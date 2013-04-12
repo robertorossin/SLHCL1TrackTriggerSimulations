@@ -68,7 +68,7 @@ void RecoExtractor::beginRun(Run const& run, EventSetup const& setup)
   }
 
   // If we start from existing file we don't have to loop over events
-  if (!do_fill_ && m_PIX->n_events()) 
+  if (!do_fill_ && do_PIX_ && m_PIX->n_events()) 
   {    
     // If you start from an extracted file, the number of events you want to loop on
     // is defined as an option, not in CMSSW...
@@ -87,7 +87,7 @@ void RecoExtractor::beginRun(Run const& run, EventSetup const& setup)
     }
   }
 
-  if (!do_fill_ && m_TK->n_events()) 
+  if (!do_fill_ && do_TK_ && m_TK->n_events()) 
   {    
     // If you start from an extracted file, the number of events you want to loop on
     // is defined as an option, not in CMSSW...
