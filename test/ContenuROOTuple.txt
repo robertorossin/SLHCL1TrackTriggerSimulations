@@ -1,0 +1,152 @@
+NOTA: Toutes les dimensions sont données en cm
+
+1/ Contenu du TREE MC:
+
+--> Liste des branches:
+
+  MC->Branch("gen_n",   &m_gen_n);
+  MC->Branch("gen_proc",&m_gen_proc);
+  MC->Branch("gen_pdg", &m_gen_pdg);
+  MC->Branch("gen_px",  &m_gen_px);
+  MC->Branch("gen_py",  &m_gen_py);
+  MC->Branch("gen_pz",  &m_gen_pz);
+  MC->Branch("gen_x",   &m_gen_x);
+  MC->Branch("gen_y",   &m_gen_y);
+  MC->Branch("gen_z",   &m_gen_z);
+    
+  MC->Branch("subpart_n",        &m_part_n);
+  MC->Branch("subpart_hits",     &m_hits);
+  MC->Branch("subpart_pdgId",    &m_part_pdgId);
+  MC->Branch("subpart_px",       &m_part_px);
+  MC->Branch("subpart_py",       &m_part_py);
+  MC->Branch("subpart_pz",       &m_part_pz);
+  MC->Branch("subpart_eta",      &m_part_eta);
+  MC->Branch("subpart_phi",      &m_part_phi);
+  MC->Branch("subpart_x",        &m_part_x);
+  MC->Branch("subpart_y",        &m_part_y);
+  MC->Branch("subpart_z",        &m_part_z);
+  
+  MC->Branch("subpart_nhit",     &m_part_nhit);
+  MC->Branch("subpart_hits_x",   &m_hits_x);
+  MC->Branch("subpart_hits_y",   &m_hits_y);
+  MC->Branch("subpart_hits_z",   &m_hits_z);
+  MC->Branch("subpart_hits_e",   &m_hits_e);
+  MC->Branch("subpart_hits_id",  &m_hits_id);
+
+--> Signification (et dimension) des variables
+
+  static const int 	m_gen_nMAX   = 10000;  // Nombre maximal de particules générées
+
+  int    		m_gen_n;               // Nombre de particules générées (1 pour du particle gun)
+  float 	        m_gen_x[m_gen_nMAX];   // Origine x de la particule 
+  float 	        m_gen_y[m_gen_nMAX];   // Origine y de la particule 
+  float 	        m_gen_z[m_gen_nMAX];   // Origine z de la particule 
+  float 	        m_gen_px[m_gen_nMAX];  // Px de la particule 
+  float 	        m_gen_py[m_gen_nMAX];  // Py de la particule 
+  float                 m_gen_pz[m_gen_nMAX];  // Pz de la particule 
+  int 	                m_gen_proc[m_gen_nMAX];// Non utilisé 
+  int                   m_gen_pdg[m_gen_nMAX]; // PDG ID de la particule
+
+
+  // Tracking particles for a given event, along with their 
+  // simulated hits
+
+  static const int 	m_part_nMAX    = 10000;  // Nombre maximal de particules simulées
+  static const int 	m_part_nhitMAX = 1000;   // Nombre maximal de hits par particule simulée
+
+
+  int    		m_part_n;                 // Nombre de particules simulées dans GEANT4
+  int    		m_part_nhit;              // Nombre de hits simulés dans GEANT4 
+
+  int                   m_part_pdgId[m_part_nMAX];// PDG ID de la particule simulée
+  float 		m_part_px[m_part_nMAX];   // px de la particule simulée
+  float 		m_part_py[m_part_nMAX];   // py de la particule simulée
+  float 		m_part_pz[m_part_nMAX];   // pz de la particule simulée
+  float 		m_part_eta[m_part_nMAX];  // eta de la particule simulée
+  float 		m_part_phi[m_part_nMAX];  // phi de la particule simulée
+  float                 m_part_x[m_part_nMAX];    // Origine x de la particule simulée
+  float                 m_part_y[m_part_nMAX];    // Origine y de la particule simulée
+  float                 m_part_z[m_part_nMAX];    // Origine z de la particule simulée
+  int                   m_hits[m_part_nMAX];      // Nombre de simhits pour cette particule
+
+  float                 m_hits_x[m_part_nMAX*m_part_nhitMAX];  // Position x des simhits
+  float                 m_hits_y[m_part_nMAX*m_part_nhitMAX];  // Position y des simhits
+  float                 m_hits_z[m_part_nMAX*m_part_nhitMAX];  // Position z des simhits
+  float                 m_hits_e[m_part_nMAX*m_part_nhitMAX];  // Perte en energie des simhits
+  int                   m_hits_id[m_part_nMAX*m_part_nhitMAX]; // Dans quel sous détecteur est le simhits: 
+							       // vaut 1 pour le tracker 
+
+
+
+2/ Contenu du TREE L1TrackTrigger:
+
+--> Liste des branches:
+
+  L1TrackTrigger->Branch("evt",            &n_evt)
+  L1TrackTrigger->Branch("CLUS_n",         &m_clus)
+  L1TrackTrigger->Branch("CLUS_x",         &m_clus_x)
+  L1TrackTrigger->Branch("CLUS_y",         &m_clus_y)
+  L1TrackTrigger->Branch("CLUS_z",         &m_clus_z)
+  L1TrackTrigger->Branch("CLUS_charge",    &m_clus_e)
+  L1TrackTrigger->Branch("CLUS_layer",     &m_clus_layer)
+  L1TrackTrigger->Branch("CLUS_module",    &m_clus_module)
+  L1TrackTrigger->Branch("CLUS_ladder",    &m_clus_ladder)
+  L1TrackTrigger->Branch("CLUS_seg",       &m_clus_seg)
+  L1TrackTrigger->Branch("CLUS_strip",     &m_clus_strip)
+  L1TrackTrigger->Branch("CLUS_match",     &m_clus_matched)
+  L1TrackTrigger->Branch("CLUS_tp",        &m_clus_tp)
+  L1TrackTrigger->Branch("STUB_n",         &m_stub)
+  L1TrackTrigger->Branch("STUB_x",         &m_stub_x)
+  L1TrackTrigger->Branch("STUB_y",         &m_stub_y)
+  L1TrackTrigger->Branch("STUB_z",         &m_stub_z)
+  L1TrackTrigger->Branch("STUB_pt",        &m_stub_pt)
+  L1TrackTrigger->Branch("STUB_layer",     &m_stub_layer)
+  L1TrackTrigger->Branch("STUB_module",    &m_stub_module)
+  L1TrackTrigger->Branch("STUB_ladder",    &m_stub_ladder)
+  L1TrackTrigger->Branch("STUB_seg",       &m_stub_seg)
+  L1TrackTrigger->Branch("STUB_strip",     &m_stub_strip)
+  L1TrackTrigger->Branch("STUB_clust1",    &m_stub_clust1)
+  L1TrackTrigger->Branch("STUB_clust2",    &m_stub_clust2)
+
+--> Signification (et dimension) des variables
+
+  int               n_evt;                      // N° de l'évenement (le même que dans MC)
+
+  // Clusters fabriqués à partir des strips digis
+
+  static const int  m_clus_MAX    = 10000;      // Nombre maximal de clusters
+
+  int               m_clus;                     // Nombre de clusters reconstruits pour l'evt 
+  float             m_clus_x[m_clus_MAX];       // Position x globale des clusters
+  float             m_clus_y[m_clus_MAX];       // Position y globale des clusters
+  float             m_clus_z[m_clus_MAX];       // Position z globale des clusters
+  float             m_clus_e[m_clus_MAX];       // Charge des cluster (en coups ADC)
+  int               m_clus_layer[m_clus_MAX];   // Layer du cluster (5 à 10 pour les 6 layers qui nous interessent)
+  int               m_clus_module[m_clus_MAX];  // Position en Z du module contenant le cluster:
+						//	    Layers 5/6/7:  va de 1 à 104 (-Z à +Z), Z=0 est entre 52 et 53
+						//	    Layers 8/9/10: va de 1 à 48 (-Z à +Z), Z=0 est entre 24 et 25
+  int               m_clus_ladder[m_clus_MAX];  // Position en PHI du module contenant le cluster:
+						// Le nombre de ladders dépend du layer (16 pour layer 6, 76 pour layer 10)
+						// L'incrémentation (0 à Nladders) se fait dans le sens inverse des aiguilles
+						// d'une montre (en partant de PHI=0 pour le ladder 1) 
+  int               m_clus_seg[m_clus_MAX];     // Le segment du module où est le cluster (2 segments par module selon l'axe Z)
+  int               m_clus_strip[m_clus_MAX];   // Le numéro du strip où est situé le centre du cluster (entre 1 et 1024)
+  int               m_clus_matched[m_clus_MAX]; // Est-ce que le cluster est matché avec un simhit, si non ce paramètre vaut -1
+						// si oui il correspond à l'indice du hit dans le tree MC (m_hits_***)
+  int               m_clus_tp[m_clus_MAX];      // Est-ce que le cluster est contenu dans un tracking particle simulé, 
+						// si non ce paramètre vaut -1
+						// si oui il correspond à l'indice de la TP dans le tree MC (m_part_***)
+
+  // Stub info (fait à partir de paires de clusters matchés)
+
+  static const int      m_stub_MAX    = 10000;     // Nombre maximal de stubs
+
+  int m_stub;
+  float                 m_stub_pt[m_stub_MAX];     // Pt du stub (en GeV/c)
+  int                   m_stub_layer[m_stub_MAX];  // Layer du stub (5 à 10 pour les 6 layers qui nous interessent)
+  int                   m_stub_module[m_stub_MAX]; // Position en Z du module contenant le stub
+  int                   m_stub_ladder[m_stub_MAX]; // Position en PHI du module contenant le stub
+  int                   m_stub_seg[m_stub_MAX];    // Segment du module contenant le stub
+  int                   m_stub_strip[m_stub_MAX];  // Strip du cluster interne du stub
+  int                   m_stub_clust1[m_stub_MAX]; // Indice du premier cluster dans les variables clus 
+  int                   m_stub_clust2[m_stub_MAX]; // Indice du second cluster dans les variables clus 

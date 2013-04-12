@@ -1,0 +1,11 @@
+2013-04-12  Seb Viret  <viret@in2p3.fr>
+ 
+       	* First import of the RecoExtractor package in the HL_LHC.
+
+	* Documentation on this package might be fouund on the following page:
+	
+	  http://sviret.web.cern.ch/sviret/Welcome.php?n=CMS.HLLHCTuto
+
+  	  Look at STEP III
+
+	This version has been tested against CMSSW_6_1_2_SLHC1
