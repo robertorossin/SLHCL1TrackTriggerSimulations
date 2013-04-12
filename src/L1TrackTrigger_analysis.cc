@@ -182,7 +182,7 @@ void L1TrackTrigger_analysis::get_digis(PixelExtractor *pix, MCExtractor *mc)
 
   if (m_verb) // Printouts (for verbose mode)
   {
-    int k,idx;
+    int idx;
 
     cout << "Event " << n_tot_evt << " contains " << ndigis << " digis" << endl;
 
@@ -190,7 +190,6 @@ void L1TrackTrigger_analysis::get_digis(PixelExtractor *pix, MCExtractor *mc)
     {
       idx = static_cast<int>(m_digi_ref->at(i));
 
-      k=0;
       cout << " Digi " << idx << " : "
 	   << pix->layer(idx) << " / " << pix->ladder(idx) << " / " << pix->module(idx) << " / " 
 	   << pix->column(idx) << " / " << pix->row(idx) << " / "
@@ -208,7 +207,6 @@ void L1TrackTrigger_analysis::get_digis(PixelExtractor *pix, MCExtractor *mc)
 		  << mc->getTP_hitsy((m_digi_match->at(i)).at(k)) << " / " 
 		  << mc->getTP_hitsz((m_digi_match->at(i)).at(k)) << std::endl;
 
-	++k;
       }
     }
 
@@ -991,7 +989,9 @@ bool L1TrackTrigger_analysis::is_neighbour(PixelExtractor *pix, int idx, int lay
   int drow = 0;
   int dseg = 0;
   
-  for (int j=0;j<clus_row.size();++j) // Loop over already stored digis
+  int nrow = static_cast<int>(clus_row.size());
+
+  for (int j=0;j<nrow;++j) // Loop over already stored digis
   { 
     drow = abs(clus_row.at(j)-pix->row(idx));
     dseg = abs(clus_col.at(j)-pix->column(idx));
