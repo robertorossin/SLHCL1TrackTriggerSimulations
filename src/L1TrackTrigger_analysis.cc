@@ -581,9 +581,20 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
       for (int j=0;j<7;++j) ladder_cut[j][i] = m_window_size;
     }
   }
+  //else 
+  //{
+   // std::cout << "Applying the optimal SW windows cuts" << std::endl;
+  //}
+
 
   double B  = 3.8;
 
+	
+  double d_b = 0.;
+  double d_t = 0.;
+
+  int i_t = 0;
+  int i_b = 0;
 
   double dR = 0.;
   double R1 = 0.;
@@ -613,6 +624,7 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
   double strip_cor= 0.;
   double delta_strip= 0.;
   double delta_strip_min= 0.;
+  double delta_strip_min_s= 0.;
   int matching_tp = -1;
 
   int n_candidates = 0;
@@ -643,6 +655,10 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
       philadder = 8.*atan(1.)/n_goodlad*((m_clus_module->at(i)-1)/2);  
       delta_strip_min = ladder_cut[disk-1][m_clus_ladder->at(i)-1]+0.1;
     }
+
+    
+    if (m_verb)
+      std::cout << "SW cut is set to " << delta_strip_min << endl;
 
     phi1      = atan2(m_clus_y->at(i),m_clus_x->at(i));
     R1        = sqrt(m_clus_x->at(i)*m_clus_x->at(i)+m_clus_y->at(i)*m_clus_y->at(i));  
@@ -682,19 +698,43 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 
       if (disk==0) // Barrel or endcap
       {
-        (R_i<R_j)
-	  ? strip_cor = (R_j/R_i-1.)*(m_clus_strip->at(i)-m_clus_nrows->at(i)/2)
-	  : strip_cor = (R_i/R_j-1.)*(m_clus_strip->at(j)-m_clus_nrows->at(j)/2);
+	if (R_i<R_j)
+	{
+	  d_t = R_j;
+	  d_b = R_i;
+	  i_t = j;
+	  i_b = i;
+	}
+	else
+	{
+	  d_t = R_i;
+	  d_b = R_j;
+	  i_t = i;
+	  i_b = j;
+	}
       }
       else
       {
-	(m_clus_z->at(i)<m_clus_z->at(j))
-	  ? strip_cor = (m_clus_z->at(j)/m_clus_z->at(i)-1.)*(m_clus_strip->at(i)-m_clus_nrows->at(i)/2)
-	  : strip_cor = (m_clus_z->at(i)/m_clus_z->at(j)-1.)*(m_clus_strip->at(j)-m_clus_nrows->at(j)/2);	
+	if (m_clus_z->at(i)<m_clus_z->at(j))
+	{
+	  d_t = m_clus_z->at(j);
+	  d_b = m_clus_z->at(i);
+	  i_t = j;
+	  i_b = i;
+	}
+	else
+	{
+	  d_t = m_clus_z->at(i);
+	  d_b = m_clus_z->at(j);
+	  i_t = i;
+	  i_b = j;
+	}
       }
 
+      strip_cor   = (d_t/d_b-1.)*(m_clus_strip->at(i_b)-m_clus_nrows->at(i_b)/2);
       strip_cor  -= fmod(strip_cor,0.5); 
-      delta_strip = m_clus_strip->at(j)+strip_cor - m_clus_strip->at(i); 
+      delta_strip = m_clus_strip->at(i_b) - m_clus_strip->at(i_t); 
+      delta_strip += strip_cor; 
 
       // Here we apply the stub width cut
       if (fabs(delta_strip)>delta_strip_min) continue;
@@ -705,6 +745,7 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
       if (fabs(delta_strip)<=delta_strip_min) 
       {
 	delta_strip_min=fabs(delta_strip);
+	delta_strip_min_s=delta_strip;
 	clus_chosen=j;
       }
     } // End of loop over second cluster
@@ -712,6 +753,9 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 
     if (m_verb)
       std::cout << "Found " << n_candidates << " pair(s)..." << endl;
+
+    if (m_verb)
+      std::cout << "SW = " << delta_strip_min_s << endl;
 
     // We didn't found the stub, we stop
     if (n_candidates==0) continue;
@@ -739,15 +783,12 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
     phi_j = phi2-philadder;
     R_j   = R2*cos(phi_j);
 
+    delta_strip = delta_strip_min_s;
+
     if (disk==0) // Barrel or endcap
     {
       if (R_i<R_j)
       {
-	strip_cor   = (R_j/R_i-1.)*(m_clus_strip->at(i)-m_clus_nrows->at(i)/2);
-	strip_cor  -= fmod(strip_cor,0.5); 
-	delta_strip = m_clus_strip->at(i) - m_clus_strip->at(clus_chosen); 
-	delta_strip += strip_cor; 
-	
 	R           = R1;
 	dR          = R2-R1;
 	dphi        = phi2-phi1;    
@@ -755,6 +796,7 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 	if (m_verb) 
 	  cout << m_stub << " / " << m_clus_layer->at(i) << " / " <<  m_clus_ladder->at(i) << " / " 
 	       << clus_chosen << " / " 
+	       << delta_strip << " / " 
 	       << m_clus_strip->at(i) << " / " <<  strip_cor << endl;
 	
 	if (matching_tp!=-1) 
@@ -768,11 +810,6 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
       }
       else
       {
-	strip_cor   = (R_i/R_j-1.)*(m_clus_strip->at(clus_chosen)-m_clus_nrows->at(clus_chosen)/2);
-	strip_cor  -= fmod(strip_cor,0.5); 
-	delta_strip = m_clus_strip->at(clus_chosen) - m_clus_strip->at(i); 
-	delta_strip += strip_cor; 
-	
 	R           = R2;
 	dR          = R1-R2;
 	dphi        = phi1-phi2;    
@@ -780,6 +817,7 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 	if (m_verb)
 	  cout << m_stub << " / " << m_clus_layer->at(clus_chosen) << " / " <<  m_clus_ladder->at(clus_chosen) << " / " 
 	       << clus_chosen << " / " 
+	       << delta_strip << " / " 
 	       << m_clus_strip->at(clus_chosen) << " / " <<  strip_cor << endl;
 		
 	if (matching_tp!=-1) 
@@ -796,10 +834,6 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
     {
       if (m_clus_z->at(i)<m_clus_z->at(clus_chosen))
       {
-	strip_cor   = (m_clus_z->at(clus_chosen)/m_clus_z->at(i)-1.)*(m_clus_strip->at(i)-m_clus_nrows->at(i)/2);
-	strip_cor  -= fmod(strip_cor,0.5); 
-	delta_strip = m_clus_strip->at(i)+strip_cor - m_clus_strip->at(clus_chosen); 	  
-
 	R           = R1;
 	dR          = R2-R1;
 	dphi        = phi2-phi1;   
@@ -815,11 +849,6 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
       }
       else
       {
-	strip_cor   = (m_clus_z->at(i)/m_clus_z->at(clus_chosen)-1.)
-	  *(m_clus_strip->at(clus_chosen)-m_clus_nrows->at(clus_chosen)/2);
-	strip_cor  -= fmod(strip_cor,0.5); 
-	delta_strip = m_clus_strip->at(clus_chosen)+strip_cor - m_clus_strip->at(i); 
-
 	R           = R2;
 	dR          = R1-R2;
 	dphi        = phi1-phi2;  
