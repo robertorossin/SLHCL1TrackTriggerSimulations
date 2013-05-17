@@ -245,6 +245,8 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
   float bary_y_mc   = 0.;
   float bary_z_mc   = 0.;
  
+  int pid_mc   = 0;
+ 
   int m_clus_prev   = -1;
   int idx,idx_h;
 
@@ -291,7 +293,8 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
 	  
 	  matching_tps_clus.push_back((m_digi_tp->at(i)).at(k));  
 	  matching_hits_clus.push_back(idx_h);
-	  
+
+	  pid_mc       = mc->getTP_hitsproc(idx_h);
 	  bary_sum_mc  += mc->getTP_hitse(idx_h);   
 	  bary_x_mc    += mc->getTP_hitse(idx_h)*mc->getTP_hitsx(idx_h);
 	  bary_y_mc    += mc->getTP_hitse(idx_h)*mc->getTP_hitsy(idx_h); 
@@ -321,7 +324,8 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
 	bary_x_mc    = 0.; 
 	bary_y_mc    = 0.; 
 	bary_z_mc    = 0.; 
-	
+	pid_mc       = 0;
+
 	clus_row.push_back(pix->row(idx));
 	clus_col.push_back(pix->column(idx));
 	
@@ -340,7 +344,8 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
 	  
 	  matching_tps_clus.push_back((m_digi_tp->at(i)).at(k));  
 	  matching_hits_clus.push_back(idx_h);
-	  
+
+	  pid_mc       = mc->getTP_hitsproc(idx_h);
 	  bary_sum_mc  += mc->getTP_hitse(idx_h);   
 	  bary_x_mc    += mc->getTP_hitse(idx_h)*mc->getTP_hitsx(idx_h);
 	  bary_y_mc    += mc->getTP_hitse(idx_h)*mc->getTP_hitsy(idx_h); 
@@ -375,6 +380,7 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
 	m_clus_xmc->at(m_clus-1)  = bary_x_mc/bary_sum_mc;
 	m_clus_ymc->at(m_clus-1)  = bary_y_mc/bary_sum_mc;
 	m_clus_zmc->at(m_clus-1)  = bary_z_mc/bary_sum_mc;
+	m_clus_pid->at(m_clus-1)  = pid_mc;
       }
 
       m_clus_sat->at(m_clus-1)     = nsat;
@@ -401,12 +407,14 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
 	m_clus_xmc->push_back(bary_x_mc/bary_sum_mc);
 	m_clus_ymc->push_back(bary_y_mc/bary_sum_mc);
 	m_clus_zmc->push_back(bary_z_mc/bary_sum_mc);
+	m_clus_pid->push_back(pid_mc);
       }
       else
       {
 	m_clus_xmc->push_back(0.);
 	m_clus_ymc->push_back(0.);
 	m_clus_zmc->push_back(0.);
+	m_clus_pid->push_back(0);
       }
 
       m_clus_used->push_back(0);
@@ -596,14 +604,23 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
   int i_t = 0;
   int i_b = 0;
 
+  int i_ts = 0;
+  int i_bs = 0;
+
   double dR = 0.;
-  double R1 = 0.;
-  double R2 = 0.;
   double R  = 0.;
-  double R_i = 0.;
-  double R_j = 0.;
-  double phi_i = 0.;
-  double phi_j = 0.;
+
+  double R1   = 0.;
+  double R2   = 0.;
+  double Z1   = 0.;
+  double Z2   = 0.;
+  double phi1 = 0.;
+  double phi2 = 0.;
+
+
+  double d_i = 0.;
+  double d_j = 0.;
+
   double philadder = 0.;
 
   double dR_mc = 0.;
@@ -611,8 +628,6 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
   double R2_mc = 0.;
   double R_mc  = 0.;
 
-  double phi1    = 0.;
-  double phi2    = 0.;
   double dphi    = 0.;
   double pt_stub = 0.;
 
@@ -622,17 +637,19 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
   double pt_stub_mc = 0.;
 
   double strip_cor= 0.;
-  double delta_strip= 0.;
-  double delta_strip_min= 0.;
-  double delta_strip_min_s= 0.;
+  double SW       = 0.;
+  double SW_min   = 0.;
+  double SW_min_s = 0.;
   int matching_tp = -1;
 
   int n_candidates = 0;
-  int clus_chosen  = 0;
-  double n_goodlad = 0.;
+ 
+  double PI = 4.*atan(1.);
 
   for (int i=0;i<m_clus;++i) // Loop over clusters
   {
+    n_candidates    = 0;
+
     // Selection
     if (m_clus_layer->at(i)   != layer ||             // Don't use cluster of another layer
 	m_clus_module->at(i)%2!= 1     ||             // Start from an odd module
@@ -644,32 +661,22 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
     if (m_verb)
       std::cout << "Dealing with clus " << i << endl;
 
+    phi1  = atan2(m_clus_y->at(i),m_clus_x->at(i));
+    R1    = sqrt(m_clus_x->at(i)*m_clus_x->at(i)+m_clus_y->at(i)*m_clus_y->at(i));  
+    Z1    = m_clus_z->at(i);  
+
     if (disk==0) // Barrel
     {
-      philadder = 8.*atan(1.)/n_lad_barrel[m_clus_layer->at(i)-5]*(m_clus_ladder->at(i)-1);
-      delta_strip_min = layer_cut[layer-5]+0.1;
+      philadder  = 2.*PI/n_lad_barrel[m_clus_layer->at(i)-5]*(m_clus_ladder->at(i)-1);
+      SW_min     = layer_cut[layer-5]+0.1;
+      d_i        = R1*cos(phi1-philadder);
     }
     else // Endcap
     {
-      n_goodlad = n_lad_endcap[m_clus_ladder->at(i)-1+lad_cor];
-      philadder = 8.*atan(1.)/n_goodlad*((m_clus_module->at(i)-1)/2);  
-      delta_strip_min = ladder_cut[disk-1][m_clus_ladder->at(i)-1]+0.1;
+      philadder  = 2.*PI/n_lad_endcap[m_clus_ladder->at(i)-1+lad_cor]*((m_clus_module->at(i)-1)/2);  
+      SW_min     = ladder_cut[disk-1][m_clus_ladder->at(i)-1]+0.1;
+      d_i        = fabs(Z1);
     }
-
-    
-    if (m_verb)
-      std::cout << "SW cut is set to " << delta_strip_min << endl;
-
-    phi1      = atan2(m_clus_y->at(i),m_clus_x->at(i));
-    R1        = sqrt(m_clus_x->at(i)*m_clus_x->at(i)+m_clus_y->at(i)*m_clus_y->at(i));  
-    phi_i     = phi1-philadder;
-    R_i       = R1*cos(phi_i);
-
-    strip_cor       = 0.;
-    delta_strip     = 0.;
-    n_candidates    = 0;
-    clus_chosen     = -1;
-    matching_tp     = -1;
 
 
     for (int j=i+1;j<m_clus;++j) // Loop over other clusters
@@ -691,78 +698,57 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
       if (m_verb)
 	std::cout << "...and with clus " << j << endl;
 
-      phi2      = atan2(m_clus_y->at(j),m_clus_x->at(j));
-      R2        = sqrt(m_clus_x->at(j)*m_clus_x->at(j)+m_clus_y->at(j)*m_clus_y->at(j));  
-      phi_j     = phi2-philadder;
-      R_j       = R2*cos(phi_j);
+      phi2  = atan2(m_clus_y->at(j),m_clus_x->at(j));
+      R2    = sqrt(m_clus_x->at(j)*m_clus_x->at(j)+m_clus_y->at(j)*m_clus_y->at(j));  
+      Z2    = m_clus_z->at(j);  
 
-      if (disk==0) // Barrel or endcap
+      d_j = R2*cos(phi2-philadder);
+      if (disk!=0) d_j = fabs(Z2);
+
+      if (d_i<d_j)
       {
-	if (R_i<R_j)
-	{
-	  d_t = R_j;
-	  d_b = R_i;
-	  i_t = j;
-	  i_b = i;
-	}
-	else
-	{
-	  d_t = R_i;
-	  d_b = R_j;
-	  i_t = i;
-	  i_b = j;
-	}
+	d_t = d_j;
+	d_b = d_i;
+	i_t = j;
+	i_b = i;
       }
       else
       {
-	if (m_clus_z->at(i)<m_clus_z->at(j))
-	{
-	  d_t = m_clus_z->at(j);
-	  d_b = m_clus_z->at(i);
-	  i_t = j;
-	  i_b = i;
-	}
-	else
-	{
-	  d_t = m_clus_z->at(i);
-	  d_b = m_clus_z->at(j);
-	  i_t = i;
-	  i_b = j;
-	}
+	d_t = d_i;
+	d_b = d_j;
+	i_t = i;
+	i_b = j;
       }
 
       strip_cor   = (d_t/d_b-1.)*(m_clus_strip->at(i_b)-m_clus_nrows->at(i_b)/2);
       strip_cor  -= fmod(strip_cor,0.5); 
-      delta_strip = m_clus_strip->at(i_b) - m_clus_strip->at(i_t); 
-      delta_strip += strip_cor; 
+      SW = m_clus_strip->at(i_b) - m_clus_strip->at(i_t); 
+      SW += strip_cor; 
 
       // Here we apply the stub width cut
-      if (fabs(delta_strip)>delta_strip_min) continue;
+      if (fabs(SW)>SW_min) continue;
 
       ++n_candidates;
 
       // If more than one cand, take the closest one
-      if (fabs(delta_strip)<=delta_strip_min) 
-      {
-	delta_strip_min=fabs(delta_strip);
-	delta_strip_min_s=delta_strip;
-	clus_chosen=j;
-      }
+      SW_min=fabs(SW);
+      SW_min_s=SW;
+      i_ts = i_t;
+      i_bs = i_b;
+
     } // End of loop over second cluster
-
-
-    if (m_verb)
-      std::cout << "Found " << n_candidates << " pair(s)..." << endl;
-
-    if (m_verb)
-      std::cout << "SW = " << delta_strip_min_s << endl;
 
     // We didn't found the stub, we stop
     if (n_candidates==0) continue;
 
+    if (m_verb)
+    {
+      std::cout << "Found " << n_candidates << " pair(s)..." << endl;
+      std::cout << "Bottom/Top: " << i_bs << "/" << i_ts << endl;
+      std::cout << "SW = " << SW_min_s << endl;
+    }
     
-    m_clus_used->at(clus_chosen) = 1;
-    matching_tp = getMatchingTP(i,clus_chosen);
+    matching_tp = getMatchingTP(i_ts,i_bs);
 
     if (m_matchStubs && matching_tp != 0) continue; // We use this option only for bank production
 
@@ -772,124 +758,53 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
     // matching_tp is the reference to the tracking particle responsible for the stub
     // clus_chosen contains the one chosen to make the stub (the one minimizing the SW)
 
+    R1   = sqrt(m_clus_x->at(i_bs)*m_clus_x->at(i_bs)+m_clus_y->at(i_bs)*m_clus_y->at(i_bs));
+    R2   = sqrt(m_clus_x->at(i_ts)*m_clus_x->at(i_ts)+m_clus_y->at(i_ts)*m_clus_y->at(i_ts));
+    phi1 = atan2(m_clus_y->at(i_bs),m_clus_x->at(i_bs));
+    phi2 = atan2(m_clus_y->at(i_ts),m_clus_x->at(i_ts));
+    dphi = phi2-phi1;   
+    dR   = R2-R1;
+    SW   = SW_min_s;
+
     if (matching_tp!=-1) 
     {
-      R1_mc = sqrt(m_clus_xmc->at(i)*m_clus_xmc->at(i)+m_clus_ymc->at(i)*m_clus_ymc->at(i));  
-      R2_mc = sqrt(m_clus_xmc->at(clus_chosen)*m_clus_xmc->at(clus_chosen)+m_clus_ymc->at(clus_chosen)*m_clus_ymc->at(clus_chosen));  
+      R1_mc = sqrt(m_clus_xmc->at(i_bs)*m_clus_xmc->at(i_bs)+m_clus_ymc->at(i_bs)*m_clus_ymc->at(i_bs));
+      R2_mc = sqrt(m_clus_xmc->at(i_ts)*m_clus_xmc->at(i_ts)+m_clus_ymc->at(i_ts)*m_clus_ymc->at(i_ts));
+      phi1_mc = atan2(m_clus_ymc->at(i_bs),m_clus_xmc->at(i_bs));
+      phi2_mc = atan2(m_clus_ymc->at(i_ts),m_clus_xmc->at(i_ts));
+      dphi_mc = phi2_mc-phi1_mc;   
+      dR_mc   = R2_mc-R1_mc;
     } 
 
-    phi2  = atan2(m_clus_y->at(clus_chosen),m_clus_x->at(clus_chosen));
-    R2    = sqrt(m_clus_x->at(clus_chosen)*m_clus_x->at(clus_chosen)+m_clus_y->at(clus_chosen)*m_clus_y->at(clus_chosen));  
-    phi_j = phi2-philadder;
-    R_j   = R2*cos(phi_j);
+    if (m_verb) 
+      cout << m_stub << " / " 
+	   << m_clus_layer->at(i_bs) << " / " 
+	   << m_clus_ladder->at(i_bs) << " / " 
+	   << i_bs << " / " 
+	   << SW << " / " 
+	   << m_clus_strip->at(i_bs) << endl;
 
-    delta_strip = delta_strip_min_s;
-
-    if (disk==0) // Barrel or endcap
-    {
-      if (R_i<R_j)
-      {
-	R           = R1;
-	dR          = R2-R1;
-	dphi        = phi2-phi1;    
-	
-	if (m_verb) 
-	  cout << m_stub << " / " << m_clus_layer->at(i) << " / " <<  m_clus_ladder->at(i) << " / " 
-	       << clus_chosen << " / " 
-	       << delta_strip << " / " 
-	       << m_clus_strip->at(i) << " / " <<  strip_cor << endl;
-	
-	if (matching_tp!=-1) 
-	{
-	  R_mc    = R1_mc;
-	  dR_mc   = R2_mc-R1_mc;
-	  phi1_mc = atan2(m_clus_ymc->at(i),m_clus_xmc->at(i));
-	  phi2_mc = atan2(m_clus_ymc->at(clus_chosen),m_clus_xmc->at(clus_chosen));
-	  dphi_mc = phi2_mc-phi1_mc;    
-	}
-      }
-      else
-      {
-	R           = R2;
-	dR          = R1-R2;
-	dphi        = phi1-phi2;    
-	
-	if (m_verb)
-	  cout << m_stub << " / " << m_clus_layer->at(clus_chosen) << " / " <<  m_clus_ladder->at(clus_chosen) << " / " 
-	       << clus_chosen << " / " 
-	       << delta_strip << " / " 
-	       << m_clus_strip->at(clus_chosen) << " / " <<  strip_cor << endl;
-		
-	if (matching_tp!=-1) 
-	{
-	  R_mc=R2_mc;
-	  dR_mc = R1_mc-R2_mc;
-	  phi2_mc = atan2(m_clus_ymc->at(i),m_clus_xmc->at(i));
-	  phi1_mc = atan2(m_clus_ymc->at(clus_chosen),m_clus_xmc->at(clus_chosen));
-	  dphi_mc = phi1_mc-phi2_mc;    
-	}
-      }
-    }
-    else
-    {
-      if (m_clus_z->at(i)<m_clus_z->at(clus_chosen))
-      {
-	R           = R1;
-	dR          = R2-R1;
-	dphi        = phi2-phi1;   
-
-	if (matching_tp!=-1) 
-	{	
-	  R_mc    = R1_mc;
-	  dR_mc   = R2_mc-R1_mc;
-	  phi1_mc = atan2(m_clus_ymc->at(i),m_clus_xmc->at(i));
-	  phi2_mc = atan2(m_clus_ymc->at(clus_chosen),m_clus_xmc->at(clus_chosen));
-	  dphi_mc = phi2_mc-phi1_mc;    
-	}
-      }
-      else
-      {
-	R           = R2;
-	dR          = R1-R2;
-	dphi        = phi1-phi2;  
-
-	if (matching_tp!=-1) 
-	{
-	  R_mc=R2_mc;
-	  dR_mc = R1_mc-R2_mc;
-	  phi2_mc = atan2(m_clus_ymc->at(i),m_clus_xmc->at(i));
-	  phi1_mc = atan2(m_clus_ymc->at(clus_chosen),m_clus_xmc->at(clus_chosen));
-	  dphi_mc = phi1_mc-phi2_mc;    
-	}
-      }
-	
-      if (m_verb) 
-	cout << m_stub << " / " << m_clus_layer->at(i) << " / " <<  m_clus_ladder->at(i) << " / " 
-	     << clus_chosen << " / " 
-	     << m_clus_strip->at(i) << " / " <<  strip_cor << endl;		
-    }
-
-    if (dphi<0.)             dphi    = -dphi;
-    if (dphi>4.*atan(1.))    dphi    = 8.*atan(1.)-dphi;
-    
-    		
+    if (dphi<0.)    dphi = -dphi;
+    if (dphi>PI)    dphi = 2.*PI-dphi;
+        		
     if (matching_tp!=-1) 
     {
-      if (dphi_mc<0.)          dphi_mc = -dphi_mc;
-      if (dphi_mc>4.*atan(1.)) dphi_mc = 8.*atan(1.)-dphi_mc;
+      if (dphi_mc<0.)  dphi_mc = -dphi_mc;
+      if (dphi_mc>PI)  dphi_mc = 2.*PI-dphi_mc;
     }
     
 
-    if (m_clus_used->at(i))
+    if (m_clus_used->at(i_bs))
       std::cout<< "Problem!" << std::endl;
-    
-    m_clus_used->at(i) = 1;
+
+    m_clus_used->at(i_bs) = 1;
+    m_clus_used->at(i_ts) = 1;
     
     pt_stub    = 0.15*B*dR/dphi*sqrt(1+(R*dphi/dR)*(R*dphi/dR))/100.;
     
     (matching_tp!=-1)     
-      ? pt_stub_mc = 0.15*B*dR_mc/dphi_mc*sqrt(1+(R_mc*dphi_mc/dR_mc)*(R_mc*dphi_mc/dR_mc))/100.
-      : pt_stub_mc = 0.;
+    ? pt_stub_mc = 0.15*B*dR_mc/dphi_mc*sqrt(1+(R_mc*dphi_mc/dR_mc)*(R_mc*dphi_mc/dR_mc))/100.
+    : pt_stub_mc = 0.;
 
     m_stub_pt->push_back(pt_stub);
     m_stub_ptMC->push_back(pt_stub_mc);    
@@ -898,38 +813,29 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
     m_stub_layer->push_back(m_clus_layer->at(i));
     m_stub_module->push_back((m_clus_module->at(i)-1)/2);
     m_stub_ladder->push_back(m_clus_ladder->at(i)+lad_cor-1);
-    m_stub_seg->push_back(m_clus_seg->at(i));
+    m_stub_seg->push_back(m_clus_seg->at(i_bs));
 
-    (R_i<R_j)
-      ? m_stub_strip->push_back(m_clus_strip->at(i))
-      : m_stub_strip->push_back(m_clus_strip->at(clus_chosen));
-	
-    m_stub_clust1->push_back(i);
-    m_stub_clust2->push_back(clus_chosen);
+    m_stub_strip->push_back(m_clus_strip->at(i_bs)); 	
+    m_stub_clust1->push_back(i_bs);
+    m_stub_clust2->push_back(i_ts);
+    m_stub_cw1->push_back(m_clus_nstrips->at(i_bs));
+    m_stub_cw2->push_back(m_clus_nstrips->at(i_ts));
 
-    if (m_clus_PS->at(i)>m_clus_PS->at(clus_chosen)) // i is a Pixel module
+    if (m_clus_PS->at(i_bs)>2) // Bottom module is pixel
     {
-      m_stub_x->push_back(m_clus_x->at(i));
-      m_stub_y->push_back(m_clus_y->at(i));
-      m_stub_z->push_back(m_clus_z->at(i));
+      m_stub_x->push_back(m_clus_x->at(i_bs));
+      m_stub_y->push_back(m_clus_y->at(i_bs));
+      m_stub_z->push_back(m_clus_z->at(i_bs));
+    }
+    else
+    {
+      m_stub_x->push_back((m_clus_x->at(i_bs)+m_clus_x->at(i_ts))/2.);
+      m_stub_y->push_back((m_clus_y->at(i_bs)+m_clus_y->at(i_ts))/2.);
+      m_stub_z->push_back((m_clus_z->at(i_bs)+m_clus_z->at(i_ts))/2.);
     }
 
-    if (m_clus_PS->at(i)<m_clus_PS->at(clus_chosen)) // j is a Pixel module
-    {
-      m_stub_x->push_back(m_clus_x->at(clus_chosen));
-      m_stub_y->push_back(m_clus_y->at(clus_chosen));
-      m_stub_z->push_back(m_clus_z->at(clus_chosen));
-    }
-
-    if (m_clus_PS->at(i)==m_clus_PS->at(clus_chosen)) // j is a Pixel module
-    {
-      m_stub_x->push_back((m_clus_x->at(clus_chosen)+m_clus_x->at(i))/2.);
-      m_stub_y->push_back((m_clus_y->at(clus_chosen)+m_clus_y->at(i))/2.);
-      m_stub_z->push_back((m_clus_z->at(clus_chosen)+m_clus_z->at(i))/2.);
-    }
-
-    m_stub_deltas->push_back(delta_strip);
-    m_stub_cor->push_back(strip_cor);
+    m_stub_deltas->push_back(SW);
+    m_stub_cor->push_back(0);
 
     if (matching_tp!=-1)
     {
@@ -938,6 +844,7 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
       m_stub_etaGEN->push_back(asinh(mc->getTP_pz(matching_tp)/sqrt(mc->getTP_px(matching_tp)*mc->getTP_px(matching_tp)
 								    +mc->getTP_py(matching_tp)*mc->getTP_py(matching_tp))));
       m_stub_pdg->push_back(mc->getTP_ID(matching_tp));
+      m_stub_pid->push_back(m_clus_pid->at(i_bs));
       m_stub_X0->push_back(mc->getTP_x(matching_tp));
       m_stub_Y0->push_back(mc->getTP_y(matching_tp));
       m_stub_Z0->push_back(mc->getTP_z(matching_tp));
@@ -962,6 +869,7 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
       m_stub_Z0->push_back(0);
       m_stub_PHI0->push_back(0);
       m_stub_pdg->push_back(0);
+      m_stub_pid->push_back(0);
     }
 
     ++m_stub;    
@@ -1061,7 +969,8 @@ void L1TrackTrigger_analysis::initialize()
   m_clus_nstrips = new  std::vector<int>; 
   m_clus_matched = new  std::vector<int>;  
   m_clus_PS      = new  std::vector<int>;  
-  m_clus_nrows   = new  std::vector<int>;  
+  m_clus_nrows   = new  std::vector<int>;
+  m_clus_pid     = new  std::vector<int>;  
   m_clus_tp      = new  std::vector< std::vector<int> >;  
   m_clus_hits    = new  std::vector< std::vector<int> >; 
   
@@ -1084,10 +993,13 @@ void L1TrackTrigger_analysis::initialize()
   m_stub_z       = new  std::vector<float>;  
   m_stub_clust1  = new  std::vector<int>;  
   m_stub_clust2  = new  std::vector<int>;  
+  m_stub_cw1     = new  std::vector<int>;  
+  m_stub_cw2     = new  std::vector<int>;  
   m_stub_deltas  = new  std::vector<float>;  
   m_stub_cor     = new  std::vector<float>;  
   m_stub_tp      = new  std::vector<int>;  
   m_stub_pdg     = new  std::vector<int>;  
+  m_stub_pid     = new  std::vector<int>;  
 
   L1TrackTrigger_analysis::reset();
 
@@ -1126,14 +1038,18 @@ void L1TrackTrigger_analysis::initialize()
     m_tree_L1TrackTrigger->Branch("CLUS_nrows",     &m_clus_nrows);
     m_tree_L1TrackTrigger->Branch("CLUS_tp",        &m_clus_tp);
     m_tree_L1TrackTrigger->Branch("CLUS_hits",      &m_clus_hits);
+    m_tree_L1TrackTrigger->Branch("CLUS_process",   &m_clus_pid);
 
     m_tree_L1TrackTrigger->Branch("STUB_ptMC",      &m_stub_ptMC);
     m_tree_L1TrackTrigger->Branch("STUB_clust1",    &m_stub_clust1);
     m_tree_L1TrackTrigger->Branch("STUB_clust2",    &m_stub_clust2);
+    m_tree_L1TrackTrigger->Branch("STUB_cw1",       &m_stub_cw1);
+    m_tree_L1TrackTrigger->Branch("STUB_cw2",       &m_stub_cw2);
     m_tree_L1TrackTrigger->Branch("STUB_cor",       &m_stub_cor);
     m_tree_L1TrackTrigger->Branch("STUB_PHI0",      &m_stub_PHI0);
     m_tree_L1TrackTrigger->Branch("STUB_tp",        &m_stub_tp);
     m_tree_L1TrackTrigger->Branch("STUB_pdgID",     &m_stub_pdg);
+    m_tree_L1TrackTrigger->Branch("STUB_process",   &m_stub_pid);
   }
 
   m_tree_L1TrackTrigger->Branch("STUB_n",         &m_stub);
@@ -1184,6 +1100,7 @@ void L1TrackTrigger_analysis::reset()
   m_clus_matched->clear();
   m_clus_PS->clear();
   m_clus_nrows->clear();
+  m_clus_pid->clear();
 
   m_clus_tp->clear();
   m_clus_hits->clear();
@@ -1208,8 +1125,10 @@ void L1TrackTrigger_analysis::reset()
   m_stub_z->clear(); 
   m_stub_clust1->clear(); 
   m_stub_clust2->clear(); 
+  m_stub_cw1->clear(); 
+  m_stub_cw2->clear(); 
   m_stub_deltas->clear(); 
   m_stub_cor->clear(); 
   m_stub_pdg->clear();
-
+  m_stub_pid->clear();
 }

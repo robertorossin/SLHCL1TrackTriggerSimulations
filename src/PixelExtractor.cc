@@ -17,7 +17,6 @@ PixelExtractor::PixelExtractor(edm::InputTag tag, bool doTree, bool doMatch)
   m_pixclus_e        = new std::vector<float>;    
   m_pixclus_row      = new std::vector<int>;      
   m_pixclus_column   = new std::vector<int>;      
-  m_pixclus_ptype    = new std::vector<int>;      
   m_pixclus_simhit   = new std::vector<int>;      
   m_pixclus_simhitID = new std::vector< std::vector<int> >;  
 
@@ -72,7 +71,6 @@ PixelExtractor::PixelExtractor(TFile *a_file)
   m_pixclus_e        = new std::vector<float>;    
   m_pixclus_row      = new std::vector<int>;      
   m_pixclus_column   = new std::vector<int>;      
-  m_pixclus_ptype    = new std::vector<int>;      
   m_pixclus_simhit   = new std::vector<int>;      
   m_pixclus_simhitID = new std::vector< std::vector<int> >;  
   m_pixclus_layer    = new std::vector<int>;    
@@ -137,12 +135,13 @@ void PixelExtractor::writeInfo(const edm::Event *event)
   PixelExtractor::reset();
 
   edm::Handle< edm::DetSetVector<PixelDigi> > pDigiColl;
-  event->getByLabel("simSiPixelDigis", pDigiColl);
+  //event->getByLabel("simSiPixelDigis", pDigiColl);
+  event->getByLabel(m_tag, pDigiColl);
 
   edm::DetSetVector<PixelDigi>::const_iterator DSViterDigi = pDigiColl->begin();
 
   if (m_matching)
-    event->getByLabel("simSiPixelDigis", pDigiLinkColl);
+    event->getByLabel(m_tag, pDigiLinkColl);
 
   bool barrel;
   bool endcap;
@@ -201,13 +200,8 @@ void PixelExtractor::writeInfo(const edm::Event *event)
       m_pixclus_y->push_back(pos.y());
       m_pixclus_z->push_back(pos.z());
       m_pixclus_e->push_back((*iter).adc());
-      //m_pixclus_e->push_back(int(barrel)-int(endcap));
       m_pixclus_row->push_back((*iter).row()); 
       m_pixclus_column->push_back((*iter).column());
-	
-      //      std::cout << barrel << " / " << endcap << " / " 
-      //		<< sqrt(pos.x()*pos.x()+pos.y()*pos.y()) << " / " << pos.z() 
-      //		<< std::endl ; 
 
       if (m_matching)
       {
@@ -293,7 +287,6 @@ void PixelExtractor::reset()
   m_pixclus_e->clear(); 
   m_pixclus_row->clear();   
   m_pixclus_column->clear();
-  m_pixclus_ptype->clear(); 
   m_pixclus_simhit->clear();
   m_pixclus_simhitID->clear();
   m_pixclus_layer->clear();  

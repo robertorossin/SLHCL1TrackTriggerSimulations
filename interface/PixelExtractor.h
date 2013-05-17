@@ -98,27 +98,48 @@ class PixelExtractor
 
   // Pixel info
 
-  int    		m_pclus;
+  /*
+    List of the branches contained in the Pixels tree
 
-  std::vector<float>    *m_pixclus_x;
-  std::vector<float>    *m_pixclus_y;
-  std::vector<float>    *m_pixclus_z;
-  std::vector<float>    *m_pixclus_e;
-  std::vector<int>      *m_pixclus_row;
-  std::vector<int>      *m_pixclus_column;
-  std::vector<int>      *m_pixclus_ptype;
-  std::vector<int>      *m_pixclus_simhit;
-  //std::vector<int>      *m_pixclus_simhitID;
+    m_tree->Branch("PIX_n",         &m_pclus,    "PIX_n/I");
+    m_tree->Branch("PIX_x",         &m_pixclus_x);
+    m_tree->Branch("PIX_y",         &m_pixclus_y);
+    m_tree->Branch("PIX_z",         &m_pixclus_z);
+    m_tree->Branch("PIX_charge",    &m_pixclus_e);
+    m_tree->Branch("PIX_row",       &m_pixclus_row);
+    m_tree->Branch("PIX_column",    &m_pixclus_column);
+    m_tree->Branch("PIX_simhit",    &m_pixclus_simhit);
+    m_tree->Branch("PIX_simhitID",  &m_pixclus_simhitID);
+    m_tree->Branch("PIX_layer",     &m_pixclus_layer);
+    m_tree->Branch("PIX_module",    &m_pixclus_module);
+    m_tree->Branch("PIX_ladder",    &m_pixclus_ladder);
+    m_tree->Branch("PIX_nrow",      &m_pixclus_nrow);
+    m_tree->Branch("PIX_ncolumn",   &m_pixclus_ncolumn);
+    m_tree->Branch("PIX_pitchx",    &m_pixclus_pitchx);
+    m_tree->Branch("PIX_pitchy",    &m_pixclus_pitchy);
+  */
 
-  std::vector< std::vector<int> >  *m_pixclus_simhitID;
+  // Meaning of the branches
 
-  std::vector<int>      *m_pixclus_layer;
-  std::vector<int>      *m_pixclus_module;
-  std::vector<int>      *m_pixclus_ladder;
-  std::vector<int>      *m_pixclus_nrow;
-  std::vector<int>      *m_pixclus_ncolumn;
-  std::vector<float>    *m_pixclus_pitchx;
-  std::vector<float>    *m_pixclus_pitchy;
+  int    		m_pclus; // Number of digis
+
+  // All the following vectors have a size m_pclus
+
+  std::vector<float>               *m_pixclus_x;        // Digi x-global coordinates (in cm)
+  std::vector<float>               *m_pixclus_y;        // Digi y-global coordinates (in cm)
+  std::vector<float>               *m_pixclus_z;        // Digi z-global coordinates (in cm)
+  std::vector<float>               *m_pixclus_e;        // Digi signal (in ADC counts)
+  std::vector<int>                 *m_pixclus_row;      // Digi strip numbers 
+  std::vector<int>                 *m_pixclus_column;   // Digi column numbers 
+  std::vector<int>                 *m_pixclus_simhit;   // Number of simhits making the digi
+  std::vector< std::vector<int> >  *m_pixclus_simhitID; // Simtrack IDs of the corresponding simhits (stored as a vector)
+  std::vector<int>                 *m_pixclus_layer;    // Digi layer numbers 
+  std::vector<int>                 *m_pixclus_module;   // Digi module numbers 
+  std::vector<int>                 *m_pixclus_ladder;   // Digi ladder/ring numbers 
+  std::vector<int>                 *m_pixclus_nrow;     // Number of strips of the sensor containing the digi
+  std::vector<int>                 *m_pixclus_ncolumn;  // Number of columns of the sensor containing the digi
+  std::vector<float>               *m_pixclus_pitchx;   // Strip pitch
+  std::vector<float>               *m_pixclus_pitchy;   // Column pitch
 
 
   std::vector<int>      the_ids;

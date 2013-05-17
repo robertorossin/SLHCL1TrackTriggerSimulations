@@ -39,6 +39,9 @@ MCExtractor::MCExtractor(bool doTree)
   m_hits_y      = new std::vector<float>;  
   m_hits_z      = new std::vector<float>;  
   m_hits_e      = new std::vector<float>;  
+  m_hits_tof    = new std::vector<float>;  
+  m_hits_proc   = new std::vector<int>;  
+  m_hits_pdgId  = new std::vector<int>; 
   m_hits_id     = new std::vector<int>;   
   m_hits_layer  = new std::vector<int>;    
   m_hits_ladder = new std::vector<int>;   
@@ -103,7 +106,10 @@ MCExtractor::MCExtractor(TFile *a_file)
   m_hits_y      = new std::vector<float>;  
   m_hits_z      = new std::vector<float>;  
   m_hits_e      = new std::vector<float>;  
+  m_hits_tof    = new std::vector<float>;  
+  m_hits_proc   = new std::vector<int>;  
   m_hits_id     = new std::vector<int>;   
+  m_hits_pdgId  = new std::vector<int>; 
   m_hits_layer  = new std::vector<int>;    
   m_hits_ladder = new std::vector<int>;   
   m_hits_module = new std::vector<int>;   
@@ -156,7 +162,10 @@ MCExtractor::MCExtractor(TFile *a_file)
   m_tree_retrieved->SetBranchAddress("subpart_hits_y",   &m_hits_y);
   m_tree_retrieved->SetBranchAddress("subpart_hits_z",   &m_hits_z);
   m_tree_retrieved->SetBranchAddress("subpart_hits_e",   &m_hits_e);
+  m_tree_retrieved->SetBranchAddress("subpart_hits_tof", &m_hits_tof);
+  m_tree_retrieved->SetBranchAddress("subpart_hits_proc",&m_hits_proc);
   m_tree_retrieved->SetBranchAddress("subpart_hits_id",  &m_hits_id);
+  m_tree_retrieved->SetBranchAddress("subpart_hits_pdgId",  &m_hits_pdgId);
   m_tree_retrieved->SetBranchAddress("subpart_hits_layer",   &m_hits_layer);
   m_tree_retrieved->SetBranchAddress("subpart_hits_ladder",  &m_hits_ladder);
   m_tree_retrieved->SetBranchAddress("subpart_hits_module",  &m_hits_module);
@@ -348,6 +357,9 @@ void MCExtractor::writeInfo(const edm::Event *event)
 	m_hits_y->push_back(static_cast<float>(hit_position.y()));   
 	m_hits_z->push_back(static_cast<float>(hit_position.z()));
 	m_hits_e->push_back(itp->energyLoss());   
+	m_hits_tof->push_back(itp->timeOfFlight());   
+	m_hits_proc->push_back(static_cast<int>(itp->processType()));   
+	m_hits_pdgId->push_back(static_cast<int>(itp->particleType()));   
 	m_hits_id->push_back(subdetID);  
 	
 
@@ -455,7 +467,10 @@ void MCExtractor::reset()
   m_hits_y->clear();  
   m_hits_z->clear();  
   m_hits_e->clear();  
+  m_hits_proc->clear();  
+  m_hits_tof->clear();  
   m_hits_id->clear();  
+  m_hits_pdgId->clear();  
   m_hits_layer->clear();  
   m_hits_ladder->clear();  
   m_hits_module->clear();  
@@ -516,7 +531,10 @@ void MCExtractor::createTree()
   m_tree_new->Branch("subpart_hits_y",       &m_hits_y);
   m_tree_new->Branch("subpart_hits_z",       &m_hits_z);
   m_tree_new->Branch("subpart_hits_e",       &m_hits_e);
+  m_tree_new->Branch("subpart_hits_tof",     &m_hits_tof);
+  m_tree_new->Branch("subpart_hits_proc",    &m_hits_proc);
   m_tree_new->Branch("subpart_hits_id",      &m_hits_id);
+  m_tree_new->Branch("subpart_hits_pdgId",      &m_hits_pdgId);
   m_tree_new->Branch("subpart_hits_layer",   &m_hits_layer);
   m_tree_new->Branch("subpart_hits_ladder",  &m_hits_ladder);
   m_tree_new->Branch("subpart_hits_module",  &m_hits_module);

@@ -103,6 +103,9 @@ class MCExtractor
   float getTP_hitsz(int i) {return m_hits_z->at(i);}
   float getTP_hitse(int i) {return m_hits_e->at(i);}
   float getTP_hitsid(int i)  {return m_hits_id->at(i);}
+  int getTP_hitspdgId(int i)  {return m_hits_pdgId->at(i);}
+  float getTP_hitsproc(int i) {return m_hits_proc->at(i);}
+  float getTP_hitstof(int i) {return m_hits_tof->at(i);}
   int   getTP_stid(int i)    {return m_st_id->at(i);}
   int   getTP_hitslad(int i) {return m_hits_ladder->at(i);}
   int   getTP_hitslay(int i) {return m_hits_layer->at(i);}
@@ -129,53 +132,105 @@ class MCExtractor
   TTree* m_tree_retrieved;
   
   bool m_OK;
-
-
-  int    		m_gen_n;
-  int    		m_part_n;
-  int    		m_part_nhit;
-  int                   m_part_nstracks;
-
-
-  std::vector<float>    *m_gen_x;
-  std::vector<float>    *m_gen_y;
-  std::vector<float>    *m_gen_z;
-  std::vector<float> 	*m_gen_px;
-  std::vector<float> 	*m_gen_py;
-  std::vector<float>    *m_gen_pz;
-  std::vector<int> 	*m_gen_proc;
-  std::vector<int>      *m_gen_pdg;
-
-
-  // Tracking particles for a given event, along with their 
-  // simulated hits
-
-
-
-  std::vector<int>      *m_part_pdgId;
-  std::vector<float> 	*m_part_px;
-  std::vector<float> 	*m_part_py;
-  std::vector<float>	*m_part_pz;
-  std::vector<float>    *m_part_eta;
-  std::vector<float> 	*m_part_phi;
-  std::vector<float>    *m_part_x;
-  std::vector<float>    *m_part_y;
-  std::vector<float>    *m_part_z;
   std::vector<int>      *m_part_used;
-
-  std::vector<int>      *m_hits;
-  std::vector<float>    *m_hits_x;
-  std::vector<float>    *m_hits_y;
-  std::vector<float>    *m_hits_z;
-  std::vector<float>    *m_hits_e;
-  std::vector<int>      *m_hits_id;
-  std::vector<int>      *m_hits_layer;
-  std::vector<int>      *m_hits_ladder;
-  std::vector<int>      *m_hits_module;
   std::vector<int>      *m_hits_used;
 
-  std::vector<int>      *m_st;
-  std::vector<int>      *m_st_id;
+  /*
+    List of the branches contained in the MC tree
+
+    m_tree_new->Branch("gen_n",   &m_gen_n);
+    m_tree_new->Branch("gen_proc",&m_gen_proc);
+    m_tree_new->Branch("gen_pdg", &m_gen_pdg);
+    m_tree_new->Branch("gen_px",  &m_gen_px);
+    m_tree_new->Branch("gen_py",  &m_gen_py);
+    m_tree_new->Branch("gen_pz",  &m_gen_pz);
+    m_tree_new->Branch("gen_x",   &m_gen_x);
+    m_tree_new->Branch("gen_y",   &m_gen_y);
+    m_tree_new->Branch("gen_z",   &m_gen_z);
+    
+    // Infos related to the subsequent tracking particles
+  
+    m_tree_new->Branch("subpart_n",            &m_part_n);
+    m_tree_new->Branch("subpart_hits",         &m_hits);
+    m_tree_new->Branch("subpart_st",           &m_st);
+    m_tree_new->Branch("subpart_pdgId",        &m_part_pdgId);
+    m_tree_new->Branch("subpart_px",           &m_part_px);
+    m_tree_new->Branch("subpart_py",           &m_part_py);
+    m_tree_new->Branch("subpart_pz",           &m_part_pz);
+    m_tree_new->Branch("subpart_eta",          &m_part_eta);
+    m_tree_new->Branch("subpart_phi",          &m_part_phi);
+    m_tree_new->Branch("subpart_x",            &m_part_x);
+    m_tree_new->Branch("subpart_y",            &m_part_y);
+    m_tree_new->Branch("subpart_z",            &m_part_z);
+    
+    m_tree_new->Branch("subpart_nsimtracks",   &m_part_nstracks);
+    m_tree_new->Branch("subpart_st_ids",       &m_st_id);
+    
+    m_tree_new->Branch("subpart_nhit",         &m_part_nhit);
+    m_tree_new->Branch("subpart_hits_x",       &m_hits_x);
+    m_tree_new->Branch("subpart_hits_y",       &m_hits_y);
+    m_tree_new->Branch("subpart_hits_z",       &m_hits_z);
+    m_tree_new->Branch("subpart_hits_e",       &m_hits_e);
+    m_tree_new->Branch("subpart_hits_tof",     &m_hits_tof);
+    m_tree_new->Branch("subpart_hits_proc",    &m_hits_proc);
+    m_tree_new->Branch("subpart_hits_id",      &m_hits_id);
+    m_tree_new->Branch("subpart_hits_pdgId",      &m_hits_pdgId);
+    m_tree_new->Branch("subpart_hits_layer",   &m_hits_layer);
+    m_tree_new->Branch("subpart_hits_ladder",  &m_hits_ladder);
+    m_tree_new->Branch("subpart_hits_module",  &m_hits_module);
+    
+  */
+  
+  int    		m_gen_n;       // Number of particles generated
+ 
+  // Size of the following vectors is m_gen_n
+  std::vector<float>    *m_gen_x;     // x-origin of particle i (in cm)
+  std::vector<float>    *m_gen_y;     // y-origin of particle i (in cm)
+  std::vector<float>    *m_gen_z;     // z-origin of particle i (in cm)
+  std::vector<float> 	*m_gen_px;    // px-origin of particle i (in cm)
+  std::vector<float> 	*m_gen_py;    // py-origin of particle i (in cm)
+  std::vector<float>    *m_gen_pz;    // pz-origin of particle i (in cm)
+  std::vector<int> 	*m_gen_proc;  // UNUSED 
+  std::vector<int>      *m_gen_pdg;   // PDG code of particle
+
+
+  int    		m_part_n;     // Number of TrackingParticles retrieved
+
+  // Size of the following vectors is m_part_n
+  std::vector<int>      *m_part_pdgId;// PDG code of TP i
+  std::vector<float> 	*m_part_px;   // px-origin of TP i (in cm)
+  std::vector<float> 	*m_part_py;   // py-origin of TP i (in cm)
+  std::vector<float>	*m_part_pz;   // pz-origin of TP i (in cm)
+  std::vector<float>    *m_part_eta;  // eta-origin of TP i (in cm)
+  std::vector<float> 	*m_part_phi;  // phi-origin of TP i (in cm)
+  std::vector<float>    *m_part_x;    // x-origin of TP i (in cm)
+  std::vector<float>    *m_part_y;    // y-origin of TP i (in cm)
+  std::vector<float>    *m_part_z;    // z-origin of TP i (in cm)
+  std::vector<int>      *m_st;        // Number of simtracks involved in TP i 
+  std::vector<int>      *m_hits;      // Number of SimHits of TP i 
+
+  int                   m_part_nstracks; // Total SimTracks in event
+
+  // Size of the following vectors is m_part_nstracks
+  std::vector<int>      *m_st_id;     // SimTrackID of ST i 
+
+
+  int    		m_part_nhit;  // Number of SimHits in event
+
+  // Size of the following vectors is m_part_nhit
+  std::vector<float>    *m_hits_x;     // x-pos of hit i (in cm)
+  std::vector<float>    *m_hits_y;     // y-pos of hit i (in cm)
+  std::vector<float>    *m_hits_z;     // z-pos of hit i (in cm)
+  std::vector<float>    *m_hits_e;     // energy of hit i (in MeV)
+  std::vector<float>    *m_hits_tof;   // recording time of hit i w.r.t. interaction (in ns)
+  std::vector<int>      *m_hits_proc;  // process that induced hit i (see http://cmslxr.fnal.gov/lxr/source/SimG4Core/Physics/src/ProcessTypeEnumerator.cc for definition)
+  std::vector<int>      *m_hits_id;    // DetId info of hit i (where it is?)
+  std::vector<int>      *m_hits_pdgId; // PDG code of the particle inducing hit i
+  std::vector<int>      *m_hits_layer; // Layer of hit i
+  std::vector<int>      *m_hits_ladder;// Ladder/Ring of hit i 
+  std::vector<int>      *m_hits_module;// Module of hit i
+
+
 
   // Finally the geometry information
 
