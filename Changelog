@@ -1,3 +1,8 @@
+2013-05-23  Seb Viret  <viret@in2p3.fr>
+ 
+       	* Added a first version of the trigger sector builder in
+          the /test/ directory
+
 2013-04-19  Seb Viret  <viret@in2p3.fr>
  
        	* Added helper macros in Test directory
