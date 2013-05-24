@@ -153,10 +153,10 @@ void do_layer_map(std::string filename,int layer)
 
   c1->Update();
 
-  sprintf (buffer, "Barrel_%d_rate_140.eps", layer);
+  sprintf (buffer, "Barrel_%d_sector.eps", layer);
   c1->Print(buffer);
 
-  sprintf (buffer, "Barrel_%d_rate_140.png", layer);
+  sprintf (buffer, "Barrel_%d_sector.png", layer);
   c1->Print(buffer);
 
   c1->Update();
@@ -301,10 +301,10 @@ void do_disk_map(std::string filename,int disk)
 
   c1->Update();
 
-  sprintf (buffer, "Disk_%d_rate_140.eps", disk+1);
+  sprintf (buffer, "Disk_%d_sector.eps", disk+1);
   c1->Print(buffer);
 
-  sprintf (buffer, "Disk_%d_rate_140.png", disk+1);
+  sprintf (buffer, "Disk_%d_sector.png", disk+1);
   c1->Print(buffer);
   
 }

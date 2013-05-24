@@ -340,7 +340,7 @@ void rates::initTuple(std::string in,std::string out)
 {
   L1TT   = new TChain("L1TrackTrigger"); 
 
-  L1TT->Add(filename.c_str());
+  L1TT->Add(in.c_str());
  
 
   pm_clus_x=&m_clus_x;
