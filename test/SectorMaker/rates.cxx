@@ -340,26 +340,7 @@ void rates::initTuple(std::string in,std::string out)
 {
   L1TT   = new TChain("L1TrackTrigger"); 
 
-
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_02.root");
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_03.root");
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_04.root");
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_05.root");
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_06.root");
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_07.root");
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_08.root");
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_09.root");
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_10.root");
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_11.root");
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_12.root");
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_13.root");
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_14.root");
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_15.root");
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_16.root");
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_17.root");
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_18.root");
-  L1TT->Add("/scratch/viret/PU2/PILEUP_140_19.root");
-  //  L1TT->Add(filename.c_str());
+  L1TT->Add(filename.c_str());
  
 
   pm_clus_x=&m_clus_x;

@@ -1,3 +1,8 @@
+2013-05-24  Seb Viret  <viret@in2p3.fr>
+ 
+       	* Added a the MakeRatesGraphs.C macro in 
+          the /test/ directory
+
 2013-05-23  Seb Viret  <viret@in2p3.fr>
  
        	* Added a first version of the trigger sector builder in
