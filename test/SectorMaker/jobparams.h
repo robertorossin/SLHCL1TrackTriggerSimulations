@@ -26,23 +26,29 @@ class jobparams{
 
   bool        rates() const;
   bool        sectors() const;
+  bool        test() const;
   std::string inputfile() const;
+  std::string testfile() const;
   std::string outfile() const;
   int         eta() const;
   int         phi() const;
   int         oeta() const;
   int         ophi() const;
+  int         nevt() const;
 
  private:
 
   bool         m_rates;   
   bool         m_sectors;   
+  bool         m_test;   
   std::string  m_inputfile; 
   std::string  m_outfile; 
+  std::string  m_testfile; 
   int          m_eta;
   int          m_phi;
   int          m_oeta;
   int          m_ophi;
+  int          m_nevt;
 
 };
 
@@ -54,12 +60,20 @@ inline std::string jobparams::outfile() const{
   return m_outfile;
 }
 
+inline std::string jobparams::testfile() const{
+  return m_testfile;
+}
+
 inline bool jobparams::rates() const{
   return m_rates;
 }
 
 inline bool jobparams::sectors() const{
   return m_sectors;
+}
+
+inline bool jobparams::test() const{
+  return m_test;
 }
 
 inline int jobparams::eta() const{
@@ -78,6 +92,9 @@ inline int jobparams::ophi() const{
   return m_ophi;
 }
 
+inline int jobparams::nevt() const{
+  return m_nevt;
+}
 
 
 #endif

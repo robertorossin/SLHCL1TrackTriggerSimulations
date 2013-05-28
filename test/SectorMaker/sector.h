@@ -58,7 +58,7 @@ class sector
   TFile *m_outfile;
   TTree *m_ratetree;
   TTree *m_sectree;
-
+  TTree *m_sec_det_tree;
   // Coding conventions for barrel and endcap module IDs
   
   // We define a barrel ID and an endcap ID as follows:
@@ -106,13 +106,13 @@ class sector
 
 
   // The vector containing the barrel module lists of sectors 
-  std::vector< std::vector<int> > *m_barrel_mod_tot; 
+  std::vector< std::vector<int> >   *m_barrel_mod_tot; 
   // The vector containing the endcap module lists of sectors 
-  std::vector< std::vector<int> > *m_endcap_mod_tot;
+  std::vector< std::vector<int> >   *m_endcap_mod_tot;
   // The vector containing eta/phi coordinates of sectors
   std::vector< std::vector<float> > *m_coords;
   // The vector containing the total module lists of sectors 
-  std::vector< std::vector<int> > *m_sectors; 
+  std::vector< std::vector<int> >   *m_sectors; 
 
   int m_counter_barrel[58000];  // Sector multiplicity of each barrel module
   int m_counter_endcap[142000]; // Sector multiplicity of each endcap module
@@ -131,6 +131,12 @@ class sector
   int m_ophi;
   int m_oeta;
   float m_cov; 
+
+
+  int   m_sec;
+  int   m_lay;
+  float m_rate;
+  float m_rate_tot;
 };
 
 #endif

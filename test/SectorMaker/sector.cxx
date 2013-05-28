@@ -29,12 +29,19 @@ void sector::do_sector()
   // Get the rate information
   m_ratetree->GetEntry(0);
 
+  float lay_rate[20];
+
+
+  m_sec = 0;
 
   // Loop over the sectors
   for (int k=0;k<m_neta;++k)
   { 
     for (int j=0;j<m_nphi;++j)
     { 
+      for (int i=0;i<20;++i) lay_rate[i]=0.;
+      m_rate_tot=0.;
+
       cout << k << " / " << j << endl;
 
       // Define The sector coordinates
@@ -75,6 +82,7 @@ void sector::do_sector()
 	///	cout << k << " / " << j << " / " << i << endl; 
 
 	// Module is in, add it...
+	lay_rate[i/10000]+=m_b_rate[i];
 	barrel_mod.push_back(i);
 	sector.push_back(i+50000);
       }
@@ -86,6 +94,7 @@ void sector::do_sector()
 	if (!sector::is_in_phi(m_e_phimax[i],m_e_phimin[i],phi_min,phi_max,m_cov)) continue;
 	
 	// Module is in, add it...
+	lay_rate[i/10000+6]+=m_e_rate[i];
 	endcap_mod.push_back(i);
 	sector.push_back(i+110000);
       }
@@ -97,6 +106,18 @@ void sector::do_sector()
       m_barrel_mod_tot->push_back(barrel_mod);
       m_sectors->push_back(sector);
       m_coords->push_back(coord);
+
+      for (int i=0;i<20;++i) m_rate_tot+=lay_rate[i];
+      
+      for (int i=0;i<20;++i)
+      {
+	m_lay = i;
+	m_rate= lay_rate[i];
+
+	m_sec_det_tree->Fill();
+      }
+
+      ++m_sec;
     }
   }
 
@@ -236,7 +257,7 @@ void sector::initTuple(std::string in,std::string out)
 
   m_outfile = new TFile(out.c_str(),"recreate");
   m_sectree = new TTree("Sectors","Tree containing tracker sec info");
-
+  m_sec_det_tree = new TTree("Sec_Rates","Tree containing tracker sec info");
 
   m_ratetree->SetBranchAddress("STUB_b_rates",         &m_b_rate);
   m_ratetree->SetBranchAddress("STUB_b_phi_b",         &m_b_phimin);
@@ -257,4 +278,8 @@ void sector::initTuple(std::string in,std::string out)
   m_sectree->Branch("counter_barrel",   &m_counter_barrel , "counter_barrel[58000]/I");
   m_sectree->Branch("counter_endcap",   &m_counter_endcap , "counter_endcap[142000]/I");
 
+  m_sec_det_tree->Branch("sec",         &m_sec);
+  m_sec_det_tree->Branch("lay",         &m_lay);
+  m_sec_det_tree->Branch("rate",        &m_rate);
+  m_sec_det_tree->Branch("rate_tot",    &m_rate_tot);
 }

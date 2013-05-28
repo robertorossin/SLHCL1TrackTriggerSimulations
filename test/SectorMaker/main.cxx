@@ -6,6 +6,7 @@
 
 #include "rates.h"
 #include "sector.h"
+#include "sector_test.h"
 #include "jobparams.h"
 #include "TROOT.h"
 
@@ -49,6 +50,22 @@ int main(int argc, char** argv) {
 				    params.eta(),params.phi(),
 				    params.oeta(),params.ophi());
     delete my_sectors;
+  }
+
+
+  // Option 4: do sectors and test
+
+  if (params.sectors()==1 && params.rates()==0 && params.test()==1)
+  {
+    sector* my_sectors = new sector(params.inputfile(),"my_sectors_temp.root",
+				    params.eta(),params.phi(),
+				    params.oeta(),params.ophi());
+    delete my_sectors;
+
+    sector_test* my_test = new sector_test(params.testfile(),"my_sectors_temp.root",
+					   params.outfile(),params.nevt());
+
+    delete my_test;
   }
 
   return 0;
