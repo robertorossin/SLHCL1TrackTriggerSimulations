@@ -16,6 +16,7 @@
 #include "FWCore/Framework/interface/LuminosityBlock.h"
 
 #include "../interface/PixelExtractor.h"
+#include "../interface/StubExtractor.h"
 #include "../interface/MCExtractor.h"
 #include "../interface/L1TrackTrigger_analysis.h"
 #include "../interface/TkLayout_Translator.h"
@@ -58,6 +59,7 @@ class RecoExtractor : public edm::EDAnalyzer{
 
   bool do_PIX_;
   bool do_MC_;
+  bool do_STUB_;
   bool do_TK_;
   bool do_MATCH_;
   bool do_L1tt_;
@@ -84,6 +86,7 @@ class RecoExtractor : public edm::EDAnalyzer{
 
   PixelExtractor*   m_PIX;
   MCExtractor*      m_MC;
+  StubExtractor*    m_STUB;
   TkLayout_Translator*      m_TK;
   AnalysisSettings*  m_ana_settings;
   L1TrackTrigger_analysis* m_L1TT_analysis;

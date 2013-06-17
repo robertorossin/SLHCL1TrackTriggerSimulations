@@ -7,6 +7,7 @@ RecoExtractor::RecoExtractor(const edm::ParameterSet& config) :
   do_fill_       (config.getUntrackedParameter<bool>("fillTree", true)),
   do_PIX_        (config.getUntrackedParameter<bool>("doPixel",    false)),
   do_MC_         (config.getUntrackedParameter<bool>("doMC",       false)),
+  do_STUB_       (config.getUntrackedParameter<bool>("doSTUB",     false)),
   do_TK_         (config.getUntrackedParameter<bool>("doTranslation", false)),
   do_MATCH_      (config.getUntrackedParameter<bool>("doMatch",    false)),
   do_L1tt_       (config.getUntrackedParameter<bool>("doL1TT", false)),
@@ -65,6 +66,7 @@ void RecoExtractor::beginRun(Run const& run, EventSetup const& setup)
   {
     if (do_PIX_)      m_PIX->init(&setup);
     if (do_MC_)       m_MC->init(&setup);
+    if (do_STUB_)     m_STUB->init(&setup);
   }
 
   // If we start from existing file we don't have to loop over events
@@ -156,6 +158,7 @@ void RecoExtractor::fillInfo(const edm::Event *event)
 {
   if (do_PIX_)      m_PIX->writeInfo(event);
   if (do_MC_)       m_MC->writeInfo(event);
+  if (do_STUB_ && do_MC_)     m_STUB->writeInfo(event,m_MC);
 }   
 
 
@@ -166,6 +169,7 @@ void RecoExtractor::getInfo(int ievent)
   if (do_MC_)       m_MC->getInfo(ievent);
   if (do_PIX_)      m_PIX->getInfo(ievent);
   if (do_TK_)       m_TK->getInfo(ievent);
+  if (do_STUB_)     m_STUB->getInfo(ievent);
 }
 
 
@@ -175,6 +179,7 @@ void RecoExtractor::initialize()
 {
   m_outfile  = new TFile(outFilename_.c_str(),"RECREATE");
   m_MC       = new MCExtractor(do_MC_);
+  m_STUB     = new StubExtractor(do_STUB_);
   m_PIX      = new PixelExtractor(PIX_tag_,do_PIX_,do_MATCH_);
 }  
 

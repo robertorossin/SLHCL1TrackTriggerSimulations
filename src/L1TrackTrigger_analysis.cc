@@ -722,8 +722,8 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 
       strip_cor   = (d_t/d_b-1.)*(m_clus_strip->at(i_b)-m_clus_nrows->at(i_b)/2);
       strip_cor  -= fmod(strip_cor,0.5); 
-      SW = m_clus_strip->at(i_b) - m_clus_strip->at(i_t); 
-      SW += strip_cor; 
+      SW = m_clus_strip->at(i_t) - m_clus_strip->at(i_b); 
+      SW -= strip_cor; 
 
       // Here we apply the stub width cut
       if (fabs(SW)>SW_min) continue;
@@ -815,25 +815,17 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
     m_stub_ladder->push_back(m_clus_ladder->at(i)+lad_cor-1);
     m_stub_seg->push_back(m_clus_seg->at(i_bs));
 
-    m_stub_strip->push_back(m_clus_strip->at(i_bs)); 	
+    m_stub_strip->push_back(m_clus_strip->at(i_bs)); 
+    m_stub_chip->push_back(m_clus_strip->at(i_bs)/(m_clus_nrows->at(i_bs)/8)); 
     m_stub_clust1->push_back(i_bs);
     m_stub_clust2->push_back(i_ts);
     m_stub_cw1->push_back(m_clus_nstrips->at(i_bs));
     m_stub_cw2->push_back(m_clus_nstrips->at(i_ts));
 
-    if (m_clus_PS->at(i_bs)>2) // Bottom module is pixel
-    {
-      m_stub_x->push_back(m_clus_x->at(i_bs));
-      m_stub_y->push_back(m_clus_y->at(i_bs));
-      m_stub_z->push_back(m_clus_z->at(i_bs));
-    }
-    else
-    {
-      m_stub_x->push_back((m_clus_x->at(i_bs)+m_clus_x->at(i_ts))/2.);
-      m_stub_y->push_back((m_clus_y->at(i_bs)+m_clus_y->at(i_ts))/2.);
-      m_stub_z->push_back((m_clus_z->at(i_bs)+m_clus_z->at(i_ts))/2.);
-    }
-
+    m_stub_x->push_back(m_clus_x->at(i_bs));
+    m_stub_y->push_back(m_clus_y->at(i_bs));
+    m_stub_z->push_back(m_clus_z->at(i_bs));
+ 
     m_stub_deltas->push_back(SW);
     m_stub_cor->push_back(0);
 
@@ -987,6 +979,7 @@ void L1TrackTrigger_analysis::initialize()
   m_stub_module  = new  std::vector<int>;  
   m_stub_ladder  = new  std::vector<int>; 
   m_stub_seg     = new  std::vector<int>;  
+  m_stub_chip    = new  std::vector<int>; 
   m_stub_strip   = new  std::vector<int>; 
   m_stub_x       = new  std::vector<float>;  
   m_stub_y       = new  std::vector<float>;  
@@ -1050,6 +1043,7 @@ void L1TrackTrigger_analysis::initialize()
     m_tree_L1TrackTrigger->Branch("STUB_tp",        &m_stub_tp);
     m_tree_L1TrackTrigger->Branch("STUB_pdgID",     &m_stub_pdg);
     m_tree_L1TrackTrigger->Branch("STUB_process",   &m_stub_pid);
+    m_tree_L1TrackTrigger->Branch("STUB_chip",      &m_stub_chip);
   }
 
   m_tree_L1TrackTrigger->Branch("STUB_n",         &m_stub);
@@ -1119,6 +1113,7 @@ void L1TrackTrigger_analysis::reset()
   m_stub_module->clear(); 
   m_stub_ladder->clear(); 
   m_stub_seg->clear();    
+  m_stub_chip->clear(); 
   m_stub_strip->clear(); 
   m_stub_x->clear(); 
   m_stub_y->clear(); 

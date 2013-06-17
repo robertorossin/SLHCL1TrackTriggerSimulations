@@ -1,3 +1,10 @@
+2013-06-17  Seb Viret  <viret@in2p3.fr>
+ 
+       	* Adding the Stub extractor class in order to 
+	retrieve the official stub info
+
+	This version has been tested against CMSSW_6_1_2_SLHC4
+
 2013-05-28  Seb Viret  <viret@in2p3.fr>
  
        	* Added sector efficiency calculator 

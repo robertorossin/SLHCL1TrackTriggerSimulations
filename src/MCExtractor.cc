@@ -623,8 +623,8 @@ void MCExtractor::findMatchingTP(const int &stID,const int &layer,
       {
 	for (int j=n_st_part;j<n_st2;++j) // Loop on simtrack
 	{
-	  //	  if (verb)
-	  //	    std::cout << m_st_id->at(j) << " / " << stID << std::endl;
+	  if (verb)
+	    std::cout << m_st_id->at(j) << " // " << stID << std::endl;
 	  
 	  if (m_st_id->at(j)==stID) 
 	  {
@@ -641,7 +641,7 @@ void MCExtractor::findMatchingTP(const int &stID,const int &layer,
       if (!match) 
       {
 	if (verb)
-	  std::cout << " No match " << std::endl;
+	  std::cout << " No simtrk match " << std::endl;
 
 	n_st_part  = n_st2;
 	n_hit_part = n_hit2;
@@ -653,14 +653,30 @@ void MCExtractor::findMatchingTP(const int &stID,const int &layer,
     for (int k=n_hit_part;k<n_hit2;++k) // Loop on hits
     {
       if (verb)
+      {
 	std::cout << k << " / " <<  n_hit << std::endl;
+
+	if (layer==m_hits_layer->at(k))
+	{
+	  std::cout << layer << " / " <<  ladder << " / " << module << std::endl;
+	  std::cout << m_hits_layer->at(k) << " / " 
+		    << m_hits_ladder->at(k) << " / " 
+		    << m_hits_module->at(k) << std::endl;
+	}
+      }
 
       if (m_hits_module->at(k) != module ||  
 	  m_hits_ladder->at(k) != ladder ||
 	  m_hits_layer->at(k)  != layer)  continue;
 
+      if (verb)
+	std::cout << " In the same module !" << std::endl;
+
       dz = fabs(m_hits_z->at(k)-z);
       dr = fabs(sqrt(m_hits_x->at(k)*m_hits_x->at(k)+m_hits_y->at(k)*m_hits_y->at(k))-sqrt(x*x+y*y)); 
+
+      if (verb)
+	std::cout << dr <<  "/" << dz << std::endl;
 
       /*
       if (layer<=7 && dz>2.5/static_cast<float>(nseg)) continue;

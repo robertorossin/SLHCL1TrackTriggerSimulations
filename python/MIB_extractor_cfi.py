@@ -27,7 +27,7 @@ MIBextraction = cms.EDAnalyzer("RecoExtractor",
 
   # Main stuff                        
   doMC             = cms.untracked.bool(False),  # Extract the MC information (MC tree)
-                
+  doSTUB           = cms.untracked.bool(False),  # Extract the official STUB information (TkStub tree)  
   # Add Pixel information                              
   doPixel          = cms.untracked.bool(False),  # Extract the Tracker information (Pixel tree)
   pixel_tag        = cms.InputTag( "simSiPixelDigis" ),  # The collection where to fing the pixel info

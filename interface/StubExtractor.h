@@ -1,54 +1,92 @@
-#ifndef L1TRACKTRIGGER_ANALYSIS_H
-#define L1TRACKTRIGGER_ANALYSIS_H
+#ifndef STUBEXTRACTOR_H
+#define STUBEXTRACTOR_H
 
-/*****************************
+/**
+ * StubExtractor
+ * \brief: Base class for extracting pixel info
+ */
 
-Simple example class showing how to perform an 
-analysis using the PatExtractor tools
 
-S.Viret (viret@in2p3.fr): 31/05/11
+//Include RECO inf
+#include "FWCore/Framework/interface/Event.h"
+#include "FWCore/Framework/interface/EventSetup.h"
+#include "FWCore/Framework/interface/ESHandle.h"
+#include "FWCore/Utilities/interface/InputTag.h"
 
-More info: http://sviret.web.cern.ch/sviret/Welcome.php?n=CMS.PHYTuto
+#include "SimDataFormats/TrackingHit/interface/PSimHitContainer.h"
+#include "SimDataFormats/TrackingHit/interface/PSimHit.h"
+#include "SimDataFormats/Track/interface/SimTrack.h"
+#include "SimDataFormats/Track/interface/SimTrackContainer.h"
+#include "SimDataFormats/Vertex/interface/SimVertex.h"
+#include "SimDataFormats/Vertex/interface/SimVertexContainer.h"
 
- ******************************/
+
+#include "SimDataFormats/TrackerDigiSimLink/interface/PixelDigiSimLink.h"
+#include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
+#include "SimDataFormats/SLHC/interface/StackedTrackerTypes.h"
+
+#include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
+#include "Geometry/CommonTopologies/interface/PixelTopology.h"
+#include "Geometry/TrackerGeometryBuilder/interface/PixelGeomDetUnit.h"
+#include "Geometry/TrackerGeometryBuilder/interface/StripGeomDetUnit.h"
+#include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
+
+#include "Geometry/Records/interface/StackedTrackerGeometryRecord.h"
+#include "Geometry/TrackerGeometryBuilder/interface/StackedTrackerGeometry.h"
+#include "Geometry/TrackerGeometryBuilder/interface/StackedTrackerDetUnit.h"
+
+#include "DataFormats/SiPixelDetId/interface/StackedTrackerDetId.h"
+#include "DataFormats/SiPixelCluster/interface/SiPixelCluster.h"
+#include "DataFormats/SiPixelDigi/interface/PixelDigi.h"
+#include "DataFormats/SiPixelDetId/interface/PXBDetId.h"
+#include "DataFormats/SiPixelDetId/interface/PXFDetId.h"
+#include "DataFormats/SiPixelDetId/interface/PixelSubdetector.h"
+#include "DataFormats/SiPixelDetId/interface/PixelBarrelName.h"
+#include "DataFormats/SiPixelDetId/interface/PixelEndcapName.h"
 
 //Include std C++
 #include <iostream>
 #include <vector>
-#include <map>
-#include <set>
-#include <algorithm>
-using namespace std;
 
-#include "AnalysisSettings.h"
-#include "PixelExtractor.h"
+#include "TMath.h"
+#include "TTree.h"
+#include "TFile.h"
+#include "TLorentzVector.h"
+#include "TClonesArray.h"
 #include "MCExtractor.h"
 
-class L1TrackTrigger_analysis
+class StubExtractor
 {
+
  public:
-  L1TrackTrigger_analysis(AnalysisSettings *settings, int start_evt);
 
-  ~L1TrackTrigger_analysis();
-  
-  //Selection
+  StubExtractor(bool doTree);
+  StubExtractor(TFile *a_file);
+  ~StubExtractor();
 
-  void do_stubs(PixelExtractor *pix, MCExtractor *mc);
 
-  void get_digis(PixelExtractor *pix, MCExtractor *mc);
-  void get_clusters(PixelExtractor *pix, MCExtractor *mc);
-  void get_stubs(int layer,MCExtractor *mc);
+  void init(const edm::EventSetup *setup);
+  void writeInfo(const edm::Event *event, MCExtractor *mc); 
+  void getInfo(int ievt); 
 
-  void initialize();
   void reset();
-  void fillTree();
+  void fillTree(); 
+  void fillSize(int size);
+  int  getSize();
+  int  n_events() {return m_n_events;}
 
-  bool is_neighbour(PixelExtractor *pix, int idx, int lay, int lad, int mod);
-  int  getMatchingTP(int i, int j);
+  bool isOK() {return m_OK;}
+
+  //Getters
+
+  int getClust1Idx(float x, float y, float z);
+  int getClust2Idx(int idx1, float dist);
+
+  int getNDigis() {return m_clus;}
+
 
  private:
-
-  TTree* m_tree_L1TrackTrigger;
+  
 
   int n_tot_evt;
   int m_nstubs;
@@ -63,73 +101,29 @@ class L1TrackTrigger_analysis
   float m_window_size;
   float m_thresh;
 
- 
-  /*
-    List of the branches contained in the L1TrackTrigger tree
+  TTree* m_tree;
+  edm::Handle< edm::SimTrackContainer >  SimTrackHandle;
+  edm::Handle< edm::SimVertexContainer > SimVtxHandle;
 
-    tree->Branch("CLUS_n",         &m_clus);
-    tree->Branch("CLUS_x",         &m_clus_x);
-    tree->Branch("CLUS_y",         &m_clus_y);
-    tree->Branch("CLUS_z",         &m_clus_z);
-    tree->Branch("CLUS_xmc",       &m_clus_xmc);
-    tree->Branch("CLUS_ymc",       &m_clus_ymc);
-    tree->Branch("CLUS_zmc",       &m_clus_zmc);
-    tree->Branch("CLUS_charge",    &m_clus_e);
-    tree->Branch("CLUS_layer",     &m_clus_layer);
-    tree->Branch("CLUS_module",    &m_clus_module);
-    tree->Branch("CLUS_ladder",    &m_clus_ladder);
-    tree->Branch("CLUS_seg",       &m_clus_seg);
-    tree->Branch("CLUS_strip",     &m_clus_strip);
-    tree->Branch("CLUS_nstrip",    &m_clus_nstrips);
-    tree->Branch("CLUS_nsat",      &m_clus_sat);
-    tree->Branch("CLUS_match",     &m_clus_matched);
-    tree->Branch("CLUS_PS",        &m_clus_PS);
-    tree->Branch("CLUS_nrows",     &m_clus_nrows);
-    tree->Branch("CLUS_tp",        &m_clus_tp);
-    tree->Branch("CLUS_hits",      &m_clus_hits);
-    tree->Branch("CLUS_process",   &m_clus_pid);
+  edm::Handle<TrackingParticleCollection>  TPCollection ;
+  edm::Handle< edm::DetSetVector<PixelDigiSimLink> > pDigiLinkColl;
+  edm::DetSet<PixelDigiSimLink> pDigiLinks;
 
-    tree->Branch("STUB_ptMC",      &m_stub_ptMC);
-    tree->Branch("STUB_clust1",    &m_stub_clust1);
-    tree->Branch("STUB_clust2",    &m_stub_clust2);
-    tree->Branch("STUB_cw1",       &m_stub_cw1);
-    tree->Branch("STUB_cw2",       &m_stub_cw2);
-    tree->Branch("STUB_cor",       &m_stub_cor);
-    tree->Branch("STUB_PHI0",      &m_stub_PHI0);
-    tree->Branch("STUB_tp",        &m_stub_tp);
-    tree->Branch("STUB_pdgID",     &m_stub_pdg);
-    tree->Branch("STUB_process",   &m_stub_pid);  
-    tree->Branch("STUB_n",         &m_stub);
-    tree->Branch("STUB_pt",        &m_stub_pt);
-    tree->Branch("STUB_pxGEN",     &m_stub_pxGEN);
-    tree->Branch("STUB_pyGEN",     &m_stub_pyGEN);
-    tree->Branch("STUB_etaGEN",    &m_stub_etaGEN);
-    tree->Branch("STUB_layer",     &m_stub_layer);
-    tree->Branch("STUB_module",    &m_stub_module);
-    tree->Branch("STUB_ladder",    &m_stub_ladder);
-    tree->Branch("STUB_seg",       &m_stub_seg);
-    tree->Branch("STUB_strip",     &m_stub_strip);
-    tree->Branch("STUB_x",         &m_stub_x);
-    tree->Branch("STUB_y",         &m_stub_y);
-    tree->Branch("STUB_z",         &m_stub_z);
-    tree->Branch("STUB_deltas",    &m_stub_deltas);
-    tree->Branch("STUB_X0",        &m_stub_X0);
-    tree->Branch("STUB_Y0",        &m_stub_Y0);
-    tree->Branch("STUB_Z0",        &m_stub_Z0);
-  */
+  //  edm::ESHandle<TrackerGeometry> theTrackerGeometry;
+  edm::InputTag m_tag;
+  bool m_OK;
+  bool m_matching;
+  int  m_n_events;
 
-  std::vector<int> clus_row;
-  std::vector<int> clus_col;
+  /// Geometry handles etc
+  edm::ESHandle< TrackerGeometry >                theTrackerGeometry;
+  edm::ESHandle< StackedTrackerGeometry >         theStackedTrackerGeometry;
+  const StackedTrackerGeometry*                   theStackedGeometry;
+  StackedTrackerGeometry::StackContainerIterator  StackedTrackerIterator;
 
-  std::vector<int> i_match;
-  std::vector<int> j_match;
-
-  int i_match_s;
-  int j_match_s;
-
-  std::vector<int>                 *m_digi_ref;
-  std::vector< std::vector<int> >  *m_digi_match;
-  std::vector< std::vector<int> >  *m_digi_tp;
+  edm::Handle< L1TkCluster_PixelDigi_Collection > PixelDigiL1TkClusterHandle;
+  edm::Handle< L1TkStub_PixelDigi_Collection >    PixelDigiL1TkStubHandle;
+  edm::Handle< L1TkStub_PixelDigi_Collection >    PixelDigiL1TkFailedStubHandle;
   std::vector<int>                 *m_clus_used;   
 
 
@@ -174,7 +168,7 @@ class L1TrackTrigger_analysis
   std::vector<int>    *m_stub_module; // module of stub i
   std::vector<int>    *m_stub_ladder; // ladder/ring of stub i
   std::vector<int>    *m_stub_seg;    // segment of stub i
-  std::vector<int>    *m_stub_chip;   // chip of stub i (8 chip per sensor)
+  std::vector<int>    *m_stub_chip;   // chip of stub i
   std::vector<int>    *m_stub_strip;  // strip of stub i (innermost module value)
   std::vector<float>  *m_stub_x;      // x pos of stub i (in cm)
   std::vector<float>  *m_stub_y;      // y pos of stub i (in cm)
@@ -188,6 +182,10 @@ class L1TrackTrigger_analysis
   std::vector<int>    *m_stub_tp;     // index of the TP inducing the stub in the MC tree
   std::vector<int>    *m_stub_pdg;    // PDG code of the particle inducing the stub
   std::vector<int>    *m_stub_pid;    // process id inducing cluster i (see MCExtractor.h)
+
+
+  // Pixel info
+
 
 };
 
