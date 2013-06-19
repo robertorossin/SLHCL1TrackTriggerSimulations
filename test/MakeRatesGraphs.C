@@ -1,20 +1,37 @@
+
 /*
-  ROOT macro for stub rates visualization
+  ROOT macro for trigger sectors visualization
 
   Use:
 
-  root[1]-> .L MakeRatesGraphs.C
+  root[1]-> .L MakeSectorGraphs.C
 
   Then you can choose between the following methods 
   knowing that filename denotes the extracted ROOT file 
-  containing the stub rates (created by the 
-  sectorMaker program).
+  containing the sectors definition (created by the 
+  sectorMaker program) 
 
-  You can also use the default ROOT file present in the 
-  directory: PU_140_example.root 
-
-  Solution 1 do all the plots
+  Solution 1 do all the plots with complete rates
   root[2]-> do_rates_plots(std::string filename) 
+
+  // Then you can make rate plots for only a type of stubs.
+  // Stubs could indeed be put in two categories
+  // 
+  // Primaries
+  // Secondaries
+  // Fakes
+  // 
+
+  In order to do rate plots only for primaries do:
+  root[2]-> do_the_plots(std::string filename,1,0,0) 
+
+  In order to do rate plots only for secondaries do:
+  root[2]-> do_the_plots(std::string filename,0,1,0) 
+
+  In order to do rate plots only for fakes do:
+  root[2]-> do_the_plots(std::string filename,0,1,0) 
+
+  // Then you can make plots only for a layer/disk only
 
   Solution 2 do the plot for barrel layer i
   root[2]-> do_layer_map(std::string filename,int layer)
@@ -22,30 +39,59 @@
   Solution 3 do the plot for endcap disk i
   root[2]-> do_disk_map(std::string filename,int disk)
 
+
+  // Finally you can now plot the rate per chip for a given module
+  //
+
+  root[2]-> do_module_map(std::string filename,int layer, int ladder, int module)
+
+  with layer numbered as:
+
+  5-10 : Barrel
+  11-17: Endcap +Z
+  18-24: Endcap -Z
+
+
   Information about this macro may be found in the following page:
 
   http://sviret.web.cern.ch/sviret/Welcome.php?n=CMS.HLLHCTuto (STEP III)
 
   Author: viret@in2p3_dot_fr
-  Date: 23/05/2013
+  Date:   23/05/2013
+  Update: 19/06/2013
 */
-
 
 void do_rates_plots(std::string filename)
 {
-  for (int i=0;i<14;++i)
-  { 
-    do_disk_map(filename,i);
-  }
-
-  for (int i=5;i<11;++i)
-  { 
-    do_layer_map(filename,i);
-  }
+  do_the_plots(filename,1,1,1);
 }
 
 
 void do_layer_map(std::string filename,int layer)
+{
+  do_layer_map_i(filename,layer,1,1,1);
+}
+
+void do_disk_map(std::string filename,int disk)
+{
+  do_disk_map_i(filename,disk,1,1,1);
+}
+
+void do_the_plots(std::string filename, float pri, float sec, float fak)
+{
+  for (int i=0;i<14;++i)
+  { 
+    do_disk_map_i(filename,i,pri,sec,fak);
+  }
+
+  for (int i=5;i<11;++i)
+  { 
+    do_layer_map_i(filename,i,pri,sec,fak);
+  }
+}
+
+
+void do_layer_map_i(std::string filename,int layer, float pri, float sec, float fak)
 {
   // First get the data
   // by merging all the available files
@@ -53,7 +99,9 @@ void do_layer_map(std::string filename,int layer)
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
 
-  float count_b[58000];
+  float count_p[58000];
+  float count_f[58000];
+  float count_s[58000];
  
   double n_lad_barrel[6]  = {16,24,34,48,62,76};
   double n_mod_barrel[6]  = {63,55,54,24,24,24};
@@ -62,17 +110,22 @@ void do_layer_map(std::string filename,int layer)
   TFile *oldfile = TFile::Open(filename.c_str());
   TTree *newtree = (TTree*)oldfile->Get("L1Rates");
 
-  newtree->SetBranchAddress("STUB_b_rates",  &count_b);
+  newtree->SetBranchAddress("STUB_b_rates_prim",  &count_p);
+  newtree->SetBranchAddress("STUB_b_rates_sec",   &count_f);
+  newtree->SetBranchAddress("STUB_b_rates_f",     &count_s);
   newtree->GetEntry(0);
 
   int idx;
   float maxval = 0;
+  float rate = 0;
 
   for (int i=0;i<7;++i)
   { 
     for (int j=0;j<58000;++j)
     { 
-      if (count_b[j]>maxval) maxval = count_b[j];
+      rate = pri*count_p[j]+fak*count_f[j]+sec*count_s[j];
+
+      if (rate>maxval) maxval = rate;
     }
   }
 
@@ -87,8 +140,9 @@ void do_layer_map(std::string filename,int layer)
     for (int i=0;i<n_lad_barrel[layer-5];++i)
     {
       idx = 10000*(layer-5) + 100*i + j;
+      rate= pri*count_p[idx]+fak*count_f[idx]+sec*count_s[idx];
 
-      cadre2->Fill(j+0.5,i+0.5,count_b[idx]);
+      cadre2->Fill(j+0.5,i+0.5,rate);
     }
   }
 
@@ -167,7 +221,7 @@ void do_layer_map(std::string filename,int layer)
 
 
 
-void do_disk_map(std::string filename,int disk)
+void do_disk_map_i(std::string filename,int disk, float pri, float sec, float fak)
 {
 
   // First get the data
@@ -177,6 +231,10 @@ void do_disk_map(std::string filename,int disk)
   gStyle->SetOptTitle(0);
 
   float count_e[142000];
+
+  float count_p[142000];
+  float count_f[142000];
+  float count_s[142000];
 
   double n_lad_endcap[14]   = {24,26,28,30,34,34,38,40,48,54,62,66,72,78};
   double n_start_endcap[14] = {0,0,0,0,0,0,1,0,0,1,0,0,0,1};
@@ -189,18 +247,26 @@ void do_disk_map(std::string filename,int disk)
   TFile *oldfile = TFile::Open(filename.c_str());
   TTree *newtree = (TTree*)oldfile->Get("L1Rates");
 
-  newtree->SetBranchAddress("STUB_e_rates", &count_e);
+ 
+  newtree->SetBranchAddress("STUB_e_rates_prim",  &count_p);
+  newtree->SetBranchAddress("STUB_e_rates_sec",   &count_f);
+  newtree->SetBranchAddress("STUB_e_rates_f",     &count_s);
 
   // Initialize some params
   newtree->GetEntry(0);
 
   float maxval = 0;
-
-  for (int i=0;i<14;++i)
+  float rate   = 0;
+ 
+  for (int i=0;i<142000;++i) count_e[i]=0.; 
+   
+  for (int i=0;i<14;++i) 
   { 
     for (int j=10000*i;j<10000*i+2000;++j)
-    { 
-      if (count_e[j]>maxval) maxval = count_e[j];
+    {
+      rate = pri*count_p[j]+fak*count_f[j]+sec*count_s[j];
+      count_e[j]=rate; 
+      if (rate>maxval) maxval = rate;
     }
   }
 
@@ -330,4 +396,107 @@ void fill_histo(TH2F *hist,float val[], double nlad, double dec, int disk, int r
  
   hist->Fill(0.5*scale,24.5,0);
   hist->Fill(1.5*scale,24.5,max);
+}
+
+
+void do_module_map(std::string filename,int layer, int ladder, int module)
+{
+  // First get the data
+  // by merging all the available files
+
+  gStyle->SetOptStat(0);
+  gStyle->SetOptTitle(0);
+
+  float count[16][58000];
+
+  TFile *oldfile = TFile::Open(filename.c_str());
+  TTree *newtree = (TTree*)oldfile->Get("L1Rates");
+
+  newtree->SetBranchAddress("STUB_b_rates",  &count);
+  newtree->GetEntry(0);
+
+
+  TH2F *cadre  = new TH2F("zz","zz",2,0.5,2.5,8,0.5,8.5);
+
+  float sen;
+  float chip;
+  float rate;
+
+  int idx;
+
+  for (int j=0;j<16;++j)
+  {
+    sen  = j/8+1.;
+    chip = j%8+1.;
+    idx  = 10000*(layer-5) + 100*ladder + module;
+    rate = static_cast<int>(100.*count[j][idx])/100.;
+
+    cadre->Fill(sen,chip,rate);    
+  }
+
+  const Int_t NRGBs = 5;
+  const Int_t NCont = 255;
+  
+  Double_t stops[NRGBs] = { 0.00, 0.25, 0.5, 0.75, 1.00 };
+  Double_t red[NRGBs]   = { 1.00, 0.9, 0.75, 0.6, .4 };
+  Double_t green[NRGBs] = { 0.00, 0., 0.00, 0.0, 0.00 };
+  Double_t blue[NRGBs]  = { 0., 0.00, 0., 0.00, 0.00 };
+  TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
+  gStyle->SetNumberContours(NCont);
+
+  c1 = new TCanvas("c1","Layer map",166,77,947,880);
+
+  gStyle->SetOptStat(0);
+  gStyle->SetOptTitle(0);
+  c1->Range(0.8097754,0.1854951,3.089828,9.691771);
+  c1->SetFillColor(0);
+  c1->SetBorderMode(0);
+  c1->SetBorderSize(2);
+  c1->SetLeftMargin(0.0834299);
+  c1->SetRightMargin(0.03939745);
+  c1->SetTopMargin(0.07276995);
+  c1->SetBottomMargin(0.08568075);
+  c1->SetFrameBorderMode(0);
+  c1->SetFrameBorderMode(0);
+
+  //  cadre->GetXaxis()->SetLabelSize(0.);
+  //  cadre->GetXaxis()->SetLabelOffset(999);
+  //  cadre->GetYaxis()->SetLabelSize(0.);
+  //  cadre->GetYaxis()->SetLabelOffset(999);
+  cadre->GetXaxis()->SetTitle("Sensor number");
+  cadre->GetXaxis()->SetNdivisions(302);
+  cadre->GetXaxis()->SetLabelFont(102);
+  cadre->GetXaxis()->SetLabelSize(0.03);
+  cadre->GetXaxis()->SetTitleSize(0.035);
+  cadre->GetXaxis()->SetTitleFont(102);
+  cadre->GetYaxis()->SetTitle("Chip number");
+  cadre->GetYaxis()->SetNdivisions(209);
+  cadre->GetYaxis()->SetLabelFont(102);
+  cadre->GetYaxis()->SetLabelSize(0.03);
+  cadre->GetYaxis()->SetTitleOffset(0.79);
+  cadre->GetYaxis()->SetTitleFont(102);
+  cadre->SetMarkerSize(2.);
+  cadre->Draw("coltext");
+    
+  TPaveText *pt = new TPaveText(0.8,8.6,2.2,9.1,"br");
+
+  char buffer[150];
+
+  sprintf(buffer, "Av. chip rates for module %d from ladder %d and layer %d (in stubs/BX)", module+1,ladder+1,layer);
+
+  ci = TColor::GetColor("#ffcc33");
+  pt->SetFillColor(ci);
+  pt->SetTextSize(0.02);
+  TText *text = pt->AddText(buffer);
+  pt->Draw();
+  c1->Modified();
+
+  c1->Update();
+
+
+  sprintf (buffer, "MChip_%d_%d_%d_rate.eps",layer,ladder+1,module+1);
+  c1->Print(buffer);
+
+  sprintf (buffer, "MChip_%d_%d_%d_rate.png",layer,ladder+1,module+1);
+  c1->Print(buffer);
 }

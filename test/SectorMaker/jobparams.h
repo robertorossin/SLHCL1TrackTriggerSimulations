@@ -27,6 +27,7 @@ class jobparams{
   bool        rates() const;
   bool        sectors() const;
   bool        test() const;
+  bool        efficiencies() const;
   std::string inputfile() const;
   std::string testfile() const;
   std::string outfile() const;
@@ -39,11 +40,12 @@ class jobparams{
  private:
 
   bool         m_rates;   
-  bool         m_sectors;   
+  bool         m_sectors; 
   bool         m_test;   
+  bool         m_efficiencies;    
   std::string  m_inputfile; 
-  std::string  m_outfile; 
-  std::string  m_testfile; 
+  std::string  m_outfile;
+  std::string  m_testfile;  
   int          m_eta;
   int          m_phi;
   int          m_oeta;
@@ -74,6 +76,10 @@ inline bool jobparams::sectors() const{
 
 inline bool jobparams::test() const{
   return m_test;
+}
+
+inline bool jobparams::efficiencies() const{
+  return m_efficiencies;
 }
 
 inline int jobparams::eta() const{

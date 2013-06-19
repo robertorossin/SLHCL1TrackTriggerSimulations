@@ -25,14 +25,14 @@ void rates::get_rates()
  int B_id,E_id; // The detector module IDs (defined in the header)
 
   int disk;
-  int layer,ladder,module;
+  int layer,ladder,module,chip;
 
   float IP;
 
   bool is_prim = false;
   bool is_fake = false;
 
-  int st,idx,seg;
+  int st,idx,seg,nseg;
   float phi,eta,r;
   double eta_seg,phi_seg;
 
@@ -58,6 +58,11 @@ void rates::get_rates()
       layer = m_stub_layer[i]; 
       ladder= m_stub_ladder[i]; 
       module= m_stub_module[i]; 
+      seg   = m_stub_seg[i]; 
+      chip  = m_stub_chip[i]; 
+      nseg  = m_clus_nseg[m_stub_clust1[i]];
+
+      if (seg/(nseg/2)==1) chip += 8;
 
       if (layer>10 && layer<=17) disk=(layer-10)%8;
       if (layer>17 && layer<=24) disk=(layer-17)%8+7;
@@ -80,14 +85,14 @@ void rates::get_rates()
       // Get some stub info (to get position on the module)
       idx = m_stub_clust1[i];
       st  = m_stub_strip[i];
-      seg = m_stub_seg[i];
+      
       phi = atan2(m_clus_y[idx],m_clus_x[idx]);
       r   = sqrt(m_clus_y[idx]*m_clus_y[idx]+m_clus_x[idx]*m_clus_x[idx]);
       eta = -log(tan(atan2(r,m_clus_z[idx])/2.));
 
       if (disk==0) // Barrel
       {
-	m_b_rate[B_id]  += fact;
+	m_b_rate[chip][B_id]  += fact;
 	m_b_nseg[B_id]   = m_clus_nseg[idx];
 	m_b_nstrip[B_id] = m_clus_nrows[idx];
 
@@ -125,7 +130,7 @@ void rates::get_rates()
 	{
 	  // Endcap +z: phi grows with strip, eta grows with seg
 
-	  m_e_rate[E_id] += fact;
+	  m_e_rate[chip][E_id] += fact;
 	  m_e_nseg[E_id]   = m_clus_nseg[idx];
 	  m_e_nstrip[E_id] = m_clus_nrows[idx];
 	  
@@ -162,7 +167,7 @@ void rates::get_rates()
 	{
 	  // Endcap +z: phi grows with strip, eta grows with seg
 
-	  m_e_rate[E_id] += fact;
+	  m_e_rate[chip][E_id] += fact;
 	  m_e_nseg[E_id]   = m_clus_nseg[idx];
 	  m_e_nstrip[E_id] = m_clus_nrows[idx];
 	  
@@ -207,7 +212,7 @@ void rates::get_rates()
 
   for (int i=0;i<58000;++i) // Barrel
   {
-    if (m_b_rate[i]==0.) continue;
+    if (m_b_rate_f[i]+m_b_rate_s[i]+m_b_rate_p[i]==0.) continue;
 
     if (m_b_segmax[i]-m_b_segmin[i]!=0)
     {
@@ -228,22 +233,22 @@ void rates::get_rates()
       if (m_b_phimin[i]<4*atan(1.) && m_b_phimax[i]>4*atan(1.)) m_b_phimax[i]-=8*atan(1.);  
     }
 
-    m_disk= 0;
-    m_lay = static_cast<int>(i/10000);
-    m_lad = static_cast<int>((i-10000*m_lay)/100);
-    m_mod = static_cast<int>((i-10000*m_lay-100*m_lad));
-    m_rate= m_b_rate[i];
-    m_pmin = m_b_phimin[i];
-    m_pmax = m_b_phimax[i];
-    m_emin = m_b_etamin[i];
-    m_emax = m_b_etamax[i];
-
-    m_dbgtree->Fill(); 
+    for (int j=0;j<16;++j) 
+    {
+      m_disk= 0;
+      m_lay = static_cast<int>(i/10000);
+      m_lad = static_cast<int>((i-10000*m_lay)/100);
+      m_mod = static_cast<int>((i-10000*m_lay-100*m_lad));
+      m_sen = j/8+1;
+      m_chp = j%8+1;
+      m_rate= m_b_rate[j][i];
+      m_dbgtree->Fill(); 
+    }
   }
 
   for (int i=0;i<140000;++i) // Endcap
   {
-    if (m_e_rate[i]==0.) continue;
+    if (m_e_rate_f[i]+m_e_rate_s[i]+m_e_rate_p[i]==0.) continue;
 
     if (m_e_segmax[i]-m_e_segmin[i]!=0)
     {
@@ -265,17 +270,17 @@ void rates::get_rates()
       if (m_e_phimin[i]<4*atan(1.) && m_e_phimax[i]>4*atan(1.)) m_e_phimax[i]-=8*atan(1.);  
     }
 
-    m_disk= 1;
-    m_lay = static_cast<int>(i/10000);
-    m_lad = static_cast<int>((i-10000*m_lay)/100);
-    m_mod = static_cast<int>((i-10000*m_lay-100*m_lad));
-    m_rate= m_e_rate[i];
-    m_pmin = m_e_phimin[i];
-    m_pmax = m_e_phimax[i];
-    m_emin = m_e_etamin[i];
-    m_emax = m_e_etamax[i];
-
-    m_dbgtree->Fill(); 
+    for (int j=0;j<16;++j) 
+    {
+      m_disk= 1;
+      m_lay = static_cast<int>(i/10000);
+      m_lad = static_cast<int>((i-10000*m_lay)/100);
+      m_mod = static_cast<int>((i-10000*m_lay-100*m_lad));
+      m_sen = j/8+1;
+      m_chp = j%8+1;
+      m_rate= m_e_rate[j][i];
+      m_dbgtree->Fill(); 
+    }
   }
 
   // End of dbg loop, fill up root trees
@@ -298,7 +303,7 @@ void rates::initVars()
 {
   for (int i=0;i<58000;++i)
   {
-    m_b_rate[i]   = 0.;
+    for (int j=0;j<16;++j) m_b_rate[j][i]   = 0.;
     m_b_rate_p[i] = 0.;
     m_b_rate_s[i] = 0.;
     m_b_rate_f[i] = 0.;
@@ -317,7 +322,7 @@ void rates::initVars()
 
   for (int i=0;i<142000;++i)
   {
-    m_e_rate[i]   = 0.;
+    for (int j=0;j<16;++j) m_e_rate[j][i]   = 0.;
     m_e_rate_p[i] = 0.;
     m_e_rate_s[i] = 0.;
     m_e_rate_f[i] = 0.;
@@ -363,6 +368,7 @@ void rates::initTuple(std::string in,std::string out)
   pm_stub_z=&m_stub_z;
   pm_stub_strip=&m_stub_strip;
   pm_stub_seg=&m_stub_seg;
+  pm_stub_chip=&m_stub_chip;
   pm_stub_pdgID=&m_stub_pdgID;
   pm_stub_clust1=&m_stub_clust1;
 
@@ -382,6 +388,7 @@ void rates::initTuple(std::string in,std::string out)
   L1TT->SetBranchAddress("STUB_z",         &pm_stub_z);
   L1TT->SetBranchAddress("STUB_strip",     &pm_stub_strip);
   L1TT->SetBranchAddress("STUB_seg",       &pm_stub_seg);
+  L1TT->SetBranchAddress("STUB_chip",      &pm_stub_chip);
   L1TT->SetBranchAddress("STUB_pdgID",     &pm_stub_pdgID);
   L1TT->SetBranchAddress("STUB_clust1",    &pm_stub_clust1);
   
@@ -396,8 +403,7 @@ void rates::initTuple(std::string in,std::string out)
   m_dbgtree  = new TTree("Details","Debug");
 
 
-
-  m_ratetree->Branch("STUB_b_rates",         &m_b_rate,      "STUB_b_rates[58000]/F");
+  m_ratetree->Branch("STUB_b_rates",         &m_b_rate,      "STUB_b_rates[16][58000]/F");
   m_ratetree->Branch("STUB_b_rates_prim",    &m_b_rate_p,    "STUB_b_rates_prim[58000]/F"); 
   m_ratetree->Branch("STUB_b_rates_sec",     &m_b_rate_s,    "STUB_b_rates_sec[58000]/F"); 
   m_ratetree->Branch("STUB_b_rates_f",       &m_b_rate_f,    "STUB_b_rates_fake[58000]/F"); 
@@ -406,7 +412,7 @@ void rates::initTuple(std::string in,std::string out)
   m_ratetree->Branch("STUB_b_eta_b",         &m_b_etamin,    "STUB_b_eta_b[58000]/F"); 
   m_ratetree->Branch("STUB_b_eta_t",         &m_b_etamax,    "STUB_b_eta_t[58000]/F"); 
 
-  m_ratetree->Branch("STUB_e_rates",         &m_e_rate,      "STUB_e_rates[142000]/F");
+  m_ratetree->Branch("STUB_e_rates",         &m_e_rate,      "STUB_e_rates[16][142000]/F");
   m_ratetree->Branch("STUB_e_rates_prim",    &m_e_rate_p,    "STUB_e_rates_prim[142000]/F"); 
   m_ratetree->Branch("STUB_e_rates_sec",     &m_e_rate_s,    "STUB_e_rates_sec[142000]/F"); 
   m_ratetree->Branch("STUB_e_rates_f",       &m_e_rate_f,    "STUB_e_rates_fake[142000]/F"); 
@@ -420,9 +426,7 @@ void rates::initTuple(std::string in,std::string out)
   m_dbgtree->Branch("lay",         &m_lay,    "lay/I"); 
   m_dbgtree->Branch("lad",         &m_lad,    "lad/I"); 
   m_dbgtree->Branch("mod",         &m_mod,    "mod/I"); 
+  m_dbgtree->Branch("sen",         &m_sen,    "sen/I"); 
+  m_dbgtree->Branch("chip",        &m_chp,    "chip/I"); 
   m_dbgtree->Branch("rate",        &m_rate,   "rate/F"); 
-  m_dbgtree->Branch("phimin",      &m_pmin,   "phimin/F"); 
-  m_dbgtree->Branch("phimax",      &m_pmax,   "phimax/F"); 
-  m_dbgtree->Branch("etamin",      &m_emin,   "etamin/F"); 
-  m_dbgtree->Branch("etamax",      &m_emax,   "etamax/F"); 
 }

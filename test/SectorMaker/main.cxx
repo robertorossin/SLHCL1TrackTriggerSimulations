@@ -7,6 +7,7 @@
 #include "rates.h"
 #include "sector.h"
 #include "sector_test.h"
+#include "efficiencies.h"
 #include "jobparams.h"
 #include "TROOT.h"
 
@@ -52,7 +53,6 @@ int main(int argc, char** argv) {
     delete my_sectors;
   }
 
-
   // Option 4: do sectors and test
 
   if (params.sectors()==1 && params.rates()==0 && params.test()==1)
@@ -66,6 +66,13 @@ int main(int argc, char** argv) {
 					   params.outfile(),params.nevt());
 
     delete my_test;
+  }
+  
+  // Option 5: efficiencies
+  if (params.efficiencies()==1)
+  {
+    efficiencies* my_effs = new efficiencies(params.inputfile(),params.outfile());
+    delete my_effs;
   }
 
   return 0;

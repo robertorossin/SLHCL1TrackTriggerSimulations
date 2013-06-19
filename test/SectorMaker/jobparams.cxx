@@ -36,23 +36,27 @@ jobparams::jobparams(int argc, char** argv){
      ValueArg<std::string> outfile("o","output","name of the output file",
 				false, "output.root", "string");
      cmd.add(outfile);
-    
-     ValueArg<std::string> testfile("f","fortest","name of the input file used to test the parametrization",
-				false, "test.root", "string");
-     cmd.add(testfile);
-   
+     
      ValueArg<bool> rates("r","rates","do we perform the rate calculation? ",
 			   false, 0, "bool");
      cmd.add(rates);
 
-     ValueArg<int> sectors("s","sectors","do we perform the sector calculation?",
-			   false, 0, "bool");
+     ValueArg<bool> sectors("s","sectors","do we perform the sector calculation?",
+			    false, 0, "bool");
      cmd.add(sectors);
+  
+     ValueArg<bool> efficiencies("c","efficiencies","do we perform the efficiency calculation?",
+				 false, 0, "bool");
+     cmd.add(efficiencies);
+
+     ValueArg<std::string> testfile("f","fortest","name of the input file used to test the parametrization",
+				    false, "test.root", "string");
+     cmd.add(testfile);
 
      ValueArg<int> test("t","test","do we perform the eff test?",
 			false, 0, "bool");
      cmd.add(test);
-  
+     
      ValueArg<int> nevt("n","nevt","number of events for the eff test?",
 			false, 0, "int");
      cmd.add(nevt);
@@ -60,17 +64,18 @@ jobparams::jobparams(int argc, char** argv){
      // parse
      cmd.parse(argc, argv);
      
-     m_inputfile = inputfile.getValue();
-     m_outfile   = outfile.getValue();
-     m_testfile   = testfile.getValue();
-     m_sectors   = sectors.getValue();
-     m_rates     = rates.getValue();
-     m_test      = test.getValue();
-     m_eta       = eta.getValue();
-     m_phi       = phi.getValue();
-     m_oeta      = oeta.getValue();
-     m_ophi      = ophi.getValue();
-     m_nevt      = nevt.getValue();
+     m_inputfile    = inputfile.getValue();
+     m_outfile      = outfile.getValue();
+     m_testfile     = testfile.getValue();
+     m_sectors      = sectors.getValue();
+     m_efficiencies = efficiencies.getValue();
+     m_rates        = rates.getValue();
+     m_test         = test.getValue();
+     m_eta          = eta.getValue();
+     m_phi          = phi.getValue();
+     m_oeta         = oeta.getValue();
+     m_ophi         = ophi.getValue();
+     m_nevt         = nevt.getValue();
    }
    catch (ArgException &e){ // catch exception from parse
      std::cerr << "ERROR: " << e.error() << " for arg " << e.argId()  << std::endl;

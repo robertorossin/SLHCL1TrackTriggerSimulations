@@ -72,12 +72,12 @@ class rates
 
 
   // Following tables are for rates
-  float m_b_rate[58000];     // Contains the barrel module rates (in stubs/bx)
+  float m_b_rate[16][58000]; // Contains the barrel chips module rates (in stubs/bx)
   float m_b_rate_p[58000];   // Contains the barrel primary stubs module rates (in stubs/bx)
   float m_b_rate_s[58000];   // Contains the barrel secondary stubs module rates (in stubs/bx)
   float m_b_rate_f[58000];   // Contains the barrel fake stubs module rates (in stubs/bx)
 
-  float m_e_rate[142000];    // Contains the endcap module rates (in stubs/bx)
+  float m_e_rate[16][142000];// Contains the endcap chips module rates (in stubs/bx)
   float m_e_rate_p[142000];  // Contains the endcap primary stubs module rates (in stubs/bx)
   float m_e_rate_s[142000];  // Contains the endcap secondary stubs module rates (in stubs/bx)
   float m_e_rate_f[142000];  // Contains the endcap fake stubs module rates (in stubs/bx)
@@ -139,6 +139,7 @@ class rates
   std::vector<float> m_stub_z;
   std::vector<int>   m_stub_strip;
   std::vector<int>   m_stub_seg;
+  std::vector<int>   m_stub_chip;
   std::vector<int>   m_stub_pdgID;
   std::vector<int>   m_stub_clust1;
 
@@ -156,6 +157,7 @@ class rates
   std::vector<float> *pm_stub_z;
   std::vector<int>   *pm_stub_strip;
   std::vector<int>   *pm_stub_seg;
+  std::vector<int>   *pm_stub_chip;
   std::vector<int>   *pm_stub_pdgID;
   std::vector<int>   *pm_stub_clust1;
 
@@ -166,11 +168,9 @@ class rates
   int m_lay;
   int m_lad;
   int m_mod;
+  int m_sen;
+  int m_chp;
   float m_rate;
-  float m_pmin;
-  float m_pmax;
-  float m_emin;
-  float m_emax;
 };
 
 #endif

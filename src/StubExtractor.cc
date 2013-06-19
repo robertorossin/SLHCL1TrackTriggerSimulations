@@ -297,6 +297,8 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
   int module = 0;
   int segs   = 0;
   int rows   = 0;
+  int disk   = 0;
+  int lad_cor= 0;
 
   /// Go on only if there are L1TkCluster from PixelDigis
   if ( PixelDigiL1TkClusterHandle->size() > 0 )
@@ -439,7 +441,12 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
       else if ( detIdStub.isEndcap() )
       {	
 	layer  = 10+detIdStub.iZ()+abs(detIdStub.iSide()-2)*7;
-	ladder = detIdStub.iRing();
+
+	if (layer>10 && layer<=17) disk=(layer-10)%8;
+	if (layer>17 && layer<=24) disk=(layer-17)%8;
+	if (disk>=5) lad_cor = (disk-4)%4;
+
+	ladder = detIdStub.iRing()-1+lad_cor;
 	module = detIdStub.iPhi()*2-1;
       }
 
