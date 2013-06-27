@@ -74,8 +74,12 @@ void efficiencies::get_efficiencies()
     for (int k=0;k<m_part_n;++k) // Loop over TPs
     {
       D0GEN = sqrt(m_part_x->at(k)*m_part_x->at(k)+m_part_y->at(k)*m_part_y->at(k));
-      if (D0GEN > 0.3) continue; // Not a primary, skip
-
+      if (D0GEN > 0.3) 
+      {
+	nh_tot+=m_part_hits->at(k);
+	continue; // Not a primary, skip
+      }
+      
       PTGEN = sqrt(m_part_px->at(k)*m_part_px->at(k)+m_part_py->at(k)*m_part_py->at(k));
 
       for (int l=nh_tot;l<m_part_hits->at(k)+nh_tot;++l) // Loop over TP simhits
@@ -201,6 +205,8 @@ void efficiencies::get_efficiencies()
 	  }
 	}
       } // End of loop over SimHits
+      
+      nh_tot+=m_part_hits->at(k);
     } // End of loop over TPs
 
     ///    efficiencies::reset();
