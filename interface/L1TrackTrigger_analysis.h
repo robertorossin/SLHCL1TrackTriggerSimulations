@@ -62,7 +62,7 @@ class L1TrackTrigger_analysis
   int   m_PDG_id;
   float m_window_size;
   float m_thresh;
-
+  bool  m_zMatch;
  
   /*
     List of the branches contained in the L1TrackTrigger tree

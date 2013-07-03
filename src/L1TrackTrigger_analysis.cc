@@ -38,6 +38,11 @@ L1TrackTrigger_analysis::L1TrackTrigger_analysis(AnalysisSettings *settings, int
     ? m_posMatch = (static_cast<bool>(settings->getSetting("posMatching")))
     : m_posMatch = false;
 
+  // If you want to apply the Z segment matching in the PS modules (default is true)
+  (settings->getSetting("zMatch")!=-1)
+    ? m_zMatch = (static_cast<bool>(settings->getSetting("zMatch")))
+    : m_zMatch = true;
+
   // Cluster width cut (in strip units)
   (settings->getSetting("maxClusWdth")!=-1)
     ? m_max_wclus = settings->getSetting("maxClusWdth")
@@ -444,147 +449,167 @@ Method extracting the stubs using the cluster info
 void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 {  
   // These values are extracted from here:
-  // http://http://cmssw.cvs.cern.ch/cgi-bin/cmssw.cgi/CMSSW/Geometry/
-  // TrackerCommonData/data/PhaseII/BarrelEndcap/tracker.xml
-  // ?revision=1.1&view=markup&pathrev=CMSSW_6_1_1_SLHCphase2tk1
+  // http://cmssw.cvs.cern.ch/cgi-bin/cmssw.cgi/CMSSW/Geometry/
+  // TrackerCommonData/data/PhaseII/BarrelEndcap5D/tracker.xml?revision=1.1&view=markup
 
   double n_lad_barrel[6]  = {16,24,34,48,62,76};
-  double n_lad_endcap[14] = {24,26,28,30,34,34,38,40,48,54,62,66,72,78};
+  double n_lad_endcap[15] = {20,24,28,28,32,36,36,40,40,48,56,64,68,72,80};
 
   // For endcap there are exceptions
   //
-  // 8/9/10/11 are OK
-  // disk +/- 12: {XX,26,28,30,34,34,38,40,48,54,62,66,72,78}
-  // disk +/- 13: {XX,XX,28,30,34,34,38,40,48,54,62,66,72,78}
-  // disk +/- 14: {XX,XX,XX,30,34,34,38,40,48,54,62,66,72,78}
+  // 6/7 are OK
+  // disk +/-  8: {XX,24,28,28,32,36,36,40,40,48,56,64,68,72,80}
+  // disk +/-  9: {XX,XX,XX,28,32,36,36,40,40,48,56,64,68,72,80}
+  // disk +/- 10: {XX,XX,XX,XX,32,36,36,40,40,48,56,64,68,72,80}
   //
   // Layer values are always starting from 1, so they have to be corrected in the table
   // good_layer = abs(disk%7)+layer 
+  //
+  // 
+
 
   int disk = 0;
   int lad_cor = 0;
 
-  if (layer>10 && layer<=17) disk=(layer-10)%8;
-  if (layer>17 && layer<=24) disk=(layer-17)%8;
-  if (disk>=5) lad_cor = (disk-4)%4;
+  if (layer>10 && layer<=17) disk=(layer-10)%8; // Bet. 11 and 15
+  if (layer>17 && layer<=24) disk=(layer-17)%8; // Bet. 18 and 22
+  if (disk==3) lad_cor = 1;
+  if (disk==4) lad_cor = 3;
+  if (disk==5) lad_cor = 4;
+
+  // The correction is :
+
+  // Disk 1 ==> 0 
+  // Disk 2 ==> 0 
+  // Disk 3 ==> 1 
+  // Disk 4 ==> 3 
+  // Disk 5 ==> 4 
 
   // Here this is the optimized list of SW cuts for the CMSSW_6_1_1_SLHCphase2tk1 Geometry
 
-  double layer_cut[6]     = {2.5,2.5,3,4.5,5.5,7.};
-  double ladder_cut[7][14];
+  double layer_cut[6]     = {2.5,2.5,3,4.5,5.5,6.};
+
+  double ladder_cut[7][15];
 
   for (int i=0;i<7;++i) 
   {
     ladder_cut[0][0] = 1.5;
     ladder_cut[0][1] = 1.5;
-    ladder_cut[0][2] = 2.;
+    ladder_cut[0][2] = 1.5;
     ladder_cut[0][3] = 2.;
-    ladder_cut[0][4] = 2.5;
-    ladder_cut[0][5] = 3.;
-    ladder_cut[0][6] = 3.;
-    ladder_cut[0][7] = 3.5;
-    ladder_cut[0][8] = 2.5;
-    ladder_cut[0][9] = 3.;
-    ladder_cut[0][10]= 3.;
-    ladder_cut[0][11]= 4.5;
-    ladder_cut[0][12]= 5.5;
-    ladder_cut[0][13]= 5.5;
+    ladder_cut[0][4] = 2.;
+    ladder_cut[0][5] = 2.5;
+    ladder_cut[0][6] = 2.5;
+    ladder_cut[0][7] = 3.;
+    ladder_cut[0][8] = 3.;
+    ladder_cut[0][9] = 2.;
+    ladder_cut[0][10]= 2.5;
+    ladder_cut[0][11]= 3.;
+    ladder_cut[0][12]= 3.5;
+    ladder_cut[0][13]= 4.5;
+    ladder_cut[0][14]= 5.;
 
-    ladder_cut[1][0] = 1.;
+    ladder_cut[1][0] = 1.5;
     ladder_cut[1][1] = 1.5;
-    ladder_cut[1][2] = 2.;
-    ladder_cut[1][3] = 2.;
-    ladder_cut[1][4] = 2.5;
-    ladder_cut[1][5] = 2.5;
-    ladder_cut[1][6] = 3.;
-    ladder_cut[1][7] = 3.5;
-    ladder_cut[1][8] = 2.;
-    ladder_cut[1][9] = 3.;
-    ladder_cut[1][10]= 3.;
-    ladder_cut[1][11]= 4.;
-    ladder_cut[1][12]= 4.;
-    ladder_cut[1][13]= 5.;
+    ladder_cut[1][2] = 1.5;
+    ladder_cut[1][3] = 1.5;
+    ladder_cut[1][4] = 2.;
+    ladder_cut[1][5] = 2.;
+    ladder_cut[1][6] = 2.5;
+    ladder_cut[1][7] = 2.5;
+    ladder_cut[1][8] = 3.;
+    ladder_cut[1][9] = 2.;
+    ladder_cut[1][10]= 2.;
+    ladder_cut[1][11]= 3.;
+    ladder_cut[1][12]= 3.;
+    ladder_cut[1][13]= 4.;
+    ladder_cut[1][14]= 4.5;
 
-    ladder_cut[2][0] = 1.;
-    ladder_cut[2][1] = 1.;
+    ladder_cut[2][0] = 0.;
+    ladder_cut[2][1] = 1.5;
     ladder_cut[2][2] = 1.5;
-    ladder_cut[2][3] = 2.;
+    ladder_cut[2][3] = 1.5;
     ladder_cut[2][4] = 2.;
-    ladder_cut[2][5] = 2.5;
-    ladder_cut[2][6] = 3.;
-    ladder_cut[2][7] = 3.;
-    ladder_cut[2][8] = 2.;
-    ladder_cut[2][9] = 2.;
-    ladder_cut[2][10]= 3.;
-    ladder_cut[2][11]= 3.;
-    ladder_cut[2][12]= 4.;
-    ladder_cut[2][13]= 4.5;
+    ladder_cut[2][5] = 2.;
+    ladder_cut[2][6] = 2.;
+    ladder_cut[2][7] = 2.5;
+    ladder_cut[2][8] = 2.5;
+    ladder_cut[2][9] = 2.0;
+    ladder_cut[2][10]= 2.;
+    ladder_cut[2][11]= 2.;
+    ladder_cut[2][12]= 3.;
+    ladder_cut[2][13]= 3.;
+    ladder_cut[2][14]= 3.5;
 
-    ladder_cut[3][0] = 1.;
-    ladder_cut[3][1] = 1.;
-    ladder_cut[3][2] = 1.5;
+    ladder_cut[3][0] = 0.;
+    ladder_cut[3][1] = 0.;
+    ladder_cut[3][2] = 0.;
     ladder_cut[3][3] = 1.5;
-    ladder_cut[3][4] = 2.;
+    ladder_cut[3][4] = 1.5;
     ladder_cut[3][5] = 2.;
-    ladder_cut[3][6] = 2.5;
-    ladder_cut[3][7] = 2.5;
-    ladder_cut[3][8] = 3.5;
-    ladder_cut[3][9] = 2.;
-    ladder_cut[3][10]= 2.5;
-    ladder_cut[3][11]= 3.;
-    ladder_cut[3][12]= 3.;
-    ladder_cut[3][13]= 4.;
+    ladder_cut[3][6] = 2.;
+    ladder_cut[3][7] = 2.;
+    ladder_cut[3][8] = 2.;
+    ladder_cut[3][9] = 2.5;
+    ladder_cut[3][10]= 2.;
+    ladder_cut[3][11]= 2.;
+    ladder_cut[3][12]= 2.;
+    ladder_cut[3][13]= 3.;
+    ladder_cut[3][14]= 3.;
 
     ladder_cut[4][0] = 0.;
-    ladder_cut[4][1] = 1.;
-    ladder_cut[4][2] = 1.5;
-    ladder_cut[4][3] = 1.5;
-    ladder_cut[4][4] = 2.;
+    ladder_cut[4][1] = 0.;
+    ladder_cut[4][2] = 0.;
+    ladder_cut[4][3] = 0.;
+    ladder_cut[4][4] = 1.5;
     ladder_cut[4][5] = 2.;
-    ladder_cut[4][6] = 2.5;
-    ladder_cut[4][7] = 2.5;
-    ladder_cut[4][8] = 3.;
-    ladder_cut[4][9] = 4.;
-    ladder_cut[4][10]= 2.;
-    ladder_cut[4][11]= 2.5;
-    ladder_cut[4][12]= 3.;
-    ladder_cut[4][13]= 3.5;
+    ladder_cut[4][6] = 2.;
+    ladder_cut[4][7] = 2.;
+    ladder_cut[4][8] = 2.;
+    ladder_cut[4][9] = 2.;
+    ladder_cut[4][10]= 3.;
+    ladder_cut[4][11]= 2.;
+    ladder_cut[4][12]= 2.;
+    ladder_cut[4][13]= 2.;
+    ladder_cut[4][14]= 2.5;
 
     ladder_cut[5][0] = 0.;
     ladder_cut[5][1] = 0.;
-    ladder_cut[5][2] = 1.5;
-    ladder_cut[5][3] = 1.5;
-    ladder_cut[5][4] = 1.5;
-    ladder_cut[5][5] = 2.;
-    ladder_cut[5][6] = 2.;
-    ladder_cut[5][7] = 2.5;
-    ladder_cut[5][8] = 3.;
-    ladder_cut[5][9] = 3.5;
-    ladder_cut[5][10]= 2.;
-    ladder_cut[5][11]= 2.5;
-    ladder_cut[5][12]= 3.;
-    ladder_cut[5][13]= 3.;
+    ladder_cut[5][2] = 0.;
+    ladder_cut[5][3] = 0.;
+    ladder_cut[5][4] = 0.;
+    ladder_cut[5][5] = 0.;
+    ladder_cut[5][6] = 0.;
+    ladder_cut[5][7] = 0.;
+    ladder_cut[5][8] = 0.;
+    ladder_cut[5][9] = 0.;
+    ladder_cut[5][10]= 0.;
+    ladder_cut[5][11]= 0.;
+    ladder_cut[5][12]= 0.;
+    ladder_cut[5][13]= 0.;
+    ladder_cut[5][14]= 0.;
 
     ladder_cut[6][0] = 0.;
     ladder_cut[6][1] = 0.;
     ladder_cut[6][2] = 0.;
-    ladder_cut[6][3] = 1.;
-    ladder_cut[6][4] = 1.5;
-    ladder_cut[6][5] = 2.;
-    ladder_cut[6][6] = 2.;
-    ladder_cut[6][7] = 2.5;
-    ladder_cut[6][8] = 2.5;
-    ladder_cut[6][9] = 3.;
-    ladder_cut[6][10]= 4.;
-    ladder_cut[6][11]= 2.;
-    ladder_cut[6][12]= 2.5;
-    ladder_cut[6][13]= 3.;
+    ladder_cut[6][3] = 0.;
+    ladder_cut[6][4] = 0.;
+    ladder_cut[6][5] = 0.;
+    ladder_cut[6][6] = 0.;
+    ladder_cut[6][7] = 0.;
+    ladder_cut[6][8] = 0.;
+    ladder_cut[6][9] = 0.;
+    ladder_cut[6][10]= 0.;
+    ladder_cut[6][11]= 0.;
+    ladder_cut[6][12]= 0.;
+    ladder_cut[6][13]= 0.;
+    ladder_cut[6][14]= 0.;
   }
 
   if (m_window_size!=-1) // If precised one could apply a generic cut
   {
     for (int i=0;i<6;++i)  layer_cut[i]  = m_window_size;
-    for (int i=0;i<14;++i) 
+    for (int i=0;i<15;++i) 
     {  
       for (int j=0;j<7;++j) ladder_cut[j][i] = m_window_size;
     }
@@ -684,11 +709,22 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
       if (m_clus_layer->at(j) !=layer ||     
 	  m_clus_used->at(j)  ==1     ||                  
 	  m_clus_ladder->at(i)!=m_clus_ladder->at(j) ||    
-	  (2*m_clus_seg->at(i))/m_clus_PS->at(i) !=  (2*m_clus_seg->at(j))/m_clus_PS->at(j) ||          
 	  (m_clus_module->at(j)-m_clus_module->at(i))!=1 ||
 	  m_clus_nstrips->at(j)>m_max_wclus ||          
 	  (m_clus_matched->at(j)==0 && m_matchStubs))       
 	continue;  
+
+      //Special treatment for the Z segment matching
+
+      // SS module, no bypass
+      if (m_clus_PS->at(i)==m_clus_PS->at(j) && 
+	  (2*m_clus_seg->at(i))/m_clus_PS->at(i) !=  (2*m_clus_seg->at(j))/m_clus_PS->at(j)) 
+	continue;
+
+      // PS module, bypass if the m_zMatch tag is set to false
+      if (m_clus_PS->at(i)!=m_clus_PS->at(j) && m_zMatch &&
+	  (2*m_clus_seg->at(i))/m_clus_PS->at(i) !=  (2*m_clus_seg->at(j))/m_clus_PS->at(j)) 
+	continue;
 
       if (getMatchingTP(i,j)!=0 && m_matchStubs) continue;  
 
@@ -720,8 +756,10 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 	i_b = j;
       }
 
-      strip_cor   = (d_t/d_b-1.)*(m_clus_strip->at(i_b)-m_clus_nrows->at(i_b)/2);
-      strip_cor  -= fmod(strip_cor,0.5); 
+      strip_cor = (d_t/d_b-1.)*(m_clus_strip->at(i_b)-m_clus_nrows->at(i_b)/2.);
+      strip_cor = static_cast<int>(2*strip_cor)/2.;
+
+
       SW = m_clus_strip->at(i_t) - m_clus_strip->at(i_b); 
       SW -= strip_cor; 
 
