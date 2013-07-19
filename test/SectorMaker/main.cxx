@@ -75,5 +75,15 @@ int main(int argc, char** argv) {
     delete my_effs;
   }
 
+  // Option 6: sector test only 
+
+  if (params.test()==1)
+  {
+    sector_test* my_test = new sector_test(params.testfile(),params.inputfile(),
+					   params.outfile(),params.nevt());
+
+    delete my_test;
+  }
+
   return 0;
 }

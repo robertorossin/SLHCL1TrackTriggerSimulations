@@ -56,9 +56,11 @@ class sector_test
   TFile *m_infile;
   TFile *m_testfile;
   TFile *m_outfile;
-  TTree *m_L1TT;
+  TFile *m_pattfile;
+  TChain *m_L1TT;
   TTree *m_sectree;
   TTree *m_efftree;
+  TTree *m_PATT;
 
   // Coding conventions for barrel and endcap module IDs
   
@@ -95,10 +97,32 @@ class sector_test
 
   // The output tree has one entry per primary track. 
 
-  int nsec;    // The number of sectors containing ALL the stubs of the track
+  int   nsec;  // The number of sectors containing ALL the stubs of the track
   float pt;    // The pT of the track
   float eta;   // The eta of the track
   float phi;   // The phi of the track
+  int npatt;   // The number of patterns containing the full track
+  int ntotpatt;// The total number of patterns 
+  int   mult[500];   // 
+  int   nhits;
+
+
+  static const int MAX_NB_PATTERNS=1500;
+  static const int MAX_NB_HITS = 100;
+
+  int nb_layers;
+  int nb_patterns;
+  int event_id;
+  int pattern_sector_id[MAX_NB_PATTERNS];
+  
+  int nbHitPerPattern[MAX_NB_PATTERNS];
+  short hit_layer[MAX_NB_PATTERNS*MAX_NB_HITS];
+  short hit_ladder[MAX_NB_PATTERNS*MAX_NB_HITS];
+  short hit_zPos[MAX_NB_PATTERNS*MAX_NB_HITS];
+  short hit_segment[MAX_NB_PATTERNS*MAX_NB_HITS];
+  short hit_strip[MAX_NB_PATTERNS*MAX_NB_HITS];
+  int hit_tp[MAX_NB_PATTERNS*MAX_NB_HITS];
+  float hit_ptGEN[MAX_NB_PATTERNS*MAX_NB_HITS];
 };
 
 #endif

@@ -62,6 +62,7 @@ class L1TrackTrigger_analysis
   int   m_PDG_id;
   float m_window_size;
   float m_thresh;
+  float m_pTthresh;
   bool  m_zMatch;
  
   /*

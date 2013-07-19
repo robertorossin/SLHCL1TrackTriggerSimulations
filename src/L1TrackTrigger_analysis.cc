@@ -2,10 +2,10 @@
 
 The private Cluster and STUB maker
 
-Adapted to CMSSW 6_1_1
+Adapted to CMSSW 6_1_2_SLHC6_patch1
 
 Contact: viret@in2p3.fr
-Last review : 29/03/2013
+Last review : 17/07/2013
  */
 
 
@@ -57,6 +57,11 @@ L1TrackTrigger_analysis::L1TrackTrigger_analysis(AnalysisSettings *settings, int
   (settings->getSetting("pdgSel")!=-1)
     ? m_PDG_id = settings->getSetting("pdgSel")
     : m_PDG_id = -1;
+
+  // The pt threshold for the barrel stubs 
+  (settings->getSetting("thresh")!=-1)
+    ? m_pTthresh = settings->getSetting("thresh")
+    : m_pTthresh = 2;
 
   n_tot_evt = start_evt;
   m_thresh = 0; // No threshold (0 or 1) 
@@ -487,7 +492,37 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 
   // Here this is the optimized list of SW cuts for the CMSSW_6_1_1_SLHCphase2tk1 Geometry
 
-  double layer_cut[6]     = {2.5,2.5,3,4.5,5.5,6.};
+  double layer_cut[6]     = {2.5,2.5,3,4.5,5.5,6.5};
+  
+  if (m_pTthresh>=3)
+  {
+    layer_cut[0] = 2.;
+    layer_cut[1] = 2.;
+    layer_cut[2] = 2.5;
+    layer_cut[3] = 3.;
+    layer_cut[4] = 4.;
+    layer_cut[5] = 4.5;
+  }
+
+  if (m_pTthresh>=4)
+  {
+    layer_cut[0] = 2.;
+    layer_cut[1] = 2.;
+    layer_cut[2] = 2.;
+    layer_cut[3] = 2.5;
+    layer_cut[4] = 3.;
+    layer_cut[5] = 3.5;
+  }
+
+  if (m_pTthresh>=5)
+  {
+    layer_cut[0] = 1.5;
+    layer_cut[1] = 1.5;
+    layer_cut[2] = 1.5;
+    layer_cut[3] = 2.;
+    layer_cut[4] = 2.5;
+    layer_cut[5] = 3.;
+  }
 
   double ladder_cut[7][15];
 
@@ -495,40 +530,40 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
   {
     ladder_cut[0][0] = 1.5;
     ladder_cut[0][1] = 1.5;
-    ladder_cut[0][2] = 1.5;
+    ladder_cut[0][2] = 2.;
     ladder_cut[0][3] = 2.;
     ladder_cut[0][4] = 2.;
     ladder_cut[0][5] = 2.5;
-    ladder_cut[0][6] = 2.5;
+    ladder_cut[0][6] = 3.;
     ladder_cut[0][7] = 3.;
-    ladder_cut[0][8] = 3.;
-    ladder_cut[0][9] = 2.;
-    ladder_cut[0][10]= 2.5;
-    ladder_cut[0][11]= 3.;
-    ladder_cut[0][12]= 3.5;
-    ladder_cut[0][13]= 4.5;
-    ladder_cut[0][14]= 5.;
+    ladder_cut[0][8] = 3.5;
+    ladder_cut[0][9] = 2.5;
+    ladder_cut[0][10]= 3.;
+    ladder_cut[0][11]= 3.5;
+    ladder_cut[0][12]= 4.;
+    ladder_cut[0][13]= 5.;
+    ladder_cut[0][14]= 5.5;
 
     ladder_cut[1][0] = 1.5;
     ladder_cut[1][1] = 1.5;
     ladder_cut[1][2] = 1.5;
-    ladder_cut[1][3] = 1.5;
+    ladder_cut[1][3] = 2.;
     ladder_cut[1][4] = 2.;
-    ladder_cut[1][5] = 2.;
+    ladder_cut[1][5] = 2.5;
     ladder_cut[1][6] = 2.5;
-    ladder_cut[1][7] = 2.5;
+    ladder_cut[1][7] = 3.;
     ladder_cut[1][8] = 3.;
     ladder_cut[1][9] = 2.;
-    ladder_cut[1][10]= 2.;
+    ladder_cut[1][10]= 2.5;
     ladder_cut[1][11]= 3.;
-    ladder_cut[1][12]= 3.;
+    ladder_cut[1][12]= 3.5;
     ladder_cut[1][13]= 4.;
     ladder_cut[1][14]= 4.5;
 
     ladder_cut[2][0] = 0.;
     ladder_cut[2][1] = 1.5;
     ladder_cut[2][2] = 1.5;
-    ladder_cut[2][3] = 1.5;
+    ladder_cut[2][3] = 2.;
     ladder_cut[2][4] = 2.;
     ladder_cut[2][5] = 2.;
     ladder_cut[2][6] = 2.;
@@ -536,26 +571,26 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
     ladder_cut[2][8] = 2.5;
     ladder_cut[2][9] = 2.0;
     ladder_cut[2][10]= 2.;
-    ladder_cut[2][11]= 2.;
+    ladder_cut[2][11]= 3.;
     ladder_cut[2][12]= 3.;
-    ladder_cut[2][13]= 3.;
-    ladder_cut[2][14]= 3.5;
+    ladder_cut[2][13]= 3.5;
+    ladder_cut[2][14]= 4.;
 
     ladder_cut[3][0] = 0.;
     ladder_cut[3][1] = 0.;
     ladder_cut[3][2] = 0.;
     ladder_cut[3][3] = 1.5;
-    ladder_cut[3][4] = 1.5;
+    ladder_cut[3][4] = 2.;
     ladder_cut[3][5] = 2.;
     ladder_cut[3][6] = 2.;
     ladder_cut[3][7] = 2.;
-    ladder_cut[3][8] = 2.;
-    ladder_cut[3][9] = 2.5;
+    ladder_cut[3][8] = 2.5;
+    ladder_cut[3][9] = 3.;
     ladder_cut[3][10]= 2.;
     ladder_cut[3][11]= 2.;
-    ladder_cut[3][12]= 2.;
+    ladder_cut[3][12]= 2.5;
     ladder_cut[3][13]= 3.;
-    ladder_cut[3][14]= 3.;
+    ladder_cut[3][14]= 3.5;
 
     ladder_cut[4][0] = 0.;
     ladder_cut[4][1] = 0.;
@@ -566,12 +601,12 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
     ladder_cut[4][6] = 2.;
     ladder_cut[4][7] = 2.;
     ladder_cut[4][8] = 2.;
-    ladder_cut[4][9] = 2.;
+    ladder_cut[4][9] = 3.;
     ladder_cut[4][10]= 3.;
     ladder_cut[4][11]= 2.;
     ladder_cut[4][12]= 2.;
-    ladder_cut[4][13]= 2.;
-    ladder_cut[4][14]= 2.5;
+    ladder_cut[4][13]= 2.5;
+    ladder_cut[4][14]= 3.;
 
     ladder_cut[5][0] = 0.;
     ladder_cut[5][1] = 0.;
@@ -699,7 +734,7 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
     else // Endcap
     {
       philadder  = 2.*PI/n_lad_endcap[m_clus_ladder->at(i)-1+lad_cor]*((m_clus_module->at(i)-1)/2);  
-      SW_min     = ladder_cut[disk-1][m_clus_ladder->at(i)-1]+0.1;
+      SW_min     = ladder_cut[disk-1][m_clus_ladder->at(i)+lad_cor-1]+0.1;
       d_i        = fabs(Z1);
     }
 
