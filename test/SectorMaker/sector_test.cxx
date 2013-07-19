@@ -22,15 +22,25 @@ void sector_test::do_test(int nevt)
   cout << "Starting a test loop over " << nevt << " events..." << endl;
   cout << "... using " << m_nsec << " trigger sectors..." << endl;
 
+  int sharing[m_nsec][m_nsec];
+
   int is_sec_there[m_nsec];
   int ladder,module,layer;
   int n_per_lay[20];
   int n_per_lay_patt[20];
   int hitIndex;
-
+  int n_rods[6] = {16,24,34,48,62,76};
   int nhits_p;
 
   for (int j=0;j<500;++j) mult[j]=0;
+    
+  for (int j=0;j<m_nsec;++j)
+  {
+    for (int i=0;i<m_nsec;++i)
+    {
+      sharing[i][j]=0;
+    }
+  }
 
   // Loop over the events
   for (int i=0;i<nevt;++i)
@@ -54,9 +64,10 @@ void sector_test::do_test(int nevt)
     }
 
     m_L1TT->GetEntry(i);
-    m_PATT->GetEntry(i);
+    m_PATT->GetEntry(0);
 
-    if (i%1000==0) cout << "Processed " << i << "/" << nevt << endl;
+    //    if (i%1000==0) 
+    	cout << "Processed " << i << "/" << nevt << endl;
 
     if (m_stub == 0) continue; // No stubs, don't go further
 
@@ -64,15 +75,17 @@ void sector_test::do_test(int nevt)
     {  
       // First of all we compute the ID of the stub's module
 
-      if (m_stub_tp[j]!=0) continue; // Keep only the primary PGUN particle
+      //if (m_stub_tp[j]!=0) continue; // Keep only the primary PGUN particle
 
       layer  = m_stub_layer[j]; 
       ladder = m_stub_ladder[j]; 
+      if (layer<=10) ladder = (ladder+n_rods[layer-5]/4)%(n_rods[layer-5]);
+
       module = m_stub_module[j]; 
 
-      id = 10000*layer+100*ladder+module; // Get the module ID
+      //cout << layer << " / " << ladder << " / " << module << endl;
 
-      ++n_per_lay[layer-5];
+      id = 10000*layer+100*ladder+module; // Get the module ID
 
       for (int k=0;k<m_nsec;++k)
       {
@@ -82,10 +95,14 @@ void sector_test::do_test(int nevt)
 	  if (m_stub_tp[j]==0) ++is_sec_there[k];
 	}
       }
-           
-      pt  = sqrt(m_stub_pxGEN[j]*m_stub_pxGEN[j]+m_stub_pyGEN[j]*m_stub_pyGEN[j]);
-      eta = m_stub_etaGEN[j];
-      phi = atan2(m_stub_pyGEN[j],m_stub_pxGEN[j]);
+
+      if (m_stub_tp[j]==0)   
+      {
+	++n_per_lay[layer-5];
+	pt  = sqrt(m_stub_pxGEN[j]*m_stub_pxGEN[j]+m_stub_pyGEN[j]*m_stub_pyGEN[j]);
+	eta = m_stub_etaGEN[j];
+	phi = atan2(m_stub_pyGEN[j],m_stub_pxGEN[j]);
+      }
     }
 
     hitIndex=0;
@@ -161,21 +178,23 @@ void sector_test::initTuple(std::string test,std::string sec,std::string out)
 {
   m_infile   = TFile::Open(sec.c_str()); 
   m_sectree  = (TTree*)m_infile->Get("Sectors");
-  m_pattfile = TFile::Open("SingMuons6L_32_36Cov_6on6.root");
+  m_pattfile = TFile::Open("Data/SingMuons6L_32_36Cov_6on6.root");
 
   m_L1TT   = new TChain("L1TrackTrigger"); 
 
   m_L1TT->Add(test.c_str());
   m_PATT     = (TTree*)m_pattfile->Get("Patterns");
-
-  //  m_L1TT->Add("/tmp/sviret/PU_01.root");
-  //  m_L1TT->Add("/tmp/sviret/PU_02.root");
-  //  m_L1TT->Add("/tmp/sviret/PU_03.root");
-  ///  m_L1TT->Add("/tmp/sviret/PU_04.root");
-  //  m_L1TT->Add("/tmp/sviret/PU_07.root");
-  //m_L1TT->Add("/tmp/sviret/PU_08.root");
-  //m_L1TT->Add("/tmp/sviret/PU_09.root");
-
+  /*
+  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_01.root");
+  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_02.root");
+  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_03.root");
+  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_04.root");
+  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_05.root");
+  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_06.root");
+  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_07.root");
+  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_08.root");
+  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_09.root");
+  */
   m_outfile = new TFile(out.c_str(),"recreate");
   m_efftree = new TTree("Efficiencies","");
 

@@ -33,6 +33,9 @@ using namespace std;
 // Info about the code:
 //
 //  http://sviret.web.cern.ch/sviret/Welcome.php?n=CMS.HLLHCTuto (STEP III)
+// 
+// This code was developped for the BE classic geometry, but also works for 
+// the 5 disks alternative
 //
 //  Author: viret@in2p3_dot_fr
 //  Date: 23/05/2013
@@ -67,8 +70,8 @@ class rates
 
   // E_id = (disk-1)*10000 + ladder*100 + module (0 to 131377)
 
-  // Disks 0 to 6  (towards positive Z)
-  // Disks 7 to 13 (towards negative Z)
+  // Disks 0 to 6  (towards positive Z)  (0 to  4 for 5D)
+  // Disks 7 to 13 (towards negative Z)  (7 to 11 for 5D)
 
 
   // Following tables are for rates
@@ -107,7 +110,7 @@ class rates
   // Here are the parameters needed from the data
   // Details on these might be found on
   //
-  // http://cmssw.cvs.cern.ch/cgi-bin/cmssw.cgi/UserCode/HL_LHC/Extractors/RecoExtractor/interface/L1TrackTrigger_analysis.h?view=markup
+  // https://github.com/sviret/HL_LHC/blob/master/Extractors/RecoExtractor/interface/L1TrackTrigger_analysis.h
   //
 
 

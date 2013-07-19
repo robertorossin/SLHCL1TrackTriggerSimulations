@@ -1,4 +1,3 @@
-
 /*
   ROOT macro for trigger sectors visualization
 
@@ -11,27 +10,8 @@
   containing the sectors definition (created by the 
   sectorMaker program) 
 
-  Solution 1 do all the plots with complete rates
-  root[2]-> do_rates_plots(std::string filename) 
-
-  // Then you can make rate plots for only a type of stubs.
-  // Stubs could indeed be put in two categories
-  // 
-  // Primaries
-  // Secondaries
-  // Fakes
-  // 
-
-  In order to do rate plots only for primaries do:
-  root[2]-> do_the_plots(std::string filename,1,0,0) 
-
-  In order to do rate plots only for secondaries do:
-  root[2]-> do_the_plots(std::string filename,0,1,0) 
-
-  In order to do rate plots only for fakes do:
-  root[2]-> do_the_plots(std::string filename,0,1,0) 
-
-  // Then you can make plots only for a layer/disk only
+  Solution 1 do all the plots
+  root[2]-> do_sec_plots(std::string filename) 
 
   Solution 2 do the plot for barrel layer i
   root[2]-> do_layer_map(std::string filename,int layer)
@@ -39,59 +19,30 @@
   Solution 3 do the plot for endcap disk i
   root[2]-> do_disk_map(std::string filename,int disk)
 
-
-  // Finally you can now plot the rate per chip for a given module
-  //
-
-  root[2]-> do_module_map(std::string filename,int layer, int ladder, int module)
-
-  with layer numbered as:
-
-  5-10 : Barrel
-  11-17: Endcap +Z
-  18-24: Endcap -Z
-
-
   Information about this macro may be found in the following page:
 
   http://sviret.web.cern.ch/sviret/Welcome.php?n=CMS.HLLHCTuto (STEP III)
 
   Author: viret@in2p3_dot_fr
-  Date:   23/05/2013
-  Update: 19/06/2013
+  Date: 23/05/2013
 */
 
-void do_rates_plots(std::string filename)
-{
-  do_the_plots(filename,1,1,1);
-}
 
-
-void do_layer_map(std::string filename,int layer)
-{
-  do_layer_map_i(filename,layer,1,1,1);
-}
-
-void do_disk_map(std::string filename,int disk)
-{
-  do_disk_map_i(filename,disk,1,1,1);
-}
-
-void do_the_plots(std::string filename, float pri, float sec, float fak)
+void do_sec_plots(std::string filename, float pri, float sec, float fak)
 {
   for (int i=0;i<14;++i)
   { 
-    do_disk_map_i(filename,i,pri,sec,fak);
+    do_disk_map(filename,i,pri,sec,fak);
   }
 
   for (int i=5;i<11;++i)
   { 
-    do_layer_map_i(filename,i,pri,sec,fak);
+    do_layer_map(filename,i,pri,sec,fak);
   }
 }
 
 
-void do_layer_map_i(std::string filename,int layer, float pri, float sec, float fak)
+void do_layer_map(std::string filename,int layer, float pri, float sec, float fak)
 {
   // First get the data
   // by merging all the available files
@@ -118,16 +69,25 @@ void do_layer_map_i(std::string filename,int layer, float pri, float sec, float 
   int idx;
   float maxval = 0;
   float rate = 0;
+  int maxmod = 0;
 
   for (int i=0;i<7;++i)
   { 
-    for (int j=0;j<58000;++j)
+    for (int j=(layer-5)*10000;j<(layer-5)*10000+8000;++j)
     { 
       rate = pri*count_p[j]+fak*count_f[j]+sec*count_s[j];
 
-      if (rate>maxval) maxval = rate;
+      if (rate>maxval) 
+      {
+	maxval = rate;
+	maxmod = j;
+      }
     }
   }
+
+  cout << "max module for layer " << layer << " is " << maxmod << endl;  
+
+  //  do_module_map(filename,layer+5, int ladder, int module)
 
   TH2F *cadre = new TH2F("zz","zz",n_mod_barrel[layer-5],0.,n_mod_barrel[layer-5],n_lad_barrel[layer-5],0.,n_lad_barrel[layer-5]);
   TH2F *cadre2 = new TH2F("zz","zz",n_mod_barrel[layer-5]+1,0.,n_mod_barrel[layer-5]+1,n_lad_barrel[layer-5],0.,n_lad_barrel[layer-5]);
@@ -219,9 +179,141 @@ void do_layer_map_i(std::string filename,int layer, float pri, float sec, float 
   c1->Update();
 }
 
+void do_layer_maxmap(std::string filename,int layer)
+{
+  // First get the data
+  // by merging all the available files
+
+  gStyle->SetOptStat(0);
+  gStyle->SetOptTitle(0);
+
+  int count_p[58000];
+ 
+  double n_lad_barrel[6]  = {16,24,34,48,62,76};
+  double n_mod_barrel[6]  = {63,55,54,24,24,24};
 
 
-void do_disk_map_i(std::string filename,int disk, float pri, float sec, float fak)
+  TFile *oldfile = TFile::Open(filename.c_str());
+  TTree *newtree = (TTree*)oldfile->Get("L1Rates");
+
+  newtree->SetBranchAddress("STUB_b_max",  &count_p);
+  newtree->GetEntry(0);
+
+  int idx;
+  float maxval = 0;
+  float rate = 0;
+  int maxmod = 0;
+
+  for (int i=0;i<7;++i)
+  { 
+    for (int j=(layer-5)*10000;j<(layer-5)*10000+8000;++j)
+    { 
+      rate = float(count_p[j]);
+
+      if (rate>maxval) 
+      {
+	maxval = rate;
+	maxmod = j;
+      }
+    }
+  }
+
+  cout << "max module for layer " << layer << " is " << maxmod << endl;  
+
+  //  do_module_map(filename,layer+5, int ladder, int module)
+
+  TH2F *cadre = new TH2F("zz","zz",n_mod_barrel[layer-5],0.,n_mod_barrel[layer-5],n_lad_barrel[layer-5],0.,n_lad_barrel[layer-5]);
+  TH2F *cadre2 = new TH2F("zz","zz",n_mod_barrel[layer-5]+1,0.,n_mod_barrel[layer-5]+1,n_lad_barrel[layer-5],0.,n_lad_barrel[layer-5]);
+
+  cadre2->Fill(n_mod_barrel[layer-5]+0.5,0.5,0.);
+  cadre2->Fill(n_mod_barrel[layer-5]+0.5,0.5,maxval);
+
+  for (int j=0;j<n_mod_barrel[layer-5];++j)
+  {
+    for (int i=0;i<n_lad_barrel[layer-5];++i)
+    {
+      idx = 10000*(layer-5) + 100*i + j;
+      rate= count_p[idx];
+
+      cadre2->Fill(j+0.5,i+0.5,rate);
+    }
+  }
+
+  const Int_t NRGBs = 5;
+  const Int_t NCont = 255;
+  
+  Double_t stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
+  Double_t red[NRGBs]   = { 0.00, 0.00, 0.87, 1.00, 0.51 };
+  Double_t green[NRGBs] = { 0.00, 0.81, 1.00, 0.20, 0.00 };
+  Double_t blue[NRGBs]  = { 0.51, 1.00, 0.12, 0.00, 0.00 };
+  TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
+  gStyle->SetNumberContours(NCont);
+
+
+  c1 = new TCanvas("c1","Layer map",201,77,1470,858);
+  gStyle->SetOptStat(0);
+  gStyle->SetOptTitle(0);
+  c1->Range(-5.887851,-1.930603,70.65421,17.37543);
+  c1->SetFillColor(0);
+  c1->SetBorderMode(0);
+  c1->SetBorderSize(2);
+  c1->SetGridx();
+  c1->SetGridy();
+  c1->SetLeftMargin(0.07692308);
+  c1->SetTopMargin(0.07124352);
+  c1->SetFrameBorderMode(0);
+  c1->SetFrameBorderMode(0);
+  
+
+  cadre->GetXaxis()->SetTitle("Barrel module index");
+  cadre->GetXaxis()->SetNdivisions(n_mod_barrel[layer-5]);
+  cadre->GetXaxis()->SetLabelFont(42);
+  cadre->GetXaxis()->SetLabelSize(0.02);
+  cadre->GetXaxis()->SetTitleSize(0.035);
+  cadre->GetXaxis()->SetTickLength(1);
+  cadre->GetXaxis()->SetTitleFont(42);
+  cadre->GetYaxis()->SetTitle("Barrel ladder index");
+  cadre->GetYaxis()->SetNdivisions(n_lad_barrel[layer-5]);
+  cadre->GetYaxis()->SetLabelFont(42);
+  cadre->GetYaxis()->SetLabelOffset(0.004);
+  cadre->GetYaxis()->SetLabelSize(0.02);
+  cadre->GetYaxis()->SetTitleSize(0.03);
+  cadre->GetYaxis()->SetTickLength(0.99);
+  cadre->GetYaxis()->SetTitleFont(42);
+  cadre->GetZaxis()->SetLabelFont(42);
+  cadre->GetZaxis()->SetLabelSize(0.035);
+  cadre->GetZaxis()->SetTitleSize(0.035);
+  cadre->GetZaxis()->SetTitleFont(42);  
+
+  cadre->Draw();
+  cadre2->Draw("colzsame");
+   
+  TPaveText *pt = new TPaveText(-0.249009,16.26533,10.45435,17.25477,"br");
+  TPaveText *pt = new TPaveText(0.,n_lad_barrel[layer-5],10./55.*n_mod_barrel[layer-5],17./16.*n_lad_barrel[layer-5],"br");
+
+  char buffer[50];
+  sprintf (buffer, "Barrel Layer %d",layer);
+
+  ci = TColor::GetColor("#ccccff");
+  pt->SetFillColor(ci);
+  pt->SetTextSize(0.03125);
+  TText *text = pt->AddText(buffer);
+  pt->Draw();
+  c1->Modified();
+
+  c1->Update();
+
+  sprintf (buffer, "Barrel_%d_rate_140.eps", layer);
+  c1->Print(buffer);
+
+  sprintf (buffer, "Barrel_%d_rate_140.png", layer);
+  c1->Print(buffer);
+
+  c1->Update();
+}
+
+
+void do_disk_map(std::string filename,int disk, float pri, float sec, float fak)
 {
 
   // First get the data
@@ -236,12 +328,12 @@ void do_disk_map_i(std::string filename,int disk, float pri, float sec, float fa
   float count_f[142000];
   float count_s[142000];
 
-  double n_lad_endcap[14]   = {24,26,28,30,34,34,38,40,48,54,62,66,72,78};
-  double n_start_endcap[14] = {0,0,0,0,0,0,1,0,0,1,0,0,0,1};
+  double n_lad_endcap[15]   = {20,24,28,28,32,36,36,40,40,48,56,64,68,72,80};
+  double n_start_endcap[15] = {0,0,0,0,0,0,1,0,0,0,1,0,0,0,1};
 
   if (disk>=7) // -Z case
   {
-    for (int i=0;i<14;++i) n_start_endcap[i] = 0; // There is no problem in this case
+    for (int i=0;i<15;++i) n_start_endcap[i] = 0; // There is no problem in this case
   }
 
   TFile *oldfile = TFile::Open(filename.c_str());
@@ -270,21 +362,22 @@ void do_disk_map_i(std::string filename,int disk, float pri, float sec, float fa
     }
   }
 
-  TH2F *cadre  = new TH2F("zz","zz",28,-14.,14.,28,-14.,14.);
-  TH2F *ring1  = new TH2F("r1","r1",n_lad_endcap[0],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring2  = new TH2F("r2","r2",n_lad_endcap[1],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring3  = new TH2F("r3","r3",n_lad_endcap[2],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring4  = new TH2F("r4","r4",n_lad_endcap[3],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring5  = new TH2F("r5","r5",n_lad_endcap[4],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring6  = new TH2F("r6","r6",n_lad_endcap[5],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring7  = new TH2F("r7","r7",n_lad_endcap[6],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring8  = new TH2F("r8","r8",n_lad_endcap[7],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring9  = new TH2F("r9","r9",n_lad_endcap[8],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring10 = new TH2F("r10","r10",n_lad_endcap[9],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring11 = new TH2F("r11","r11",n_lad_endcap[10],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring12 = new TH2F("r12","r12",n_lad_endcap[11],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring13 = new TH2F("r13","r13",n_lad_endcap[12],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring14 = new TH2F("r14","r14",n_lad_endcap[13],0.,8*atan(1.),25,0.,25.);
+  TH2F *cadre  = new TH2F("zz","zz",30,-15.,15.,30,-15.,15.);
+  TH2F *ring1  = new TH2F("r1","r1",n_lad_endcap[0],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring2  = new TH2F("r2","r2",n_lad_endcap[1],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring3  = new TH2F("r3","r3",n_lad_endcap[2],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring4  = new TH2F("r4","r4",n_lad_endcap[3],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring5  = new TH2F("r5","r5",n_lad_endcap[4],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring6  = new TH2F("r6","r6",n_lad_endcap[5],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring7  = new TH2F("r7","r7",n_lad_endcap[6],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring8  = new TH2F("r8","r8",n_lad_endcap[7],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring9  = new TH2F("r9","r9",n_lad_endcap[8],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring10 = new TH2F("r10","r10",n_lad_endcap[9],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring11 = new TH2F("r11","r11",n_lad_endcap[10],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring12 = new TH2F("r12","r12",n_lad_endcap[11],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring13 = new TH2F("r13","r13",n_lad_endcap[12],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring14 = new TH2F("r14","r14",n_lad_endcap[13],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring15 = new TH2F("r15","r15",n_lad_endcap[14],0.,8*atan(1.),26,0.,26.);
 
   fill_histo(ring1,count_e,n_lad_endcap[0],n_start_endcap[0],disk,0,maxval);
   fill_histo(ring2,count_e,n_lad_endcap[1],n_start_endcap[1],disk,1,maxval);
@@ -300,6 +393,7 @@ void do_disk_map_i(std::string filename,int disk, float pri, float sec, float fa
   fill_histo(ring12,count_e,n_lad_endcap[11],n_start_endcap[11],disk,11,maxval);
   fill_histo(ring13,count_e,n_lad_endcap[12],n_start_endcap[12],disk,12,maxval);
   fill_histo(ring14,count_e,n_lad_endcap[13],n_start_endcap[13],disk,13,maxval);
+  fill_histo(ring15,count_e,n_lad_endcap[14],n_start_endcap[14],disk,14,maxval);
 
   const Int_t NRGBs = 5;
   const Int_t NCont = 255;
@@ -346,8 +440,9 @@ void do_disk_map_i(std::string filename,int disk, float pri, float sec, float fa
   ring12->Draw("polcolsame");
   ring13->Draw("polcolsame");
   ring14->Draw("polcolzsame");
+  ring15->Draw("polcolzsame");
      
-  TPaveText *pt = new TPaveText(-14.55731,13.00358,-5.683091,14.59651,"br");
+  TPaveText *pt = new TPaveText(-15.55731,13.00358,-5.083091,14.59651,"br");
 
   char buffer[50];
 
@@ -394,8 +489,8 @@ void fill_histo(TH2F *hist,float val[], double nlad, double dec, int disk, int r
     hist->Fill(phi_sec,0.5+ring,val[idx]);
   }
  
-  hist->Fill(0.5*scale,24.5,0);
-  hist->Fill(1.5*scale,24.5,max);
+  hist->Fill(0.5*scale,25.5,0);
+  hist->Fill(1.5*scale,25.5,max);
 }
 
 
@@ -483,6 +578,108 @@ void do_module_map(std::string filename,int layer, int ladder, int module)
   char buffer[150];
 
   sprintf(buffer, "Av. chip rates for module %d from ladder %d and layer %d (in stubs/BX)", module+1,ladder+1,layer);
+
+  ci = TColor::GetColor("#ffcc33");
+  pt->SetFillColor(ci);
+  pt->SetTextSize(0.02);
+  TText *text = pt->AddText(buffer);
+  pt->Draw();
+  c1->Modified();
+
+  c1->Update();
+
+
+  sprintf (buffer, "MChip_%d_%d_%d_rate.eps",layer,ladder+1,module+1);
+  c1->Print(buffer);
+
+  sprintf (buffer, "MChip_%d_%d_%d_rate.png",layer,ladder+1,module+1);
+  c1->Print(buffer);
+}
+
+void do_module_MAXmap(std::string filename,int layer, int ladder, int module)
+{
+  // First get the data
+  // by merging all the available files
+
+  gStyle->SetOptStat(0);
+  gStyle->SetOptTitle(0);
+
+  int count[16][58000];
+
+  TFile *oldfile = TFile::Open(filename.c_str());
+  TTree *newtree = (TTree*)oldfile->Get("L1Rates");
+
+  newtree->SetBranchAddress("STUB_b_c_max",  &count);
+  newtree->GetEntry(0);
+
+
+  TH2F *cadre  = new TH2F("zz","zz",2,0.5,2.5,8,0.5,8.5);
+
+  float sen;
+  float chip;
+  float rate;
+
+  int idx;
+
+  for (int j=0;j<16;++j)
+  {
+    sen  = j/8+1.;
+    chip = j%8+1.;
+    idx  = 10000*(layer-5) + 100*ladder + module;
+    rate = count[j][idx];
+
+    cadre->Fill(sen,chip,rate);    
+  }
+
+  const Int_t NRGBs = 5;
+  const Int_t NCont = 255;
+  
+  Double_t stops[NRGBs] = { 0.00, 0.25, 0.5, 0.75, 1.00 };
+  Double_t red[NRGBs]   = { 1.00, 0.9, 0.75, 0.6, .4 };
+  Double_t green[NRGBs] = { 0.00, 0., 0.00, 0.0, 0.00 };
+  Double_t blue[NRGBs]  = { 0., 0.00, 0., 0.00, 0.00 };
+  TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
+  gStyle->SetNumberContours(NCont);
+
+  c1 = new TCanvas("c1","Layer map",166,77,947,880);
+
+  gStyle->SetOptStat(0);
+  gStyle->SetOptTitle(0);
+  c1->Range(0.8097754,0.1854951,3.089828,9.691771);
+  c1->SetFillColor(0);
+  c1->SetBorderMode(0);
+  c1->SetBorderSize(2);
+  c1->SetLeftMargin(0.0834299);
+  c1->SetRightMargin(0.03939745);
+  c1->SetTopMargin(0.07276995);
+  c1->SetBottomMargin(0.08568075);
+  c1->SetFrameBorderMode(0);
+  c1->SetFrameBorderMode(0);
+
+  //  cadre->GetXaxis()->SetLabelSize(0.);
+  //  cadre->GetXaxis()->SetLabelOffset(999);
+  //  cadre->GetYaxis()->SetLabelSize(0.);
+  //  cadre->GetYaxis()->SetLabelOffset(999);
+  cadre->GetXaxis()->SetTitle("Sensor number");
+  cadre->GetXaxis()->SetNdivisions(302);
+  cadre->GetXaxis()->SetLabelFont(102);
+  cadre->GetXaxis()->SetLabelSize(0.03);
+  cadre->GetXaxis()->SetTitleSize(0.035);
+  cadre->GetXaxis()->SetTitleFont(102);
+  cadre->GetYaxis()->SetTitle("Chip number");
+  cadre->GetYaxis()->SetNdivisions(209);
+  cadre->GetYaxis()->SetLabelFont(102);
+  cadre->GetYaxis()->SetLabelSize(0.03);
+  cadre->GetYaxis()->SetTitleOffset(0.79);
+  cadre->GetYaxis()->SetTitleFont(102);
+  cadre->SetMarkerSize(2.);
+  cadre->Draw("coltext");
+    
+  TPaveText *pt = new TPaveText(0.8,8.6,2.2,9.1,"br");
+
+  char buffer[150];
+
+  sprintf(buffer, "Max chip rates for module %d from ladder %d and layer %d (in stubs/BX)", module+1,ladder+1,layer);
 
   ci = TColor::GetColor("#ffcc33");
   pt->SetFillColor(ci);

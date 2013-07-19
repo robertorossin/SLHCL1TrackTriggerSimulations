@@ -22,7 +22,7 @@ void rates::get_rates()
 {
   // Initialize some params
  
- int B_id,E_id; // The detector module IDs (defined in the header)
+  int B_id,E_id; // The detector module IDs (defined in the header)
 
   int disk;
   int layer,ladder,module,chip;
@@ -346,8 +346,7 @@ void rates::initTuple(std::string in,std::string out)
   L1TT   = new TChain("L1TrackTrigger"); 
 
   L1TT->Add(in.c_str());
- 
-
+  
   pm_clus_x=&m_clus_x;
   pm_clus_y=&m_clus_y;
   pm_clus_z=&m_clus_z;

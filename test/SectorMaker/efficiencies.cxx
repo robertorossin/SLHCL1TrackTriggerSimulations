@@ -1,4 +1,4 @@
-// Class for the efficiencies determination
+// Class for the rates determination
 // For more info, look at the header file
 
 #include "efficiencies.h"
@@ -7,6 +7,8 @@
 
 efficiencies::efficiencies(std::string filename, std::string outfile)
 {
+  cout << "Into eff " << endl;	
+
   efficiencies::initTuple(filename,outfile);
   efficiencies::reset();
   efficiencies::initVars();
@@ -31,7 +33,9 @@ void efficiencies::get_efficiencies()
   int pix_i;
   int clus_i;
   int stub_i;
- 
+  
+  int disk = 0;
+
   int i_lay;
   int i_mod;
   int i_seg;
@@ -40,9 +44,15 @@ void efficiencies::get_efficiencies()
   double dphi = 0;
   double dphi_min = 0;
 
+  int hit_on_lay[20];
+  int stub_on_lay_pri[20];
+  int stub_on_lay_off[20];
+
   int n_entries = L1TT_P->GetEntries();
 
   // Then loop over events
+
+  bool m_dbg =false;
 
   for (int j=0;j<n_entries;++j)
   {
@@ -57,7 +67,7 @@ void efficiencies::get_efficiencies()
 
     nh_tot=0;
 
-    if (j%1000==0)
+    if (j%10000==0)
       cout << j <<endl;
 
     // Principle is the following:
@@ -71,26 +81,70 @@ void efficiencies::get_efficiencies()
     L1TT_O->GetEntry(j,1);
     L1TT_P->GetEntry(j,1);
 
+
     for (int k=0;k<m_part_n;++k) // Loop over TPs
     {
+      if (abs(m_part_pdg->at(k)) != 13) // Select only muons for the moment 
+      {
+	nh_tot+=m_part_hits->at(k);
+	continue; // Not an interesting
+      }
+
       D0GEN = sqrt(m_part_x->at(k)*m_part_x->at(k)+m_part_y->at(k)*m_part_y->at(k));
       if (D0GEN > 0.3) 
       {
 	nh_tot+=m_part_hits->at(k);
 	continue; // Not a primary, skip
       }
-      
+
       PTGEN = sqrt(m_part_px->at(k)*m_part_px->at(k)+m_part_py->at(k)*m_part_py->at(k));
+
+      if (PTGEN < 1.) 
+      {
+	nh_tot+=m_part_hits->at(k);
+	continue; // Not an interesting
+      }
+
+      for (int i=0;i<20;++i)
+      {
+	hit_on_lay[i]=0;
+	stub_on_lay_off[i]=0;
+	stub_on_lay_pri[i]=0;
+      }
+
+      if (m_dbg)
+      {
+	cout << endl;
+	cout << "Dealing with TP " << k << " of " << m_part_n << endl;
+	cout << "TP PDG code is " << m_part_pdg->at(k) << endl;
+	cout << "This TP contains " << m_part_hits->at(k) << " hits" << endl;
+      }
 
       for (int l=nh_tot;l<m_part_hits->at(k)+nh_tot;++l) // Loop over TP simhits
       {
 	if (m_hits_layer->at(l)<5) continue; // Don't care about pixel hits
 
 	dphi_min = 1.;
-
+	
 	i_eta = m_part_eta->at(k);
 	i_lay = m_hits_layer->at(l);
 	i_mod = m_hits_module->at(l)-1;
+
+	++hit_on_lay[i_lay-5];
+
+	if (m_dbg)
+	{
+	  cout << endl;	
+	  cout << "   HIT    " << l << "/" << m_part_hits->at(k)+nh_tot << endl;	
+	  cout << "   Coords " << i_lay 
+	       << " / " << m_hits_ladder->at(l) 
+	       << " / " << i_mod+1 << endl;
+	}
+
+	disk=0;
+	if (i_lay>10 && i_lay<=17) disk=int(i_lay-10)%8;
+	if (i_lay>17 && i_lay<=24) disk=int(i_lay-17)%8;
+
 
 	if (PTGEN<20) entries_pt[i_lay-5][static_cast<int>(5*PTGEN)]+=1;   
 	if (fabs(i_eta)<2.5 && PTGEN>10) entries_eta[i_lay-5][static_cast<int>(25+10*i_eta)]+=1;   
@@ -106,14 +160,11 @@ void efficiencies::get_efficiencies()
 	// We have the simhits, now look at the digis
 	for (int i=0;i<m_pclus;++i)
 	{
-	  if (pix_i!=-1) break; // We found something
 	  if (m_pixclus_layer->at(i)!=i_lay) continue;
 	  if (m_pixclus_module->at(i)!=i_mod+1) continue;	      
 	  if (m_pixclus_ladder->at(i)!= m_hits_ladder->at(l)) continue;
 
 	  dphi = fabs(atan2(m_hits_y->at(l),m_hits_x->at(l))-atan2(m_pixclus_y->at(i),m_pixclus_x->at(i)));
-
-	  if (dphi>0.002) continue;
 
 	  if (dphi<dphi_min)
 	  {
@@ -123,6 +174,11 @@ void efficiencies::get_efficiencies()
 	} // End of loop over digis
 
 	if (pix_i==-1) continue; 
+
+	if (m_dbg)
+	{
+	  cout << "   Matched with PIX " << pix_i << endl;	
+	}
 
 	i_seg = m_pixclus_column->at(pix_i);
 
@@ -135,18 +191,28 @@ void efficiencies::get_efficiencies()
 	for (int i=0;i<m_clus;++i)
 	{
 	  if (clus_i!=-1) break;
-	  if (m_clus_nstrips->at(i)>3) continue;
+	  if (m_clus_nstrips->at(i)>4) continue;
 	  if (m_clus_layer->at(i)!=i_lay) continue;
 	  if (m_clus_module->at(i)!=i_mod+1) continue;	
 	  if (m_clus_seg->at(i)!=i_seg) continue;
 	  if (m_clus_ladder->at(i)!=m_hits_ladder->at(l)) continue;
 	  if (fabs(m_clus_strip->at(i)-m_pixclus_row->at(pix_i))>m_clus_nstrips->at(i)) continue;
+
+	  if (m_dbg)
+	  {
+	    cout << "   Cand CLUS " << i << " / " << m_clus_strip->at(i) << " / " << m_pixclus_row->at(pix_i)  << " / " << m_clus_nstrips->at(i) << endl;	
+	  }
+
 	  clus_i = i;
 	}
 
-	
 	if (clus_i!=-1) 
 	{
+	  if (m_dbg)
+	  {
+	    cout << "   Matched with CLUS " << clus_i << endl;	
+	  }
+
 	  if (PTGEN<20) clus_pri_pt[i_lay-5][static_cast<int>(5*PTGEN)]+=1;   
 	  if (fabs(i_eta)<2.5 && PTGEN>10) clus_pri_eta[i_lay-5][static_cast<int>(25+10*i_eta)]+=1;  
 	  
@@ -154,19 +220,27 @@ void efficiencies::get_efficiencies()
 	  for (int i=0;i<m_stub;++i)
 	  {
 	    if (stub_i!=-1) break;
-	    if (m_stub_tp->at(i)!=k) continue;
+	    //if (m_stub_tp->at(i)!=k) continue;
 	    if (m_stub_layer->at(i)!=i_lay) continue;
 	    if (m_stub_clust1->at(i)==clus_i) stub_i = i;
-	    if (m_stub_clust2->at(i)==clus_i) stub_i = i;
+	    if (m_stub_clust2->at(i)==clus_i) stub_i = i; 
 	  }
 	  
 	  if (stub_i!=-1) 
 	  {
+	    ++stub_on_lay_pri[i_lay-5];
+	    if (m_dbg)
+	    {
+	      cout << "   Matched with STUB " << stub_i << " / "	
+		   << m_stub_tp->at(stub_i) << " / " 
+		   << k  << endl;	
+	    }
+
 	    if (PTGEN<20) stub_pri_pt[i_lay-5][static_cast<int>(5*PTGEN)]+=1;   
 	    if (fabs(i_eta)<2.5 && PTGEN>10) stub_pri_eta[i_lay-5][static_cast<int>(25+10*i_eta)]+=1;  
 	  }	  
 	}
-	
+      
 	clus_i = -1; //
 	stub_i = -1; //
 
@@ -174,7 +248,7 @@ void efficiencies::get_efficiencies()
 	for (int i=0;i<m_tkclus;++i)
 	{
 
-	  if (m_tkclus_nstrips->at(i)>3) continue;
+	  if (m_tkclus_nstrips->at(i)>4) continue;
 	  if (m_tkclus_layer->at(i)!=i_lay) continue;
 	  if (m_tkclus_module->at(i)!=i_mod+1) continue;	
 	  if (m_tkclus_seg->at(i)!=i_seg) continue;
@@ -192,7 +266,7 @@ void efficiencies::get_efficiencies()
 	  for (int i=0;i<m_tkstub;++i)
 	  {
 	    if (stub_i!=-1) break;
-	    if (m_tkstub_tp->at(i)!=k) continue;
+	    //	    if (m_tkstub_tp->at(i)!=k) continue;
 	    if (m_tkstub_layer->at(i)!=i_lay) continue;
 	    if (m_tkstub_clust1->at(i)==clus_i) stub_i = i;
 	    if (m_tkstub_clust2->at(i)==clus_i) stub_i = i;
@@ -200,12 +274,35 @@ void efficiencies::get_efficiencies()
 
 	  if (stub_i!=-1) 
 	  {
+	    ++stub_on_lay_off[i_lay-5];
+
 	    if (PTGEN<20) stub_off_pt[i_lay-5][static_cast<int>(5*PTGEN)]+=1;   
 	    if (fabs(i_eta)<2.5 && PTGEN>10) stub_off_eta[i_lay-5][static_cast<int>(25+10*i_eta)]+=1;  
 	  }
 	}
       } // End of loop over SimHits
-      
+
+      for (int i=0;i<20;++i)
+      {
+	if (hit_on_lay[i]!=0)
+	{
+	  if (PTGEN<20) entries_pt_lay[i][static_cast<int>(5*PTGEN)]+=1;   
+	  if (fabs(i_eta)<2.5 && PTGEN>10) entries_eta_lay[i][static_cast<int>(25+10*i_eta)]+=1;   
+	}
+
+	if (stub_on_lay_pri[i]!=0)
+	{
+	  if (PTGEN<20) stub_pri_pt_lay[i][static_cast<int>(5*PTGEN)]+=1;   
+	  if (fabs(i_eta)<2.5 && PTGEN>10) stub_pri_eta_lay[i][static_cast<int>(25+10*i_eta)]+=1; 
+	}
+
+	if (stub_on_lay_off[i]!=0)
+	{
+	  if (PTGEN<20) stub_off_pt_lay[i][static_cast<int>(5*PTGEN)]+=1;   
+	  if (fabs(i_eta)<2.5 && PTGEN>10) stub_off_eta_lay[i][static_cast<int>(25+10*i_eta)]+=1; 
+	}
+      }
+
       nh_tot+=m_part_hits->at(k);
     } // End of loop over TPs
 
@@ -226,7 +323,13 @@ void efficiencies::get_efficiencies()
 	stub_off_pt[i][j] = stub_off_pt[i][j]/entries_pt[i][j];
 	clus_pri_pt[i][j] = clus_pri_pt[i][j]/entries_pt[i][j];
 	stub_pri_pt[i][j] = stub_pri_pt[i][j]/entries_pt[i][j];
-      }     
+      }  
+
+      if (entries_pt_lay[i][j]!=0.)
+      {
+   	stub_pri_pt_lay[i][j] = stub_pri_pt_lay[i][j]/entries_pt_lay[i][j];
+   	stub_off_pt_lay[i][j] = stub_off_pt_lay[i][j]/entries_pt_lay[i][j];
+      }
     }
 
     for (int j=0;j<50;++j) 
@@ -238,7 +341,13 @@ void efficiencies::get_efficiencies()
 	stub_off_eta[i][j] = stub_off_eta[i][j]/entries_eta[i][j];
 	clus_pri_eta[i][j] = clus_pri_eta[i][j]/entries_eta[i][j];
 	stub_pri_eta[i][j] = stub_pri_eta[i][j]/entries_eta[i][j];
-      }     
+      } 
+
+      if (entries_eta_lay[i][j]!=0.)
+      {
+   	stub_pri_eta_lay[i][j] = stub_pri_eta_lay[i][j]/entries_eta_lay[i][j];
+   	stub_off_eta_lay[i][j] = stub_off_eta_lay[i][j]/entries_eta_lay[i][j];
+      }    
     }
   }
 
@@ -262,22 +371,30 @@ void efficiencies::initVars()
     {
       digi_pt[i][j]=0.;
       entries_pt[i][j]=0.;     
+      entries_pt_lay[i][j]=0.;     
 
       clus_off_pt[i][j]=0.;
-      stub_off_pt[i][j]=0.;
       clus_pri_pt[i][j]=0.;
+
+      stub_off_pt[i][j]=0.;
       stub_pri_pt[i][j]=0.;
+      stub_off_pt_lay[i][j]=0.;
+      stub_pri_pt_lay[i][j]=0.;
     }
 
     for (int j=0;j<50;++j) 
     {
       digi_eta[i][j]=0.;
       entries_eta[i][j]=0.;     
+      entries_eta_lay[i][j]=0.;     
 
       clus_off_eta[i][j]=0.;
-      stub_off_eta[i][j]=0.;
       clus_pri_eta[i][j]=0.;
+
+      stub_off_eta[i][j]=0.;
       stub_pri_eta[i][j]=0.;
+      stub_off_eta_lay[i][j]=0.;
+      stub_pri_eta_lay[i][j]=0.;
     }
   }
 
@@ -294,6 +411,7 @@ void efficiencies::reset()
   m_pixclus_y->clear();
   
   m_part_hits->clear();
+  m_part_pdg->clear();
   m_part_px->clear();
   m_part_py->clear();
   m_part_eta->clear();
@@ -353,6 +471,7 @@ void efficiencies::initTuple(std::string in,std::string out)
   m_pixclus_y        = new std::vector<float>; 
 
   m_part_hits   = new std::vector<int>; 
+  m_part_pdg    = new std::vector<int>; 
   m_part_px     = new std::vector<float>; 
   m_part_py     = new std::vector<float>; 
   m_part_eta    = new std::vector<float>;   
@@ -413,7 +532,8 @@ void efficiencies::initTuple(std::string in,std::string out)
   MC->SetBranchStatus("subpart_y",1);    
   MC->SetBranchStatus("subpart_px",1);   
   MC->SetBranchStatus("subpart_py",1);   
-  MC->SetBranchStatus("subpart_eta",1);  
+  MC->SetBranchStatus("subpart_eta",1);
+  MC->SetBranchStatus("subpart_pdgId",1);  
 
   MC->SetBranchStatus("subpart_hits",1);       
   MC->SetBranchStatus("subpart_hits_x",1);     
@@ -468,6 +588,7 @@ void efficiencies::initTuple(std::string in,std::string out)
   MC->SetBranchAddress("subpart_px",       &m_part_px);   
   MC->SetBranchAddress("subpart_py",       &m_part_py);   
   MC->SetBranchAddress("subpart_eta",      &m_part_eta);  
+  MC->SetBranchAddress("subpart_pdgId",    &m_part_pdg);  
 
   MC->SetBranchAddress("subpart_hits",          &m_part_hits); 
   MC->SetBranchAddress("subpart_hits_x",        &m_hits_x);
@@ -516,11 +637,17 @@ void efficiencies::initTuple(std::string in,std::string out)
   m_tree->Branch("digi_pt",&digi_pt,"digi_pt[20][100]");
   m_tree->Branch("digi_eta",&digi_eta,"digi_eta[20][50]");
   m_tree->Branch("clus_off_pt",&clus_off_pt,"clus_off_pt[20][100]");
-  m_tree->Branch("stub_off_pt",&stub_off_pt,"stub_off_pt[20][100]");
   m_tree->Branch("clus_off_eta",&clus_off_eta,"clus_off_eta[20][50]");
-  m_tree->Branch("stub_off_eta",&stub_off_eta,"stub_off_eta[20][50]");
   m_tree->Branch("clus_pri_pt",&clus_pri_pt,"clus_pri_pt[20][100]");
-  m_tree->Branch("stub_pri_pt",&stub_pri_pt,"stub_pri_pt[20][100]");
   m_tree->Branch("clus_pri_eta",&clus_pri_eta,"clus_pri_eta[20][50]");
+
+  m_tree->Branch("stub_off_pt",&stub_off_pt,"stub_off_pt[20][100]");
+  m_tree->Branch("stub_off_eta",&stub_off_eta,"stub_off_eta[20][50]");
+  m_tree->Branch("stub_pri_pt",&stub_pri_pt,"stub_pri_pt[20][100]");
   m_tree->Branch("stub_pri_eta",&stub_pri_eta,"stub_pri_eta[20][50]");
+
+  m_tree->Branch("stub_off_pt_lay",&stub_off_pt_lay,"stub_off_pt_lay[20][100]");
+  m_tree->Branch("stub_off_eta_lay",&stub_off_eta_lay,"stub_off_eta_lay[20][50]");
+  m_tree->Branch("stub_pri_pt_lay",&stub_pri_pt_lay,"stub_pri_pt_lay[20][100]");
+  m_tree->Branch("stub_pri_eta_lay",&stub_pri_eta_lay,"stub_pri_eta_lay[20][50]");
 }
