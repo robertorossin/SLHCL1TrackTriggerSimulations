@@ -11,7 +11,7 @@
   sectorMaker program) 
 
   Solution 1 do all the plots
-  root[2]-> do_sec_plots(std::string filename) 
+  root[2]-> do_rates_plots(std::string filename) 
 
   Solution 2 do the plot for barrel layer i
   root[2]-> do_layer_map(std::string filename,int layer)
@@ -26,6 +26,12 @@
   Author: viret@in2p3_dot_fr
   Date: 23/05/2013
 */
+
+
+void do_rates_plots(std::string filename)
+{
+  do_sec_plots(filename,1,1,1)
+}
 
 
 void do_sec_plots(std::string filename, float pri, float sec, float fak)
