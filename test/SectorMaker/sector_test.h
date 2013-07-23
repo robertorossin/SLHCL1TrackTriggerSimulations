@@ -20,6 +20,10 @@
 //
 // Base class for sector efficiency determination 
 //
+// The role of this class is to check that all particles are contained in at least one 
+// trigger sector, to count the stub multiplicities per sector, and finally to 
+// compute the pattern bank efficiency
+//
 // filename    : the name and directory of the input ROOT file containing the particle to test
 // secfilename : the name and directory of the input ROOT file containing the sectors definition
 // outfile     : the name of the output ROOT file containing the efficiency results 
@@ -42,25 +46,26 @@ class sector_test
  public:
 
   sector_test(std::string filename, std::string secfilename, 
-	      std::string outfile, int nevt);
+	      std::string pattfilename, std::string outfile, int nevt);
 
   void   do_test(int nevt);    
-  void   initTuple(std::string test,std::string sec,std::string out);
-
+  void   initTuple(std::string test,std::string sec,std::string patt,std::string out);
   bool   in_sec(int sec,int mod);
 
 
 
  private:
 
-  TFile *m_infile;
-  TFile *m_testfile;
-  TFile *m_outfile;
-  TFile *m_pattfile;
+  bool do_patt;
+
+  TFile  *m_infile;
+  TFile  *m_testfile;
+  TFile  *m_outfile;
+  TFile  *m_pattfile;
   TChain *m_L1TT;
-  TTree *m_sectree;
-  TTree *m_efftree;
-  TTree *m_PATT;
+  TTree  *m_sectree;
+  TTree  *m_efftree;
+  TTree  *m_PATT;
 
   // Coding conventions for barrel and endcap module IDs
   
@@ -97,15 +102,15 @@ class sector_test
 
   // The output tree has one entry per primary track. 
 
-  int   nsec;  // The number of sectors containing ALL the stubs of the track
-  float pt;    // The pT of the track
-  float eta;   // The eta of the track
-  float phi;   // The phi of the track
-  int npatt;   // The number of patterns containing the full track
-  int ntotpatt;// The total number of patterns 
-  int   mult[500];   // 
-  int   nhits;
-
+  int   nsec;       // The number of sectors containing at least 5 stubs of the prim. track
+  float pt;         // The pT of the prim. track
+  float eta;        // The eta of the prim. track
+  float phi;        // The phi of the prim. track
+  int   npatt;      // The number of patterns containing at least 5 stubs of the prim. track
+  int   ntotpatt;   // The total number of patterns 
+  int   mult[500];  // The total number of stubs per sector 
+  int   nhits;      // The total number of layers/disks hit by the prim track
+  int   nplay[20];  // The total number of prim stubs per layer 
 
   static const int MAX_NB_PATTERNS=1500;
   static const int MAX_NB_HITS = 100;

@@ -31,6 +31,7 @@ class jobparams{
   std::string inputfile() const;
   std::string testfile() const;
   std::string outfile() const;
+  std::string pattfile() const;
   int         eta() const;
   int         phi() const;
   int         oeta() const;
@@ -45,7 +46,8 @@ class jobparams{
   bool         m_efficiencies;    
   std::string  m_inputfile; 
   std::string  m_outfile;
-  std::string  m_testfile;  
+  std::string  m_testfile; 
+  std::string  m_pattfile;  
   int          m_eta;
   int          m_phi;
   int          m_oeta;
@@ -64,6 +66,10 @@ inline std::string jobparams::outfile() const{
 
 inline std::string jobparams::testfile() const{
   return m_testfile;
+}
+
+inline std::string jobparams::pattfile() const{
+  return m_pattfile;
 }
 
 inline bool jobparams::rates() const{

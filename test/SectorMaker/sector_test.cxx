@@ -4,10 +4,11 @@
 #include "sector_test.h"
 
 sector_test::sector_test(std::string filename, std::string secfilename, 
-			 std::string outfile, int nevt)
+			 std::string pattfilename, std::string outfile, int nevt)
 {
-  sector_test::initTuple(filename,secfilename,outfile);
-  sector_test::do_test(nevt);
+  sector_test::initTuple(filename,secfilename,pattfilename,outfile);
+ 
+  sector_test::do_test(nevt); // Launch the test loop over n events
 }
 
 void sector_test::do_test(int nevt)
@@ -22,8 +23,6 @@ void sector_test::do_test(int nevt)
   cout << "Starting a test loop over " << nevt << " events..." << endl;
   cout << "... using " << m_nsec << " trigger sectors..." << endl;
 
-  int sharing[m_nsec][m_nsec];
-
   int is_sec_there[m_nsec];
   int ladder,module,layer;
   int n_per_lay[20];
@@ -33,14 +32,6 @@ void sector_test::do_test(int nevt)
   int nhits_p;
 
   for (int j=0;j<500;++j) mult[j]=0;
-    
-  for (int j=0;j<m_nsec;++j)
-  {
-    for (int i=0;i<m_nsec;++i)
-    {
-      sharing[i][j]=0;
-    }
-  }
 
   // Loop over the events
   for (int i=0;i<nevt;++i)
@@ -64,35 +55,39 @@ void sector_test::do_test(int nevt)
     }
 
     m_L1TT->GetEntry(i);
-    m_PATT->GetEntry(0);
+    if (do_patt) m_PATT->GetEntry(i);
 
-    //    if (i%1000==0) 
+    if (i%100==0) 
     	cout << "Processed " << i << "/" << nevt << endl;
 
     if (m_stub == 0) continue; // No stubs, don't go further
 
+    //
+    // First, we make a loop on the stubs in order to check 
+    // in which sector they are
+
     for (int j=0;j<m_stub;++j)
     {  
+      if (m_stub_tp[j]!=0) continue;   
+
       // First of all we compute the ID of the stub's module
-
-      //if (m_stub_tp[j]!=0) continue; // Keep only the primary PGUN particle
-
       layer  = m_stub_layer[j]; 
       ladder = m_stub_ladder[j]; 
-      if (layer<=10) ladder = (ladder+n_rods[layer-5]/4)%(n_rods[layer-5]);
-
       module = m_stub_module[j]; 
 
-      //cout << layer << " / " << ladder << " / " << module << endl;
+      ///////
+      // This hack is temporary and is due to a numbering problem in the TkLayout tool
+      if (layer<=10) ladder = (ladder+n_rods[layer-5]/4)%(n_rods[layer-5]);
+      ///////
 
       id = 10000*layer+100*ladder+module; // Get the module ID
 
-      for (int k=0;k<m_nsec;++k)
+      for (int k=0;k<m_nsec;++k) // In which sector the module is
       {
-	if (sector_test::in_sec(k,id)) // Test is module is in sector 
+	if (sector_test::in_sec(k,id)) 
 	{
 	  ++mult[k];
-	  if (m_stub_tp[j]==0) ++is_sec_there[k];
+	  if (m_stub_tp[j]==0) ++is_sec_there[k]; // A primary stub is in sector k
 	}
       }
 
@@ -105,44 +100,59 @@ void sector_test::do_test(int nevt)
       }
     }
 
-    hitIndex=0;
-    ntotpatt=nb_patterns; 
-    npatt=0;
-   
-    for(int k=0;k<nb_patterns;k++)
-    {
-      nhits_p=0;
+    // For the sector efficiency we proceed as follow
+    // We check if the track has let at least 5 stubs in 
+    // 5 different layer/disk (nhits>=5). If yes, we compute 
+    // the number of sectors containing at least 5 of those 
+    // stubs (nsec)
 
-      for (int j=0;j<20;++j) n_per_lay_patt[j]=0;
-
-	//affichage des stubs dans le pattern actif
-      for(int m=0;m<nbHitPerPattern[k];m++)
-      {
-	if (hit_tp[hitIndex]==0)
-	  n_per_lay_patt[(int)hit_layer[hitIndex]-5]++;
-
-	hitIndex++;
-      }
-      
-      for (int kk=0;kk<20;++kk)
-      {
-	if (n_per_lay_patt[kk]!=0)
-	{
-	  ++nhits_p;
-	}
-      }
-
-      if (nhits_p>4) ++npatt;
-    }
-
+    // First we get the number of different layers/disks hit by the primary
     for (int k=0;k<20;++k)
     {
       if (n_per_lay[k]!=0) ++nhits;
+      nplay[k]=n_per_lay[k];
     }
 
+    // Then we get the number of sectors containing more than 5 primary hits 
     for (int k=0;k<m_nsec;++k)
     {
-      if (is_sec_there[k]>=5) ++nsec; 
+      if (is_sec_there[k]>4) ++nsec; 
+    }
+
+    // Finally we do the pattern loop
+    
+    if (do_patt)
+    {
+      ntotpatt = nb_patterns; // The total number of patterns in the sector
+      hitIndex = 0;           //
+      npatt    = 0;           // The patterns containing at least 5 prim hits
+   
+      for(int k=0;k<nb_patterns;k++)
+      {
+	for (int j=0;j<20;++j) n_per_lay_patt[j]=0;
+
+	// First we count the number of prim stubs in the 
+	// pattern layers/disks
+
+	for(int m=0;m<nbHitPerPattern[k];m++)
+	{
+	  if (hit_tp[hitIndex]==0)
+	    n_per_lay_patt[(int)hit_layer[hitIndex]-5]++;
+	  
+	  hitIndex++;
+	}
+
+	// First we get the number of different layers/disks hit by the primary
+	// in the pattern
+	nhits_p=0; 
+      
+	for (int kk=0;kk<20;++kk)
+	{
+	  if (n_per_lay_patt[kk]!=0) ++nhits_p;
+	}
+	
+	if (nhits_p>4) ++npatt; // More than 5, the pattern is good
+      }
     }
 
     m_efftree->Fill();
@@ -174,16 +184,14 @@ bool sector_test::in_sec(int sec, int mod)
 }
 
 
-void sector_test::initTuple(std::string test,std::string sec,std::string out)
+void sector_test::initTuple(std::string test,std::string sec,std::string patt,std::string out)
 {
   m_infile   = TFile::Open(sec.c_str()); 
   m_sectree  = (TTree*)m_infile->Get("Sectors");
-  m_pattfile = TFile::Open("Data/SingMuons6L_32_36Cov_6on6.root");
 
   m_L1TT   = new TChain("L1TrackTrigger"); 
-
   m_L1TT->Add(test.c_str());
-  m_PATT     = (TTree*)m_pattfile->Get("Patterns");
+
   /*
   m_L1TT->Add("/scratch/viret/PU_SKIM/PU_01.root");
   m_L1TT->Add("/scratch/viret/PU_SKIM/PU_02.root");
@@ -196,9 +204,11 @@ void sector_test::initTuple(std::string test,std::string sec,std::string out)
   m_L1TT->Add("/scratch/viret/PU_SKIM/PU_09.root");
   */
   m_outfile = new TFile(out.c_str(),"recreate");
-  m_efftree = new TTree("Efficiencies","");
+  m_efftree = new TTree("SectorEff","");
 
   pm_sectors=&m_sectors;
+
+  do_patt=false;
 
   m_sectree->SetBranchAddress("sectors",          &pm_sectors);
  
@@ -218,26 +228,38 @@ void sector_test::initTuple(std::string test,std::string sec,std::string out)
   m_L1TT->SetBranchAddress("STUB_pyGEN",     &pm_stub_pyGEN);
   m_L1TT->SetBranchAddress("STUB_etaGEN",    &pm_stub_etaGEN);
   m_L1TT->SetBranchAddress("STUB_tp",        &pm_stub_tp);
+  
 
-  m_PATT->SetBranchAddress("nbLayers",            &nb_layers); 
-  m_PATT->SetBranchAddress("nbPatterns",          &nb_patterns);
-  m_PATT->SetBranchAddress("eventID",             &event_id);   
-  m_PATT->SetBranchAddress("sectorID",            pattern_sector_id); 
-  m_PATT->SetBranchAddress("nbStubs",             nbHitPerPattern);   
-  m_PATT->SetBranchAddress("stub_layers",         hit_layer);      
-  m_PATT->SetBranchAddress("stub_ladders",        hit_ladder);     
-  m_PATT->SetBranchAddress("stub_module",         hit_zPos);       
-  m_PATT->SetBranchAddress("stub_segment",        hit_segment);    
-  m_PATT->SetBranchAddress("stub_strip",          hit_strip);      
-  m_PATT->SetBranchAddress("stub_tp",             hit_tp);         
-  m_PATT->SetBranchAddress("stub_ptGEN",          hit_ptGEN);   
-
-  m_efftree->Branch("nsec",       &nsec,  "nsec/I"); 
-  m_efftree->Branch("nhits",      &nhits, "nhits/I"); 
+  m_efftree->Branch("nsec",       &nsec,    "nsec/I"); 
+  m_efftree->Branch("nhits",      &nhits,   "nhits/I"); 
   m_efftree->Branch("npatt",      &npatt,   "npatt/I"); 
   m_efftree->Branch("tpatt",      &ntotpatt,"tpatt/I"); 
-  m_efftree->Branch("pt",         &pt,    "pt/F"); 
-  m_efftree->Branch("eta",        &eta,   "eta/F"); 
-  m_efftree->Branch("phi",        &phi,   "phi/F"); 
-  m_efftree->Branch("mult",       &mult,  "mult[500]/I"); 
+  m_efftree->Branch("nplay",      &nplay,   "nplay[20]/I"); 
+  m_efftree->Branch("pt",         &pt,      "pt/F"); 
+  m_efftree->Branch("eta",        &eta,     "eta/F"); 
+  m_efftree->Branch("phi",        &phi,     "phi/F"); 
+  m_efftree->Branch("mult",       &mult,    "mult[500]/I"); 
+
+
+  // We check the pattern information only if available
+
+  if (patt!="")
+  {
+    do_patt = true;
+    m_pattfile = TFile::Open(patt.c_str());
+    m_PATT     = (TTree*)m_pattfile->Get("Patterns");
+
+    m_PATT->SetBranchAddress("nbLayers",            &nb_layers); 
+    m_PATT->SetBranchAddress("nbPatterns",          &nb_patterns);
+    m_PATT->SetBranchAddress("eventID",             &event_id);   
+    m_PATT->SetBranchAddress("sectorID",            pattern_sector_id); 
+    m_PATT->SetBranchAddress("nbStubs",             nbHitPerPattern);   
+    m_PATT->SetBranchAddress("stub_layers",         hit_layer);      
+    m_PATT->SetBranchAddress("stub_ladders",        hit_ladder);     
+    m_PATT->SetBranchAddress("stub_module",         hit_zPos);       
+    m_PATT->SetBranchAddress("stub_segment",        hit_segment);    
+    m_PATT->SetBranchAddress("stub_strip",          hit_strip);      
+    m_PATT->SetBranchAddress("stub_tp",             hit_tp);         
+    m_PATT->SetBranchAddress("stub_ptGEN",          hit_ptGEN); 
+  }
 }
