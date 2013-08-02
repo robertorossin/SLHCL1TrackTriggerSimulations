@@ -19,6 +19,14 @@ void sector_test::do_test(int nevt)
   int id;
 
   const int m_nsec = m_sectors.size(); // How many sectors are in the file
+  const int m_nevt = nevt; 
+
+  int indexes[m_nevt];
+
+  for (int i=0;i<nevt;++i)
+  {
+    indexes[i]=-1;
+  }
 
   cout << "Starting a test loop over " << nevt << " events..." << endl;
   cout << "... using " << m_nsec << " trigger sectors..." << endl;
@@ -30,6 +38,59 @@ void sector_test::do_test(int nevt)
   int hitIndex;
   int n_rods[6] = {16,24,34,48,62,76};
   int nhits_p;
+
+  int patt_file_size = 0;
+
+  m_mod_sec.clear(); 
+
+  std::vector<int> the_sectors;
+
+  
+  for (int i=0;i<230000;++i)
+  {
+    if (i%10000==0) 
+      cout << "Caching " << i << "/" << 230000 << endl;
+
+    the_sectors.clear();
+    the_sectors.push_back(-1);
+    if (i>50000) 
+    {    
+      for (int k=0;k<m_nsec;++k) // In which sector the module is
+      {
+	if (sector_test::in_sec(k,i)) the_sectors.push_back(k); 
+      }
+    }
+
+    m_mod_sec.push_back(the_sectors); 
+    /*
+    if (the_sectors.size()>1)
+    {
+      cout << i;
+      for (int k=1; k<the_sectors.size();++k)
+      {
+	cout << " / " << the_sectors.at(k);
+      }
+
+      cout << endl;
+    }
+    */
+  }
+
+
+  if (do_patt)
+  {
+    patt_file_size=m_PATT->GetEntries();
+
+    for (int i=0;i<patt_file_size;++i)
+    {
+      if (i%100000==0) 
+    	cout << "Processed " << i << "/" << patt_file_size << endl;
+
+      m_PATT->GetEntry(i);
+      if (event_id<nevt) indexes[event_id]=i;
+    }
+  }
+
 
   for (int j=0;j<500;++j) mult[j]=0;
 
@@ -55,9 +116,19 @@ void sector_test::do_test(int nevt)
     }
 
     m_L1TT->GetEntry(i);
-    if (do_patt) m_PATT->GetEntry(i);
 
-    if (i%100==0) 
+    //    if (do_patt) m_PATT->GetEntry(i);
+
+    if (do_patt && indexes[i]!=-1) 
+    {
+      m_PATT->GetEntry(indexes[i]);
+    }
+    else
+    {
+      continue;
+    }
+
+    if (i%10000==0) 
     	cout << "Processed " << i << "/" << nevt << endl;
 
     if (m_stub == 0) continue; // No stubs, don't go further
@@ -82,12 +153,14 @@ void sector_test::do_test(int nevt)
 
       id = 10000*layer+100*ladder+module; // Get the module ID
 
-      for (int k=0;k<m_nsec;++k) // In which sector the module is
+      //      cout << id << " / " << m_mod_sec.at(id).size() << endl;
+      
+      if (m_mod_sec.at(id).size()>1)
       {
-	if (sector_test::in_sec(k,id)) 
+	for (int k=1;k<m_mod_sec.at(id).size();++k) // In which sector the module is
 	{
-	  ++mult[k];
-	  if (m_stub_tp[j]==0) ++is_sec_there[k]; // A primary stub is in sector k
+	  ++mult[m_mod_sec.at(id).at(k)];
+	  if (m_stub_tp[j]==0) ++is_sec_there[m_mod_sec.at(id).at(k)]; // A primary stub is in sector k
 	}
       }
 
@@ -137,7 +210,14 @@ void sector_test::do_test(int nevt)
 	for(int m=0;m<nbHitPerPattern[k];m++)
 	{
 	  if (hit_tp[hitIndex]==0)
+	  {
 	    n_per_lay_patt[(int)hit_layer[hitIndex]-5]++;
+
+	    //cout << endl;
+	    //cout << pt << " / " << hit_ptGEN[hitIndex] << endl;
+	    //cout << eta << " / " << hit_etaGEN[hitIndex] << endl;
+	    //cout << phi << " / " << hit_phiGEN[hitIndex] << endl;
+	  }
 	  
 	  hitIndex++;
 	}
@@ -261,5 +341,7 @@ void sector_test::initTuple(std::string test,std::string sec,std::string patt,st
     m_PATT->SetBranchAddress("stub_strip",          hit_strip);      
     m_PATT->SetBranchAddress("stub_tp",             hit_tp);         
     m_PATT->SetBranchAddress("stub_ptGEN",          hit_ptGEN); 
+    m_PATT->SetBranchAddress("stub_etaGEN",         hit_etaGEN); 
+    m_PATT->SetBranchAddress("stub_phi0GEN",        hit_phiGEN); 
   }
 }

@@ -3,7 +3,7 @@
 
   Use:
 
-  root[1]-> .L MakeEffPlots.C
+  root[1]-> .L MakeEffGraphs.C
 
   Then you can choose between the following methods 
   knowing that filename denotes the extracted ROOT file 
@@ -1208,7 +1208,7 @@ void do_sector_effs(std::string filename, int nh)
   // First loop to get the sector eta/phi acceptance
 
   for (int i=0;i<n_entries;++i)
-    //for (int i=0;i<1000;++i)
+    //for (int i=0;i<10000;++i)
   {
     newtree->GetEntry(i);
 
@@ -1464,23 +1464,32 @@ void do_pattern_effs(std::string filename, int sec_num, int nh)
 
   int n_entries = newtree->GetEntries();
 
-  TH2F *tracks     = new TH2F("tracks","tracks",70,-2.2,2.2,80,-3.15.,3.15);
-  TH2F *eff_pat    = new TH2F("eff_p","eff_p",70,-2.2,2.2,80,-3.15.,3.15);
+  const int nbin_eta = 200;
+  const int nbin_phi = 200;
+
+
+  TH2F *tracks     = new TH2F("tracks","tracks",nbin_eta,-2.2,2.2,nbin_phi,-3.15.,3.15);
+  TH2F *eff_pat    = new TH2F("eff_p","eff_p",nbin_eta,-2.2,2.2,nbin_phi,-3.15.,3.15);
   TH1F *pt_eff     = new TH1F("eff_pt","eff_pt",100,0.,100.);
   TH1F *pt_fake    = new TH1F("fak_pt","fak_pt",100,0.,100.);
+  TH1F *pt_dupl    = new TH1F("dup_pt","dup_pt",100,0.,100.);
 
-  float eff_stub[80][70];
-  float eff_sector[80][70];
-  float entries_stub[80][70];
+  TH1F *pt_eff_z   = new TH1F("eff_pt_z","eff_pt_z",50,0.,10.);
+  TH1F *pt_fake_z  = new TH1F("fak_pt_z","fak_pt_z",50,0.,10.);
+  TH1F *pt_dupl_z  = new TH1F("dup_pt_z","dup_pt_z",50,0.,10.);
 
-  float eff_pat_m[80][70];
-  float eff_sec_m[80][70];
+  float eff_stub[nbin_phi][nbin_eta];
+  float eff_sector[nbin_phi][nbin_eta];
+  float entries_stub[nbin_phi][nbin_eta];
 
-  float entries_stub[80][70];
+  float eff_pat_m[nbin_phi][nbin_eta];
+  float eff_sec_m[nbin_phi][nbin_eta];
 
-  for (int i=0;i<80;++i)
+  float entries_stub[nbin_phi][nbin_eta];
+
+  for (int i=0;i<nbin_phi;++i)
   {
-    for (int j=0;j<70;++j)
+    for (int j=0;j<nbin_eta;++j)
     {
       eff_stub[i][j]     = 0.;
       eff_sector[i][j]   = 0.;
@@ -1501,38 +1510,67 @@ void do_pattern_effs(std::string filename, int sec_num, int nh)
 
   float PI=4.*atan(1.);
 
+  float pt_in_dup[100];
   float pt_in_sec[100];
   float pt_in_pat[100];
-
   float good_patt[100];
   float tot_patt[100];
 
+  float pt_in_dup_z[50];
+  float pt_in_sec_z[50];
+  float pt_in_pat_z[50];
+  float good_patt_z[50];
+  float tot_patt_z[50];
+
+
   for (int i=0;i<100;++i)
   {
+    pt_in_dup[i]=0.;
     pt_in_sec[i]=0.;
     pt_in_pat[i]=0.;
     good_patt[i]=0.;
     tot_patt[i]=0.;
   }
   
-  int pt_bin;
+  for (int i=0;i<50;++i)
+  {
+    pt_in_dup_z[i]=0.;
+    pt_in_sec_z[i]=0.;
+    pt_in_pat_z[i]=0.;
+    good_patt_z[i]=0.;
+    tot_patt_z[i]=0.;
+  }
+
+  int pt_bin, pt_bin_z;
+  int n_sec=0;
 
   // First loop to get the sector eta/phi acceptance
 
   for (int i=0;i<n_entries;++i)
-    //for (int i=0;i<1000;++i)
+    //for (int i=0;i<10000;++i)
   {
     newtree->GetEntry(i);
     
     if (fabs(eta)>2.15) continue;
   
-  pt_bin=static_cast<int>(pt);
+    pt_bin=static_cast<int>(pt);
+    pt_bin_z=static_cast<int>(5*pt);
 
-  i_bin = static_cast<int>(80*(phi+PI)/(2*PI));
-    j_bin = static_cast<int>(70*(eta+2.2)/4.4);
+    i_bin = static_cast<int>(nbin_phi*(phi+PI)/(2*PI));
+    j_bin = static_cast<int>(nbin_eta*(eta+2.2)/4.4);
 
     if (nhits<nh) continue;
     if (mult[sec_num]<nh) continue;
+
+    n_sec=0;
+
+    for (int j=0;j<100;++j)
+    {
+      if (j==sec_num) continue;
+      if (mult[j]>=nh) ++n_sec; 
+    }
+
+    if (n_sec!=0) continue;
 
     ++pt_in_sec[pt_bin];
 
@@ -1544,13 +1582,29 @@ void do_pattern_effs(std::string filename, int sec_num, int nh)
 
     tot_patt[pt_bin]+=ntotpatt;
 
+
+
+    if (pt<10) ++pt_in_sec_z[pt_bin_z];
+    if (pt<10) tot_patt_z[pt_bin_z]+=ntotpatt;
+
+    //    if (pt<10) cout << pt_bin_z << " / " << pt << " / " << pt_in_sec_z[pt_bin_z]<< endl;
+
     if (npatt!=0)
     {
       ++pt_in_pat[pt_bin];
+      if (npatt>1) ++pt_in_dup[pt_bin];
+
       eff_pat_m[i_bin][j_bin]+=1.;
       tot_match+=1;
       tot_goodpatts+=npatt;
       good_patt[pt_bin]+=npatt;
+
+      if (pt<10) 
+      {
+	++pt_in_pat_z[pt_bin_z];
+	++good_patt_z[pt_bin_z];
+	if (npatt>1) ++pt_in_dup_z[pt_bin_z];
+      }
     }
   }	
 
@@ -1561,16 +1615,16 @@ void do_pattern_effs(std::string filename, int sec_num, int nh)
 
 
 
-  for (int i=0;i<80;++i)
+  for (int i=0;i<nbin_phi;++i)
   {
-    for (int j=0;j<70;++j)   
+    for (int j=0;j<nbin_eta;++j)   
     {
-      tracks->Fill(-2.2+(j+0.5)*4.4/70,-PI+(i+0.5)*2*PI/80,eff_sec_m[i][j]);
+      tracks->Fill(-2.2+(j+0.5)*4.4/nbin_eta,-PI+(i+0.5)*2*PI/nbin_phi,eff_sec_m[i][j]);
 
       if (eff_sec_m[i][j]!=0.)
       {
 	eff_pat_m[i][j] /= eff_sec_m[i][j];
-	eff_pat->Fill(-2.2+(j+0.5)*4.4/70,-PI+(i+0.5)*2*PI/80,eff_pat_m[i][j]);
+	eff_pat->Fill(-2.2+(j+0.5)*4.4/nbin_eta,-PI+(i+0.5)*2*PI/nbin_phi,eff_pat_m[i][j]);
       }
     }
   }
@@ -1582,11 +1636,33 @@ void do_pattern_effs(std::string filename, int sec_num, int nh)
       pt_in_pat[i]/=pt_in_sec[i];
       pt_eff->Fill(i+0.5,pt_in_pat[i]);
     }
+
+    if (pt_in_pat[i]!=0.)
+    {
+      pt_in_dup[i]/=pt_in_pat[i];
+      pt_dupl->Fill(i+0.5,pt_in_dup[i]);
+    }
+
     if (tot_patt[i]!=0.)
     {
       pt_fake->Fill(i+0.5,(tot_patt[i]-good_patt[i])/tot_patt[i]);
     }
+  }
 
+  for (int i=0;i<50;++i)
+  {
+    if (pt_in_sec_z[i]!=0.)
+    {
+      pt_in_pat_z[i]/=pt_in_sec_z[i];
+
+      //      cout << i << " / " << pt_in_pat_z[i] << " / " << pt_in_sec_z[i] << endl;
+      pt_eff_z->Fill(0.2*(i+0.5),pt_in_pat_z[i]);
+    }
+
+    if (tot_patt_z[i]!=0.)
+    {
+      pt_fake_z->Fill(0.2*(i+0.5),(tot_patt_z[i]-good_patt_z[i])/tot_patt_z[i]);
+    }
   }
 
   char buffer[80];
@@ -1642,32 +1718,47 @@ void do_pattern_effs(std::string filename, int sec_num, int nh)
   pt_eff->GetXaxis()->SetTitleSize(0.035);
   pt_eff->GetXaxis()->SetTitleOffset(1.19);
   pt_eff->GetXaxis()->SetTitleFont(42);
-  pt_eff->GetYaxis()->SetTitle("Pattern reco efficiency in the sector");
+  pt_eff->GetYaxis()->SetTitle("Proportion of patterns");
   pt_eff->GetYaxis()->SetLabelFont(42);
   pt_eff->GetYaxis()->SetLabelSize(0.035);
   pt_eff->GetYaxis()->SetTitleSize(0.035);
   pt_eff->GetYaxis()->SetTitleFont(42);
+  pt_eff->SetMarkerStyle(20);
+  pt_fake->SetMarkerStyle(4);
   pt_eff->Draw("P");
+  pt_fake->Draw("Psame");
 
- 
+  leg = new TLegend(0.6,0.5,0.85,0.65);
+  leg->AddEntry(pt_eff,"Pattern reco efficiency","p");
+  leg->AddEntry(pt_fake,"Fake proportion","p");
+  leg->Draw();
+
   c1->cd(4); 
   c1->cd(4)->SetGridx();
   c1->cd(4)->SetGridy();
-  pt_fake->SetMinimum(-0.1);
-  pt_fake->SetMaximum(1.1);
-  pt_fake->SetMarkerStyle(3);
-  pt_fake->GetXaxis()->SetTitle("Particle p_{T} (in GeV/c)");
-  pt_fake->GetXaxis()->SetLabelFont(42);
-  pt_fake->GetXaxis()->SetLabelSize(0.035);
-  pt_fake->GetXaxis()->SetTitleSize(0.035);
-  pt_fake->GetXaxis()->SetTitleOffset(1.19);
-  pt_fake->GetXaxis()->SetTitleFont(42);
-  pt_fake->GetYaxis()->SetTitle("Proportion of fake patterns");
-  pt_fake->GetYaxis()->SetLabelFont(42);
-  pt_fake->GetYaxis()->SetLabelSize(0.035);
-  pt_fake->GetYaxis()->SetTitleSize(0.035);
-  pt_fake->GetYaxis()->SetTitleFont(42);
-  pt_fake->Draw("P");
+  pt_eff_z->SetMinimum(-0.1);
+  pt_eff_z->SetMaximum(1.1);
+  pt_eff_z->SetMarkerStyle(3);
+  pt_eff_z->GetXaxis()->SetTitle("Particle p_{T} (in GeV/c)");
+  pt_eff_z->GetXaxis()->SetLabelFont(42);
+  pt_eff_z->GetXaxis()->SetLabelSize(0.035);
+  pt_eff_z->GetXaxis()->SetTitleSize(0.035);
+  pt_eff_z->GetXaxis()->SetTitleOffset(1.19);
+  pt_eff_z->GetXaxis()->SetTitleFont(42);
+  pt_eff_z->GetYaxis()->SetTitle("Proportion of patterns");
+  pt_eff_z->GetYaxis()->SetLabelFont(42);
+  pt_eff_z->GetYaxis()->SetLabelSize(0.035);
+  pt_eff_z->GetYaxis()->SetTitleSize(0.035);
+  pt_eff_z->GetYaxis()->SetTitleFont(42);
+  pt_eff_z->SetMarkerStyle(20);
+  pt_fake_z->SetMarkerStyle(4);
+  pt_eff_z->Draw("P");
+  //  pt_fake_z->Draw("Psame");
+
+  leg = new TLegend(0.6,0.5,0.85,0.65);
+  leg->AddEntry(pt_eff_z,"Pattern reco efficiency","p");
+  // leg->AddEntry(pt_fake_z,"Fake proportion","p");
+  leg->Draw();
 
   c1->cd(3);  
   tracks->GetXaxis()->SetTitle("#eta");

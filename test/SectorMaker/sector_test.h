@@ -78,6 +78,8 @@ class sector_test
   // Disks 0 to 6  (towards positive Z)
   // Disks 7 to 13 (towards negative Z)
 
+  std::vector< std::vector<int> >   m_mod_sec; 
+
   // The vector containing the total module lists of sectors 
   std::vector< std::vector<int> >   m_sectors; 
   std::vector< std::vector<int> >   *pm_sectors; 
@@ -128,6 +130,8 @@ class sector_test
   short hit_strip[MAX_NB_PATTERNS*MAX_NB_HITS];
   int hit_tp[MAX_NB_PATTERNS*MAX_NB_HITS];
   float hit_ptGEN[MAX_NB_PATTERNS*MAX_NB_HITS];
+  float hit_phiGEN[MAX_NB_PATTERNS*MAX_NB_HITS];
+  float hit_etaGEN[MAX_NB_PATTERNS*MAX_NB_HITS];
 };
 
 #endif
