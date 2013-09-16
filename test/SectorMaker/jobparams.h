@@ -25,6 +25,7 @@ class jobparams{
   /** return value */
 
   bool        rates() const;
+  bool        dbg() const;
   bool        sectors() const;
   bool        test() const;
   bool        efficiencies() const;
@@ -41,6 +42,7 @@ class jobparams{
  private:
 
   bool         m_rates;   
+  bool         m_dbg;   
   bool         m_sectors; 
   bool         m_test;   
   bool         m_efficiencies;    
@@ -70,6 +72,10 @@ inline std::string jobparams::testfile() const{
 
 inline std::string jobparams::pattfile() const{
   return m_pattfile;
+}
+
+inline bool jobparams::dbg() const{
+  return m_dbg;
 }
 
 inline bool jobparams::rates() const{

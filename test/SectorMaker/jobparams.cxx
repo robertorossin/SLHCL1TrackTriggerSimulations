@@ -36,6 +36,10 @@ jobparams::jobparams(int argc, char** argv){
 				    false, "test.root", "string");
      cmd.add(testfile);
 
+     ValueArg<bool> dbg("g","gdb","debug mode (standalone PR used) or not",
+			false, 0, "bool");
+     cmd.add(dbg);
+
      ValueArg<std::string> inputfile("i","input","path and name of the input file",
 				false, "/scratch/viret/data.root", "string");
      cmd.add(inputfile);
@@ -82,6 +86,7 @@ jobparams::jobparams(int argc, char** argv){
      m_oeta         = oeta.getValue();
      m_ophi         = ophi.getValue();
      m_nevt         = nevt.getValue();
+     m_dbg          = dbg.getValue();
    }
    catch (ArgException &e){ // catch exception from parse
      std::cerr << "ERROR: " << e.error() << " for arg " << e.argId()  << std::endl;

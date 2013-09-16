@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
     delete my_sectors;
 
     sector_test* my_test = new sector_test(params.testfile(),"my_sectors_temp.root",
-					   params.pattfile(),params.outfile(),params.nevt());
+					   params.pattfile(),params.outfile(),params.nevt(),params.dbg());
 
     delete my_test;
   }
@@ -80,7 +80,8 @@ int main(int argc, char** argv) {
   if (params.test()==1)
   {
     sector_test* my_test = new sector_test(params.testfile(),params.inputfile(),
-					   params.pattfile(),params.outfile(),params.nevt());
+					   params.pattfile(),params.outfile(),
+					   params.nevt(),params.dbg());
 
     delete my_test;
   }

@@ -26,16 +26,21 @@
 //
 // filename    : the name and directory of the input ROOT file containing the particle to test
 // secfilename : the name and directory of the input ROOT file containing the sectors definition
+// pattfilename: the name and directory of the input ROOT file containing the pattern reco output
 // outfile     : the name of the output ROOT file containing the efficiency results 
 //           
 // nevt        : the number of particles to test
+// dbg         : debug mode (true if the pattern file comes from the standalone preco, false otherwise) 
 //
 // Info about the code:
 //
-//  http://sviret.web.cern.ch/sviret/Welcome.php?n=CMS.HLLHCTuto (STEP III)
+//  http://sviret.web.cern.ch/sviret/Welcome.php?n=CMS.HLLHCTuto (STEP III for the efficiency 
+//                                                                test without pattern file. 
+//                                                                STEP V otherwise)
 //
 //  Author: viret@in2p3_dot_fr
 //  Date: 28/05/2013
+//  Maj.update: 16/09/2013
 //
 ///////////////////////////////////
 
@@ -46,9 +51,11 @@ class sector_test
  public:
 
   sector_test(std::string filename, std::string secfilename, 
-	      std::string pattfilename, std::string outfile, int nevt);
+	      std::string pattfilename, std::string outfile, int nevt, bool dbg);
 
   void   do_test(int nevt);    
+
+  void   translateTuple(std::string pattin,std::string pattout);
   void   initTuple(std::string test,std::string sec,std::string patt,std::string out);
   bool   in_sec(int sec,int mod);
 
@@ -57,6 +64,7 @@ class sector_test
  private:
 
   bool do_patt;
+  bool m_dbg;
 
   TFile  *m_infile;
   TFile  *m_testfile;
@@ -114,12 +122,28 @@ class sector_test
   int   nhits;      // The total number of layers/disks hit by the prim track
   int   nplay[20];  // The total number of prim stubs per layer 
 
-  static const int MAX_NB_PATTERNS=1500;
-  static const int MAX_NB_HITS = 100;
+
+  // Informations contained in the pattern file
+
+  int nb_patterns; // Number of patterns in event evtID
+  int event_id;    // Event ID
+
+
+  // Info id dbg==false (CMSSW fast mode)
+
+  std::vector< std::vector<int> > m_links; // Links to the stub ids of the pattern 
+  std::vector<int>                m_secid; // Link to the sector ids of the pattern 
+
+  std::vector< std::vector<int> > *pm_links; 
+  std::vector<int>                *pm_secid;
+
+
+  // Info id dbg==true (Standalone mode)
+
+  static const int MAX_NB_PATTERNS = 1500;
+  static const int MAX_NB_HITS     = 100;
 
   int nb_layers;
-  int nb_patterns;
-  int event_id;
   int pattern_sector_id[MAX_NB_PATTERNS];
   
   int nbHitPerPattern[MAX_NB_PATTERNS];

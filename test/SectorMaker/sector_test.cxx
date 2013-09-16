@@ -4,12 +4,32 @@
 #include "sector_test.h"
 
 sector_test::sector_test(std::string filename, std::string secfilename, 
-			 std::string pattfilename, std::string outfile, int nevt)
+			 std::string pattfilename, std::string outfile
+			 , int nevt, bool dbg)
 {
-  sector_test::initTuple(filename,secfilename,pattfilename,outfile);
+  
+  m_dbg = dbg;
+
+  if (pattfilename!="") 
+  {
+    if (!m_dbg) // In mass production one has to reorder the events
+    {
+      sector_test::translateTuple(pattfilename,"rewritten.root");
+      sector_test::initTuple(filename,secfilename,"rewritten.root",outfile);
+    }
+    else
+    {
+      sector_test::initTuple(filename,secfilename,pattfilename,outfile);
+    }
+  }
  
   sector_test::do_test(nevt); // Launch the test loop over n events
 }
+
+
+//
+// Main method, where the efficiency calculations are made
+//
 
 void sector_test::do_test(int nevt)
 {
@@ -45,7 +65,8 @@ void sector_test::do_test(int nevt)
 
   std::vector<int> the_sectors;
 
-  
+  // We create a map linking sector and module numbers and cache it 
+
   for (int i=0;i<230000;++i)
   {
     if (i%10000==0) 
@@ -62,20 +83,10 @@ void sector_test::do_test(int nevt)
     }
 
     m_mod_sec.push_back(the_sectors); 
-    /*
-    if (the_sectors.size()>1)
-    {
-      cout << i;
-      for (int k=1; k<the_sectors.size();++k)
-      {
-	cout << " / " << the_sectors.at(k);
-      }
-
-      cout << endl;
-    }
-    */
   }
 
+
+  // An other linking (evtID in patt and data files might be misaligned
 
   if (do_patt)
   {
@@ -83,20 +94,16 @@ void sector_test::do_test(int nevt)
 
     for (int i=0;i<patt_file_size;++i)
     {
-      if (i%100000==0) 
-    	cout << "Processed " << i << "/" << patt_file_size << endl;
-
       m_PATT->GetEntry(i);
       if (event_id<nevt) indexes[event_id]=i;
     }
   }
 
-
   for (int j=0;j<500;++j) mult[j]=0;
 
   // Loop over the events
   for (int i=0;i<nevt;++i)
-  { 
+  {    
     nhits=0;
     nsec=0;
 
@@ -117,19 +124,18 @@ void sector_test::do_test(int nevt)
 
     m_L1TT->GetEntry(i);
 
-    //    if (do_patt) m_PATT->GetEntry(i);
+    if (i%100000==0) 
+      cout << "Processed " << i << "/" << nevt << endl;
 
     if (do_patt && indexes[i]!=-1) 
     {
+      //      cout << i << "/" << indexes[i] << endl;
       m_PATT->GetEntry(indexes[i]);
     }
     else
     {
       continue;
     }
-
-    if (i%10000==0) 
-    	cout << "Processed " << i << "/" << nevt << endl;
 
     if (m_stub == 0) continue; // No stubs, don't go further
 
@@ -146,18 +152,17 @@ void sector_test::do_test(int nevt)
       ladder = m_stub_ladder[j]; 
       module = m_stub_module[j]; 
 
+
       ///////
       // This hack is temporary and is due to a numbering problem in the TkLayout tool
       if (layer<=10) ladder = (ladder+n_rods[layer-5]/4)%(n_rods[layer-5]);
       ///////
 
       id = 10000*layer+100*ladder+module; // Get the module ID
-
-      //      cout << id << " / " << m_mod_sec.at(id).size() << endl;
       
       if (m_mod_sec.at(id).size()>1)
       {
-	for (int k=1;k<m_mod_sec.at(id).size();++k) // In which sector the module is
+	for (unsigned int k=1;k<m_mod_sec.at(id).size();++k) // In which sector the module is
 	{
 	  ++mult[m_mod_sec.at(id).at(k)];
 	  if (m_stub_tp[j]==0) ++is_sec_there[m_mod_sec.at(id).at(k)]; // A primary stub is in sector k
@@ -174,9 +179,9 @@ void sector_test::do_test(int nevt)
     }
 
     // For the sector efficiency we proceed as follow
-    // We check if the track has let at least 5 stubs in 
-    // 5 different layer/disk (nhits>=5). If yes, we compute 
-    // the number of sectors containing at least 5 of those 
+    // We check if the track has let at least 4 stubs in 
+    // 4 different layer/disk (nhits>=4). If yes, we compute 
+    // the number of sectors containing at least 4 of those 
     // stubs (nsec)
 
     // First we get the number of different layers/disks hit by the primary
@@ -186,19 +191,19 @@ void sector_test::do_test(int nevt)
       nplay[k]=n_per_lay[k];
     }
 
-    // Then we get the number of sectors containing more than 5 primary hits 
+    // Then we get the number of sectors containing more than 4 primary hits 
     for (int k=0;k<m_nsec;++k)
     {
-      if (is_sec_there[k]>4) ++nsec; 
+      if (is_sec_there[k]>=4) ++nsec; 
     }
 
     // Finally we do the pattern loop
-    
+
     if (do_patt)
     {
       ntotpatt = nb_patterns; // The total number of patterns in the sector
       hitIndex = 0;           //
-      npatt    = 0;           // The patterns containing at least 5 prim hits
+      npatt    = 0;           // The patterns containing at least 4 prim hits
    
       for(int k=0;k<nb_patterns;k++)
       {
@@ -207,21 +212,34 @@ void sector_test::do_test(int nevt)
 	// First we count the number of prim stubs in the 
 	// pattern layers/disks
 
-	for(int m=0;m<nbHitPerPattern[k];m++)
+	if (m_dbg) // Debug mode
 	{
-	  if (hit_tp[hitIndex]==0)
+	  for(int m=0;m<nbHitPerPattern[k];m++)
 	  {
-	    n_per_lay_patt[(int)hit_layer[hitIndex]-5]++;
-
-	    //cout << endl;
-	    //cout << pt << " / " << hit_ptGEN[hitIndex] << endl;
-	    //cout << eta << " / " << hit_etaGEN[hitIndex] << endl;
-	    //cout << phi << " / " << hit_phiGEN[hitIndex] << endl;
+	    if (hit_tp[hitIndex]==0)
+	    {
+	      n_per_lay_patt[(int)hit_layer[hitIndex]-5]++;
+	      
+	      //cout << endl;
+	      //cout << pt  << " / " << hit_ptGEN[hitIndex] << endl;
+	      //cout << eta << " / " << hit_etaGEN[hitIndex] << endl;
+	      //cout << phi << " / " << hit_phiGEN[hitIndex] << endl;
+	    }
+	    
+	    hitIndex++;
 	  }
-	  
-	  hitIndex++;
 	}
-
+	else
+	{	
+	  for(unsigned int m=0;m<m_links.at(k).size();m++)
+	  {
+	    if (m_stub_tp[m_links.at(k).at(m)]==0)
+	    {
+	      n_per_lay_patt[m_stub_layer[m_links.at(k).at(m)]-5]++;
+	    }
+	  }
+	}
+	
 	// First we get the number of different layers/disks hit by the primary
 	// in the pattern
 	nhits_p=0; 
@@ -231,7 +249,7 @@ void sector_test::do_test(int nevt)
 	  if (n_per_lay_patt[kk]!=0) ++nhits_p;
 	}
 	
-	if (nhits_p>4) ++npatt; // More than 5, the pattern is good
+	if (nhits_p>=4) ++npatt; // More than 4, the pattern is good
       }
     }
 
@@ -272,17 +290,6 @@ void sector_test::initTuple(std::string test,std::string sec,std::string patt,st
   m_L1TT   = new TChain("L1TrackTrigger"); 
   m_L1TT->Add(test.c_str());
 
-  /*
-  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_01.root");
-  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_02.root");
-  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_03.root");
-  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_04.root");
-  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_05.root");
-  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_06.root");
-  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_07.root");
-  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_08.root");
-  m_L1TT->Add("/scratch/viret/PU_SKIM/PU_09.root");
-  */
   m_outfile = new TFile(out.c_str(),"recreate");
   m_efftree = new TTree("SectorEff","");
 
@@ -326,22 +333,140 @@ void sector_test::initTuple(std::string test,std::string sec,std::string patt,st
   if (patt!="")
   {
     do_patt = true;
-    m_pattfile = TFile::Open(patt.c_str());
-    m_PATT     = (TTree*)m_pattfile->Get("Patterns");
-
-    m_PATT->SetBranchAddress("nbLayers",            &nb_layers); 
-    m_PATT->SetBranchAddress("nbPatterns",          &nb_patterns);
-    m_PATT->SetBranchAddress("eventID",             &event_id);   
-    m_PATT->SetBranchAddress("sectorID",            pattern_sector_id); 
-    m_PATT->SetBranchAddress("nbStubs",             nbHitPerPattern);   
-    m_PATT->SetBranchAddress("stub_layers",         hit_layer);      
-    m_PATT->SetBranchAddress("stub_ladders",        hit_ladder);     
-    m_PATT->SetBranchAddress("stub_module",         hit_zPos);       
-    m_PATT->SetBranchAddress("stub_segment",        hit_segment);    
-    m_PATT->SetBranchAddress("stub_strip",          hit_strip);      
-    m_PATT->SetBranchAddress("stub_tp",             hit_tp);         
-    m_PATT->SetBranchAddress("stub_ptGEN",          hit_ptGEN); 
-    m_PATT->SetBranchAddress("stub_etaGEN",         hit_etaGEN); 
-    m_PATT->SetBranchAddress("stub_phi0GEN",        hit_phiGEN); 
+    m_pattfile  = TFile::Open(patt.c_str());
+   
+    if (m_dbg)
+    {
+      m_PATT     = (TTree*)m_pattfile->Get("Patterns");
+      
+      m_PATT->SetBranchAddress("nbLayers",            &nb_layers); 
+      m_PATT->SetBranchAddress("nbPatterns",          &nb_patterns);
+      m_PATT->SetBranchAddress("eventID",             &event_id);   
+      m_PATT->SetBranchAddress("sectorID",            pattern_sector_id); 
+      m_PATT->SetBranchAddress("nbStubs",             nbHitPerPattern);   
+      m_PATT->SetBranchAddress("stub_layers",         hit_layer);      
+      m_PATT->SetBranchAddress("stub_ladders",        hit_ladder);     
+      m_PATT->SetBranchAddress("stub_module",         hit_zPos);       
+      m_PATT->SetBranchAddress("stub_segment",        hit_segment);    
+      m_PATT->SetBranchAddress("stub_strip",          hit_strip);      
+      m_PATT->SetBranchAddress("stub_tp",             hit_tp);         
+      m_PATT->SetBranchAddress("stub_ptGEN",          hit_ptGEN); 
+      m_PATT->SetBranchAddress("stub_etaGEN",         hit_etaGEN); 
+      m_PATT->SetBranchAddress("stub_phi0GEN",        hit_phiGEN); 
+    }
+    else
+    {
+      m_PATT    = (TTree*)m_pattfile->Get("L1PatternReco");
+      
+      pm_links=&m_links;
+      pm_secid=&m_secid;
+      
+      m_PATT->SetBranchAddress("evt",            &event_id); 
+      m_PATT->SetBranchAddress("PATT_n",         &nb_patterns);
+      m_PATT->SetBranchAddress("PATT_links",     &pm_links);
+      m_PATT->SetBranchAddress("PATT_secID",     &pm_secid);
+    }
   }
+}
+
+
+//
+// Reordering is need for mass pattern recognition (all events a treated in parallel)
+//
+
+void sector_test::translateTuple(std::string pattin,std::string pattout)
+{
+  std::vector< std::vector<int> > m_links;
+  std::vector<int> m_secid;
+  std::vector< std::vector<int> > *pm_links = new std::vector< std::vector<int> >;
+  std::vector<int> *pm_secid = new std::vector<int> ;
+
+  pm_links=&m_links;
+  pm_secid=&m_secid;
+
+  int evtID;
+  int m_patt;
+
+  TChain *data = new TChain("L1PatternReco");
+
+  data->SetBranchAddress("evt",            &evtID); // Simple evt number or event ID
+  data->SetBranchAddress("PATT_n",         &m_patt);
+  data->SetBranchAddress("PATT_links",     &pm_links);
+  data->SetBranchAddress("PATT_secID",     &pm_secid);
+  data->Add(pattin.c_str());
+
+  std::vector< std::vector<int> > *f_links = new std::vector< std::vector<int> >;
+  std::vector<int> *f_secid = new std::vector<int> ;
+
+  int f_evtID;
+  int f_patt;
+
+  TFile hfile(pattout.c_str(),"RECREATE","");
+
+  TTree *m_tree_L1PatternReco = new TTree("L1PatternReco","L1PatternReco Analysis info");  
+  
+  /// Branches definition
+
+  m_tree_L1PatternReco->Branch("evt",            &f_evtID); // Simple evt number or event ID
+  m_tree_L1PatternReco->Branch("PATT_n",         &f_patt);
+  m_tree_L1PatternReco->Branch("PATT_links",     &f_links);
+  m_tree_L1PatternReco->Branch("PATT_secID",     &f_secid);
+
+  int ndat = data->GetEntries();
+
+  int evtIDmax = -1;
+
+  std::vector<int> indexes;
+  std::vector< std::vector<int> > indexes_ordered;
+
+  indexes.clear();
+    
+  for(int i=0;i<ndat;i++)
+  {    
+    data->GetEntry(i);
+
+    if (evtID>evtIDmax) evtIDmax=evtID;
+
+    indexes.push_back(evtID);
+  }
+
+  indexes_ordered.resize(evtIDmax+1);
+
+  for(int i=0;i<evtIDmax;i++) indexes_ordered[i].clear();
+  for(int i=0;i<ndat;i++)     indexes_ordered[indexes[i]].push_back(i);
+
+
+  for(int i=0;i<evtIDmax;i++)
+  { 
+    if (i%100000==0)
+      cout << "Reordering event " << i << endl;
+  
+    f_evtID = i;
+    f_patt = 0;
+    f_links->clear();
+    f_secid->clear();
+ 
+    if (indexes_ordered[i].size()!=0) 
+    {
+      for(unsigned int j=0;j<indexes_ordered[i].size();j++)
+      {    
+	data->GetEntry(indexes_ordered[i].at(j));
+      
+	if (evtID!=i) continue; 
+
+	f_patt += m_patt;
+	
+	for(int k=0;k<m_patt;k++)
+	{ 
+	  f_links->push_back(m_links.at(k));
+	  f_secid->push_back(m_secid.at(k));
+	}
+      }
+    }    
+
+    m_tree_L1PatternReco->Fill();
+  }
+
+  hfile.Write();
+  hfile.Close();
 }
