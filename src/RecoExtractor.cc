@@ -48,9 +48,6 @@ void RecoExtractor::beginJob()
 
   nevent_tot = skip_;
 
-  //  if (do_MC_ && do_PIX_ && do_L1tt_) 
-  //    m_L1TT_analysis = new L1TrackTrigger_analysis(m_ana_settings,nevent_tot,1000,300);
-
   std::cout << "Exit BeginJob" << std::endl;
 
 }
@@ -146,9 +143,6 @@ void RecoExtractor::endJob() {
     m_outfile->Write();
     m_outfile->Close();
   }
-
-  //  if (do_ftt_&& do_HLT_ && do_MC_) 
-  //    m_fourtop_trigger_analysis->fourtop_trigger_finalize(nevent_tot);
 }
     
 
@@ -156,9 +150,9 @@ void RecoExtractor::endJob() {
 
 void RecoExtractor::fillInfo(const edm::Event *event) 
 {
-  if (do_PIX_)      m_PIX->writeInfo(event);
-  if (do_MC_)       m_MC->writeInfo(event);
-  if (do_STUB_ && do_MC_)     m_STUB->writeInfo(event,m_MC);
+  if (do_PIX_)             m_PIX->writeInfo(event);
+  if (do_MC_)              m_MC->writeInfo(event);
+  if (do_STUB_ && do_MC_)  m_STUB->writeInfo(event,m_MC);
 }   
 
 
@@ -217,10 +211,6 @@ void RecoExtractor::doAna()
   if (do_MC_ && do_PIX_ && do_L1tt_) 
   {  
     m_L1TT_analysis->do_stubs(m_PIX,m_MC);
- 
-    //    m_Mtt_analysis_new->mtt_Sel(do_MC_,m_event,m_MC,
-    //			m_muon,m_electron,m_jet,m_MET,m_vertex);
-
     m_L1TT_analysis->fillTree();
   }
 

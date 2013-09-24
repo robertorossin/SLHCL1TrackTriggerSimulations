@@ -63,7 +63,14 @@ L1TrackTrigger_analysis::L1TrackTrigger_analysis(AnalysisSettings *settings, int
     ? m_pTthresh = settings->getSetting("thresh")
     : m_pTthresh = 2;
 
+  // To keep track of the event number for pileup
+  (settings->getSetting("evtNum")!=-1)
+    ? m_evtNum = settings->getSetting("evtNum")
+    : m_evtNum = -1;
+
   n_tot_evt = start_evt;
+  if (m_evtNum!=-1) n_tot_evt=m_evtNum; 
+
   m_thresh = 0; // No threshold (0 or 1) 
 
   // Initialize everything
@@ -84,11 +91,7 @@ void L1TrackTrigger_analysis::do_stubs(PixelExtractor *pix, MCExtractor *mc)
   L1TrackTrigger_analysis::reset();
 
  // No particle simulated, don't go further
-  if (mc->getNGen() == 0)
-  {
-    ++n_tot_evt;
-    return; 
-  }
+  if (mc->getNGen() == 0) return; 
 
   if (m_verb) cout << "Analyzing event " << n_tot_evt << endl;
 
@@ -103,7 +106,6 @@ void L1TrackTrigger_analysis::do_stubs(PixelExtractor *pix, MCExtractor *mc)
   // Finally loop over layers to get the stubs
   for (int i=5;i<25;++i) L1TrackTrigger_analysis::get_stubs(i,mc); 
 
-  ++n_tot_evt;    
 }
 
 
@@ -134,10 +136,16 @@ void L1TrackTrigger_analysis::get_digis(PixelExtractor *pix, MCExtractor *mc)
 
   // Remove some hits from the TPs in order to save some 
   // time for the matching (in particular for high-PU event)
+  //
+  // mc->clearTP(A,B)
+  //
+  // Means we won't match the TP with pt<A GeV/c or |eta|>5.5 or d0>B mm
+  //
 
-  (!m_matchStubs)
-    ? mc->clearTP(0.001,10000000.0)
-    : mc->clearTP(0.001,10000000.0);
+
+  (m_posMatch==false)
+    ? mc->clearTP(0.5,2.0) // Here we just keep the primaries 
+    : mc->clearTP(0.001,10000000.0); // Here you match everything
 
   // Loop over the pixel digis
 
@@ -950,7 +958,8 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 
 void L1TrackTrigger_analysis::fillTree()
 {
-  m_tree_L1TrackTrigger->Fill(); 
+  m_tree_L1TrackTrigger->Fill();
+  ++n_tot_evt;
 }
 
 

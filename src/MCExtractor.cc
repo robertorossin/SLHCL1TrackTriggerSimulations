@@ -534,7 +534,7 @@ void MCExtractor::createTree()
   m_tree_new->Branch("subpart_hits_tof",     &m_hits_tof);
   m_tree_new->Branch("subpart_hits_proc",    &m_hits_proc);
   m_tree_new->Branch("subpart_hits_id",      &m_hits_id);
-  m_tree_new->Branch("subpart_hits_pdgId",      &m_hits_pdgId);
+  m_tree_new->Branch("subpart_hits_pdgId",   &m_hits_pdgId);
   m_tree_new->Branch("subpart_hits_layer",   &m_hits_layer);
   m_tree_new->Branch("subpart_hits_ladder",  &m_hits_ladder);
   m_tree_new->Branch("subpart_hits_module",  &m_hits_module);

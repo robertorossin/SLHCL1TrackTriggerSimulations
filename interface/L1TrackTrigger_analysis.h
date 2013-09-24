@@ -52,6 +52,7 @@ class L1TrackTrigger_analysis
 
   int n_tot_evt;
   int m_nstubs;
+  int m_evtNum;
 
   bool  m_verb;
   bool  m_matchStubs;
