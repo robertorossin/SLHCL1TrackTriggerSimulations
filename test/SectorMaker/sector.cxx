@@ -31,7 +31,6 @@ void sector::do_sector()
 
   float lay_rate[20];
 
-
   m_sec = 0;
 
   // Loop over the sectors
@@ -42,17 +41,12 @@ void sector::do_sector()
       for (int i=0;i<20;++i) lay_rate[i]=0.;
       m_rate_tot=0.;
 
-      cout << k << " / " << j << endl;
-
       // Define The sector coordinates
 
       phi_min = j*m_phi_step-m_phi_size/2.;;
       phi_max = j*m_phi_step+m_phi_size/2.;
       eta_min = -2.5+(k+0.5)*m_eta_step-m_eta_size/2.;
       eta_max = -2.5+(k+0.5)*m_eta_step+m_eta_size/2.;
-
-      cout << phi_min << " / " << phi_max << " / " << eta_min << " / " << eta_max << endl;
-
 
       std::vector<int> barrel_mod;
       std::vector<int> endcap_mod;
@@ -78,8 +72,6 @@ void sector::do_sector()
       { 
 	if (!sector::is_in_eta(m_b_etamax[i],m_b_etamin[i],eta_min,eta_max,m_cov)) continue;
 	if (!sector::is_in_phi(m_b_phimax[i],m_b_phimin[i],phi_min,phi_max,m_cov)) continue;
-	
-	///	cout << k << " / " << j << " / " << i << endl; 
 
 	// Module is in, add it...
 	lay_rate[i/10000]+=m_b_rate[i];
@@ -158,10 +150,6 @@ void sector::do_sector()
 
 bool sector::is_in_eta(float mod_max,float mod_min,float sec_min,float sec_max,float cov)
 {  
-
-  //  cout << mod_min << " / " << mod_max << " / " << sec_min << " / " << sec_max << endl;
-
-
   if (mod_max<sec_min) return false; 
   if (mod_min>sec_max) return false;
 

@@ -23,7 +23,14 @@ using namespace std;
 ///////////////////////////////////
 //
 //
-// Base class for stub rates calculation (in stubs/module/BX)
+// Base class for stub efficiencies calculation (in stubs/module/BX)
+//
+// This code computes the efficiencies per module or the efficiencies per layer
+// both for official and private stub producer
+//
+// For infos about the efficiency definition, have a look at the following presentation:
+//
+// https://indico.cern.ch/getFile.py/access?contribId=0&resId=0&materialId=slides&confId=263068
 //
 // Input infos are :
 //
@@ -60,35 +67,41 @@ class efficiencies
   TChain *MC;      
 
   TFile *m_outfile;  // The output file
-  TTree *m_tree; // The tree containing the efficiency information
+  TTree *m_tree;     // The tree containing the efficiency information
 
   float pt_val[100];
   float eta_val[50];
-
-  float digi_pt[20][100];
   float entries_pt[20][100];
-  float digi_eta[20][50];
   float entries_eta[20][50];
   float entries_pt_lay[20][100];
   float entries_eta_lay[20][50];
 
-  float clus_off_pt[20][100];
-  float stub_off_pt[20][100];
-  float clus_off_eta[20][50];
-  float stub_off_eta[20][50];
+  float digi_pt[20][100]; // Digi efficiencies as function of pT (between 0 and 20 GeV/c)
+  float digi_eta[20][50]; // Digi efficiencies as function of eta (between -2.5 and 2.5)
 
-  float clus_pri_pt[20][100];
-  float stub_pri_pt[20][100];
-  float clus_pri_eta[20][50];
-  float stub_pri_eta[20][50];
-  float stub_pri_pt_lay[20][100];
-  float stub_pri_eta_lay[20][50];
+  // Module efficiencies
+  float clus_off_pt[20][100]; // Official cluster efficiencies as function of pT
+  float stub_off_pt[20][100]; // Official stub efficiencies as function of pT
+  float clus_off_eta[20][50]; // Official cluster efficiencies as function of eta
+  float stub_off_eta[20][50]; // Official stub efficiencies as function of eta
+
+  float clus_pri_pt[20][100]; // Private cluster efficiencies as function of pT
+  float stub_pri_pt[20][100]; // Private stub efficiencies as function of pT
+  float clus_pri_eta[20][50]; // Private cluster efficiencies as function of eta
+  float stub_pri_eta[20][50]; // Private stub efficiencies as function of eta
+
+  // Layer efficiencies (only for stubs)
+  float stub_off_pt_lay[20][100]; // Official stub efficiencies as function of pT
+  float stub_off_eta_lay[20][50]; // Official stub efficiencies as function of eta
+
+  float stub_pri_pt_lay[20][100]; // Private stub efficiencies as function of pT
+  float stub_pri_eta_lay[20][50]; // Private stub efficiencies as function of eta
 
 
   // Here are the parameters needed from the data
   // Details on these might be found on
   //
-  // http://cmssw.cvs.cern.ch/cgi-bin/cmssw.cgi/UserCode/HL_LHC/Extractors/RecoExtractor/interface/L1TrackTrigger_analysis.h?view=markup
+  // https://github.com/sviret/HL_LHC/blob/master/Extractors/RecoExtractor/interface/L1TrackTrigger_analysis.h
   //
 
 
