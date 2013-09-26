@@ -79,11 +79,19 @@ class rates
   float m_b_rate_p[58000];   // Contains the barrel primary stubs module rates (in stubs/bx)
   float m_b_rate_s[58000];   // Contains the barrel secondary stubs module rates (in stubs/bx)
   float m_b_rate_f[58000];   // Contains the barrel fake stubs module rates (in stubs/bx)
-
+  float m_b_crate[58000];    // Contains the barrel cluster module rates (in stubs/bx)
+  float m_b_drate[58000];    // Contains the barrel digi module rates (in stubs/bx)
+  float m_b_bylc_rate[600];  // Contains the barrel clus ladder rates (in stubs/bx)
+  float m_b_byls_rate[600];  // Contains the barrel clus ladder rates (in stubs/bx)
+ 
   float m_e_rate[16][142000];// Contains the endcap chips module rates (in stubs/bx)
   float m_e_rate_p[142000];  // Contains the endcap primary stubs module rates (in stubs/bx)
   float m_e_rate_s[142000];  // Contains the endcap secondary stubs module rates (in stubs/bx)
   float m_e_rate_f[142000];  // Contains the endcap fake stubs module rates (in stubs/bx)
+  float m_e_crate[142000];    // Contains the barrel cluster module rates (in stubs/bx)
+  float m_e_drate[142000];    // Contains the barrel digi module rates (in stubs/bx)
+  float m_e_bylc_rate[1500];  // Contains the barrel clus ladder rates (in stubs/bx)
+  float m_e_byls_rate[1500];  // Contains the barrel clus ladder rates (in stubs/bx)
 
   // Following tables are for sector definition
   float m_b_etamin[58000];   // Contains the barrel module min eta value
@@ -118,12 +126,18 @@ class rates
   std::vector<float> m_clus_x;
   std::vector<float> m_clus_y;
   std::vector<float> m_clus_z;
+  std::vector<int>   m_clus_layer;
+  std::vector<int>   m_clus_ladder;
+  std::vector<int>   m_clus_module;
   std::vector<int>   m_clus_nrows;
   std::vector<int>   m_clus_nseg;
 
   std::vector<float> *pm_clus_x;
   std::vector<float> *pm_clus_y;
   std::vector<float> *pm_clus_z;
+  std::vector<int>   *pm_clus_layer;
+  std::vector<int>   *pm_clus_ladder;
+  std::vector<int>   *pm_clus_module;
   std::vector<int>   *pm_clus_nrows;
   std::vector<int>   *pm_clus_nseg;
 
@@ -174,6 +188,8 @@ class rates
   int m_sen;
   int m_chp;
   float m_rate;
+  int m_bar_clus[6];
+  int m_bar_stub[6];
 };
 
 #endif

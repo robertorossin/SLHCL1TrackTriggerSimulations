@@ -6,6 +6,8 @@
 #include <map>
 #include <iostream>
 #include <cmath>
+#include <stdio.h>  
+#include <stdlib.h> 
 
 #include "TSystem.h"
 #include "TFile.h"
@@ -14,6 +16,7 @@
 
 #include <fstream>
 #include <string>
+#include <sstream> 
 
 ///////////////////////////////////
 //
@@ -55,11 +58,9 @@ class sector_test
 
   void   do_test(int nevt);    
 
-  void   translateTuple(std::string pattin,std::string pattout);
-  void   initTuple(std::string test,std::string sec,std::string patt,std::string out);
-  bool   in_sec(int sec,int mod);
-
-
+  void   translateTuple(std::string pattin,std::string pattout, bool dbg);
+  void   initTuple(std::string test,std::string patt,std::string out);
+  bool   convert(std::string sectorfilename); 
 
  private:
 
@@ -71,9 +72,16 @@ class sector_test
   TFile  *m_outfile;
   TFile  *m_pattfile;
   TChain *m_L1TT;
-  TTree  *m_sectree;
+  TChain *data;
+
   TTree  *m_efftree;
   TTree  *m_PATT;
+
+  // List of stubs from primaries (one vector of stub ids per prim track) 
+  // for a given event 
+
+  std::vector< std::vector<int> >   m_primaries;
+
 
   // Coding conventions for barrel and endcap module IDs
   
@@ -86,36 +94,45 @@ class sector_test
   // Disks 0 to 6  (towards positive Z)
   // Disks 7 to 13 (towards negative Z)
 
-  std::vector< std::vector<int> >   m_mod_sec; 
+  int m_sec_mult;
+  int evtIDmax;
 
-  // The vector containing the total module lists of sectors 
-  std::vector< std::vector<int> >   m_sectors; 
-  std::vector< std::vector<int> >   *pm_sectors; 
+  std::vector< std::vector<int> >   m_modules; 
 
+
+  int m_evtid;
   int m_stub;
   std::vector<int>   m_stub_layer;
   std::vector<int>   m_stub_ladder;
   std::vector<int>   m_stub_module;
   std::vector<int>   m_stub_tp;
+  std::vector<int>   m_stub_pdg;
   std::vector<float> m_stub_pxGEN;
   std::vector<float> m_stub_pyGEN;
   std::vector<float> m_stub_etaGEN;
+  std::vector<float> m_stub_X0;
+  std::vector<float> m_stub_Y0;
 
   std::vector<int>   *pm_stub_layer;
   std::vector<int>   *pm_stub_ladder;
   std::vector<int>   *pm_stub_module;
   std::vector<int>   *pm_stub_tp;
+  std::vector<int>   *pm_stub_pdg;
   std::vector<float> *pm_stub_pxGEN;
   std::vector<float> *pm_stub_pyGEN;
   std::vector<float> *pm_stub_etaGEN;
-
+  std::vector<float> *pm_stub_X0;
+  std::vector<float> *pm_stub_Y0;
 
   // The output tree has one entry per primary track. 
 
+  int   evt;        // Event number (for PU event, where there is more than 1 primary)
+  int   pdg;        // The pdg ID of the particle
   int   nsec;       // The number of sectors containing at least 5 stubs of the prim. track
   float pt;         // The pT of the prim. track
   float eta;        // The eta of the prim. track
   float phi;        // The phi of the prim. track
+  float d0;         // The origin radius
   int   npatt;      // The number of patterns containing at least 5 stubs of the prim. track
   int   ntotpatt;   // The total number of patterns 
   int   mult[500];  // The total number of stubs per sector 
@@ -123,6 +140,7 @@ class sector_test
   int   nplay[20];  // The total number of prim stubs per layer 
 
 
+  
   // Informations contained in the pattern file
 
   int nb_patterns; // Number of patterns in event evtID
@@ -143,19 +161,11 @@ class sector_test
   static const int MAX_NB_PATTERNS = 1500;
   static const int MAX_NB_HITS     = 100;
 
-  int nb_layers;
-  int pattern_sector_id[MAX_NB_PATTERNS];
-  
-  int nbHitPerPattern[MAX_NB_PATTERNS];
+  int   pattern_sector_id[MAX_NB_PATTERNS];  
+  int   nbHitPerPattern[MAX_NB_PATTERNS];
   short hit_layer[MAX_NB_PATTERNS*MAX_NB_HITS];
-  short hit_ladder[MAX_NB_PATTERNS*MAX_NB_HITS];
-  short hit_zPos[MAX_NB_PATTERNS*MAX_NB_HITS];
-  short hit_segment[MAX_NB_PATTERNS*MAX_NB_HITS];
-  short hit_strip[MAX_NB_PATTERNS*MAX_NB_HITS];
-  int hit_tp[MAX_NB_PATTERNS*MAX_NB_HITS];
-  float hit_ptGEN[MAX_NB_PATTERNS*MAX_NB_HITS];
-  float hit_phiGEN[MAX_NB_PATTERNS*MAX_NB_HITS];
-  float hit_etaGEN[MAX_NB_PATTERNS*MAX_NB_HITS];
+  int   hit_tp[MAX_NB_PATTERNS*MAX_NB_HITS];
+
 };
 
 #endif

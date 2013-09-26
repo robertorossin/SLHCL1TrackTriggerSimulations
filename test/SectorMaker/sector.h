@@ -27,11 +27,6 @@
 // nphi     : the number of divisions in phi (default : 8)
 // oeta     : the percentage of eta overlap between 2 sectors (default : 0)
 // ophi     : the percentage of phi overlap between 2 sectors (default : 0)
-// 
-// This code was developped for the BE classic geometry, but also works for 
-// the 5 disks alternative
-//
-// It is however preferable to use the sectors files made from the TkLayout tool
 //
 // Info about the code:
 //
@@ -72,8 +67,9 @@ class sector
 
   // E_id = (disk-1)*10000 + ladder*100 + module (0 to 131377)
 
-  // Disks 0 to 6  (towards positive Z)  (0 to  4 for 5D)
-  // Disks 7 to 13 (towards negative Z)  (7 to 11 for 5D)
+  // Disks 0 to 6  (towards positive Z)
+  // Disks 7 to 13 (towards negative Z)
+
 
   // Following tables are for rates
   float m_b_rate[58000];     // Contains the barrel module rates (in stubs/bx)
