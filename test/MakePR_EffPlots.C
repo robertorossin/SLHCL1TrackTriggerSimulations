@@ -808,11 +808,9 @@ void do_full_effs(std::string filename, int nh, bool plot_fake)
   pt_eff_z->SetMarkerStyle(20);
   pt_fake_z->SetMarkerStyle(4);
   pt_eff_z->Draw("");
-  if (plot_fake) pt_fake_z->Draw("Psame");
 
   leg = new TLegend(0.6,0.5,0.85,0.65);
   leg->AddEntry(pt_eff_z,"Pattern reco efficiency","p");
-  if (plot_fake) leg->AddEntry(pt_fake_z,"Fake proportion","p");
   leg->Draw();
 
   c1->cd(3);  
