@@ -88,7 +88,7 @@ void sector_test::do_test(int nevt)
       m_PATT->GetEntry(m_evtid);      
       evt = event_id;
 
-      if (nb_patterns==-1) continue; // This event wasn't treated
+      //if (nb_patterns==-1) continue; // This event wasn't treated
     }    
 
 
