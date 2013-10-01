@@ -260,9 +260,9 @@ void sector_test::do_test(int nevt)
 
 	    nhits_p=0; 
       
-	    for (int kk=0;kk<20;++kk)
+	    for (int jk=0;jk<20;++jk)
 	    {
-	      if (n_per_lay_patt[kk]!=0) ++nhits_p;
+	      if (n_per_lay_patt[jk]!=0) ++nhits_p;
 	    }
 	
 	    if (nhits_p>=4) ++npatt; // More than 4, the pattern is good
