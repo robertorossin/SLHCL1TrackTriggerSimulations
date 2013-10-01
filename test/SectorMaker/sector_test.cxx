@@ -301,7 +301,6 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
   // Case 1, it's a root file
   if (found!=std::string::npos)
   {
-    std::cout << "first 'needle' found at: " << found << '\n';
     m_L1TT->Add(test.c_str());
   }
   else // This is a list provided into a text file
