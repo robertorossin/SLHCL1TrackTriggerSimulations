@@ -295,10 +295,34 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
   m_L1TT   = new TChain("L1TrackTrigger"); 
 
   // Input data file (you can use rfio of xrood address here)
-  m_L1TT->Add(test.c_str());
   
-  // Example of an xrootd data file
-  //m_L1TT->Add("root://lyogrid06.in2p3.fr//dpm/in2p3.fr/home/cms/data/store/user/sviret/SLHC/GEN/612_SLHC6_PU4T_thresh2/PILEUP4T_140_02.root");   
+  std::size_t found = test.find(".root");
+
+  // Case 1, it's a root file
+  if (found!=std::string::npos)
+  {
+    std::cout << "first 'needle' found at: " << found << '\n';
+    m_L1TT->Add(test.c_str());
+  }
+  else // This is a list provided into a text file
+  {
+    std::string STRING;
+    std::ifstream in(test.c_str());
+    if (!in) 
+    {
+      std::cout << "Please provide a valid data filename list" << std::endl; 
+      return;
+    }    
+  
+    while (!in.eof()) 
+    {
+      getline(in,STRING);
+      m_L1TT->Add(STRING.c_str());   
+    }
+
+    in.close();
+  }
+  
   pm_stub_layer=&m_stub_layer;
   pm_stub_ladder=&m_stub_ladder;
   pm_stub_module=&m_stub_module;
