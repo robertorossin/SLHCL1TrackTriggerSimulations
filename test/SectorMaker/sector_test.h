@@ -61,7 +61,8 @@ class sector_test
   void   translateTuple(std::string pattin,std::string pattout, bool dbg);
   void   initTuple(std::string test,std::string patt,std::string out);
   bool   convert(std::string sectorfilename); 
-
+  void   reset();
+    
  private:
 
   bool do_patt;
@@ -75,6 +76,7 @@ class sector_test
   TChain *data;
 
   TTree  *m_efftree;
+  TTree  *m_finaltree;
   TTree  *m_PATT;
 
   // List of stubs from primaries (one vector of stub ids per prim track) 
@@ -112,6 +114,10 @@ class sector_test
   std::vector<float> m_stub_etaGEN;
   std::vector<float> m_stub_X0;
   std::vector<float> m_stub_Y0;
+  std::vector<float> m_stub_Z0;
+  std::vector<float> m_stub_x;
+  std::vector<float> m_stub_y;
+  std::vector<float> m_stub_z;
 
   std::vector<int>   *pm_stub_layer;
   std::vector<int>   *pm_stub_ladder;
@@ -123,6 +129,10 @@ class sector_test
   std::vector<float> *pm_stub_etaGEN;
   std::vector<float> *pm_stub_X0;
   std::vector<float> *pm_stub_Y0;
+  std::vector<float> *pm_stub_Z0;
+  std::vector<float> *pm_stub_x;
+  std::vector<float> *pm_stub_y;
+  std::vector<float> *pm_stub_z;
 
   // The output tree has one entry per primary track. 
 
@@ -138,6 +148,36 @@ class sector_test
   int   mult[500];  // The total number of stubs per sector 
   int   nhits;      // The total number of layers/disks hit by the prim track
   int   nplay[20];  // The total number of prim stubs per layer 
+
+
+  int n_stub_total;                  // The total number of stubs in the event
+  int n_stub;                        // The total number of stubs contained in matched patterns in the event
+
+  std::vector<float>   *stub_x;      // x coordinates of ALL the stubs
+  std::vector<float>   *stub_y;      // y coordinates of ALL the stubs
+  std::vector<float>   *stub_z;      // z coordinates of ALL the stubs
+  std::vector<int>     *stub_layer;  // layer number of ALL the stubs
+  std::vector<int>     *stub_ladder; // ladder number of ALL the stubs
+  std::vector<int>     *stub_module; // module number of ALL the stubs
+  std::vector<int>     *stub_tp;     // tp index of ALL the stubs (in part_*** vectors of this tree!!!!)
+  std::vector<int>     *stub_inpatt; // is the stub in a pattern (1) of not (0)?
+
+  int n_part;                        // The total number of particles inducing at least one stub in the event
+
+  std::vector<int>     *part_pdg;    // PDG id of the particles
+  std::vector<int>     *part_nsec;   // In how many trigger towers this particle hit more than 4 different layers/disks?
+  std::vector<int>     *part_nhits;  // How many different layers/disks are hit by the particle?
+  std::vector<int>     *part_npatt;  // How many patterns contains more than 4 stubs of the particle (in 4 different layers/disks)?
+  std::vector<float>   *part_pt;     // pt of the particles
+  std::vector<float>   *part_rho;    // rho0 of the particles
+  std::vector<float>   *part_z0;     // z0 of the particles
+  std::vector<float>   *part_eta;    // eta of the particles 
+  std::vector<float>   *part_phi;    // phi of the particles
+
+  int n_patt;                        // The total number of patterns matched in the event
+  std::vector<int>                  *patt_sec;   // Sector id of all the patterns
+  std::vector< std::vector<int> >   *patt_parts; // tp index of ALL the particles contained in the pattern (in part_*** vectors of this tree!!!!)
+  std::vector< std::vector<int> >   *patt_stubs; // index of ALL the stubs contained in the pattern (in stub_*** vectors of this tree!!!!) 
 
 
   

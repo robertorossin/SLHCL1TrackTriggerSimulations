@@ -61,14 +61,18 @@ void sector_test::do_test(int nevt)
   std::vector<int> the_sectors;
   std::vector<int> prim_stubs;
 
+  std::vector<int> stubs;
+  std::vector<int> parts;
+
+
+
   // We do a linking 
   // the older version of the PatternExtractor (before Sept. 20th 2013)) 
 
   // Loop over the events
   for (int i=0;i<ndat;++i)
   {    
-    ntotpatt=0; 
-    m_primaries.clear(); 
+    sector_test::reset();
 
     m_L1TT->GetEntry(i);
 
@@ -82,13 +86,25 @@ void sector_test::do_test(int nevt)
     if (m_evtid>=m_nevt) continue; // No PR output available
 
     evt = i;
+    n_stub_total=m_stub; 
 
     if (do_patt)
     {
       m_PATT->GetEntry(m_evtid);      
       evt = event_id;
+      n_patt=nb_patterns; 
 
-      //if (nb_patterns==-1) continue; // This event wasn't treated
+      parts.clear();
+
+      if (nb_patterns>0)
+      {	  
+	for(int kk=0;kk<nb_patterns;kk++)
+	{
+	  patt_sec->push_back(m_secid.at(kk));  
+	  patt_parts->push_back(parts);   
+	  patt_stubs->push_back(m_links.at(kk));
+	}
+      }
     }    
 
 
@@ -101,16 +117,22 @@ void sector_test::do_test(int nevt)
 
     bool already_there = 0;
 
-
-    //    cout << i << " // " << m_stub << endl;
-
     for (int j=0;j<m_stub;++j)
     {  
+      stub_x->push_back(m_stub_x[j]);  
+      stub_y->push_back(m_stub_y[j]);   
+      stub_z->push_back(m_stub_z[j]);   
+      stub_layer->push_back(m_stub_layer[j]);   
+      stub_ladder->push_back(m_stub_ladder[j]);  
+      stub_module->push_back(m_stub_module[j]);  
+      stub_tp->push_back(-1);  
+      stub_inpatt->push_back(0);  
+
       if (m_stub_tp[j]<0) continue; // Bad stub  
 
       // Basic primary selection (pt and d0 cuts)
-      if (sqrt(m_stub_pxGEN[j]*m_stub_pxGEN[j]+m_stub_pyGEN[j]*m_stub_pyGEN[j])<0.1) continue;
-      if (sqrt(m_stub_X0[j]*m_stub_X0[j]+m_stub_Y0[j]*m_stub_Y0[j])>2.) continue; 
+      //  if (sqrt(m_stub_pxGEN[j]*m_stub_pxGEN[j]+m_stub_pyGEN[j]*m_stub_pyGEN[j])<0.2) continue;
+      //  if (sqrt(m_stub_X0[j]*m_stub_X0[j]+m_stub_Y0[j]*m_stub_Y0[j])>2.) continue; 
 
       already_there = false;
 
@@ -118,6 +140,7 @@ void sector_test::do_test(int nevt)
       {  
 	if (m_primaries.at(k).at(0)!=m_stub_tp[j]) continue;
 
+	stub_tp->at(j)=k;  
 	already_there = true;
 	m_primaries.at(k).push_back(j); // If yes, just put the stub index
 	break;
@@ -127,14 +150,27 @@ void sector_test::do_test(int nevt)
 
       // Here we have a new primary, we create a new entry
 
+      ++n_part;
+      part_pdg->push_back(m_stub_pdg[j]);   
+      part_nsec->push_back(0);   
+      part_nhits->push_back(0);   
+      part_npatt->push_back(0);   
+      part_pt->push_back(sqrt(m_stub_pxGEN[j]*m_stub_pxGEN[j]+m_stub_pyGEN[j]*m_stub_pyGEN[j]));   
+      part_rho->push_back(sqrt(m_stub_X0[j]*m_stub_X0[j]+m_stub_Y0[j]*m_stub_Y0[j]));  
+      part_z0->push_back(m_stub_Z0[j]);    
+      part_eta->push_back(m_stub_etaGEN[j]);    
+      part_phi->push_back(atan2(m_stub_pyGEN[j],m_stub_pxGEN[j]));
+
       prim_stubs.clear();
       prim_stubs.push_back(m_stub_tp[j]); // The TP id 
       prim_stubs.push_back(j); // The first stub ID
 
       m_primaries.push_back(prim_stubs);
+
+      stub_tp->at(j)=m_primaries.size()-1;  
     }
 
-    if (m_primaries.size()>1)
+    if (m_primaries.size()>10)
       std::cout << "Found " << m_primaries.size() 
 		<< " primary particles in the event" << i << std::endl; 
 
@@ -143,7 +179,6 @@ void sector_test::do_test(int nevt)
     // Then, in the second loop, we test all the primaries 
     // in order to check if they have matched a pattern
     //
-
 
     int idx = 0;
 
@@ -222,6 +257,9 @@ void sector_test::do_test(int nevt)
 	if (is_sec_there[kk]>=4) ++nsec; 
       }
 
+      part_nsec->at(k) = nsec;   
+      part_nhits->at(k)= nhits;   
+
       // Finally we do the pattern loop
       
       if (do_patt)
@@ -252,7 +290,11 @@ void sector_test::do_test(int nevt)
 	      if (m_stub_tp[m_links.at(kk).at(m)]==m_primaries.at(k).at(0))
 		n_per_lay_patt[m_stub_layer[m_links.at(kk).at(m)]-5]++;
 
-	      	     
+	      if (stub_inpatt->at(m_links.at(kk).at(m))==0)
+	      {
+		stub_inpatt->at(m_links.at(kk).at(m))=1;
+		++n_stub;
+	      }	
 	    }
 	   
 	    // First we get the number of different layers/disks hit by the primary
@@ -264,18 +306,24 @@ void sector_test::do_test(int nevt)
 	    {
 	      if (n_per_lay_patt[jk]!=0) ++nhits_p;
 	    }
-	
-	    if (nhits_p>=4) ++npatt; // More than 4, the pattern is good
-	  }
-	  	  
+
+	    if (nhits_p>=4) 
+	    {
+	      ++npatt; // More than 4, the pattern is good
+	      patt_parts->at(kk).push_back(k); 
+	    }
+	  }	  	  
 	}	
       }
       
+      part_npatt->at(k) = npatt; 
 
       m_efftree->Fill();
     }
+
+    m_finaltree->Fill(); 
   }
- 
+
   m_outfile->Write();
   m_outfile->Close();
 }
@@ -294,8 +342,8 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
 {
   m_L1TT   = new TChain("L1TrackTrigger"); 
 
-  // Input data file (you can use rfio of xrood address here)
-  
+  // Input data file 
+
   std::size_t found = test.find(".root");
 
   // Case 1, it's a root file
@@ -316,12 +364,14 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
     while (!in.eof()) 
     {
       getline(in,STRING);
-      m_L1TT->Add(STRING.c_str());   
+
+      found = STRING.find(".root");
+      if (found!=std::string::npos) m_L1TT->Add(STRING.c_str());   
     }
 
     in.close();
   }
-  
+
   pm_stub_layer=&m_stub_layer;
   pm_stub_ladder=&m_stub_ladder;
   pm_stub_module=&m_stub_module;
@@ -332,6 +382,10 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
   pm_stub_pdg=&m_stub_pdg;
   pm_stub_X0=&m_stub_X0;
   pm_stub_Y0=&m_stub_Y0;
+  pm_stub_Z0=&m_stub_Z0;
+  pm_stub_x=&m_stub_x;
+  pm_stub_y=&m_stub_y;
+  pm_stub_z=&m_stub_z;
 
   m_L1TT->SetBranchAddress("evt",            &m_evtid); 
   m_L1TT->SetBranchAddress("STUB_n",         &m_stub);
@@ -342,6 +396,10 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
   m_L1TT->SetBranchAddress("STUB_pyGEN",     &pm_stub_pyGEN);
   m_L1TT->SetBranchAddress("STUB_X0",        &pm_stub_X0);
   m_L1TT->SetBranchAddress("STUB_Y0",        &pm_stub_Y0);
+  m_L1TT->SetBranchAddress("STUB_Z0",        &pm_stub_Z0);
+  m_L1TT->SetBranchAddress("STUB_x",         &pm_stub_x);
+  m_L1TT->SetBranchAddress("STUB_y",         &pm_stub_y);
+  m_L1TT->SetBranchAddress("STUB_z",         &pm_stub_z);
   m_L1TT->SetBranchAddress("STUB_etaGEN",    &pm_stub_etaGEN);
   m_L1TT->SetBranchAddress("STUB_tp",        &pm_stub_tp);
   m_L1TT->SetBranchAddress("STUB_pdgID",     &pm_stub_pdg);
@@ -364,6 +422,37 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
   m_efftree->Branch("phi",        &phi,     "phi/F"); 
   m_efftree->Branch("d0",         &d0,      "d0/F"); 
   m_efftree->Branch("mult",       &mult,    "mult[500]/I"); 
+
+  m_finaltree = new TTree("FullInfo","");
+
+  m_finaltree->Branch("evt",          &evt); 
+
+  m_finaltree->Branch("n_stub_total", &n_stub_total); 
+  m_finaltree->Branch("n_stub_inpat", &n_stub); 
+  m_finaltree->Branch("stub_x",       &stub_x); 
+  m_finaltree->Branch("stub_y",       &stub_y); 
+  m_finaltree->Branch("stub_z",       &stub_z); 
+  m_finaltree->Branch("stub_layer",   &stub_layer); 
+  m_finaltree->Branch("stub_ladder",  &stub_ladder);
+  m_finaltree->Branch("stub_module",  &stub_module);
+  m_finaltree->Branch("stub_tp",      &stub_tp);
+  m_finaltree->Branch("stub_inpatt",  &stub_inpatt);
+
+  m_finaltree->Branch("n_part",       &n_part); 
+  m_finaltree->Branch("part_pdg",     &part_pdg); 
+  m_finaltree->Branch("part_nsec",    &part_nsec); 
+  m_finaltree->Branch("part_nhits",   &part_nhits); 
+  m_finaltree->Branch("part_npatt",   &part_npatt); 
+  m_finaltree->Branch("part_pt",      &part_pt); 
+  m_finaltree->Branch("part_rho",     &part_rho);
+  m_finaltree->Branch("part_z0",      &part_z0);
+  m_finaltree->Branch("part_eta",     &part_eta);  
+  m_finaltree->Branch("part_phi",     &part_phi); 
+
+  m_finaltree->Branch("n_patt",       &n_patt); 
+  m_finaltree->Branch("patt_sec",     &patt_sec); 
+  m_finaltree->Branch("patt_parts",   &patt_parts); 
+  m_finaltree->Branch("patt_stubs",   &patt_stubs); 
 
 
   // Pattern file information only if available
@@ -628,4 +717,38 @@ bool sector_test::convert(std::string sectorfilename)
   m_sec_mult -= 5;
 
   return true;
+}
+
+
+void sector_test::reset() 
+{
+  ntotpatt=0; 
+  m_primaries.clear(); 
+
+  n_stub_total=0; 
+  n_stub=0; 
+  stub_x->clear();  
+  stub_y->clear();   
+  stub_z->clear();   
+  stub_layer->clear();   
+  stub_ladder->clear();  
+  stub_module->clear();  
+  stub_tp->clear();  
+  stub_inpatt->clear();  
+ 
+  n_part=0; 
+  part_pdg->clear();   
+  part_nsec->clear();   
+  part_nhits->clear();   
+  part_npatt->clear();   
+  part_pt->clear();   
+  part_rho->clear();  
+  part_z0->clear();  
+  part_eta->clear();    
+  part_phi->clear();   
+
+  n_patt=0; 
+  patt_sec->clear();   
+  patt_parts->clear();   
+  patt_stubs->clear(); 
 }
