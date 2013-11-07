@@ -30,7 +30,7 @@
 
 void do_rates_plots(std::string filename)
 {
-  do_sec_plots(filename,1,1,1)
+  do_sec_plots(filename,1,1,1);
 }
 
 
