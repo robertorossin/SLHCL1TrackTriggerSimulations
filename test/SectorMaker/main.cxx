@@ -5,6 +5,7 @@
 // Internal includes
 
 #include "rates.h"
+#include "patterngen.h"
 #include "sector.h"
 #include "sector_test.h"
 #include "efficiencies.h"
@@ -12,6 +13,20 @@
 #include "TROOT.h"
 
 using namespace std;
+
+///////////////////////////////////
+//
+//
+// Base code for the AM analysis tool
+//
+// Available methods are described in the tutorial (part III)
+//
+//
+//  Author: viret@in2p3_dot_fr
+//  Date       : 23/05/2013
+//  Maj. update: 13/11/2013
+//
+///////////////////////////////////
 
 int main(int argc, char** argv) {
 
@@ -25,15 +40,16 @@ int main(int argc, char** argv) {
 
 
   // Option 1: just do the rate calculation
-  if (params.rates()==1 && params.sectors()==0)
+  if (params.option()=="rates")
   {
     rates* my_rates = new rates(params.inputfile(),params.outfile());
-    delete my_rates;
+    delete my_rates;    
   }
   
 
-  // Option 2: just do the sectors calculation
-  if (params.sectors()==1 && params.rates()==0)
+  // Option 2: just do the sectors calculation (please note that this option is
+  // for debugging only, official sector determination is made by the TkLayout tool)
+  if (params.option()=="sectors")
   {
     sector* my_sectors = new sector(params.inputfile(),params.outfile(),
 				    params.eta(),params.phi(),
@@ -42,7 +58,8 @@ int main(int argc, char** argv) {
   }
 
   // Option 3: do both steps
-  if (params.rates()==1 && params.sectors()==1)
+
+  if (params.option()=="rate_n_sec")
   {
     rates* my_rates = new rates(params.inputfile(),"my_rates_temp.root");
     delete my_rates;
@@ -55,7 +72,7 @@ int main(int argc, char** argv) {
 
   // Option 4: do sectors and test
 
-  if (params.sectors()==1 && params.rates()==0 && params.test()==1)
+  if (params.option()=="sec_n_test")
   {
     sector* my_sectors = new sector(params.inputfile(),"my_sectors_temp.root",
 				    params.eta(),params.phi(),
@@ -69,7 +86,8 @@ int main(int argc, char** argv) {
   }
   
   // Option 5: efficiencies
-  if (params.efficiencies()==1)
+
+  if (params.option()=="stub_eff")
   {
     efficiencies* my_effs = new efficiencies(params.inputfile(),params.outfile());
     delete my_effs;
@@ -77,7 +95,7 @@ int main(int argc, char** argv) {
 
   // Option 6: sector test only 
 
-  if (params.test()==1)
+  if (params.option()=="PR_eff")
   {
     sector_test* my_test = new sector_test(params.testfile(),params.inputfile(),
 					   params.pattfile(),params.outfile(),
@@ -86,5 +104,12 @@ int main(int argc, char** argv) {
     delete my_test;
   }
 
+  // Option 7: generate a serie of patterns for the concentrator
+  if (params.option()=="pattgen")
+  {
+    patterngen* my_pgen = new patterngen(params.inputfile(),params.outfile(),params.nevt());
+    delete my_pgen;
+  }
+  
   return 0;
 }

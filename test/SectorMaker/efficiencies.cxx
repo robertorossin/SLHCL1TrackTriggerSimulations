@@ -34,7 +34,7 @@ void efficiencies::get_efficiencies()
   int clus_i;
   int stub_i;
   
-  int disk = 0;
+  int disk;
 
   int i_lay;
   int i_mod;
@@ -141,7 +141,7 @@ void efficiencies::get_efficiencies()
 	       << " / " << i_mod+1 << endl;
 	}
 
-	disk=0;
+	disk = 0;
 	if (i_lay>10 && i_lay<=17) disk=int(i_lay-10)%8;
 	if (i_lay>17 && i_lay<=24) disk=int(i_lay-17)%8;
 

@@ -24,11 +24,8 @@ class jobparams{
 
   /** return value */
 
-  bool        rates() const;
   bool        dbg() const;
-  bool        sectors() const;
-  bool        test() const;
-  bool        efficiencies() const;
+  std::string option() const;
   std::string inputfile() const;
   std::string testfile() const;
   std::string outfile() const;
@@ -41,11 +38,8 @@ class jobparams{
 
  private:
 
-  bool         m_rates;   
   bool         m_dbg;   
-  bool         m_sectors; 
-  bool         m_test;   
-  bool         m_efficiencies;    
+  std::string  m_opt;  
   std::string  m_inputfile; 
   std::string  m_outfile;
   std::string  m_testfile; 
@@ -57,6 +51,10 @@ class jobparams{
   int          m_nevt;
 
 };
+
+inline std::string jobparams::option() const{
+  return m_opt;
+}
 
 inline std::string jobparams::inputfile() const{
   return m_inputfile;
@@ -76,22 +74,6 @@ inline std::string jobparams::pattfile() const{
 
 inline bool jobparams::dbg() const{
   return m_dbg;
-}
-
-inline bool jobparams::rates() const{
-  return m_rates;
-}
-
-inline bool jobparams::sectors() const{
-  return m_sectors;
-}
-
-inline bool jobparams::test() const{
-  return m_test;
-}
-
-inline bool jobparams::efficiencies() const{
-  return m_efficiencies;
 }
 
 inline int jobparams::eta() const{

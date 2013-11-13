@@ -23,15 +23,15 @@ void rates::get_rates()
   // Initialize some params
  
   int B_id,E_id; // The detector module IDs (defined in the header)
-
   int Bl_id,El_id; 
 
   int disk;
   int layer,ladder,module,chip;
 
-  float IP;
+  float IP,PT;
 
   bool is_prim = false;
+  bool is_prim2= false;
   bool is_fake = false;
 
   int st,idx,seg,nseg,lad_cor;
@@ -123,12 +123,15 @@ void rates::get_rates()
       // Then we look if the stub is fake/secondary/primary 
 
       is_prim=false;
+      is_prim2=false;
       is_fake=false;
 
       IP = sqrt(m_stub_X0[i]*m_stub_X0[i]+m_stub_Y0[i]*m_stub_Y0[i]);
+      PT = sqrt(m_stub_pxGEN[i]*m_stub_pxGEN[i]+m_stub_pyGEN[i]*m_stub_pyGEN[i]);
 
-      if (m_stub_tp[i]>=0 && IP<0.2) is_prim=true; // OK, perfectible
-      if (m_stub_tp[i]<0)            is_fake=true;
+      if (m_stub_tp[i]>=0 && IP<0.2)         is_prim=true; // OK, perfectible
+      if (m_stub_tp[i]<0)                    is_fake=true;
+      if (m_stub_tp[i]>=0 && IP<0.2 && PT>2) is_prim2=true; // OK, perfectible
 
 
       // Get some stub info (to get position on the module)
@@ -150,6 +153,7 @@ void rates::get_rates()
 	if (is_fake)              m_b_rate_f[B_id] += fact; 
 	if (!is_fake && !is_prim) m_b_rate_s[B_id] += fact; 
 	if (is_prim)              m_b_rate_p[B_id] += fact;
+	if (is_prim2)             m_b_rate_pp[B_id] += fact;
 
 	if (st>m_b_stmax[B_id])
 	{
@@ -189,6 +193,7 @@ void rates::get_rates()
 	  if (is_fake)              m_e_rate_f[E_id] += fact; 
 	  if (!is_fake && !is_prim) m_e_rate_s[E_id] += fact; 
 	  if (is_prim)              m_e_rate_p[E_id] += fact;
+	  if (is_prim2)             m_e_rate_pp[E_id] += fact;
 	  
 	  if (st>m_e_stmax[E_id])
 	  {
@@ -227,6 +232,7 @@ void rates::get_rates()
 	  if (is_fake)              m_e_rate_f[E_id] += fact; 
 	  if (!is_fake && !is_prim) m_e_rate_s[E_id] += fact; 
 	  if (is_prim)              m_e_rate_p[E_id] += fact;
+	  if (is_prim2)             m_e_rate_pp[E_id] += fact;
 	  
 	  if (st>m_e_stmax[E_id])
 	  {
@@ -254,6 +260,7 @@ void rates::get_rates()
 	}
       }
     }
+
 
     m_disk= -1;
     m_lay = 0;
@@ -368,6 +375,7 @@ void rates::initVars()
   {
     for (int j=0;j<16;++j) m_b_rate[j][i]   = 0.;
     m_b_rate_p[i] = 0.;
+    m_b_rate_pp[i] = 0.;
     m_b_rate_s[i] = 0.;
     m_b_rate_f[i] = 0.;
     m_b_etamin[i] = 1000.;
@@ -400,6 +408,7 @@ void rates::initVars()
   {
     for (int j=0;j<16;++j) m_e_rate[j][i]   = 0.;
     m_e_rate_p[i] = 0.;
+    m_e_rate_pp[i] = 0.;
     m_e_rate_s[i] = 0.;
     m_e_rate_f[i] = 0.;
     m_e_etamin[i] = 1000.;
@@ -423,7 +432,36 @@ void rates::initTuple(std::string in,std::string out)
 {
   L1TT   = new TChain("L1TrackTrigger"); 
 
-  L1TT->Add(in.c_str());
+  // Input data file
+
+  std::size_t found = in.find(".root");
+
+  // Case 1, it's a root file
+  if (found!=std::string::npos)
+  {
+    L1TT->Add(in.c_str());
+  }
+  else // This is a list provided into a text file
+  {
+    std::string STRING;
+    std::ifstream in2(in.c_str());
+    if (!in2)
+    {
+      std::cout << "Please provide a valid data filename list" << std::endl;
+      return;
+    }
+  
+    while (!in2.eof())
+    {
+      getline(in2,STRING);
+
+      found = STRING.find(".root");
+      if (found!=std::string::npos) L1TT->Add(STRING.c_str());
+    }
+
+    in2.close();
+  }
+
   
   pm_clus_x=&m_clus_x;
   pm_clus_y=&m_clus_y;
@@ -438,6 +476,7 @@ void rates::initTuple(std::string in,std::string out)
   pm_stub_ladder=&m_stub_ladder;
   pm_stub_module=&m_stub_module;
   pm_stub_tp=&m_stub_tp;
+  pm_stub_pt=&m_stub_pt;
   pm_stub_pxGEN=&m_stub_pxGEN;
   pm_stub_pyGEN=&m_stub_pyGEN;
   pm_stub_etaGEN=&m_stub_etaGEN;
@@ -461,6 +500,7 @@ void rates::initTuple(std::string in,std::string out)
   L1TT->SetBranchAddress("STUB_pyGEN",     &pm_stub_pyGEN);
   L1TT->SetBranchAddress("STUB_etaGEN",    &pm_stub_etaGEN);
   L1TT->SetBranchAddress("STUB_tp",        &pm_stub_tp);
+  L1TT->SetBranchAddress("STUB_pt",        &pm_stub_pt);
   L1TT->SetBranchAddress("STUB_X0",        &pm_stub_X0);
   L1TT->SetBranchAddress("STUB_Y0",        &pm_stub_Y0);
   L1TT->SetBranchAddress("STUB_x",         &pm_stub_x);
@@ -488,6 +528,7 @@ void rates::initTuple(std::string in,std::string out)
 
 
   m_ratetree->Branch("STUB_b_rates",         &m_b_rate,      "STUB_b_rates[16][58000]/F");
+  m_ratetree->Branch("STUB_b_rates_prim2",   &m_b_rate_pp,   "STUB_b_rates_prim2[58000]/F"); 
   m_ratetree->Branch("STUB_b_rates_prim",    &m_b_rate_p,    "STUB_b_rates_prim[58000]/F"); 
   m_ratetree->Branch("STUB_b_rates_sec",     &m_b_rate_s,    "STUB_b_rates_sec[58000]/F"); 
   m_ratetree->Branch("STUB_b_rates_f",       &m_b_rate_f,    "STUB_b_rates_fake[58000]/F"); 
@@ -501,6 +542,7 @@ void rates::initTuple(std::string in,std::string out)
   m_ratetree->Branch("CLUS_b_l_rates",       &m_b_bylc_rate, "CLUS_b_l_rates[600]/F");
 
   m_ratetree->Branch("STUB_e_rates",         &m_e_rate,      "STUB_e_rates[16][142000]/F");
+  m_ratetree->Branch("STUB_e_rates_prim2",    &m_e_rate_pp,    "STUB_e_rates_prim2[142000]/F"); 
   m_ratetree->Branch("STUB_e_rates_prim",    &m_e_rate_p,    "STUB_e_rates_prim[142000]/F"); 
   m_ratetree->Branch("STUB_e_rates_sec",     &m_e_rate_s,    "STUB_e_rates_sec[142000]/F"); 
   m_ratetree->Branch("STUB_e_rates_f",       &m_e_rate_f,    "STUB_e_rates_fake[142000]/F"); 

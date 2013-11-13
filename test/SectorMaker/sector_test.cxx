@@ -131,7 +131,7 @@ void sector_test::do_test(int nevt)
       if (m_stub_tp[j]<0) continue; // Bad stub  
 
       // Basic primary selection (pt and d0 cuts)
-      //  if (sqrt(m_stub_pxGEN[j]*m_stub_pxGEN[j]+m_stub_pyGEN[j]*m_stub_pyGEN[j])<0.2) continue;
+      if (sqrt(m_stub_pxGEN[j]*m_stub_pxGEN[j]+m_stub_pyGEN[j]*m_stub_pyGEN[j])<0.2) continue;
       //  if (sqrt(m_stub_X0[j]*m_stub_X0[j]+m_stub_Y0[j]*m_stub_Y0[j])>2.) continue; 
 
       already_there = false;

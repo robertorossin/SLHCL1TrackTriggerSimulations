@@ -10,11 +10,11 @@ INCS = $(ROOTSYS)/include/ $(PWD)/tclap-1.2.1/include/ .
 	@echo "*"
 	$(CXX) $(CFLAGS) $(addprefix -I, $(INCS)) -c $< -o $@
 
-sectorMaker:main.o rates.o sector.o efficiencies.o sector_test.o jobparams.o 
+AM_ana:main.o rates.o patterngen.o sector.o efficiencies.o sector_test.o jobparams.o 
 	@echo "Build sectorMaker tool" 
 	$(LD) $^ $(shell $(ROOTSYS)/bin/root-config --libs) -o $@
 
-all : sectorMaker
+all : AM_ana
 
 clean: 
 	\rm *.o	

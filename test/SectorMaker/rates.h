@@ -17,6 +17,7 @@
 
 #include <fstream>
 #include <string>
+#include <sstream> 
 
 using namespace std;
 
@@ -77,6 +78,7 @@ class rates
   // Following tables are for rates
   float m_b_rate[16][58000]; // Contains the barrel chips module rates (in stubs/bx)
   float m_b_rate_p[58000];   // Contains the barrel primary stubs module rates (in stubs/bx)
+  float m_b_rate_pp[58000];   // Contains the barrel primary stubs module rates (in stubs/bx)
   float m_b_rate_s[58000];   // Contains the barrel secondary stubs module rates (in stubs/bx)
   float m_b_rate_f[58000];   // Contains the barrel fake stubs module rates (in stubs/bx)
   float m_b_crate[58000];    // Contains the barrel cluster module rates (in stubs/bx)
@@ -86,6 +88,7 @@ class rates
  
   float m_e_rate[16][142000];// Contains the endcap chips module rates (in stubs/bx)
   float m_e_rate_p[142000];  // Contains the endcap primary stubs module rates (in stubs/bx)
+  float m_e_rate_pp[142000];  // Contains the endcap primary stubs module rates (in stubs/bx)
   float m_e_rate_s[142000];  // Contains the endcap secondary stubs module rates (in stubs/bx)
   float m_e_rate_f[142000];  // Contains the endcap fake stubs module rates (in stubs/bx)
   float m_e_crate[142000];    // Contains the barrel cluster module rates (in stubs/bx)
@@ -146,6 +149,7 @@ class rates
   std::vector<int>   m_stub_ladder;
   std::vector<int>   m_stub_module;
   std::vector<int>   m_stub_tp;
+  std::vector<float> m_stub_pt;
   std::vector<float> m_stub_pxGEN;
   std::vector<float> m_stub_pyGEN;
   std::vector<float> m_stub_etaGEN;
@@ -164,6 +168,7 @@ class rates
   std::vector<int>   *pm_stub_ladder;
   std::vector<int>   *pm_stub_module;
   std::vector<int>   *pm_stub_tp;
+  std::vector<float> *pm_stub_pt;
   std::vector<float> *pm_stub_pxGEN;
   std::vector<float> *pm_stub_pyGEN;
   std::vector<float> *pm_stub_etaGEN;

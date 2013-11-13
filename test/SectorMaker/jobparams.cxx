@@ -20,9 +20,9 @@ jobparams::jobparams(int argc, char** argv){
 			  false, 0, "int");
      cmd.add(ophi);
 
-     ValueArg<bool> efficiencies("c","efficiencies","do we perform the efficiency calculation?",
-				 false, 0, "bool");
-     cmd.add(efficiencies);   
+     ValueArg<std::string> option("c","case","type of analysis (rates/sectors/rate_n_sec/sec_n_test/stub_eff/PR_eff)",
+				false, "rates", "string");
+     cmd.add(option);
 
      ValueArg<std::string> pattfile("d","data","name of the pattern data file",
 				   false, "", "string");
@@ -52,21 +52,11 @@ jobparams::jobparams(int argc, char** argv){
 				false, "output.root", "string");
      cmd.add(outfile);
 
+
+
      ValueArg<int> phi("p","phi","how many sectors in phi",
 			  false, 8, "int");
      cmd.add(phi);
-
-     ValueArg<bool> rates("r","rates","do we perform the rate calculation? ",
-			   false, 0, "bool");
-     cmd.add(rates);
-
-     ValueArg<bool> sectors("s","sectors","do we perform the sector calculation?",
-			    false, 0, "bool");
-     cmd.add(sectors);
-
-     ValueArg<int> test("t","test","do we perform the eff test?",
-			false, 0, "bool");
-     cmd.add(test);
      
 
 
@@ -77,10 +67,7 @@ jobparams::jobparams(int argc, char** argv){
      m_outfile      = outfile.getValue();
      m_testfile     = testfile.getValue();
      m_pattfile     = pattfile.getValue();
-     m_sectors      = sectors.getValue();
-     m_efficiencies = efficiencies.getValue();
-     m_rates        = rates.getValue();
-     m_test         = test.getValue();
+     m_opt          = option.getValue();
      m_eta          = eta.getValue();
      m_phi          = phi.getValue();
      m_oeta         = oeta.getValue();

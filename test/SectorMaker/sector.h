@@ -31,7 +31,7 @@
 // This code was developped for the BE classic geometry, but also works for 
 // the 5 disks alternative
 //
-// It is however preferable to use the sectors files made from the TkLayout tool
+// !!!! It is however strongly advised to use the sectors files made from the TkLayout tool
 //
 // Info about the code:
 //
