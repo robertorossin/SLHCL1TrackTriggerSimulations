@@ -77,6 +77,8 @@ class rates
 
   // Following tables are for rates
   float m_b_rate[16][58000]; // Contains the barrel chips module rates (in stubs/bx)
+  int   m_b_c_max[16][58000]; 
+  int   m_b_max[58000];     
   float m_b_rate_p[58000];   // Contains the barrel primary stubs module rates (in stubs/bx)
   float m_b_rate_pp[58000];   // Contains the barrel primary stubs module rates (in stubs/bx)
   float m_b_rate_s[58000];   // Contains the barrel secondary stubs module rates (in stubs/bx)
@@ -117,6 +119,21 @@ class rates
   float m_b_segmax[58000];   //
   float m_b_nseg[58000];     // 
   float m_b_nstrip[58000];   // 
+
+  int tempo_ps_b[58000];   //
+  int tempo_ss_b[58000];   //
+
+  int tempo_c_ps_b[16][58000];   //
+  int tempo_c_ss_b[16][58000];   //
+
+  int evt_maxPSb;
+  int evt_maxSSb;
+
+  int evt_nsPSb;
+  int evt_nsSSb;
+
+  int n_max_PSb;
+  int n_max_SSb;
 
   // Here are the parameters needed from the data
   // Details on these might be found on

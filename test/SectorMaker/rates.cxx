@@ -44,6 +44,14 @@ void rates::get_rates()
 
   // Then loop over events
 
+  evt_maxPSb = -1;
+  evt_maxSSb = -1;
+  evt_nsPSb = -1;
+  evt_nsSSb = -1;
+
+  n_max_PSb = 0;
+  n_max_SSb = 0;
+
   for (int j=0;j<n_entries;++j)
   {
     L1TT->GetEntry(j); 
@@ -97,6 +105,15 @@ void rates::get_rates()
 
     if (m_stub == 0) continue; // No stubs, don't go further
 
+    for (int i=0;i<58000;++i)
+    { 
+      tempo_ps_b[i] = 0;   
+      tempo_ss_b[i] = 0; 
+      
+      for (int k=0;k<16;++k) tempo_c_ps_b[k][i]=0;
+      for (int k=0;k<16;++k) tempo_c_ss_b[k][i]=0;
+    }
+
     for (int i=0;i<m_stub;++i)
     {  
       // First of all we compute the ID of the stub's module
@@ -120,6 +137,19 @@ void rates::get_rates()
       Bl_id = (layer-5)*100 + module;
       El_id = (disk-1)*100 + ladder;
 
+      if (disk==0)
+      {
+	if (nseg>2)
+	{ 
+	  ++tempo_ps_b[B_id];
+	  ++tempo_c_ps_b[chip][B_id];  
+	}
+	else
+	{
+	  ++tempo_ss_b[B_id];
+	  ++tempo_c_ss_b[chip][B_id];  
+	}
+      }
       // Then we look if the stub is fake/secondary/primary 
 
       is_prim=false;
@@ -271,6 +301,20 @@ void rates::get_rates()
     m_rate= 0; 
     m_dbgtree->Fill(); 
 
+    for (int i=0;i<58000;++i) // Barrel
+    {   
+      if (tempo_ps_b[i]>m_b_max[i])
+      {
+	m_b_max[i]=tempo_ps_b[i];
+	for (int k=0;k<16;++k) m_b_c_max[k][i] = tempo_c_ps_b[k][i]; 
+      }
+
+      if (tempo_ss_b[i]>m_b_max[i])
+      {
+	m_b_max[i]=tempo_ss_b[i];
+	for (int k=0;k<16;++k) m_b_c_max[k][i] = tempo_c_ss_b[k][i]; 
+      }
+    }
   } // End of loop over events
 
   // The main tree is filled up at this point
@@ -374,6 +418,8 @@ void rates::initVars()
   for (int i=0;i<58000;++i)
   {
     for (int j=0;j<16;++j) m_b_rate[j][i]   = 0.;
+    for (int j=0;j<16;++j) m_b_c_max[j][i]   = 0;
+    m_b_max[i]    = 0;
     m_b_rate_p[i] = 0.;
     m_b_rate_pp[i] = 0.;
     m_b_rate_s[i] = 0.;
@@ -528,6 +574,8 @@ void rates::initTuple(std::string in,std::string out)
 
 
   m_ratetree->Branch("STUB_b_rates",         &m_b_rate,      "STUB_b_rates[16][58000]/F");
+  m_ratetree->Branch("STUB_b_c_max",         &m_b_c_max,     "STUB_b_c_max[16][58000]/I");
+  m_ratetree->Branch("STUB_b_max",           &m_b_max,       "STUB_b_max[58000]/I");
   m_ratetree->Branch("STUB_b_rates_prim2",   &m_b_rate_pp,   "STUB_b_rates_prim2[58000]/F"); 
   m_ratetree->Branch("STUB_b_rates_prim",    &m_b_rate_p,    "STUB_b_rates_prim[58000]/F"); 
   m_ratetree->Branch("STUB_b_rates_sec",     &m_b_rate_s,    "STUB_b_rates_sec[58000]/F"); 
