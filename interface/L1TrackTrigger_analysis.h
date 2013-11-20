@@ -177,7 +177,7 @@ class L1TrackTrigger_analysis
   std::vector<int>    *m_stub_ladder; // ladder/ring of stub i
   std::vector<int>    *m_stub_seg;    // segment of stub i
   std::vector<int>    *m_stub_chip;   // chip of stub i (8 chip per sensor)
-  std::vector<int>    *m_stub_strip;  // strip of stub i (innermost module value)
+  std::vector<float>  *m_stub_strip;  // strip of stub i (innermost module value)
   std::vector<float>  *m_stub_x;      // x pos of stub i (in cm)
   std::vector<float>  *m_stub_y;      // y pos of stub i (in cm)
   std::vector<float>  *m_stub_z;      // z pos of stub i (in cm)
