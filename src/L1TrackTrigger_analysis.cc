@@ -1062,7 +1062,7 @@ void L1TrackTrigger_analysis::initialize()
   m_stub_ladder  = new  std::vector<int>; 
   m_stub_seg     = new  std::vector<int>;  
   m_stub_chip    = new  std::vector<int>; 
-  m_stub_strip   = new  std::vector<int>; 
+  m_stub_strip   = new  std::vector<float>; 
   m_stub_x       = new  std::vector<float>;  
   m_stub_y       = new  std::vector<float>;  
   m_stub_z       = new  std::vector<float>;  
