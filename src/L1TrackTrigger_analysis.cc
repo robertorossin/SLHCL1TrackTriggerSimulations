@@ -482,7 +482,7 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
     ladder_cut[1][13]= 4.;
     ladder_cut[1][14]= 4.5;
 
-    ladder_cut[2][0] = 1.5.;
+    ladder_cut[2][0] = 1.5;
     ladder_cut[2][1] = 2.;
     ladder_cut[2][2] = 2.;
     ladder_cut[2][3] = 2.;
