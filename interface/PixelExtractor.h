@@ -13,7 +13,7 @@
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/Utilities/interface/InputTag.h"
 
-
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h" 
 #include "SimDataFormats/TrackerDigiSimLink/interface/PixelDigiSimLink.h"
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
@@ -68,7 +68,21 @@ class PixelExtractor
   int getNDigis() {return m_pclus;}
 
   int isSimHit(int i) {return m_pixclus_simhit->at(i);}
-  int tpIndex(int i,int j) {return (m_pixclus_simhitID->at(i)).at(j);}
+  int tpIndex(int i,int j) 
+  {
+    // std::cout << j << " //// " << (m_pixclus_simhitID->at(i)).size() << std::endl;
+    //  std::cout << (m_pixclus_simhitID->at(i)).at(j) << std::endl;
+ 
+    return (m_pixclus_simhitID->at(i)).at(j);
+  }
+
+  int evtIndex(int i,int j) 
+  {
+    //    std::cout << j << " //// " << (m_pixclus_evtID->at(i)).size() << std::endl;
+    //    std::cout << (m_pixclus_evtID->at(i)).at(j) << std::endl;
+ 
+    return (m_pixclus_evtID->at(i)).at(j);
+  }
 
   float e(int i) {return m_pixclus_e->at(i);}
   float x(int i) {return m_pixclus_x->at(i);}
@@ -95,6 +109,7 @@ class PixelExtractor
   bool m_OK;
   bool m_matching;
   int  m_n_events;
+  int  m_nPU;
 
   // Pixel info
 
@@ -110,6 +125,7 @@ class PixelExtractor
     m_tree->Branch("PIX_column",    &m_pixclus_column);
     m_tree->Branch("PIX_simhit",    &m_pixclus_simhit);
     m_tree->Branch("PIX_simhitID",  &m_pixclus_simhitID);
+    m_tree->Branch("PIX_evtID",     &m_pixclus_evtID);
     m_tree->Branch("PIX_layer",     &m_pixclus_layer);
     m_tree->Branch("PIX_module",    &m_pixclus_module);
     m_tree->Branch("PIX_ladder",    &m_pixclus_ladder);
@@ -133,6 +149,7 @@ class PixelExtractor
   std::vector<int>                 *m_pixclus_column;   // Digi column numbers 
   std::vector<int>                 *m_pixclus_simhit;   // Number of simhits making the digi
   std::vector< std::vector<int> >  *m_pixclus_simhitID; // Simtrack IDs of the corresponding simhits (stored as a vector)
+  std::vector< std::vector<int> >  *m_pixclus_evtID;    // Encoded EvtIDs of the corresponding simhits (stored as a vector)
   std::vector<int>                 *m_pixclus_layer;    // Digi layer numbers 
   std::vector<int>                 *m_pixclus_module;   // Digi module numbers 
   std::vector<int>                 *m_pixclus_ladder;   // Digi ladder/ring numbers 
@@ -143,6 +160,7 @@ class PixelExtractor
 
 
   std::vector<int>      the_ids;
+  std::vector<int>      the_eids;
 };
 
 #endif 

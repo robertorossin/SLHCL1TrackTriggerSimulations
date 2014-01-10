@@ -2,10 +2,10 @@
 
 The private Cluster and STUB maker
 
-Adapted to CMSSW 6_1_2_SLHC6_patch1
+Adapted to CMSSW 6_2_0_SLHC5
 
 Contact: viret@in2p3.fr
-Last review : 17/07/2013
+Last review : 10/01/2014
  */
 
 
@@ -28,7 +28,7 @@ L1TrackTrigger_analysis::L1TrackTrigger_analysis(AnalysisSettings *settings, int
     ? m_verb = (static_cast<bool>(settings->getSetting("verbose")))
     : m_verb = false;
 
-  // If you want to make stubs only with matched digis (for BANK generation)
+  // If you want to make stubs only with matched digis from TP 0 (for BANK generation)
   (settings->getSetting("matchedStubs")!=-1)
     ? m_matchStubs = (static_cast<bool>(settings->getSetting("matchedStubs")))
     : m_matchStubs = false;
@@ -71,7 +71,7 @@ L1TrackTrigger_analysis::L1TrackTrigger_analysis(AnalysisSettings *settings, int
   n_tot_evt = start_evt;
   if (m_evtNum!=-1) n_tot_evt=m_evtNum; 
 
-  m_thresh = 0; // No threshold (0 or 1) 
+  m_thresh = 0; // No threshold for digits (0 or 1) 
 
   // Initialize everything
   L1TrackTrigger_analysis::initialize();
@@ -94,6 +94,7 @@ void L1TrackTrigger_analysis::do_stubs(PixelExtractor *pix, MCExtractor *mc)
   if (mc->getNGen() == 0) return; 
 
   if (m_verb) cout << "Analyzing event " << n_tot_evt << endl;
+
 
   // First get and match the digis
   L1TrackTrigger_analysis::get_digis(pix,mc);
@@ -128,7 +129,7 @@ void L1TrackTrigger_analysis::get_digis(PixelExtractor *pix, MCExtractor *mc)
   if (ndigis==0) return;
    
   int nst       = -1; // The sim track index
-  int hit       = -1; // 
+  int nid       = -1; // The encoded event ID
   int tp        = -1; // 
 
   std::vector<int> matching_tps;
@@ -156,42 +157,41 @@ void L1TrackTrigger_analysis::get_digis(PixelExtractor *pix, MCExtractor *mc)
     if (pix->layer(i)<5) continue; // We exclude pixel digis
 
     matching_tps.clear();
-    matching_hits.clear();
     
     for (int ik=0;ik<pix->isSimHit(i);++ik) // Loop over simhit (matching)
     {
-      (m_posMatch==false)
-	? nst = -1
-	: nst = pix->tpIndex(i,ik); // The sim track index
+      if (m_verb) cout << "Hit " << ik << endl;
 
-      hit        = -1; // 
+      if (m_posMatch==false)
+      {
+        nst = -1;
+	nid = -1;
+      }
+      else
+      {
+        nst = pix->tpIndex(i,ik);  // The sim track index
+        nid = pix->evtIndex(i,ik); // The evt id of the sim track
+      }
+
       tp         = -1; // 
 
-      if (m_verb) cout << "Try to match hit " << i << " with simtrack " << nst << endl;
-    
-      mc->findMatchingTP(nst,
-			 pix->layer(i),pix->ladder(i),pix->module(i),pix->ncolumn(i),
-			 pix->x(i),pix->y(i),pix->z(i),
-			 tp,hit,m_verb);
+      if (m_verb) cout << "Try to match hit " << i << " from simtrack " << nst << endl;
+       
+      mc->findMatchingTP(nst,nid,tp,m_verb);
 
-      if (m_verb) cout << "Matched with hit " << hit << " from TP " << tp << endl;
+      if (m_verb) cout << "Matched with TP " << tp << endl;
 
-      if (tp!=-1)
-      {
-	matching_tps.push_back(tp);
-	matching_hits.push_back(hit);
-      }	
+      if (tp!=-1) matching_tps.push_back(tp);
     }	
 
-    if (static_cast<int>(matching_tps.size())==0) 
-    {
-      matching_tps.push_back(-1);
-      matching_hits.push_back(-1);
-    }
+    if (m_verb) cout << "End of TP matching " << endl;
+
+    if (static_cast<int>(matching_tps.size())==0) matching_tps.push_back(-1);
+
+    if (m_verb) cout << "Here " << endl;
 
     // Update the global params
     m_digi_ref->push_back(i);
-    m_digi_match->push_back(matching_hits);
     m_digi_tp->push_back(matching_tps);
 
   } // End of the digi loop
@@ -212,23 +212,8 @@ void L1TrackTrigger_analysis::get_digis(PixelExtractor *pix, MCExtractor *mc)
 	   << pix->layer(idx) << " / " << pix->ladder(idx) << " / " << pix->module(idx) << " / " 
 	   << pix->column(idx) << " / " << pix->row(idx) << " / "
 	   << pix->x(idx) << " / " << pix->y(idx) << " / " << pix->z(idx)
-	   << " was matched with MC hits : " << std::endl;
-
-      cout << static_cast<int>((m_digi_match->at(i)).size()) << endl;
-
-      for (int k=0;k<static_cast<int>((m_digi_match->at(i)).size());++k) // Loop over pixel hits
-      { 
-	if (static_cast<int>((m_digi_match->at(i)).at(k)) == -1) continue;
-
-	std::cout << "  --> " << k << " : " 
-		  << mc->getTP_hitsx((m_digi_match->at(i)).at(k)) << " / " 
-		  << mc->getTP_hitsy((m_digi_match->at(i)).at(k)) << " / " 
-		  << mc->getTP_hitsz((m_digi_match->at(i)).at(k)) << std::endl;
-
-      }
+	   << " was matched with " << m_digi_tp->at(i).size() << " tracking particle(s) " << std::endl;
     }
-
-    mc->printhits(0.,0.,0.);
   }
 }
 
@@ -257,22 +242,17 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
   float bary_x=0.;
   float bary_y=0.;
   float bary_z=0.;
-
-  float bary_sum_mc = 0.;
-  float bary_x_mc   = 0.;
-  float bary_y_mc   = 0.;
-  float bary_z_mc   = 0.;
- 
-  int pid_mc   = 0;
  
   int m_clus_prev   = -1;
-  int idx,idx_h;
+  int idx;
+
+  int is_there=0;
 
   std::vector<int> matching_tps_clus;
-  std::vector<int> matching_hits_clus;
-
+  std::vector<int> pix_list;
+  
+  pix_list.clear();
   matching_tps_clus.clear();  
-  matching_hits_clus.clear();
   clus_row.clear();  
   clus_col.clear();  
 
@@ -302,22 +282,23 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
 
 	clus_row.push_back(pix->row(idx));
 	clus_col.push_back(pix->column(idx));
-	
-	for (int k=0;k<static_cast<int>((m_digi_match->at(i)).size());++k) // Loop over pixel hits
-	{
-	  idx_h = static_cast<int>((m_digi_match->at(i)).at(k));
-	  
-	  if (idx_h == -1) continue;
-	  
-	  matching_tps_clus.push_back((m_digi_tp->at(i)).at(k));  
-	  matching_hits_clus.push_back(idx_h);
+	pix_list.push_back(idx);  
 
-	  pid_mc       = mc->getTP_hitsproc(idx_h);
-	  bary_sum_mc  += mc->getTP_hitse(idx_h);   
-	  bary_x_mc    += mc->getTP_hitse(idx_h)*mc->getTP_hitsx(idx_h);
-	  bary_y_mc    += mc->getTP_hitse(idx_h)*mc->getTP_hitsy(idx_h); 
-	  bary_z_mc    += mc->getTP_hitse(idx_h)*mc->getTP_hitsz(idx_h);
-	}
+	for (int k=0;k<static_cast<int>(m_digi_tp->at(i).size());++k) // Loop over match tps
+	{
+	  is_there=0;
+
+	  for (int l=0;l<static_cast<int>(matching_tps_clus.size());++l) 
+	  {
+	    if (matching_tps_clus.at(l)==(m_digi_tp->at(i)).at(k))
+	    {
+	      is_there=1;
+	      break;
+	    }
+	  }
+
+	  if (is_there==0) matching_tps_clus.push_back((m_digi_tp->at(i)).at(k));
+	}	
 
 	++bary_sum;
 	bary_x     += pix->x(idx);
@@ -334,41 +315,24 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
 	clus_row.clear();  
 	clus_col.clear();  
 	matching_tps_clus.clear();  
-	matching_hits_clus.clear();
+	pix_list.clear();  
 
 	nstrips      = 0;
 	nsat         = 0;
-	bary_sum_mc  = 0.;
-	bary_x_mc    = 0.; 
-	bary_y_mc    = 0.; 
-	bary_z_mc    = 0.; 
-	pid_mc       = 0;
 
 	clus_row.push_back(pix->row(idx));
 	clus_col.push_back(pix->column(idx));
-	
+	pix_list.push_back(idx);  	
+
+	for (int k=0;k<static_cast<int>(m_digi_tp->at(i).size());++k) // Loop over pixel hits
+	  matching_tps_clus.push_back((m_digi_tp->at(i)).at(k));
+
 	ref_lay  = pix->layer(idx);
 	ref_lad  = pix->ladder(idx);
 	ref_mod  = pix->module(idx);
 	ref_seg  = pix->column(idx);
 	ref_nseg = pix->ncolumn(idx);
 	ref_nrow = pix->nrow(idx);
-	
-	for (int k=0;k<static_cast<int>((m_digi_match->at(i)).size());++k) // Loop over pixel hits
-	{ 
-	  idx_h = static_cast<int>((m_digi_match->at(i)).at(k));
-	  
-	  if (idx_h == -1) continue;
-	  
-	  matching_tps_clus.push_back((m_digi_tp->at(i)).at(k));  
-	  matching_hits_clus.push_back(idx_h);
-
-	  pid_mc       = mc->getTP_hitsproc(idx_h);
-	  bary_sum_mc  += mc->getTP_hitse(idx_h);   
-	  bary_x_mc    += mc->getTP_hitse(idx_h)*mc->getTP_hitsx(idx_h);
-	  bary_y_mc    += mc->getTP_hitse(idx_h)*mc->getTP_hitsy(idx_h); 
-	  bary_z_mc    += mc->getTP_hitse(idx_h)*mc->getTP_hitsz(idx_h);
-	}
 
 	bary_sum   = 1;
 	bary_x     = pix->x(idx);
@@ -386,21 +350,12 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
 
     if (m_clus==m_clus_prev)
     {
+      m_clus_pix->at(m_clus-1)     = pix_list;
       m_clus_tp->at(m_clus-1)      = matching_tps_clus;
-      m_clus_hits->at(m_clus-1)    = matching_hits_clus;
-      m_clus_matched->at(m_clus-1) = matching_hits_clus.size();
+      m_clus_matched->at(m_clus-1) = matching_tps_clus.size();
       m_clus_x->at(m_clus-1)       = bary_x/bary_sum;
       m_clus_y->at(m_clus-1)       = bary_y/bary_sum;
       m_clus_z->at(m_clus-1)       = bary_z/bary_sum;
-
-      if (bary_sum_mc!=0)
-      {
-	m_clus_xmc->at(m_clus-1)  = bary_x_mc/bary_sum_mc;
-	m_clus_ymc->at(m_clus-1)  = bary_y_mc/bary_sum_mc;
-	m_clus_zmc->at(m_clus-1)  = bary_z_mc/bary_sum_mc;
-	m_clus_pid->at(m_clus-1)  = pid_mc;
-      }
-
       m_clus_sat->at(m_clus-1)     = nsat;
       m_clus_nstrips->at(m_clus-1) = nstrips;
       m_clus_layer->at(m_clus-1)   = ref_lay;
@@ -412,29 +367,12 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
     else
     {
       m_clus_prev=m_clus;
+      m_clus_pix->push_back(pix_list);
       m_clus_tp->push_back(matching_tps_clus);
-      m_clus_hits->push_back(matching_hits_clus);
-
-      m_clus_matched->push_back(matching_hits_clus.size());
+      m_clus_matched->push_back(matching_tps_clus.size());
       m_clus_x->push_back(bary_x/bary_sum);
       m_clus_y->push_back(bary_y/bary_sum);
       m_clus_z->push_back(bary_z/bary_sum);
-
-      if (bary_sum_mc!=0)
-      {
-	m_clus_xmc->push_back(bary_x_mc/bary_sum_mc);
-	m_clus_ymc->push_back(bary_y_mc/bary_sum_mc);
-	m_clus_zmc->push_back(bary_z_mc/bary_sum_mc);
-	m_clus_pid->push_back(pid_mc);
-      }
-      else
-      {
-	m_clus_xmc->push_back(0.);
-	m_clus_ymc->push_back(0.);
-	m_clus_zmc->push_back(0.);
-	m_clus_pid->push_back(0);
-      }
-
       m_clus_used->push_back(0);
       m_clus_sat->push_back(nsat);
       m_clus_nstrips->push_back(nstrips);
@@ -462,43 +400,19 @@ Method extracting the stubs using the cluster info
 void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 {  
   // These values are extracted from here:
-  // http://cmssw.cvs.cern.ch/cgi-bin/cmssw.cgi/CMSSW/Geometry/
-  // TrackerCommonData/data/PhaseII/BarrelEndcap5D/tracker.xml?revision=1.1&view=markup
+  // https://github.com/cms-sw/cmssw/blob/CMSSW_6_2_0_SLHC5/Geometry/
+  // TrackerCommonData/data/PhaseII/BarrelEndcap5D/tracker.xml
 
   double n_lad_barrel[6]  = {16,24,34,48,62,76};
   double n_lad_endcap[15] = {20,24,28,28,32,36,36,40,40,48,56,64,68,72,80};
-
-  // For endcap there are exceptions
-  //
-  // 6/7 are OK
-  // disk +/-  8: {XX,24,28,28,32,36,36,40,40,48,56,64,68,72,80}
-  // disk +/-  9: {XX,XX,XX,28,32,36,36,40,40,48,56,64,68,72,80}
-  // disk +/- 10: {XX,XX,XX,XX,32,36,36,40,40,48,56,64,68,72,80}
-  //
-  // Layer values are always starting from 1, so they have to be corrected in the table
-  // good_layer = abs(disk%7)+layer 
-  //
-  // 
-
 
   int disk = 0;
   int lad_cor = 0;
 
   if (layer>10 && layer<=17) disk=(layer-10)%8; // Bet. 11 and 15
   if (layer>17 && layer<=24) disk=(layer-17)%8; // Bet. 18 and 22
-  if (disk==3) lad_cor = 1;
-  if (disk==4) lad_cor = 3;
-  if (disk==5) lad_cor = 4;
 
-  // The correction is :
-
-  // Disk 1 ==> 0 
-  // Disk 2 ==> 0 
-  // Disk 3 ==> 1 
-  // Disk 4 ==> 3 
-  // Disk 5 ==> 4 
-
-  // Here this is the optimized list of SW cuts for the CMSSW_6_1_1_SLHCphase2tk1 Geometry
+  // Here this is the optimized list of SW cuts for the CMSSW_6_2_0_SLHC5 Geometry
 
   double layer_cut[6]     = {2.5,2.5,3,4.5,5.5,6.5};
   
@@ -536,85 +450,87 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 
   for (int i=0;i<7;++i) 
   {
-    ladder_cut[0][0] = 1.5;
-    ladder_cut[0][1] = 1.5;
+    ladder_cut[0][0] = 2.;
+    ladder_cut[0][1] = 2.;
     ladder_cut[0][2] = 2.;
     ladder_cut[0][3] = 2.;
-    ladder_cut[0][4] = 2.;
+    ladder_cut[0][4] = 2.5;
     ladder_cut[0][5] = 2.5;
-    ladder_cut[0][6] = 3.;
+    ladder_cut[0][6] = 2.5;
     ladder_cut[0][7] = 3.;
     ladder_cut[0][8] = 3.5;
-    ladder_cut[0][9] = 2.5;
+    ladder_cut[0][9] = 4.5;
     ladder_cut[0][10]= 3.;
     ladder_cut[0][11]= 3.5;
     ladder_cut[0][12]= 4.;
-    ladder_cut[0][13]= 5.;
-    ladder_cut[0][14]= 5.5;
+    ladder_cut[0][13]= 4.5;
+    ladder_cut[0][14]= 5.;
 
     ladder_cut[1][0] = 1.5;
-    ladder_cut[1][1] = 1.5;
-    ladder_cut[1][2] = 1.5;
+    ladder_cut[1][1] = 2.;
+    ladder_cut[1][2] = 2.;
     ladder_cut[1][3] = 2.;
     ladder_cut[1][4] = 2.;
     ladder_cut[1][5] = 2.5;
     ladder_cut[1][6] = 2.5;
-    ladder_cut[1][7] = 3.;
+    ladder_cut[1][7] = 2.5;
     ladder_cut[1][8] = 3.;
-    ladder_cut[1][9] = 2.;
+    ladder_cut[1][9] = 4.;
     ladder_cut[1][10]= 2.5;
     ladder_cut[1][11]= 3.;
     ladder_cut[1][12]= 3.5;
     ladder_cut[1][13]= 4.;
     ladder_cut[1][14]= 4.5;
 
-    ladder_cut[2][0] = 0.;
-    ladder_cut[2][1] = 1.5;
-    ladder_cut[2][2] = 1.5;
+    ladder_cut[2][0] = 1.5.;
+    ladder_cut[2][1] = 2.;
+    ladder_cut[2][2] = 2.;
     ladder_cut[2][3] = 2.;
     ladder_cut[2][4] = 2.;
     ladder_cut[2][5] = 2.;
-    ladder_cut[2][6] = 2.;
+    ladder_cut[2][6] = 2.5;
     ladder_cut[2][7] = 2.5;
     ladder_cut[2][8] = 2.5;
-    ladder_cut[2][9] = 2.0;
-    ladder_cut[2][10]= 2.;
-    ladder_cut[2][11]= 3.;
+    ladder_cut[2][9] = 3.5;
+    ladder_cut[2][10]= 4.;
+    ladder_cut[2][11]= 2.5;
     ladder_cut[2][12]= 3.;
     ladder_cut[2][13]= 3.5;
     ladder_cut[2][14]= 4.;
 
-    ladder_cut[3][0] = 0.;
-    ladder_cut[3][1] = 0.;
-    ladder_cut[3][2] = 0.;
-    ladder_cut[3][3] = 1.5;
+    ladder_cut[3][0] = 1.5;
+    ladder_cut[3][1] = 1.5;
+    ladder_cut[3][2] = 1.5;
+    ladder_cut[3][3] = 2.;
     ladder_cut[3][4] = 2.;
     ladder_cut[3][5] = 2.;
     ladder_cut[3][6] = 2.;
-    ladder_cut[3][7] = 2.;
+    ladder_cut[3][7] = 2.5;
     ladder_cut[3][8] = 2.5;
     ladder_cut[3][9] = 3.;
-    ladder_cut[3][10]= 2.;
-    ladder_cut[3][11]= 2.;
+    ladder_cut[3][10]= 3.5;
+    ladder_cut[3][11]= 2.5;
     ladder_cut[3][12]= 2.5;
     ladder_cut[3][13]= 3.;
     ladder_cut[3][14]= 3.5;
 
-    ladder_cut[4][0] = 0.;
-    ladder_cut[4][1] = 0.;
-    ladder_cut[4][2] = 0.;
-    ladder_cut[4][3] = 0.;
+    ladder_cut[4][0] = 1.5;
+    ladder_cut[4][1] = 1.5;
+    ladder_cut[4][2] = 1.5;
+    ladder_cut[4][3] = 1.5;
     ladder_cut[4][4] = 1.5;
     ladder_cut[4][5] = 2.;
     ladder_cut[4][6] = 2.;
     ladder_cut[4][7] = 2.;
-    ladder_cut[4][8] = 2.;
-    ladder_cut[4][9] = 3.;
+    ladder_cut[4][8] = 2.5;
+    ladder_cut[4][9] = 2.5;
     ladder_cut[4][10]= 3.;
-    ladder_cut[4][11]= 2.;
-    ladder_cut[4][12]= 2.;
+    ladder_cut[4][11]= 3.5;
+    ladder_cut[4][12]= 2.5;
     ladder_cut[4][13]= 2.5;
     ladder_cut[4][14]= 3.;
+
+    // The two last disk are not used anymore
 
     ladder_cut[5][0] = 0.;
     ladder_cut[5][1] = 0.;
@@ -691,18 +607,10 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 
   double philadder = 0.;
 
-  double dR_mc = 0.;
-  double R1_mc = 0.;
-  double R2_mc = 0.;
-  double R_mc  = 0.;
 
   double dphi    = 0.;
   double pt_stub = 0.;
 
-  double phi1_mc    = 0.;
-  double phi2_mc    = 0.;
-  double dphi_mc    = 0.;
-  double pt_stub_mc = 0.;
 
   double strip_cor= 0.;
   double SW       = 0.;
@@ -847,15 +755,6 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
     dR   = R2-R1;
     SW   = SW_min_s;
 
-    if (matching_tp!=-1) 
-    {
-      R1_mc = sqrt(m_clus_xmc->at(i_bs)*m_clus_xmc->at(i_bs)+m_clus_ymc->at(i_bs)*m_clus_ymc->at(i_bs));
-      R2_mc = sqrt(m_clus_xmc->at(i_ts)*m_clus_xmc->at(i_ts)+m_clus_ymc->at(i_ts)*m_clus_ymc->at(i_ts));
-      phi1_mc = atan2(m_clus_ymc->at(i_bs),m_clus_xmc->at(i_bs));
-      phi2_mc = atan2(m_clus_ymc->at(i_ts),m_clus_xmc->at(i_ts));
-      dphi_mc = phi2_mc-phi1_mc;   
-      dR_mc   = R2_mc-R1_mc;
-    } 
 
     if (m_verb) 
       cout << m_stub << " / " 
@@ -867,13 +766,7 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 
     if (dphi<0.)    dphi = -dphi;
     if (dphi>PI)    dphi = 2.*PI-dphi;
-        		
-    if (matching_tp!=-1) 
-    {
-      if (dphi_mc<0.)  dphi_mc = -dphi_mc;
-      if (dphi_mc>PI)  dphi_mc = 2.*PI-dphi_mc;
-    }
-    
+  
 
     if (m_clus_used->at(i_bs))
       std::cout<< "Problem!" << std::endl;
@@ -882,13 +775,8 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
     m_clus_used->at(i_ts) = 1;
     
     pt_stub    = 0.15*B*dR/dphi*sqrt(1+(R*dphi/dR)*(R*dphi/dR))/100.;
-    
-    (matching_tp!=-1)     
-    ? pt_stub_mc = 0.15*B*dR_mc/dphi_mc*sqrt(1+(R_mc*dphi_mc/dR_mc)*(R_mc*dphi_mc/dR_mc))/100.
-    : pt_stub_mc = 0.;
 
     m_stub_pt->push_back(pt_stub);
-    m_stub_ptMC->push_back(pt_stub_mc);    
     m_stub_tp->push_back(matching_tp);
 
     m_stub_layer->push_back(m_clus_layer->at(i));
@@ -915,18 +803,17 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
       m_stub_pxGEN->push_back(mc->getTP_px(matching_tp));
       m_stub_pyGEN->push_back(mc->getTP_py(matching_tp));
       m_stub_etaGEN->push_back(asinh(mc->getTP_pz(matching_tp)/sqrt(mc->getTP_px(matching_tp)*mc->getTP_px(matching_tp)
-								    +mc->getTP_py(matching_tp)*mc->getTP_py(matching_tp))));
++mc->getTP_py(matching_tp)*mc->getTP_py(matching_tp))));
       m_stub_pdg->push_back(mc->getTP_ID(matching_tp));
-      m_stub_pid->push_back(m_clus_pid->at(i_bs));
+      m_stub_pid->push_back(0);
       m_stub_X0->push_back(mc->getTP_x(matching_tp));
       m_stub_Y0->push_back(mc->getTP_y(matching_tp));
       m_stub_Z0->push_back(mc->getTP_z(matching_tp));
       m_stub_PHI0->push_back(atan2(mc->getTP_py(matching_tp),mc->getTP_px(matching_tp)));
 
       if (m_verb)
-	cout << m_stub << " / " 
-	     << pt_stub << " / " 
-	     << pt_stub_mc << " / " 
+	cout << m_stub << " / "
+	     << pt_stub << " / "
 	     << sqrt(mc->getTP_px(matching_tp)*mc->getTP_px(matching_tp)+
 		     mc->getTP_py(matching_tp)*mc->getTP_py(matching_tp))
 	     << endl;
@@ -1023,7 +910,6 @@ bool L1TrackTrigger_analysis::is_neighbour(PixelExtractor *pix, int idx, int lay
 void L1TrackTrigger_analysis::initialize()
 {  
   m_digi_ref     = new  std::vector<int>;
-  m_digi_match   = new  std::vector< std::vector<int> >; 
   m_digi_tp      = new  std::vector< std::vector<int> >; 
   
   m_clus_x       = new  std::vector<float>;
@@ -1047,9 +933,9 @@ void L1TrackTrigger_analysis::initialize()
   m_clus_pid     = new  std::vector<int>;  
   m_clus_tp      = new  std::vector< std::vector<int> >;  
   m_clus_hits    = new  std::vector< std::vector<int> >; 
-  
+  m_clus_pix     = new  std::vector< std::vector<int> >;  
+
   m_stub_pt      = new  std::vector<float>;
-  m_stub_ptMC    = new  std::vector<float>; 
   m_stub_pxGEN   = new  std::vector<float>; 
   m_stub_pyGEN   = new  std::vector<float>; 
   m_stub_etaGEN  = new  std::vector<float>; 
@@ -1113,9 +999,9 @@ void L1TrackTrigger_analysis::initialize()
     m_tree_L1TrackTrigger->Branch("CLUS_nrows",     &m_clus_nrows);
     m_tree_L1TrackTrigger->Branch("CLUS_tp",        &m_clus_tp);
     m_tree_L1TrackTrigger->Branch("CLUS_hits",      &m_clus_hits);
+    m_tree_L1TrackTrigger->Branch("CLUS_pix" ,      &m_clus_pix);
     m_tree_L1TrackTrigger->Branch("CLUS_process",   &m_clus_pid);
 
-    m_tree_L1TrackTrigger->Branch("STUB_ptMC",      &m_stub_ptMC);
     m_tree_L1TrackTrigger->Branch("STUB_clust1",    &m_stub_clust1);
     m_tree_L1TrackTrigger->Branch("STUB_clust2",    &m_stub_clust2);
     m_tree_L1TrackTrigger->Branch("STUB_cw1",       &m_stub_cw1);
@@ -1154,7 +1040,6 @@ void L1TrackTrigger_analysis::reset()
   m_clus = 0;
   m_stub = 0;
 
-  m_digi_match->clear();
   m_digi_tp->clear();
   m_digi_ref->clear();
 
@@ -1176,10 +1061,12 @@ void L1TrackTrigger_analysis::reset()
   m_clus_matched->clear();
   m_clus_PS->clear();
   m_clus_nrows->clear();
+  m_clus_pix->clear();
   m_clus_pid->clear();
 
   m_clus_tp->clear();
   m_clus_hits->clear();
+  m_clus_pix->clear();
   
   m_stub_X0->clear();     
   m_stub_Y0->clear();     
@@ -1187,7 +1074,6 @@ void L1TrackTrigger_analysis::reset()
   m_stub_PHI0->clear();     
   m_stub_tp->clear();     
   m_stub_pt->clear();     
-  m_stub_ptMC->clear();   
   m_stub_pxGEN->clear();  
   m_stub_pyGEN->clear();  
   m_stub_etaGEN->clear();  

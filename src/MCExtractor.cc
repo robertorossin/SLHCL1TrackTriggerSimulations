@@ -4,15 +4,7 @@
 MCExtractor::MCExtractor(bool doTree)
 {
   // Set everything to 0
-  resol_x    = 0.05;
-  resol_y    = 0.05;
-  resol_r    = 0.3;
-  resol_phi  = 0.004;
-
-  chi_lim    = 2.;
-
   m_OK = false;
-
 
   m_gen_x       = new std::vector<float>;
   m_gen_y       = new std::vector<float>;
@@ -24,6 +16,7 @@ MCExtractor::MCExtractor(bool doTree)
   m_gen_pdg     = new std::vector<int>; 
 
   m_part_pdgId  = new std::vector<int>;
+  m_part_evtId  = new std::vector<int>;
   m_part_px     = new std::vector<float>; 
   m_part_py     = new std::vector<float>; 
   m_part_pz     = new std::vector<float>;	
@@ -33,24 +26,7 @@ MCExtractor::MCExtractor(bool doTree)
   m_part_y      = new std::vector<float>;   
   m_part_z      = new std::vector<float>;   
   m_part_used   = new std::vector<int>;  
-
-  m_hits        = new std::vector<int>;      
-  m_hits_x      = new std::vector<float>;  
-  m_hits_y      = new std::vector<float>;  
-  m_hits_z      = new std::vector<float>;  
-  m_hits_e      = new std::vector<float>;  
-  m_hits_tof    = new std::vector<float>;  
-  m_hits_proc   = new std::vector<int>;  
-  m_hits_pdgId  = new std::vector<int>; 
-  m_hits_id     = new std::vector<int>;   
-  m_hits_layer  = new std::vector<int>;    
-  m_hits_ladder = new std::vector<int>;   
-  m_hits_module = new std::vector<int>;   
-  m_hits_used   = new std::vector<int>;     
-
-  m_st          = new std::vector<int>;    
-  m_st_id       = new std::vector<int>;  
-
+  m_part_stId   = new std::vector< std::vector<int> >;  
 
   MCExtractor::reset();
 
@@ -70,13 +46,6 @@ MCExtractor::MCExtractor(bool doTree)
 MCExtractor::MCExtractor(TFile *a_file)
 {
   std::cout << "MCExtractor object is retrieved" << std::endl;
-  resol_x    = 0.05;
-  resol_y    = 0.05;
-  resol_r    = 0.3;
-  resol_phi  = 0.004;
-
-  chi_lim    = 1.;
-  //createTree();
 
   // Tree definition
   m_OK = false;
@@ -100,23 +69,8 @@ MCExtractor::MCExtractor(TFile *a_file)
   m_part_y      = new std::vector<float>;   
   m_part_z      = new std::vector<float>;   
   m_part_used   = new std::vector<int>;  
-
-  m_hits        = new std::vector<int>;      
-  m_hits_x      = new std::vector<float>;  
-  m_hits_y      = new std::vector<float>;  
-  m_hits_z      = new std::vector<float>;  
-  m_hits_e      = new std::vector<float>;  
-  m_hits_tof    = new std::vector<float>;  
-  m_hits_proc   = new std::vector<int>;  
-  m_hits_id     = new std::vector<int>;   
-  m_hits_pdgId  = new std::vector<int>; 
-  m_hits_layer  = new std::vector<int>;    
-  m_hits_ladder = new std::vector<int>;   
-  m_hits_module = new std::vector<int>;   
-  m_hits_used   = new std::vector<int>;     
-
-  m_st          = new std::vector<int>;    
-  m_st_id       = new std::vector<int>;  
+  m_part_stId   = new std::vector< std::vector<int> >;  
+  m_part_evtId  = new std::vector<int>;
 
   MCExtractor::reset();
 
@@ -145,9 +99,8 @@ MCExtractor::MCExtractor(TFile *a_file)
   // Infos related to the subsequent tracking particles
   
   m_tree_retrieved->SetBranchAddress("subpart_n",        &m_part_n);
-  m_tree_retrieved->SetBranchAddress("subpart_hits",     &m_hits);
-  m_tree_retrieved->SetBranchAddress("subpart_st",       &m_st);
   m_tree_retrieved->SetBranchAddress("subpart_pdgId",    &m_part_pdgId);
+  m_tree_retrieved->SetBranchAddress("subpart_evtId",    &m_part_evtId);
   m_tree_retrieved->SetBranchAddress("subpart_px",       &m_part_px);
   m_tree_retrieved->SetBranchAddress("subpart_py",       &m_part_py);
   m_tree_retrieved->SetBranchAddress("subpart_pz",       &m_part_pz);
@@ -156,32 +109,13 @@ MCExtractor::MCExtractor(TFile *a_file)
   m_tree_retrieved->SetBranchAddress("subpart_x",        &m_part_x);
   m_tree_retrieved->SetBranchAddress("subpart_y",        &m_part_y);
   m_tree_retrieved->SetBranchAddress("subpart_z",        &m_part_z);
-  
-  m_tree_retrieved->SetBranchAddress("subpart_nhit",     &m_part_nhit);
-  m_tree_retrieved->SetBranchAddress("subpart_hits_x",   &m_hits_x);
-  m_tree_retrieved->SetBranchAddress("subpart_hits_y",   &m_hits_y);
-  m_tree_retrieved->SetBranchAddress("subpart_hits_z",   &m_hits_z);
-  m_tree_retrieved->SetBranchAddress("subpart_hits_e",   &m_hits_e);
-  m_tree_retrieved->SetBranchAddress("subpart_hits_tof", &m_hits_tof);
-  m_tree_retrieved->SetBranchAddress("subpart_hits_proc",&m_hits_proc);
-  m_tree_retrieved->SetBranchAddress("subpart_hits_id",  &m_hits_id);
-  m_tree_retrieved->SetBranchAddress("subpart_hits_pdgId",  &m_hits_pdgId);
-  m_tree_retrieved->SetBranchAddress("subpart_hits_layer",   &m_hits_layer);
-  m_tree_retrieved->SetBranchAddress("subpart_hits_ladder",  &m_hits_ladder);
-  m_tree_retrieved->SetBranchAddress("subpart_hits_module",  &m_hits_module);
-
-  m_tree_retrieved->SetBranchAddress("subpart_nsimtracks",   &m_part_nstracks);
-  m_tree_retrieved->SetBranchAddress("subpart_st_ids",       &m_st_id);
-
-
+  m_tree_retrieved->SetBranchAddress("subpart_stId",     &m_part_stId);
 }
 
 
 
 void MCExtractor::init(const edm::EventSetup *setup)
 {
-  //std::cout << "MCExtractor objet is created" << std::endl;
-
   //
   // Initializations 
   //
@@ -213,36 +147,19 @@ void MCExtractor::writeInfo(const edm::Event *event)
   // Then loop on tracking particles (TPs): 
   //
 
-
-
   // Get the different Calo hits
 
   int n_part        = 0; // The total number of stored TPs
-  int n_hits        = 0; // The total number of hits per TP
-  int n_hits_tot    = 0; // The total number of hits per event
-  int n_st_tot      = 0; // The total number of simtrack
+  
 
   edm::Handle<TrackingParticleCollection>  TPCollection ;
-  event->getByLabel("mergedtruth","MergedTrackTruth",TPCollection);       
+  event->getByLabel("mix","MergedTrackTruth",TPCollection);       
   const TrackingParticleCollection tpColl = *(TPCollection.product());
   
 
   std::vector<PSimHit>::const_iterator itp; 	
       
   GlobalPoint hit_position;
-  int subdetID;
-
-  bool barrel;
-  bool endcap;
-
-  int disk;
-  int cols;    
-  int rows;    
-  float pitchX;
-  float pitchY;
-
-  float rowhit;
-  float colhit;
   LocalPoint hitpos;
 
   // Loop on tracking particles 
@@ -255,7 +172,6 @@ void MCExtractor::writeInfo(const edm::Event *event)
     
     // Fill tracking particle variables
 
-    m_st->push_back(tp->g4Track_end() - tp->g4Track_begin());   // Number of hits
     m_part_pdgId->push_back(tp->pdgId());                       // Particle type
     m_part_px->push_back(tp->momentum().x());                   // 
     m_part_py->push_back(tp->momentum().y());                   // Momentum
@@ -265,118 +181,21 @@ void MCExtractor::writeInfo(const edm::Event *event)
     m_part_x->push_back(tp->parentVertex()->position().x());    //
     m_part_y->push_back(tp->parentVertex()->position().y());    // Vertex of gen
     m_part_z->push_back(tp->parentVertex()->position().z());    //
-    
+    m_part_evtId->push_back(tp->eventId().rawId());  
+
+
+    the_ids.clear();
+
     for (TrackingParticle::g4t_iterator g4T=tp->g4Track_begin(); g4T!=tp->g4Track_end(); ++g4T) 
-    {
-      m_st_id->push_back(g4T->trackId());
-      ++n_st_tot;  
-    }
+      the_ids.push_back(g4T->trackId());
     
-    // Then loop on the simulated hits for the corresponding TP
+    m_part_stId->push_back(the_ids); 
 
-    n_hits   = 0;
-    subdetID = 0;
-
-    // 3. Tracker hits
-
-    for (itp = tp->pSimHit_begin(); itp < tp->pSimHit_end(); itp++)
-    {      
-      DetId theDetUnitId(itp->detUnitId());
-      
-      // Go away if not in a tracking detector
-      
-      if (theDetUnitId.det() != DetId::Tracker && theDetUnitId.det() != DetId::Muon)
-	continue;
-      
-      if (theDetUnitId.det() == DetId::Tracker)
-      {
-	subdetID      = theDetUnitId.subdetId();
-	hit_position  = theTrackerGeometry->idToDet(theDetUnitId)->surface().toGlobal(itp->localPosition());
-	
-	barrel = (subdetID == static_cast<int>(PixelSubdetector::PixelBarrel));
-	endcap = (subdetID == static_cast<int>(PixelSubdetector::PixelEndcap));
-
-	if (!barrel && !endcap) continue;
-
-	const PixelGeomDetUnit* theGeomDet = dynamic_cast<const PixelGeomDetUnit*>(theTrackerGeometry->idToDet(theDetUnitId));      
-	const PixelTopology* topol         = &(theGeomDet->specificTopology());
-
-	cols     = topol->ncolumns();
-	rows     = topol->nrows();
-	pitchX   = topol->pitch().first;
-	pitchY   = topol->pitch().second;
-
-	rowhit   = itp->localPosition().x()/pitchX+float(rows)/2.;
-	colhit   = itp->localPosition().y()/pitchY+float(cols)/2.;
-
-
-	hitpos   = topol->localPosition( MeasurementPoint(rowhit,colhit));
-	  
-	hit_position= theGeomDet->surface().toGlobal(itp->localPosition());
-	//hit_position = theGeomDet->surface().toGlobal(hitpos);
-	
-  
-	if (barrel)
-	{
-	  PXBDetId bdetid(theDetUnitId);
-	  m_hits_layer->push_back(static_cast<int>(bdetid.layer())); 
-	  m_hits_module->push_back(static_cast<int>(bdetid.module())); 
-	  m_hits_ladder->push_back(static_cast<int>(bdetid.ladder()));  
-
-
-	  //std::cout << static_cast<int>(bdetid.layer()) << " / " 
-	  //	    << static_cast<int>(bdetid.module()) << " / " 
-	  //	    << cols << " / " << rows << " / " 
-	  //	    << rowhit << " / " << colhit << std::endl;
-
-	}
-
-	if (endcap)
-	{
-	  PXFDetId fdetid(theDetUnitId);
-	  
-	  disk = (static_cast<int>(fdetid.side())*2-3)*static_cast<int>(fdetid.disk());
-      
-	  if (disk>=4)  m_hits_layer->push_back(7+disk); 
-	  if (disk<=-4) m_hits_layer->push_back(14-disk); 
-	  if (disk<4 && disk>-4) m_hits_layer->push_back(-1); 
-	  
-	  if (static_cast<int>(fdetid.disk())<4)
-	  {
-	    m_hits_ladder->push_back(static_cast<int>(fdetid.blade())); 
-	  }
-	  else
-	  {
-	    m_hits_ladder->push_back(static_cast<int>(fdetid.ring())); 
-	  }
-	
-	  m_hits_module->push_back(static_cast<int>(fdetid.module())); 
-	}
-
-	m_hits_x->push_back(static_cast<float>(hit_position.x()));   
-	m_hits_y->push_back(static_cast<float>(hit_position.y()));   
-	m_hits_z->push_back(static_cast<float>(hit_position.z()));
-	m_hits_e->push_back(itp->energyLoss());   
-	m_hits_tof->push_back(itp->timeOfFlight());   
-	m_hits_proc->push_back(static_cast<int>(itp->processType()));   
-	m_hits_pdgId->push_back(static_cast<int>(itp->particleType()));   
-	m_hits_id->push_back(subdetID);  
-	
-
-	++n_hits;
-	++n_hits_tot;
-
-      }
-    }//end loop on sim hits
-    
-    m_hits->push_back(n_hits);
     ++n_part;	      
 
   }//end loop for on tracking particle
   
   m_part_n    = n_part;
-  m_part_nhit = n_hits_tot;
-  m_part_nstracks = n_st_tot;
 
   //___________________________
   //
@@ -434,8 +253,6 @@ void MCExtractor::reset()
 
   m_gen_n         = 0;
   m_part_n        = 0;
-  m_part_nhit     = 0;
-  m_part_nstracks = 0;
 
 
   m_gen_x->clear();
@@ -453,27 +270,13 @@ void MCExtractor::reset()
   m_part_eta->clear();
   m_part_phi->clear();
   m_part_pdgId->clear();  
+  m_part_evtId->clear();  
+  m_part_stId->clear();  
   m_part_x->clear();      
   m_part_y->clear();       
   m_part_z->clear();       
   m_part_used->clear();    
-  m_hits->clear();         
-  m_st->clear();           
- 
-  m_st_id->clear();  
-  
-  m_hits_used->clear();  
-  m_hits_x->clear();  
-  m_hits_y->clear();  
-  m_hits_z->clear();  
-  m_hits_e->clear();  
-  m_hits_proc->clear();  
-  m_hits_tof->clear();  
-  m_hits_id->clear();  
-  m_hits_pdgId->clear();  
-  m_hits_layer->clear();  
-  m_hits_ladder->clear();  
-  m_hits_module->clear();  
+
 }    
 
   
@@ -511,9 +314,9 @@ void MCExtractor::createTree()
   // Infos related to the subsequent tracking particles
   
   m_tree_new->Branch("subpart_n",            &m_part_n);
-  m_tree_new->Branch("subpart_hits",         &m_hits);
-  m_tree_new->Branch("subpart_st",           &m_st);
   m_tree_new->Branch("subpart_pdgId",        &m_part_pdgId);
+  m_tree_new->Branch("subpart_evtId",        &m_part_evtId);
+  m_tree_new->Branch("subpart_stId",         &m_part_stId);
   m_tree_new->Branch("subpart_px",           &m_part_px);
   m_tree_new->Branch("subpart_py",           &m_part_py);
   m_tree_new->Branch("subpart_pz",           &m_part_pz);
@@ -522,39 +325,8 @@ void MCExtractor::createTree()
   m_tree_new->Branch("subpart_x",            &m_part_x);
   m_tree_new->Branch("subpart_y",            &m_part_y);
   m_tree_new->Branch("subpart_z",            &m_part_z);
-
-  m_tree_new->Branch("subpart_nsimtracks",   &m_part_nstracks);
-  m_tree_new->Branch("subpart_st_ids",       &m_st_id);
-
-  m_tree_new->Branch("subpart_nhit",         &m_part_nhit);
-  m_tree_new->Branch("subpart_hits_x",       &m_hits_x);
-  m_tree_new->Branch("subpart_hits_y",       &m_hits_y);
-  m_tree_new->Branch("subpart_hits_z",       &m_hits_z);
-  m_tree_new->Branch("subpart_hits_e",       &m_hits_e);
-  m_tree_new->Branch("subpart_hits_tof",     &m_hits_tof);
-  m_tree_new->Branch("subpart_hits_proc",    &m_hits_proc);
-  m_tree_new->Branch("subpart_hits_id",      &m_hits_id);
-  m_tree_new->Branch("subpart_hits_pdgId",   &m_hits_pdgId);
-  m_tree_new->Branch("subpart_hits_layer",   &m_hits_layer);
-  m_tree_new->Branch("subpart_hits_ladder",  &m_hits_ladder);
-  m_tree_new->Branch("subpart_hits_module",  &m_hits_module);
-
 } 
-void MCExtractor::printhits(float x, float y, float z)
-{
- int n_HITS= getNHITS();
 
- for (int i=0;i<n_HITS;++i) // Loop over tracking particles
- {
-   if (getTP_hitsid(i)   == 2)      continue; // In the endcap, don't care
-
-   std::cout << "Hit " << i << " : " << getTP_hitsx(i)-x << " / " 
-	     << getTP_hitsy(i)-y << " / " 
-	     << getTP_hitsz(i)-z << std::endl;   
- }
-
- std::cout << n_HITS << std::endl;
-}
 void MCExtractor::clearTP(float ptmin,float rmax)
 {
  int n_TP= getNTP();
@@ -572,172 +344,35 @@ void MCExtractor::clearTP(float ptmin,float rmax)
  }
 }
 
-void MCExtractor::findMatchingTP(const int &stID,const int &layer,
-				 const int &ladder,const int &module, 
-				 const int &nseg, 
-				 const float &x, const float &y, const float &z, 
-				 int &itp, int &ihit, bool verb)
+void MCExtractor::findMatchingTP(const int &stID,const int &evtID,
+				 int &itp, bool verb)
 {
   if (verb)
-    std::cout << " Into matching " << std::endl;
+    std::cout << " Into new matching " << std::endl;
 
-  n_st_part  = 0;
-  n_hit_part = 0;
-  chi        = 0.;
-  n_hit      = 0;
-  n_st       = 0;
-  n_hit2     = 0;
-  n_st2      = 0;
   n_TP       = getNTP();
-  chi_lim    = 10.;
-  start      = 0;
 
-  if (itp!=-1)
+  if (itp!=-1) return;
+
+
+  for (int i=0;i<n_TP;++i) // Loop over tracking particles
   {
-    start=itp;
-    itp=-1;
-  }
+    if (m_part_evtId->at(i)!=evtID) continue;
 
-  for (int i=start;i<n_TP;++i) // Loop over tracking particles
-  {
-    n_hit = m_hits->at(i);
-    n_st  = m_st->at(i);
-    n_st2 = n_st_part+n_st;
-    n_hit2= n_hit_part+n_hit;
+    if (verb)
+      std::cout << " Try to match " << std::endl;
 
-    if (m_part_used->at(i)==1)
+    for (unsigned int j=0;j<m_part_stId->at(i).size();++j) // Loop on simtrack
     {
-      n_st_part  = n_st2;
-      n_hit_part = n_hit2;
-      continue;
-    } 
+      if (m_part_stId->at(i).at(j)!=stID) continue;
 
-    if (stID != -1)
-    {
-      if (verb)
-	std::cout << " Try to match " << std::endl;
+      if (itp!=-1 && itp!=i) 
+	std::cout << " More than one tracking particle for one simtrack ID: problem!!!! " << std::endl;
 
-      match = false;
-
-      if (m_st_id->at(n_st2-1)>=stID)
-      {
-	for (int j=n_st_part;j<n_st2;++j) // Loop on simtrack
-	{
-	  if (verb)
-	    std::cout << m_st_id->at(j) << " // " << stID << std::endl;
-	  
-	  if (m_st_id->at(j)==stID) 
-	  {
-	    match = true;
-	    break;
-	  }
-	  if (m_st_id->at(j)>stID) 
-	  {
-	    break;
-	  }
-	}  
-      }
-
-      if (!match) 
-      {
-	if (verb)
-	  std::cout << " No simtrk match " << std::endl;
-
-	n_st_part  = n_st2;
-	n_hit_part = n_hit2;
-	continue;         
-      }
+      itp = i;
     }
-
-    
-    for (int k=n_hit_part;k<n_hit2;++k) // Loop on hits
-    {
-      if (verb)
-      {
-	std::cout << k << " / " <<  n_hit << std::endl;
-
-	if (layer==m_hits_layer->at(k))
-	{
-	  std::cout << layer << " / " <<  ladder << " / " << module << std::endl;
-	  std::cout << m_hits_layer->at(k) << " / " 
-		    << m_hits_ladder->at(k) << " / " 
-		    << m_hits_module->at(k) << std::endl;
-	}
-      }
-
-      if (m_hits_module->at(k) != module ||  
-	  m_hits_ladder->at(k) != ladder ||
-	  m_hits_layer->at(k)  != layer)  continue;
-
-      if (verb)
-	std::cout << " In the same module !" << std::endl;
-
-      dz = fabs(m_hits_z->at(k)-z);
-      dr = fabs(sqrt(m_hits_x->at(k)*m_hits_x->at(k)+m_hits_y->at(k)*m_hits_y->at(k))-sqrt(x*x+y*y)); 
-
-      if (verb)
-	std::cout << dr <<  "/" << dz << std::endl;
-
-      /*
-      if (layer<=7 && dz>2.5/static_cast<float>(nseg)) continue;
-      if (layer<=10 && layer>7 && dz>5./static_cast<float>(nseg))  continue; 
-      if (layer>10 && ladder<=5 && dr>2.5/static_cast<float>(nseg))  continue;    
-      if (layer>10 && ladder>5 && dr>5./static_cast<float>(nseg))  continue;    
-      */
-
-      bool pass=true;
-
-      if (sqrt(x*x+y*y)<60)
-      {
-	if (layer>10 && dr>2.5/static_cast<float>(nseg)) pass=false;
-	if (layer<=10 && dz>2.5/static_cast<float>(nseg)) pass=false;
-      }
-      else
-      {
-	if (layer>10 && dr>5./static_cast<float>(nseg)) pass=false;
-	if (layer<=10 && dz>5./static_cast<float>(nseg)) pass=false;
-      }
-
-      if (!pass) continue;
-
-      dx  = fabs(m_hits_x->at(k)-x);
-      dy  = fabs(m_hits_y->at(k)-y);     
- 
-      dphi= fabs(atan2(m_hits_y->at(k),m_hits_x->at(k))-atan2(y,x)); 
-     
-      if (layer>10)
-      {
-	chi = (dphi/resol_phi)*(dphi/resol_phi);
-      }
-      else
-      {
-	chi = (dx/resol_x)*(dx/resol_x)+(dy/resol_y)*(dy/resol_y);
-      }
-
-	//chi = (dr/resol_r)*(dr/resol_r)+(dphi/resol_phi)*(dphi/resol_phi);
-      //std::cout << sqrt(x*x+y*y) << " / " << sqrt(dx*dx+dy*dy) << std::endl;
-
-      if (verb)
-	std::cout << x << " / " << m_hits_x->at(k) << " / " 
-		  << y << " / " << m_hits_y->at(k) << " / " 
-		  << z << " / " << m_hits_z->at(k) << " / " << chi << std::endl;
-
-      if (chi<chi_lim)
-      {
-	chi_lim=chi;
-	itp=i;
-	ihit=k;
-
-	if (verb)
-	  std::cout << "MATCH!!" << std::endl; 
-
-	if (chi_lim<1.) return;	
-      }
-    }
-   
-    n_st_part  = n_st2;
-    n_hit_part = n_hit2;
   }
 
   return;
 }
+

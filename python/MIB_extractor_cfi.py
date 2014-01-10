@@ -26,19 +26,19 @@ MIBextraction = cms.EDAnalyzer("RecoExtractor",
 ## Then the different info you want in (set to false by default)
 
   # Main stuff                        
-  doMC             = cms.untracked.bool(False),  # Extract the MC information (MC tree)
-  doSTUB           = cms.untracked.bool(False),  # Extract the official STUB information (TkStub tree)  
+  doMC             = cms.untracked.bool(False),          # Extract the MC information (MC tree)
+  doSTUB           = cms.untracked.bool(False),          # Extract the official STUB information (TkStub tree)  
   # Add Pixel information                              
-  doPixel          = cms.untracked.bool(False),  # Extract the Tracker information (Pixel tree)
+  doPixel          = cms.untracked.bool(False),          # Extract the Tracker information (Pixel tree)
   pixel_tag        = cms.InputTag( "simSiPixelDigis" ),  # The collection where to fing the pixel info
-  doMatch          = cms.untracked.bool(False),  # Add the simtrack index to each digi                             
+  doMatch          = cms.untracked.bool(False),          # Add the simtrack index to each digi                             
 
                                
-  doTranslation    = cms.untracked.bool(False),  # For TkLayout tool
-  doL1TT           = cms.untracked.bool(False),  # Extract the cluster/stub information
+  doTranslation    = cms.untracked.bool(False),          # For TkLayout tool (not maintained)
+  doL1TT           = cms.untracked.bool(False),          # Extract the cluster/stub information
 
-  n_events         = cms.untracked.int32(10), # How many events you want to analyze (only if fillTree=False)
-  skip_events      = cms.untracked.int32(0),  # How many events you want to skip (only if fillTree=False)
+  n_events         = cms.untracked.int32(10),            # How many events you want to analyze (only if fillTree=False)
+  skip_events      = cms.untracked.int32(0),             # How many events you want to skip (only if fillTree=False)
 
   # The analysis settings could be whatever you want
   # 

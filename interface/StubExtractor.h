@@ -19,7 +19,8 @@
 #include "SimDataFormats/Track/interface/SimTrackContainer.h"
 #include "SimDataFormats/Vertex/interface/SimVertex.h"
 #include "SimDataFormats/Vertex/interface/SimVertexContainer.h"
-
+#include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
+#include "MagneticField/Engine/interface/MagneticField.h"
 
 #include "SimDataFormats/TrackerDigiSimLink/interface/PixelDigiSimLink.h"
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
@@ -35,6 +36,14 @@
 #include "Geometry/TrackerGeometryBuilder/interface/StackedTrackerGeometry.h"
 #include "Geometry/TrackerGeometryBuilder/interface/StackedTrackerDetUnit.h"
 
+#include "DataFormats/L1TrackTrigger/interface/TTStub.h"
+#include "DataFormats/L1TrackTrigger/interface/TTCluster.h"
+#include "DataFormats/L1TrackTrigger/interface/TTTypes.h"
+#include "SimTracker/TrackTriggerAssociation/interface/TTClusterAssociationMap.h"
+#include "SimTracker/TrackTriggerAssociation/interface/TTStubAssociationMap.h"
+#include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
+#include "SimDataFormats/TrackingAnalysis/interface/TrackingVertex.h"
+
 #include "DataFormats/SiPixelDetId/interface/StackedTrackerDetId.h"
 #include "DataFormats/SiPixelCluster/interface/SiPixelCluster.h"
 #include "DataFormats/SiPixelDigi/interface/PixelDigi.h"
@@ -47,6 +56,7 @@
 //Include std C++
 #include <iostream>
 #include <vector>
+#include <boost/shared_ptr.hpp>
 
 #include "TMath.h"
 #include "TTree.h"
@@ -114,6 +124,7 @@ class StubExtractor
   bool m_OK;
   bool m_matching;
   int  m_n_events;
+  double mMagneticFieldStrength ;
 
   /// Geometry handles etc
   edm::ESHandle< TrackerGeometry >                theTrackerGeometry;
@@ -121,9 +132,16 @@ class StubExtractor
   const StackedTrackerGeometry*                   theStackedGeometry;
   StackedTrackerGeometry::StackContainerIterator  StackedTrackerIterator;
 
-  edm::Handle< L1TkCluster_PixelDigi_Collection > PixelDigiL1TkClusterHandle;
-  edm::Handle< L1TkStub_PixelDigi_Collection >    PixelDigiL1TkStubHandle;
-  edm::Handle< L1TkStub_PixelDigi_Collection >    PixelDigiL1TkFailedStubHandle;
+  edm::Handle< edmNew::DetSetVector< TTCluster< Ref_PixelDigi_ > > > PixelDigiL1TkClusterHandle;
+  edm::Handle< edmNew::DetSetVector< TTStub< Ref_PixelDigi_ > > > PixelDigiL1TkStubHandle;
+  edm::Handle< edmNew::DetSetVector< TTStub< Ref_PixelDigi_ > > > PixelDigiL1TkFailedStubHandle;
+
+  edm::Handle< TTClusterAssociationMap< Ref_PixelDigi_ > > MCTruthTTClusterHandle;
+  edm::Handle< TTStubAssociationMap< Ref_PixelDigi_ > >    MCTruthTTStubHandle;
+
+  edm::Handle< std::vector< TrackingParticle > > TrackingParticleHandle;
+  edm::Handle< std::vector< TrackingVertex > > TrackingVertexHandle;
+
   std::vector<int>                 *m_clus_used;   
 
 
@@ -133,9 +151,6 @@ class StubExtractor
   std::vector<float>  *m_clus_x;      // x pos of cluster i (in cm)
   std::vector<float>  *m_clus_y;      // y pos of cluster i (in cm)
   std::vector<float>  *m_clus_z;      // z pos of cluster i (in cm)
-  std::vector<float>  *m_clus_xmc;    // x true pos of cluster i (in cm)
-  std::vector<float>  *m_clus_ymc;    // y true pos of cluster i (in cm)
-  std::vector<float>  *m_clus_zmc;    // z true pos of cluster i (in cm)
   std::vector<float>  *m_clus_e;      // UNUSED
   std::vector<int>    *m_clus_layer;  // layer of cluster i
   std::vector<int>    *m_clus_module; // module of cluster i
@@ -147,8 +162,8 @@ class StubExtractor
   std::vector<int>    *m_clus_matched;// number of simhits matched to the cluster
   std::vector<int>    *m_clus_PS;     // number of segments in the corresponding module
   std::vector<int>    *m_clus_nrows;  // number of strips in the corresponding module
-  std::vector< std::vector<int> >    *m_clus_tp;   // list of tracking particles inducing cluster i
-  std::vector< std::vector<int> >    *m_clus_hits; // list of simhits inducing cluster i
+  std::vector<int>    *m_clus_pdgID;  // list of tracking particles inducing cluster i
+  std::vector<float>  *m_clus_ptGEN;  // list of simhits inducing cluster i
   std::vector<int>    *m_clus_pid;    // process id inducing cluster i (see MCExtractor.h)
 
 

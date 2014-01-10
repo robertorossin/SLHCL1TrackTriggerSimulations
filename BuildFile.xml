@@ -36,7 +36,11 @@
 <use   name="CondFormats/L1TObjects"/>
 <use   name="L1Trigger/GlobalTriggerAnalyzer"/>
 <use   name="HLTrigger/HLTcore"/>
-<lib   name="MathMore"/>
+<use   name="MathMore"/>
+<use   name="DataFormats/DetId"/>
+<use   name="DataFormats/GeometryVector"/>
+<use   name="DataFormats/GeometrySurface"/>
+<use   name="DataFormats/L1TrackTrigger"/>
 <flags     EDM_PLUGIN="1"/>
 <export>
   <lib     name="1"/>

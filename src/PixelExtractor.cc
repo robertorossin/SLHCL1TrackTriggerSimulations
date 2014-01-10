@@ -1,3 +1,4 @@
+
 #include "../interface/PixelExtractor.h"
 
 
@@ -19,6 +20,7 @@ PixelExtractor::PixelExtractor(edm::InputTag tag, bool doTree, bool doMatch)
   m_pixclus_column   = new std::vector<int>;      
   m_pixclus_simhit   = new std::vector<int>;      
   m_pixclus_simhitID = new std::vector< std::vector<int> >;  
+  m_pixclus_evtID    = new std::vector< std::vector<int> >;  
 
   m_pixclus_layer    = new std::vector<int>;    
   m_pixclus_module   = new std::vector<int>; 
@@ -39,6 +41,7 @@ PixelExtractor::PixelExtractor(edm::InputTag tag, bool doTree, bool doMatch)
     // Branches definition
 
     m_tree->Branch("PIX_n",         &m_pclus,    "PIX_n/I");
+    m_tree->Branch("PIX_nPU",       &m_nPU,      "PIX_nPU/I");
 
     m_tree->Branch("PIX_x",         &m_pixclus_x);
     m_tree->Branch("PIX_y",         &m_pixclus_y);
@@ -48,6 +51,7 @@ PixelExtractor::PixelExtractor(edm::InputTag tag, bool doTree, bool doMatch)
     m_tree->Branch("PIX_column",    &m_pixclus_column);
     m_tree->Branch("PIX_simhit",    &m_pixclus_simhit);
     m_tree->Branch("PIX_simhitID",  &m_pixclus_simhitID);
+    m_tree->Branch("PIX_evtID",     &m_pixclus_evtID);
     m_tree->Branch("PIX_layer",     &m_pixclus_layer);
     m_tree->Branch("PIX_module",    &m_pixclus_module);
     m_tree->Branch("PIX_ladder",    &m_pixclus_ladder);
@@ -73,6 +77,7 @@ PixelExtractor::PixelExtractor(TFile *a_file)
   m_pixclus_column   = new std::vector<int>;      
   m_pixclus_simhit   = new std::vector<int>;      
   m_pixclus_simhitID = new std::vector< std::vector<int> >;  
+  m_pixclus_evtID    = new std::vector< std::vector<int> >; 
   m_pixclus_layer    = new std::vector<int>;    
   m_pixclus_module   = new std::vector<int>; 
   m_pixclus_ladder   = new std::vector<int>;    
@@ -99,7 +104,8 @@ PixelExtractor::PixelExtractor(TFile *a_file)
   std::cout << "This file contains " << m_n_events << " events..." << std::endl;
 
   m_tree->SetBranchAddress("PIX_n",         &m_pclus);
-  
+  m_tree->SetBranchAddress("PIX_nPU",       &m_nPU);
+
   m_tree->SetBranchAddress("PIX_x",         &m_pixclus_x);
   m_tree->SetBranchAddress("PIX_y",         &m_pixclus_y);
   m_tree->SetBranchAddress("PIX_z",         &m_pixclus_z);
@@ -108,6 +114,7 @@ PixelExtractor::PixelExtractor(TFile *a_file)
   m_tree->SetBranchAddress("PIX_column",    &m_pixclus_column);
   m_tree->SetBranchAddress("PIX_simhit",    &m_pixclus_simhit);
   m_tree->SetBranchAddress("PIX_simhitID",  &m_pixclus_simhitID);
+  m_tree->SetBranchAddress("PIX_evtID",     &m_pixclus_evtID);
   m_tree->SetBranchAddress("PIX_layer",     &m_pixclus_layer);
   m_tree->SetBranchAddress("PIX_module",    &m_pixclus_module);
   m_tree->SetBranchAddress("PIX_ladder",    &m_pixclus_ladder);
@@ -134,14 +141,28 @@ void PixelExtractor::writeInfo(const edm::Event *event)
 {
   PixelExtractor::reset();
 
+
   edm::Handle< edm::DetSetVector<PixelDigi> > pDigiColl;
-  //event->getByLabel("simSiPixelDigis", pDigiColl);
+
   event->getByLabel(m_tag, pDigiColl);
 
   edm::DetSetVector<PixelDigi>::const_iterator DSViterDigi = pDigiColl->begin();
 
   if (m_matching)
+  {
+    edm::InputTag m_pileupcollection("addPileupInfo");
+    edm::Handle<std::vector<PileupSummaryInfo> > pileupinfos;
+    event->getByLabel(m_pileupcollection,pileupinfos);
+
+    std::vector<PileupSummaryInfo>::const_iterator PVI;
+    
+    for(PVI = pileupinfos->begin(); PVI != pileupinfos->end(); ++PVI) 
+    {
+      if (PVI->getBunchCrossing()==0) m_nPU = PVI->getPU_NumInteractions();      
+    }
+
     event->getByLabel(m_tag, pDigiLinkColl);
+  }
 
   bool barrel;
   bool endcap;
@@ -195,6 +216,7 @@ void PixelExtractor::writeInfo(const edm::Event *event)
       pos     =  theGeomDet->surface().toGlobal(clustlp);
 
       the_ids.clear();
+      the_eids.clear();
 
       m_pixclus_x->push_back(pos.x());
       m_pixclus_y->push_back(pos.y());
@@ -215,13 +237,19 @@ void PixelExtractor::writeInfo(const edm::Event *event)
 	    if (static_cast<int>(it->channel())!=static_cast<int>((*iter).channel()))
 	      continue;
 
+	    //std::cout << it->SimTrackId() << " ##### " << it->eventId().rawId() << std::endl;
+
 	    the_ids.push_back(it->SimTrackId()); 
+	    the_eids.push_back(it->eventId().rawId()); 
 	  }
 	}
       }
 
+      //      std::cout << the_ids.size() << " #///# " << the_eids.size() << std::endl;
+
       m_pixclus_simhit->push_back(the_ids.size());
       m_pixclus_simhitID->push_back(the_ids);
+      m_pixclus_evtID->push_back(the_eids);
 
       if (barrel)
       {
@@ -280,6 +308,7 @@ void PixelExtractor::getInfo(int ievt)
 void PixelExtractor::reset()
 {
   m_pclus = 0;
+  m_nPU = 0;
 
   m_pixclus_x->clear(); 
   m_pixclus_y->clear(); 
@@ -289,6 +318,7 @@ void PixelExtractor::reset()
   m_pixclus_column->clear();
   m_pixclus_simhit->clear();
   m_pixclus_simhitID->clear();
+  m_pixclus_evtID->clear();
   m_pixclus_layer->clear();  
   m_pixclus_module->clear(); 
   m_pixclus_ladder->clear(); 

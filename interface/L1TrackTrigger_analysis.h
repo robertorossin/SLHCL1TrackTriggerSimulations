@@ -1,17 +1,6 @@
 #ifndef L1TRACKTRIGGER_ANALYSIS_H
 #define L1TRACKTRIGGER_ANALYSIS_H
 
-/*****************************
-
-Simple example class showing how to perform an 
-analysis using the PatExtractor tools
-
-S.Viret (viret@in2p3.fr): 31/05/11
-
-More info: http://sviret.web.cern.ch/sviret/Welcome.php?n=CMS.PHYTuto
-
- ******************************/
-
 //Include std C++
 #include <iostream>
 #include <vector>
@@ -134,7 +123,6 @@ class L1TrackTrigger_analysis
   std::vector< std::vector<int> >  *m_digi_tp;
   std::vector<int>                 *m_clus_used;   
 
-
   int m_clus;
 
   // Size of the following vectors is m_clus
@@ -157,6 +145,7 @@ class L1TrackTrigger_analysis
   std::vector<int>    *m_clus_nrows;  // number of strips in the corresponding module
   std::vector< std::vector<int> >    *m_clus_tp;   // list of tracking particles inducing cluster i
   std::vector< std::vector<int> >    *m_clus_hits; // list of simhits inducing cluster i
+  std::vector< std::vector<int> >    *m_clus_pix;  // list of pixels inducing cluster i
   std::vector<int>    *m_clus_pid;    // process id inducing cluster i (see MCExtractor.h)
 
 
@@ -164,7 +153,6 @@ class L1TrackTrigger_analysis
 
   // Size of the following vectors is m_stub
   std::vector<float>  *m_stub_pt;     // pt calculated for stub i (in GeV/c)
-  std::vector<float>  *m_stub_ptMC;   // pt calculated using MC coordinates for stub i (in GeV/c)
   std::vector<float>  *m_stub_pxGEN;  // px generated of stub i (in GeV/c)
   std::vector<float>  *m_stub_pyGEN;  // py generated of stub i (in GeV/c)
   std::vector<float>  *m_stub_etaGEN; // eta generated of stub i (in GeV/c)

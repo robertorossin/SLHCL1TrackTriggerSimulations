@@ -1,3 +1,9 @@
+2014-01-10  Seb Viret  <viret@in2p3.fr>
+ 
+       	* Lot of modifs in the MC/STub and L1TrackTrigger parts (adaptation to 620_SLHC5)  
+
+	This version has been tested against CMSSW_6_2_0_SLHC5
+
 2013-07-19  Seb Viret  <viret@in2p3.fr>
  
        	* Adding a new pT threshold option
