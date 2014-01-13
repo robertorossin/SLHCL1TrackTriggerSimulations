@@ -11,9 +11,10 @@ import FWCore.ParameterSet.Config as cms
 # of the availability of the CrossingFrame in the Event
 #
 
-from SimGeneral.TrackingAnalysis.trackingParticles_cfi import *
+#from SimGeneral.TrackingAnalysis.trackingParticles_cfi import *
 from SimGeneral.PileupInformation.AddPileupSummary_cfi import *
+#from SimGeneral.Configuration.SimGeneral_cff import *
 
-pdigi = cms.Sequence(cms.SequencePlaceholder("randomEngineStateProducer")*cms.SequencePlaceholder("mix")*trackingParticles*addPileupInfo)
+pdigi = cms.Sequence(cms.SequencePlaceholder("randomEngineStateProducer")*cms.SequencePlaceholder("mix")*addPileupInfo)
 
 
