@@ -72,15 +72,11 @@ int main(int argc, char** argv) {
 
   // Option 4: do sectors and test
 
-  if (params.option()=="sec_n_test")
+  if (params.option()=="sector_eff")
   {
-    sector* my_sectors = new sector(params.inputfile(),"my_sectors_temp.root",
-				    params.eta(),params.phi(),
-				    params.oeta(),params.ophi());
-    delete my_sectors;
-
-    sector_test* my_test = new sector_test(params.testfile(),"my_sectors_temp.root",
-					   params.pattfile(),params.outfile(),params.nevt(),params.dbg());
+    sector_test* my_test = new sector_test(params.testfile(),params.inputfile(),
+					   "",params.outfile(),
+					   params.nevt(),params.dbg());
 
     delete my_test;
   }
@@ -89,7 +85,7 @@ int main(int argc, char** argv) {
 
   if (params.option()=="stub_eff")
   {
-    efficiencies* my_effs = new efficiencies(params.inputfile(),params.outfile());
+    efficiencies* my_effs = new efficiencies(params.inputfile(),params.outfile(),params.type());
     delete my_effs;
   }
 
@@ -105,11 +101,18 @@ int main(int argc, char** argv) {
   }
 
   // Option 7: generate a serie of patterns for the concentrator
-  if (params.option()=="pattgen")
+  if (params.option()=="pattgen_conc")
+  {
+    patterngen* my_pgen = new patterngen(params.inputfile(),params.outfile(),params.nevt(),params.rate());
+    delete my_pgen;
+  }
+  
+  // Option 8: generate a serie of events for the MPA chip
+  if (params.option()=="pattgen_MPA")
   {
     patterngen* my_pgen = new patterngen(params.inputfile(),params.outfile(),params.nevt());
     delete my_pgen;
   }
-  
+
   return 0;
 }

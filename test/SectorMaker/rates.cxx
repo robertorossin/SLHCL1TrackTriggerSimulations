@@ -34,9 +34,14 @@ void rates::get_rates()
   bool is_prim2= false;
   bool is_fake = false;
 
-  int st,idx,seg,nseg,lad_cor;
+  int st,idx,seg,nseg;
   float phi,eta,r;
   double eta_seg,phi_seg;
+
+  int n_ss_half1;
+  int n_ss_half2;
+  int n_innef_ss;
+  int n_cbc_innef_ss;
 
   int n_entries = L1TT->GetEntries();
 
@@ -56,6 +61,16 @@ void rates::get_rates()
   {
     L1TT->GetEntry(j); 
    
+    if (j%8==0)
+    {
+      for (int i=0;i<58000;++i) // Barrel
+      {   
+	n_conc_half1[i]     = 0;
+	n_conc_half2[i]     = 0;
+      }
+    }
+
+
     for (int i=0;i<6;++i)
     {
       m_bar_clus[i] = 0;
@@ -75,14 +90,6 @@ void rates::get_rates()
 
       if (layer>10 && layer<=17) disk=(layer-10)%8;
       if (layer>17 && layer<=24) disk=(layer-17)%8+7;
-
-      lad_cor=0;
-
-      if (disk==3 || disk==10)  lad_cor = 1;
-      if (disk==4 || disk==11)  lad_cor = 3;
-      if (disk==5 || disk==12) lad_cor = 4;
-  
-      ladder+=lad_cor;
 
       B_id = (layer-5)*10000 + (ladder-1)*100 + (module-1)/2;
       E_id = (disk-1)*10000 + (ladder-1)*100 + (module-1)/2;
@@ -259,9 +266,9 @@ void rates::get_rates()
 	  m_e_nstrip[E_id] = m_clus_nrows[idx];
 	  m_e_byls_rate[El_id] += fact;
 
-	  if (is_fake)              m_e_rate_f[E_id] += fact; 
-	  if (!is_fake && !is_prim) m_e_rate_s[E_id] += fact; 
-	  if (is_prim)              m_e_rate_p[E_id] += fact;
+	  if (is_fake)              m_e_rate_f[E_id]  += fact; 
+	  if (!is_fake && !is_prim) m_e_rate_s[E_id]  += fact; 
+	  if (is_prim)              m_e_rate_p[E_id]  += fact;
 	  if (is_prim2)             m_e_rate_pp[E_id] += fact;
 	  
 	  if (st>m_e_stmax[E_id])
@@ -291,18 +298,56 @@ void rates::get_rates()
       }
     }
 
+    n_cbc_innef_ss = 0;
+    n_innef_ss     = 0;
 
-    m_disk= -1;
-    m_lay = 0;
-    m_lad = 0; 
-    m_mod = 0; 
-    m_sen = 0;  
-    m_chp = 0; 
     m_rate= 0; 
-    m_dbgtree->Fill(); 
+    m_disk= -1;
 
     for (int i=0;i<58000;++i) // Barrel
     {   
+      n_ss_half1     = 0;
+      n_ss_half2     = 0;
+
+      for (int k=0;k<16;++k) 
+      {
+	if (tempo_c_ss_b[k][i]>3) ++n_cbc_innef_ss; 
+	//	if (tempo_c_ps_b[k]>3) ++n_cbc_innef_ps; 
+      }
+
+      for (int k=0;k<8;++k) 
+      {
+	(tempo_c_ss_b[k][i]<=3)
+	  ? n_ss_half1+=tempo_c_ss_b[k][i]
+	  : n_ss_half1+=3;
+
+	(tempo_c_ss_b[k+8][i]<=3)
+	  ? n_ss_half2+=tempo_c_ss_b[k+8][i]
+	  : n_ss_half2+=3;
+      }
+
+      n_conc_half1[i]    += n_ss_half1;
+      n_conc_half2[i]    += n_ss_half2;
+
+      if (n_ss_half1>22)
+      {
+	++n_innef_ss;
+      }
+
+      if (n_ss_half2>22) ++n_innef_ss;
+
+      if (j%8==7)
+      {
+	m_disk= -2;
+
+	if (n_conc_half1[i]>22)
+	{
+	  ++m_rate;
+	}
+
+	if (n_conc_half2[i]>22) ++m_rate;
+      }
+
       if (tempo_ps_b[i]>m_b_max[i])
       {
 	m_b_max[i]=tempo_ps_b[i];
@@ -315,6 +360,20 @@ void rates::get_rates()
 	for (int k=0;k<16;++k) m_b_c_max[k][i] = tempo_c_ss_b[k][i]; 
       }
     }
+
+
+
+    m_lay = 0;
+    m_lad = 0; 
+    m_mod = 0; 
+    m_sen = 0;  
+    m_chp = 0; 
+
+    m_ss  = n_innef_ss; 
+    m_cbc_ss = n_cbc_innef_ss; 
+    m_dbgtree->Fill(); 
+
+
   } // End of loop over events
 
   // The main tree is filled up at this point
@@ -356,6 +415,8 @@ void rates::get_rates()
       m_sen = j/8+1;
       m_chp = j%8+1;
       m_rate= m_b_rate[j][i];
+      m_ss = 0; 
+      m_cbc_ss = 0;
       m_dbgtree->Fill(); 
     }
   }
@@ -393,6 +454,8 @@ void rates::get_rates()
       m_sen = j/8+1;
       m_chp = j%8+1;
       m_rate= m_e_rate[j][i];
+      m_ss = 0; 
+      m_cbc_ss = 0;
       m_dbgtree->Fill(); 
     }
   }
@@ -610,6 +673,9 @@ void rates::initTuple(std::string in,std::string out)
   m_dbgtree->Branch("sen",         &m_sen,    "sen/I"); 
   m_dbgtree->Branch("chip",        &m_chp,    "chip/I"); 
   m_dbgtree->Branch("rate",        &m_rate,   "rate/F"); 
+  m_dbgtree->Branch("cbc_o_3",     &m_cbc_ss, "cbc_o_3/I"); 
+  m_dbgtree->Branch("conc_o_12",   &m_ss,     "conc_o_12/I"); 
+  m_dbgtree->Branch("rate",        &m_rate,   "rate/F");
   m_dbgtree->Branch("bar_c_mult",  &m_bar_clus,"m_bar_clus[6]/I"); 
   m_dbgtree->Branch("bar_s_mult",  &m_bar_stub,"m_bar_stub[6]/I"); 
 }

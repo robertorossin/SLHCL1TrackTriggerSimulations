@@ -35,6 +35,8 @@ class jobparams{
   int         oeta() const;
   int         ophi() const;
   int         nevt() const;
+  int         rate() const;
+  int         type() const;
 
  private:
 
@@ -49,6 +51,8 @@ class jobparams{
   int          m_oeta;
   int          m_ophi;
   int          m_nevt;
+  int          m_rate;
+  int          m_type;
 
 };
 
@@ -96,5 +100,12 @@ inline int jobparams::nevt() const{
   return m_nevt;
 }
 
+inline int jobparams::rate() const{
+  return m_rate;
+}
+
+inline int jobparams::type() const{
+  return m_type;
+}
 
 #endif

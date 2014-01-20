@@ -59,6 +59,13 @@ jobparams::jobparams(int argc, char** argv){
      cmd.add(phi);
      
 
+     ValueArg<int> rate("r","rate","L1 rate for pattern generator",
+			  false, 100, "int");
+     cmd.add(rate);
+     
+     ValueArg<int> type("t","type","PDG id of the particle to analyze",
+			  false, 13, "int");
+     cmd.add(type);
 
      // parse
      cmd.parse(argc, argv);
@@ -74,6 +81,8 @@ jobparams::jobparams(int argc, char** argv){
      m_ophi         = ophi.getValue();
      m_nevt         = nevt.getValue();
      m_dbg          = dbg.getValue();
+     m_rate         = rate.getValue();
+     m_type         = type.getValue();
    }
    catch (ArgException &e){ // catch exception from parse
      std::cerr << "ERROR: " << e.error() << " for arg " << e.argId()  << std::endl;

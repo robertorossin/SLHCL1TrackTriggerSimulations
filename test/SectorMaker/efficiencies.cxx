@@ -5,9 +5,11 @@
 
 // Main constructor
 
-efficiencies::efficiencies(std::string filename, std::string outfile)
+efficiencies::efficiencies(std::string filename, std::string outfile, int ptype)
 {
   cout << "Into eff " << endl;	
+
+  m_type = ptype;
 
   efficiencies::initTuple(filename,outfile);
   efficiencies::reset();
@@ -28,33 +30,34 @@ void efficiencies::get_efficiencies()
   double PTGEN=0;
   double D0GEN=0;
 
-  int nh_tot = 0;
-
   int pix_i;
   int clus_i;
   int stub_i;
   
-  int disk;
-
   int i_lay;
   int i_mod;
   int i_seg;
   float i_eta;
 
-  double dphi = 0;
-  double dphi_min = 0;
+  int evtID;
+  std::vector<int> stID;
+
+  std::vector<int> pix_evtID;
+  std::vector<int> pix_stID;
 
   int hit_on_lay[20];
   int stub_on_lay_pri[20];
   int stub_on_lay_off[20];
 
   int n_entries = L1TT_P->GetEntries();
+  bool inTP;
 
   // Then loop over events
 
   bool m_dbg =false;
 
   for (int j=0;j<n_entries;++j)
+    //for (int j=0;j<10;++j)
   {
     efficiencies::reset();
 
@@ -65,45 +68,43 @@ void efficiencies::get_efficiencies()
     clus_i=-1;
     stub_i=-1;
 
-    nh_tot=0;
-
     if (j%10000==0)
       cout << j <<endl;
 
     // Principle is the following:
-    // We loop over all primary TrackingParticles hits
-    // and look if those hits have induced DIGI/CLUSTER/STUBS
+    // We loop over all digis, 
+    // and look if those digis have induced CLUSTER/STUBS
     // 
-    // Efficiencies are then simply N_object/N_TPhits
+    // Efficiencies are then simply N_object/N_digis
 
     MC->GetEntry(j,1); // Get the MC info
     Pix->GetEntry(j,1);
     L1TT_O->GetEntry(j,1);
     L1TT_P->GetEntry(j,1);
 
+    // This code is for cluster/stub efficiency calculation
+    //
+    // It is intended to use it on particle gun sample
+
+    //    if (m_part_n!=1) continue;
 
     for (int k=0;k<m_part_n;++k) // Loop over TPs
     {
-      if (abs(m_part_pdg->at(k)) != 13) // Select only muons for the moment 
-      {
-	nh_tot+=m_part_hits->at(k);
-	continue; // Not an interesting
-      }
+      if (abs(m_part_pdg->at(k)) != m_type) continue;
+
+      // Thie TP corresponds to what we are looking for
+      // we continue
+
 
       D0GEN = sqrt(m_part_x->at(k)*m_part_x->at(k)+m_part_y->at(k)*m_part_y->at(k));
-      if (D0GEN > 0.3) 
-      {
-	nh_tot+=m_part_hits->at(k);
-	continue; // Not a primary, skip
-      }
+      if (D0GEN > 0.3) continue; // Not a primary, skip
 
       PTGEN = sqrt(m_part_px->at(k)*m_part_px->at(k)+m_part_py->at(k)*m_part_py->at(k));
+      if (PTGEN < 0.5) continue; // Not an interesting
 
-      if (PTGEN < 1.) 
-      {
-	nh_tot+=m_part_hits->at(k);
-	continue; // Not an interesting
-      }
+
+      evtID = m_part_evtId->at(k);
+      stID  = m_part_stId->at(k);
 
       for (int i=0;i<20;++i)
       {
@@ -117,68 +118,76 @@ void efficiencies::get_efficiencies()
 	cout << endl;
 	cout << "Dealing with TP " << k << " of " << m_part_n << endl;
 	cout << "TP PDG code is " << m_part_pdg->at(k) << endl;
-	cout << "This TP contains " << m_part_hits->at(k) << " hits" << endl;
+	cout << "This events contains " << m_pclus << " pixel digis" << endl;
       }
 
-      for (int l=nh_tot;l<m_part_hits->at(k)+nh_tot;++l) // Loop over TP simhits
-      {
-	if (m_hits_layer->at(l)<5) continue; // Don't care about pixel hits
+      if (m_pclus==0) continue; // No digi, skip
 
-	dphi_min = 1.;
+      i_eta = m_part_eta->at(k);
+
+      for (int l=0;l<m_pclus;++l) // Loop over TP digis
+      {	
+	if (m_pixclus_layer->at(l)<5) continue; // Don't care about pixel hits
+
+	pix_evtID = m_pixclus_evtID->at(l);
+
+	inTP=false;
+
+	for (unsigned int ll=0;ll<pix_evtID.size();++ll) 
+	{
+	  if (inTP) break;
+
+	  if (m_dbg)
+	    cout << l << "/" << evtID << "/" << pix_evtID.at(ll) << endl; 
+
+	  if (pix_evtID.at(ll) == evtID) inTP=true;
+	}
+
+	if (!inTP) continue;
+
+	if (m_dbg) cout << "In the same evt ID" << endl;
 	
-	i_eta = m_part_eta->at(k);
-	i_lay = m_hits_layer->at(l);
-	i_mod = m_hits_module->at(l)-1;
+	inTP=false;
+	pix_stID = m_pixclus_simhitID->at(l);
+
+	//	cout << pix_stID.size() << "/" << stID.size() << endl;
+
+	for (unsigned int ll=0;ll<pix_stID.size();++ll) 
+	{
+	  if (inTP) break;
+
+	  for (unsigned int lll=0;lll<stID.size();++lll) 
+	  {
+	    //	    cout << pix_stID.at(ll) << "/" << stID.at(lll) << endl; 
+
+	    if (pix_stID.at(ll) == stID.at(lll)) inTP=true;
+	  }
+	}
+
+	if (!inTP) continue;
+
+	// This pixel digi comes from the TP 
+	
+	i_lay = m_pixclus_layer->at(l);
+	i_mod = m_pixclus_module->at(l)-1;
 
 	++hit_on_lay[i_lay-5];
 
 	if (m_dbg)
 	{
 	  cout << endl;	
-	  cout << "   HIT    " << l << "/" << m_part_hits->at(k)+nh_tot << endl;	
+	  cout << "   DIGI    " << endl;	
 	  cout << "   Coords " << i_lay 
-	       << " / " << m_hits_ladder->at(l) 
+	       << " / " << m_pixclus_ladder->at(l) 
 	       << " / " << i_mod+1 << endl;
 	}
-
-	disk = 0;
-	if (i_lay>10 && i_lay<=17) disk=int(i_lay-10)%8;
-	if (i_lay>17 && i_lay<=24) disk=int(i_lay-17)%8;
-
 
 	if (PTGEN<20) entries_pt[i_lay-5][static_cast<int>(5*PTGEN)]+=1;   
 	if (fabs(i_eta)<2.5 && PTGEN>10) entries_eta[i_lay-5][static_cast<int>(25+10*i_eta)]+=1;   
 
-	i_seg  = -1;
-	pix_i  = -1; // The index of the induced DIGI
+	pix_i  = l; // The index of the induced DIGI
 	clus_i = -1; // The index of the induced CLUSTER
 	stub_i = -1; // The index of the induced STUB
-
-
-	if (m_pclus==0) continue;
-	
-	// We have the simhits, now look at the digis
-	for (int i=0;i<m_pclus;++i)
-	{
-	  if (m_pixclus_layer->at(i)!=i_lay) continue;
-	  if (m_pixclus_module->at(i)!=i_mod+1) continue;	      
-	  if (m_pixclus_ladder->at(i)!= m_hits_ladder->at(l)) continue;
-
-	  dphi = fabs(atan2(m_hits_y->at(l),m_hits_x->at(l))-atan2(m_pixclus_y->at(i),m_pixclus_x->at(i)));
-
-	  if (dphi<dphi_min)
-	  {
-	    dphi_min = dphi;
-	    pix_i=i;
-	  }
-	} // End of loop over digis
-
-	if (pix_i==-1) continue; 
-
-	if (m_dbg)
-	{
-	  cout << "   Matched with PIX " << pix_i << endl;	
-	}
 
 	i_seg = m_pixclus_column->at(pix_i);
 
@@ -195,7 +204,7 @@ void efficiencies::get_efficiencies()
 	  if (m_clus_layer->at(i)!=i_lay) continue;
 	  if (m_clus_module->at(i)!=i_mod+1) continue;	
 	  if (m_clus_seg->at(i)!=i_seg) continue;
-	  if (m_clus_ladder->at(i)!=m_hits_ladder->at(l)) continue;
+	  if (m_clus_ladder->at(i)!=m_pixclus_ladder->at(l)) continue;
 	  if (fabs(m_clus_strip->at(i)-m_pixclus_row->at(pix_i))>m_clus_nstrips->at(i)) continue;
 
 	  if (m_dbg)
@@ -243,7 +252,7 @@ void efficiencies::get_efficiencies()
       
 	clus_i = -1; //
 	stub_i = -1; //
-
+	
 	// Then the official one
 	for (int i=0;i<m_tkclus;++i)
 	{
@@ -252,7 +261,7 @@ void efficiencies::get_efficiencies()
 	  if (m_tkclus_layer->at(i)!=i_lay) continue;
 	  if (m_tkclus_module->at(i)!=i_mod+1) continue;	
 	  if (m_tkclus_seg->at(i)!=i_seg) continue;
-	  if (m_tkclus_ladder->at(i)!=m_hits_ladder->at(l)) continue;
+	  if (m_tkclus_ladder->at(i)!=m_pixclus_ladder->at(l)) continue;
 	  if (fabs(m_tkclus_strip->at(i)-m_pixclus_row->at(pix_i))>m_tkclus_nstrips->at(i)) continue;
 	  clus_i = i;
 	}
@@ -280,6 +289,7 @@ void efficiencies::get_efficiencies()
 	    if (fabs(i_eta)<2.5 && PTGEN>10) stub_off_eta[i_lay-5][static_cast<int>(25+10*i_eta)]+=1;  
 	  }
 	}
+       
       } // End of loop over SimHits
 
       for (int i=0;i<20;++i)
@@ -302,8 +312,6 @@ void efficiencies::get_efficiencies()
 	  if (fabs(i_eta)<2.5 && PTGEN>10) stub_off_eta_lay[i][static_cast<int>(25+10*i_eta)]+=1; 
 	}
       }
-
-      nh_tot+=m_part_hits->at(k);
     } // End of loop over TPs
 
     ///    efficiencies::reset();
@@ -409,7 +417,9 @@ void efficiencies::reset()
   m_pixclus_ladder->clear();
   m_pixclus_x->clear();
   m_pixclus_y->clear();
-  
+  m_pixclus_simhitID->clear();
+  m_pixclus_evtID->clear();
+
   m_part_hits->clear();
   m_part_pdg->clear();
   m_part_px->clear();
@@ -417,12 +427,9 @@ void efficiencies::reset()
   m_part_eta->clear();
   m_part_x->clear();
   m_part_y->clear();
-  m_hits_x->clear();
-  m_hits_y->clear();
-  m_hits_layer->clear();
-  m_hits_ladder->clear();
-  m_hits_module->clear();
-  
+  m_part_evtId->clear();
+  m_part_stId->clear();
+
   m_clus_nstrips->clear();
   m_clus_layer->clear(); 
   m_clus_module->clear();								       
@@ -469,6 +476,8 @@ void efficiencies::initTuple(std::string in,std::string out)
   m_pixclus_ladder   = new std::vector<int>;    
   m_pixclus_x        = new std::vector<float>;  
   m_pixclus_y        = new std::vector<float>; 
+  m_pixclus_simhitID = new std::vector< std::vector<int> >;
+  m_pixclus_evtID    = new std::vector< std::vector<int> >; 
 
   m_part_hits   = new std::vector<int>; 
   m_part_pdg    = new std::vector<int>; 
@@ -477,13 +486,8 @@ void efficiencies::initTuple(std::string in,std::string out)
   m_part_eta    = new std::vector<float>;   
   m_part_x      = new std::vector<float>;   
   m_part_y      = new std::vector<float>;   
- 
-
-  m_hits_x      = new std::vector<float>;  
-  m_hits_y      = new std::vector<float>;  
-  m_hits_layer  = new std::vector<int>;    
-  m_hits_ladder = new std::vector<int>;   
-  m_hits_module = new std::vector<int>;   
+  m_part_evtId  = new std::vector<int>;
+  m_part_stId   = new std::vector< std::vector<int> >;  
 
   m_clus_layer   = new  std::vector<int>;
   m_clus_module  = new  std::vector<int>;  
@@ -525,8 +529,10 @@ void efficiencies::initTuple(std::string in,std::string out)
   Pix->SetBranchStatus("PIX_y",1);       
   Pix->SetBranchStatus("PIX_row",1);     
   Pix->SetBranchStatus("PIX_column",1);  
+  Pix->SetBranchStatus("PIX_simhitID",1);     
+  Pix->SetBranchStatus("PIX_evtID",1); 
 
-  MC->SetBranchStatus("subpart_nhit",1); 
+  //  MC->SetBranchStatus("subpart_nhit",1); 
   MC->SetBranchStatus("subpart_n",1);    
   MC->SetBranchStatus("subpart_x",1);    
   MC->SetBranchStatus("subpart_y",1);    
@@ -534,13 +540,8 @@ void efficiencies::initTuple(std::string in,std::string out)
   MC->SetBranchStatus("subpart_py",1);   
   MC->SetBranchStatus("subpart_eta",1);
   MC->SetBranchStatus("subpart_pdgId",1);  
-
-  MC->SetBranchStatus("subpart_hits",1);       
-  MC->SetBranchStatus("subpart_hits_x",1);     
-  MC->SetBranchStatus("subpart_hits_y",1);     
-  MC->SetBranchStatus("subpart_hits_layer",1); 
-  MC->SetBranchStatus("subpart_hits_ladder",1);
-  MC->SetBranchStatus("subpart_hits_module",1);
+  MC->SetBranchStatus("subpart_evtId",1); 
+  MC->SetBranchStatus("subpart_stId",1); 
 
   L1TT_P->SetBranchStatus("CLUS_n",1);         
   L1TT_P->SetBranchStatus("CLUS_layer",1);     
@@ -556,7 +557,7 @@ void efficiencies::initTuple(std::string in,std::string out)
   L1TT_P->SetBranchStatus("STUB_tp",1);        
   L1TT_P->SetBranchStatus("STUB_clust1",1);     
   L1TT_P->SetBranchStatus("STUB_clust2",1);     
-
+ 
   L1TT_O->SetBranchStatus("L1TkSTUB_n",1);      
   L1TT_O->SetBranchStatus("L1TkSTUB_layer",1);  
   L1TT_O->SetBranchStatus("L1TkSTUB_ladder",1); 
@@ -571,7 +572,7 @@ void efficiencies::initTuple(std::string in,std::string out)
   L1TT_O->SetBranchStatus("L1TkCLUS_seg",1);    
   L1TT_O->SetBranchStatus("L1TkCLUS_strip",1);  
   L1TT_O->SetBranchStatus("L1TkCLUS_nstrip",1); 
-
+  
   Pix->SetBranchAddress("PIX_n",         &m_pclus);
   Pix->SetBranchAddress("PIX_layer",     &m_pixclus_layer);
   Pix->SetBranchAddress("PIX_module",    &m_pixclus_module);
@@ -580,8 +581,9 @@ void efficiencies::initTuple(std::string in,std::string out)
   Pix->SetBranchAddress("PIX_y",         &m_pixclus_y);
   Pix->SetBranchAddress("PIX_row",       &m_pixclus_row);
   Pix->SetBranchAddress("PIX_column",    &m_pixclus_column);  
+  Pix->SetBranchAddress("PIX_simhitID",  &m_pixclus_simhitID);
+  Pix->SetBranchAddress("PIX_evtID",     &m_pixclus_evtID);
 
-  MC->SetBranchAddress("subpart_nhit",     &m_part_nhit); 
   MC->SetBranchAddress("subpart_n",        &m_part_n);    
   MC->SetBranchAddress("subpart_x",        &m_part_x);    
   MC->SetBranchAddress("subpart_y",        &m_part_y);    
@@ -589,13 +591,8 @@ void efficiencies::initTuple(std::string in,std::string out)
   MC->SetBranchAddress("subpart_py",       &m_part_py);   
   MC->SetBranchAddress("subpart_eta",      &m_part_eta);  
   MC->SetBranchAddress("subpart_pdgId",    &m_part_pdg);  
-
-  MC->SetBranchAddress("subpart_hits",          &m_part_hits); 
-  MC->SetBranchAddress("subpart_hits_x",        &m_hits_x);
-  MC->SetBranchAddress("subpart_hits_y",        &m_hits_y);
-  MC->SetBranchAddress("subpart_hits_layer",    &m_hits_layer);
-  MC->SetBranchAddress("subpart_hits_ladder",   &m_hits_ladder);
-  MC->SetBranchAddress("subpart_hits_module",   &m_hits_module);
+  MC->SetBranchAddress("subpart_stId",    &m_part_stId);
+  MC->SetBranchAddress("subpart_evtId",    &m_part_evtId);
 
   L1TT_P->SetBranchAddress("CLUS_n",             &m_clus);
   L1TT_P->SetBranchAddress("CLUS_layer",         &m_clus_layer);
@@ -611,7 +608,7 @@ void efficiencies::initTuple(std::string in,std::string out)
   L1TT_P->SetBranchAddress("STUB_tp",            &m_stub_tp);
   L1TT_P->SetBranchAddress("STUB_clust1",        &m_stub_clust1);
   L1TT_P->SetBranchAddress("STUB_clust2",        &m_stub_clust2);
-
+  
   L1TT_O->SetBranchAddress("L1TkSTUB_n",         &m_tkstub);    
   L1TT_O->SetBranchAddress("L1TkSTUB_layer",     &m_tkstub_layer);
   L1TT_O->SetBranchAddress("L1TkSTUB_ladder",    &m_tkstub_ladder);
@@ -626,7 +623,7 @@ void efficiencies::initTuple(std::string in,std::string out)
   L1TT_O->SetBranchAddress("L1TkCLUS_seg",       &m_tkclus_seg);
   L1TT_O->SetBranchAddress("L1TkCLUS_strip",     &m_tkclus_strip);
   L1TT_O->SetBranchAddress("L1TkCLUS_nstrip",    &m_tkclus_nstrips);
-
+  
 
   m_outfile  = new TFile(out.c_str(),"recreate");
   m_tree     = new TTree("Efficiencies","Efficiencies info");

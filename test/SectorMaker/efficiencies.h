@@ -36,6 +36,7 @@ using namespace std;
 //
 // filename : the name and directory of the input ROOT file containing the STUB information
 // outfile  : the name of the output ROOT file containing the rates 
+// ptype    : the pdg ID of the particle type you want to test 
 //
 // Info about the code:
 //
@@ -52,7 +53,7 @@ class efficiencies
 {
  public:
 
-  efficiencies(std::string filename, std::string outfile);
+  efficiencies(std::string filename, std::string outfile, int ptype);
 
   void  get_efficiencies();  // The main method  
   void  initVars();
@@ -104,7 +105,7 @@ class efficiencies
   // https://github.com/sviret/HL_LHC/blob/master/Extractors/RecoExtractor/interface/L1TrackTrigger_analysis.h
   //
 
-
+  int                 m_type;
   int    	      m_part_n;
   int    	      m_part_nhit;
   int                 m_pclus;
@@ -120,6 +121,8 @@ class efficiencies
   std::vector<int>    *m_pixclus_ladder;
   std::vector<float>  *m_pixclus_x;
   std::vector<float>  *m_pixclus_y;
+  std::vector< std::vector<int> > *m_pixclus_simhitID; 
+  std::vector< std::vector<int> > *m_pixclus_evtID; 
 
   std::vector<int>    *m_part_hits;
   std::vector<int>    *m_part_pdg;
@@ -128,11 +131,8 @@ class efficiencies
   std::vector<float>  *m_part_eta;
   std::vector<float>  *m_part_x;
   std::vector<float>  *m_part_y;
-  std::vector<float>  *m_hits_x;
-  std::vector<float>  *m_hits_y;
-  std::vector<int>    *m_hits_layer;
-  std::vector<int>    *m_hits_ladder;
-  std::vector<int>    *m_hits_module;
+  std::vector<int>    *m_part_evtId;//
+  std::vector< std::vector<int> > *m_part_stId;// 
 
   std::vector<int>    *m_clus_nstrips;
   std::vector<int>    *m_clus_layer; 

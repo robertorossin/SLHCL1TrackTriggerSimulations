@@ -107,6 +107,8 @@ class sector_test
   std::vector<int>   m_stub_layer;
   std::vector<int>   m_stub_ladder;
   std::vector<int>   m_stub_module;
+  std::vector<int>   m_stub_segment;
+  std::vector<float> m_stub_strip;
   std::vector<int>   m_stub_tp;
   std::vector<int>   m_stub_pdg;
   std::vector<float> m_stub_pxGEN;
@@ -118,10 +120,17 @@ class sector_test
   std::vector<float> m_stub_x;
   std::vector<float> m_stub_y;
   std::vector<float> m_stub_z;
+  std::vector<float> m_clus_x;
+  std::vector<float> m_clus_y;
+  std::vector<float> m_clus_z;
+  std::vector<int>   m_stub_clust2;
+
 
   std::vector<int>   *pm_stub_layer;
   std::vector<int>   *pm_stub_ladder;
   std::vector<int>   *pm_stub_module;
+  std::vector<int>   *pm_stub_segment;
+  std::vector<float> *pm_stub_strip;
   std::vector<int>   *pm_stub_tp;
   std::vector<int>   *pm_stub_pdg;
   std::vector<float> *pm_stub_pxGEN;
@@ -133,6 +142,11 @@ class sector_test
   std::vector<float> *pm_stub_x;
   std::vector<float> *pm_stub_y;
   std::vector<float> *pm_stub_z;
+  std::vector<float> *pm_clus_x;
+  std::vector<float> *pm_clus_y;
+  std::vector<float> *pm_clus_z;
+  std::vector<int>   *pm_stub_clust2;
+
 
   // The output tree has one entry per primary track. 
 
@@ -153,12 +167,17 @@ class sector_test
   int n_stub_total;                  // The total number of stubs in the event
   int n_stub;                        // The total number of stubs contained in matched patterns in the event
 
-  std::vector<float>   *stub_x;      // x coordinates of ALL the stubs
-  std::vector<float>   *stub_y;      // y coordinates of ALL the stubs
-  std::vector<float>   *stub_z;      // z coordinates of ALL the stubs
+  std::vector<float>   *stub_x;      // x coordinates of ALL the stubs |
+  std::vector<float>   *stub_y;      // y coordinates of ALL the stubs |-> Bottom cluster
+  std::vector<float>   *stub_z;      // z coordinates of ALL the stubs |
+  std::vector<float>   *stub_x_2;    // x coordinates of ALL the stubs | 
+  std::vector<float>   *stub_y_2;    // y coordinates of ALL the stubs |-> Top cluster 
+  std::vector<float>   *stub_z_2;    // z coordinates of ALL the stubs | 
   std::vector<int>     *stub_layer;  // layer number of ALL the stubs
   std::vector<int>     *stub_ladder; // ladder number of ALL the stubs
   std::vector<int>     *stub_module; // module number of ALL the stubs
+  std::vector<int>     *stub_seg;    // segment number of ALL the stubs
+  std::vector<float>   *stub_strip;  // strip number of ALL the stubs
   std::vector<int>     *stub_tp;     // tp index of ALL the stubs (in part_*** vectors of this tree!!!!)
   std::vector<int>     *stub_inpatt; // is the stub in a pattern (1) of not (0)?
 

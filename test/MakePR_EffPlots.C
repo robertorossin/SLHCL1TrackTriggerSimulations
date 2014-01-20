@@ -160,9 +160,10 @@ void do_pattern_effs(std::string filename, int sec_num, int nh)
     newtree->GetEntry(i);
     
     if (i%10000==0) 
-      cout << "Processed " << i << "/" << n_entries << endl;
+      cout << "Processed  eeee " << i << "/" << n_entries << endl;
     
     if (fabs(eta)>2.15) continue;
+    //    if (fabs(pt)<2) continue;
     
     pt_bin=static_cast<int>(pt);
     pt_bin_z=static_cast<int>(5*pt);
@@ -451,7 +452,7 @@ void do_pattern_effs(std::string filename, int sec_num, int nh)
 
 
 
-void do_full_effs(std::string filename, int nh, bool plot_fake)
+void do_full_effs(std::string filename, int nh, int pdgid=-1, float ptcut=2., float d0cut=1., bool plot_fake=false)
 {
   // First get the data
   // by merging all the available files
@@ -462,8 +463,10 @@ void do_full_effs(std::string filename, int nh, bool plot_fake)
   int   evt;        // Event number (for PU event, where there is more than 1 primary)
   int   nsec;       // The number of sectors containing at least 5 stubs of the prim. track
   float pt;         // The pT of the prim. track
+  float d0;         // The d0 of the prim. track
   float eta;        // The eta of the prim. track
   float phi;        // The phi of the prim. track
+  int   pdg;        // The pdg id of the prim. track
   int   npatt;      // The number of patterns containing at least 5 stubs of the prim. track
   int   ntotpatt;   // The total number of patterns 
   int   mult[500];  // The total number of stubs per sector 
@@ -479,7 +482,9 @@ void do_full_effs(std::string filename, int nh, bool plot_fake)
   newtree->SetBranchAddress("npatt",      &npatt);
   newtree->SetBranchAddress("tpatt",      &ntotpatt);
   newtree->SetBranchAddress("pt",         &pt);
+  newtree->SetBranchAddress("d0",         &d0);
   newtree->SetBranchAddress("eta",        &eta);
+  newtree->SetBranchAddress("pdgID",      &pdg);
   newtree->SetBranchAddress("phi",        &phi);
   newtree->SetBranchAddress("mult",       &mult);
 
@@ -491,6 +496,7 @@ void do_full_effs(std::string filename, int nh, bool plot_fake)
 
   TH2F *tracks     = new TH2F("tracks","tracks",nbin_eta,-2.2,2.2,nbin_phi,-3.15.,3.15);
   TH2F *eff_pat    = new TH2F("eff_p","eff_p",nbin_eta,-2.2,2.2,nbin_phi,-3.15.,3.15);
+  TH2F *fak_pat    = new TH2F("fak_p","fak_p",nbin_eta,-2.2,2.2,nbin_phi,-3.15.,3.15);
   TH2F *pt_eff     = new TH2F("eff_pt","eff_pt",100,0.,100.,200,-0.1,1.1);
   TH2F *pt_fake    = new TH2F("fak_pt","fak_pt",100,0.,100.,200,-0.1,1.1);
   TH2F *pt_dupl    = new TH2F("dup_pt","dup_pt",100,0.,100.,200,-0.1,1.1);
@@ -582,11 +588,14 @@ void do_full_effs(std::string filename, int nh, bool plot_fake)
       cout << "Processed " << i << "/" << n_entries << endl;
 
     newtree->GetEntry(i);
-       
+
+    if (pdg!=pdgid && pdgid!=-1) continue;
     if (fabs(pt)>100) continue;
-    if (fabs(eta)>2.15) continue;
+    if (fabs(eta)>2.2) continue;
     if (nhits<nh) continue;
-  
+    if (fabs(pt)<ptcut) continue;
+    if (fabs(d0)>d0cut) continue;
+
     pt_bin=static_cast<int>(pt);
     pt_bin_z=static_cast<int>(5*pt);
 
@@ -808,9 +817,11 @@ void do_full_effs(std::string filename, int nh, bool plot_fake)
   pt_eff_z->SetMarkerStyle(20);
   pt_fake_z->SetMarkerStyle(4);
   pt_eff_z->Draw("");
+  //  if (plot_fake) pt_fake_z->Draw("Psame");
 
   leg = new TLegend(0.6,0.5,0.85,0.65);
   leg->AddEntry(pt_eff_z,"Pattern reco efficiency","p");
+  //  if (plot_fake) leg->AddEntry(pt_fake_z,"Fake proportion","p");
   leg->Draw();
 
   c1->cd(3);  
@@ -843,6 +854,10 @@ void do_full_effs(std::string filename, int nh, bool plot_fake)
   sprintf (buffer, "Pattern_eff_%d_hits_track.png",nh);
 
   c1->Print(buffer);
-  
+ 
+  sprintf (buffer, "Pattern_eff_%d_hits_track.C",nh);
+
+  c1->SaveSource(buffer);
+ 
 
 }

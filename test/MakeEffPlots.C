@@ -23,7 +23,7 @@
   where type=0 is for the module efficiency, and type=1 for the 
   layer/disk efficiency
 
-  Solution 3 just plot the comparicon pT plots for the endcap
+  Solution 3 just plot the comparison pT plots for the endcap
   root[2]-> do_pt_endcap_summary(std::string filename,int type) 
 
   Solution 4 do the plot for barrel layer i
@@ -92,15 +92,17 @@ void do_pt_plots(std::string filename,int layer,int per_lay)
   newtree->SetBranchAddress("pt_val",&pt_val);
   newtree->SetBranchAddress("digi_pt",&digi_pt);
   newtree->SetBranchAddress("clus_off_pt",&clus_off_pt);
-  newtree->SetBranchAddress("stub_off_pt",&stub_off_pt);
   newtree->SetBranchAddress("clus_pri_pt",&clus_pri_pt);
+
   if (per_lay==1)
   {
     newtree->SetBranchAddress("stub_pri_pt_lay",&stub_pri_pt);
+    newtree->SetBranchAddress("stub_off_pt_lay",&stub_off_pt);
   }
   else
   {
     newtree->SetBranchAddress("stub_pri_pt",&stub_pri_pt);
+    newtree->SetBranchAddress("stub_off_pt",&stub_off_pt);
   }
 
   newtree->GetEntry(0);
@@ -381,15 +383,16 @@ void do_pt_barrel_summary(std::string filename, int per_lay)
   TTree *newtree = (TTree*)file->Get("Efficiencies");
 
   newtree->SetBranchAddress("pt_val",&pt_val);
-  newtree->SetBranchAddress("stub_off_pt",&stub_off_pt);
 
   if (per_lay==1)
   {
     newtree->SetBranchAddress("stub_pri_pt_lay",&stub_pri_pt);
+    newtree->SetBranchAddress("stub_off_pt_lay",&stub_off_pt);
   }
   else
   {
     newtree->SetBranchAddress("stub_pri_pt",&stub_pri_pt);
+    newtree->SetBranchAddress("stub_off_pt",&stub_off_pt);
   }
 
   newtree->GetEntry(0);
@@ -525,6 +528,106 @@ void do_pt_barrel_summary(std::string filename, int per_lay)
     sprintf (buffer, "Barrel_module_private_eff.eps");
     c1->Print(buffer);
   }
+
+  c2 = new TCanvas("c2","Official effs",5,75,870,860);
+  gStyle->SetOptStat(0);
+  gStyle->SetOptTitle(0);
+  c2->Range(-1.833856,-0.1286626,21.1442,1.157964);
+  c2->SetFillColor(0);
+  c2->SetBorderMode(0);
+  c2->SetBorderSize(2);
+  c2->SetGridx();
+  c2->SetGridy();
+  c2->SetLeftMargin(0.08);
+  c2->SetRightMargin(0.05);
+  c2->SetFrameBorderMode(0);
+  c2->SetFrameBorderMode(0);
+
+  cadre->GetXaxis()->SetTitle("Tracking particle p_{T} (in GeV/c)");
+  cadre->GetXaxis()->SetNdivisions(522);
+  cadre->GetXaxis()->SetLabelFont(42);
+  cadre->GetXaxis()->SetLabelSize(0.03);
+  cadre->GetXaxis()->SetTitleFont(42);
+  cadre->GetYaxis()->SetTitle("Efficiency");
+  cadre->GetYaxis()->SetNdivisions(511);
+  cadre->GetYaxis()->SetLabelFont(42);
+  cadre->GetYaxis()->SetLabelSize(0.03);
+  cadre->GetYaxis()->SetTitleOffset(1.);
+  cadre->GetYaxis()->SetTitleFont(42);
+  cadre->Draw();
+  
+  L1_off->SetMarkerStyle(20);
+  L2_off->SetMarkerStyle(20);
+  L3_off->SetMarkerStyle(20);
+  L4_off->SetMarkerStyle(20);
+  L5_off->SetMarkerStyle(20);
+  L6_off->SetMarkerStyle(20);
+  
+  L1_off->SetMarkerColor(9);
+  L2_off->SetMarkerColor(4);
+  L3_off->SetMarkerColor(7);
+  L4_off->SetMarkerColor(3);
+  L5_off->SetMarkerColor(5);
+  L6_off->SetMarkerColor(2);
+
+  L1_off->SetMarkerSize(1.4);
+  L2_off->SetMarkerSize(1.4);
+  L3_off->SetMarkerSize(1.4);
+  L4_off->SetMarkerSize(1.4);
+  L5_off->SetMarkerSize(1.4);
+  L6_off->SetMarkerSize(1.4);
+
+  L1_off->Draw("same");
+  L2_off->Draw("same");
+  L3_off->Draw("same");
+  L4_off->Draw("same");
+  L5_off->Draw("same");
+  L6_off->Draw("same");
+
+
+  leg = new TLegend(0.6,0.2,0.85,0.4);
+
+  leg->SetTextSize(0.03);
+  leg->SetFillColor(0);
+  leg->AddEntry(L1_off,"Layer 1","p");
+  leg->AddEntry(L2_off,"Layer 2","p");
+  leg->AddEntry(L3_off,"Layer 3","p");
+  leg->AddEntry(L4_off,"Layer 4","p");
+  leg->AddEntry(L5_off,"Layer 5","p");
+  leg->AddEntry(L6_off,"Layer 6","p");
+  leg->Draw();
+    
+  TPaveText *pt = new TPaveText(1.3,1.05,18.7,1.11,"br");
+
+  char buffer[80];
+
+  sprintf(buffer, "Turn-on curve for tracker barrel layers");
+
+  ci = TColor::GetColor("#ccccff");
+  pt->SetFillColor(ci);
+  pt->SetTextSize(0.02798053);
+  TText *text = pt->AddText(buffer);
+  pt->Draw();
+  c2->Modified();
+  c2->Update();
+
+  if (per_lay==1)
+  {
+    sprintf (buffer, "Barrel_layer_official_eff.png");
+    c2->Print(buffer);
+    
+    sprintf (buffer, "Barrel_layer_official_eff.eps");
+    c2->Print(buffer);
+  }
+  else
+  {
+    sprintf (buffer, "Barrel_module_official_eff.png");
+    c2->Print(buffer);
+    
+    sprintf (buffer, "Barrel_module_official_eff.eps");
+    c2->Print(buffer);
+  }
+
 }
 
 void do_pt_endcap_summary(std::string filename, int per_lay)
@@ -545,14 +648,15 @@ void do_pt_endcap_summary(std::string filename, int per_lay)
   TTree *newtree = (TTree*)file->Get("Efficiencies");
 
   newtree->SetBranchAddress("pt_val",&pt_val);
-  newtree->SetBranchAddress("stub_off_pt",&stub_off_pt);
 
   if (per_lay==1)
   {
     newtree->SetBranchAddress("stub_pri_pt_lay",&stub_pri_pt);
+    newtree->SetBranchAddress("stub_off_pt_lay",&stub_off_pt);
   }
   else
   {
+    newtree->SetBranchAddress("stub_off_pt",&stub_off_pt);
     newtree->SetBranchAddress("stub_pri_pt",&stub_pri_pt);
   }
 
@@ -585,7 +689,7 @@ void do_pt_endcap_summary(std::string filename, int per_lay)
     D5_pri->Fill(pt_val[i],stub_pri_pt[10][i]);  
   }
 
-  c1 = new TCanvas("c1","Private effs",5,75,870,860);
+  c1 = new TCanvas("c1","Official effs",5,75,870,860);
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
   c1->Range(-1.833856,-0.1286626,21.1442,1.157964);
@@ -598,6 +702,101 @@ void do_pt_endcap_summary(std::string filename, int per_lay)
   c1->SetRightMargin(0.05);
   c1->SetFrameBorderMode(0);
   c1->SetFrameBorderMode(0);
+
+  cadre->GetXaxis()->SetTitle("Tracking particle p_{T} (in GeV/c)");
+  cadre->GetXaxis()->SetNdivisions(522);
+  cadre->GetXaxis()->SetLabelFont(42);
+  cadre->GetXaxis()->SetLabelSize(0.03);
+  cadre->GetXaxis()->SetTitleFont(42);
+  cadre->GetYaxis()->SetTitle("Efficiency");
+  cadre->GetYaxis()->SetNdivisions(511);
+  cadre->GetYaxis()->SetLabelFont(42);
+  cadre->GetYaxis()->SetLabelSize(0.03);
+  cadre->GetYaxis()->SetTitleOffset(1.);
+  cadre->GetYaxis()->SetTitleFont(42);
+  cadre->Draw();
+  
+  D1_off->SetMarkerStyle(20);
+  D2_off->SetMarkerStyle(20);
+  D3_off->SetMarkerStyle(20);
+  D4_off->SetMarkerStyle(20);
+  D5_off->SetMarkerStyle(20);
+  
+  D1_off->SetMarkerColor(9);
+  D2_off->SetMarkerColor(4);
+  D3_off->SetMarkerColor(7);
+  D4_off->SetMarkerColor(3);
+  D5_off->SetMarkerColor(5);
+
+  D1_off->SetMarkerSize(1.4);
+  D2_off->SetMarkerSize(1.4);
+  D3_off->SetMarkerSize(1.4);
+  D4_off->SetMarkerSize(1.4);
+  D5_off->SetMarkerSize(1.4);
+
+  D1_off->Draw("same");
+  D2_off->Draw("same");
+  D3_off->Draw("same");
+  D4_off->Draw("same");
+  D5_off->Draw("same");
+
+
+  leg = new TLegend(0.6,0.2,0.85,0.4);
+
+  leg->SetTextSize(0.03);
+  leg->SetFillColor(0);
+  leg->AddEntry(D1_off,"Disk 1","p");
+  leg->AddEntry(D2_off,"Disk 2","p");
+  leg->AddEntry(D3_off,"Disk 3","p");
+  leg->AddEntry(D4_off,"Disk 4","p");
+  leg->AddEntry(D5_off,"Disk 5","p");
+  leg->Draw();
+    
+  TPaveText *pt = new TPaveText(1.3,1.05,18.7,1.11,"br");
+
+  char buffer[80];
+
+  sprintf(buffer, "Turn-on curve for tracker endcap layers");
+
+  ci = TColor::GetColor("#ccccff");
+  pt->SetFillColor(ci);
+  pt->SetTextSize(0.02798053);
+  TText *text = pt->AddText(buffer);
+  pt->Draw();
+  c1->Modified();
+  c1->Update();
+
+
+  if (per_lay==1)
+  {
+    sprintf (buffer, "Endcap_layer_official_eff.png");
+    c1->Print(buffer);
+    
+    sprintf (buffer, "Endcap_layer_official_eff.eps");
+    c1->Print(buffer);
+  }
+  else
+  {
+    sprintf (buffer, "Endcap_module_official_eff.png");
+    c1->Print(buffer);
+    
+    sprintf (buffer, "Endcap_module_official_eff.eps");
+    c1->Print(buffer);
+  }
+
+  c2 = new TCanvas("c2","Private effs",5,75,870,860);
+  gStyle->SetOptStat(0);
+  gStyle->SetOptTitle(0);
+  c2->Range(-1.833856,-0.1286626,21.1442,1.157964);
+  c2->SetFillColor(0);
+  c2->SetBorderMode(0);
+  c2->SetBorderSize(2);
+  c2->SetGridx();
+  c2->SetGridy();
+  c2->SetLeftMargin(0.08);
+  c2->SetRightMargin(0.05);
+  c2->SetFrameBorderMode(0);
+  c2->SetFrameBorderMode(0);
 
   cadre->GetXaxis()->SetTitle("Tracking particle p_{T} (in GeV/c)");
   cadre->GetXaxis()->SetNdivisions(522);
@@ -659,25 +858,25 @@ void do_pt_endcap_summary(std::string filename, int per_lay)
   pt->SetTextSize(0.02798053);
   TText *text = pt->AddText(buffer);
   pt->Draw();
-  c1->Modified();
-  c1->Update();
+  c2->Modified();
+  c2->Update();
 
 
   if (per_lay==1)
   {
     sprintf (buffer, "Endcap_layer_private_eff.png");
-    c1->Print(buffer);
+    c2->Print(buffer);
     
     sprintf (buffer, "Endcap_layer_private_eff.eps");
-    c1->Print(buffer);
+    c2->Print(buffer);
   }
   else
   {
     sprintf (buffer, "Endcap_module_private_eff.png");
-    c1->Print(buffer);
+    c2->Print(buffer);
     
     sprintf (buffer, "Endcap_module_private_eff.eps");
-    c1->Print(buffer);
+    c2->Print(buffer);
   }
 
 }
@@ -711,16 +910,17 @@ void do_eta_plots(std::string filename,int layer,int per_lay)
   newtree->SetBranchAddress("eta_val",&eta_val);
   newtree->SetBranchAddress("digi_eta",&digi_eta);
   newtree->SetBranchAddress("clus_off_eta",&clus_off_eta);
-  newtree->SetBranchAddress("stub_off_eta",&stub_off_eta);
   newtree->SetBranchAddress("clus_pri_eta",&clus_pri_eta);
 
   if (per_lay==1)
   {
     newtree->SetBranchAddress("stub_pri_eta_lay",&stub_pri_eta);
+    newtree->SetBranchAddress("stub_off_eta_lay",&stub_off_eta);
   }
   else
   {
     newtree->SetBranchAddress("stub_pri_eta",&stub_pri_eta);
+    newtree->SetBranchAddress("stub_off_eta",&stub_off_eta);
   }
 
 
@@ -1148,6 +1348,7 @@ void do_sector_effs(std::string filename, int nh)
  
   int   nsec;       // The number of sectors containing at least 5 stubs of the prim. track
   float pt;         // The pT of the prim. track
+  float d0;         // 
   float eta;        // The eta of the prim. track
   float phi;        // The phi of the prim. track
   int   mult[500];  // The total number of stubs per sector 
@@ -1162,6 +1363,7 @@ void do_sector_effs(std::string filename, int nh)
   newtree->SetBranchAddress("nsec",       &nsec);
   newtree->SetBranchAddress("nhits",      &nhits);
   newtree->SetBranchAddress("pt",         &pt);
+  newtree->SetBranchAddress("d0",         &d0);
   newtree->SetBranchAddress("eta",        &eta);
   newtree->SetBranchAddress("phi",        &phi);
   newtree->SetBranchAddress("mult",       &mult);
@@ -1212,7 +1414,8 @@ void do_sector_effs(std::string filename, int nh)
   {
     newtree->GetEntry(i);
 
-    if (pt<2 || fabs(eta)>2.15) continue;
+    if (pt<2 || fabs(eta)>2.15 || d0>0.1) continue;
+    if (nhits<4) continue;
 
     ++ntot_1;
     i_bin = static_cast<int>(nphi*(phi+PI)/(2*PI));
@@ -1373,7 +1576,7 @@ void do_sector_effs(std::string filename, int nh)
   ptt->SetLineColor(0);
   ptt->SetTextFont(42);
   ptt->SetTextSize(0.035);
-  text = ptt->AddText("All tracks");
+  text = ptt->AddText("Tracks w/more than 4 stubs");
   ptt->Draw();
   
   TPaveText *ptt = new TPaveText(1.07,0.79,1.93,0.795,"br");
@@ -1382,7 +1585,7 @@ void do_sector_effs(std::string filename, int nh)
   ptt->SetLineColor(0);
   ptt->SetTextFont(42);
   ptt->SetTextSize(0.035);
-  text = ptt->AddText("Stubs innef");
+  text = ptt->AddText("Tracks w/enough stubs");
   ptt->Draw();
 
   TPaveText *ptt = new TPaveText(2.07,0.79,2.93,0.795,"br");
@@ -1391,7 +1594,7 @@ void do_sector_effs(std::string filename, int nh)
   ptt->SetLineColor(0);
   ptt->SetTextFont(42);
   ptt->SetTextSize(0.035);
-  text = ptt->AddText("Stubs+sector innef");
+  text = ptt->AddText("Tracks in a sector");
   ptt->Draw();
 
   TPaveText *ptt = new TPaveText(0.2,0.955,0.8,0.965,"br");
@@ -1419,5 +1622,4 @@ void do_sector_effs(std::string filename, int nh)
   c1->Print(buffer);
   
 }
-
 

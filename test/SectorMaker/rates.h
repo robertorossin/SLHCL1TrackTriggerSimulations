@@ -123,6 +123,9 @@ class rates
   int tempo_ps_b[58000];   //
   int tempo_ss_b[58000];   //
 
+  int n_conc_half1[58000];
+  int n_conc_half2[58000];
+
   int tempo_c_ps_b[16][58000];   //
   int tempo_c_ss_b[16][58000];   //
 
@@ -175,7 +178,7 @@ class rates
   std::vector<float> m_stub_x;
   std::vector<float> m_stub_y;
   std::vector<float> m_stub_z;
-  std::vector<int>   m_stub_strip;
+  std::vector<float> m_stub_strip;
   std::vector<int>   m_stub_seg;
   std::vector<int>   m_stub_chip;
   std::vector<int>   m_stub_pdgID;
@@ -194,7 +197,7 @@ class rates
   std::vector<float> *pm_stub_x;
   std::vector<float> *pm_stub_y;
   std::vector<float> *pm_stub_z;
-  std::vector<int>   *pm_stub_strip;
+  std::vector<float> *pm_stub_strip;
   std::vector<int>   *pm_stub_seg;
   std::vector<int>   *pm_stub_chip;
   std::vector<int>   *pm_stub_pdgID;
@@ -212,6 +215,9 @@ class rates
   float m_rate;
   int m_bar_clus[6];
   int m_bar_stub[6];
+  int m_ss; 
+  int m_cbc_ss;
+
 };
 
 #endif

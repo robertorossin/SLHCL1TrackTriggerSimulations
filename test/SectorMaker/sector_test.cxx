@@ -65,19 +65,19 @@ void sector_test::do_test(int nevt)
   std::vector<int> parts;
 
 
-
   // We do a linking 
   // the older version of the PatternExtractor (before Sept. 20th 2013)) 
 
   // Loop over the events
+ 
   for (int i=0;i<ndat;++i)
   {    
     sector_test::reset();
 
     m_L1TT->GetEntry(i);
 
-    if (i%100000==0) 
-      cout << "Processed " << i << "/" << ndat << endl;
+    if (i%10000==0) 
+      cout << "Processed " << i << "/" << ndat << "/" << m_evtid << endl;
 
     if (m_stub == 0) continue; // No stubs, don't go further
 
@@ -121,10 +121,15 @@ void sector_test::do_test(int nevt)
     {  
       stub_x->push_back(m_stub_x[j]);  
       stub_y->push_back(m_stub_y[j]);   
-      stub_z->push_back(m_stub_z[j]);   
+      stub_z->push_back(m_stub_z[j]);  
+      stub_x_2->push_back(m_clus_x[m_stub_clust2[j]]);  
+      stub_y_2->push_back(m_clus_y[m_stub_clust2[j]]);   
+      stub_z_2->push_back(m_clus_z[m_stub_clust2[j]]);  
       stub_layer->push_back(m_stub_layer[j]);   
       stub_ladder->push_back(m_stub_ladder[j]);  
       stub_module->push_back(m_stub_module[j]);  
+      stub_seg->push_back(m_stub_segment[j]);  
+      stub_strip->push_back(m_stub_strip[j]);  
       stub_tp->push_back(-1);  
       stub_inpatt->push_back(0);  
 
@@ -284,7 +289,8 @@ void sector_test::do_test(int nevt)
 	      {
 		cout << " !!! Reordering problem !!! " << m_stub << endl;
 		cout << m_links.at(kk).at(m) << " / " << m_stub << endl;
-		cout << m_evtid << " // " << event_id << endl;
+		//cout << m_evtid << " // " << event_id << endl;
+		cout << evt << " // " << event_id << endl;
 	      }
 	      
 	      if (m_stub_tp[m_links.at(kk).at(m)]==m_primaries.at(k).at(0))
@@ -375,6 +381,8 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
   pm_stub_layer=&m_stub_layer;
   pm_stub_ladder=&m_stub_ladder;
   pm_stub_module=&m_stub_module;
+  pm_stub_segment=&m_stub_segment;
+  pm_stub_strip=&m_stub_strip;
   pm_stub_pxGEN=&m_stub_pxGEN;
   pm_stub_pyGEN=&m_stub_pyGEN;
   pm_stub_etaGEN=&m_stub_etaGEN;
@@ -386,12 +394,18 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
   pm_stub_x=&m_stub_x;
   pm_stub_y=&m_stub_y;
   pm_stub_z=&m_stub_z;
+  pm_clus_x=&m_clus_x;
+  pm_clus_y=&m_clus_y;
+  pm_clus_z=&m_clus_z;
+  pm_stub_clust2=&m_stub_clust2;
 
   m_L1TT->SetBranchAddress("evt",            &m_evtid); 
   m_L1TT->SetBranchAddress("STUB_n",         &m_stub);
   m_L1TT->SetBranchAddress("STUB_layer",     &pm_stub_layer);
   m_L1TT->SetBranchAddress("STUB_ladder",    &pm_stub_ladder);
   m_L1TT->SetBranchAddress("STUB_module",    &pm_stub_module);
+  m_L1TT->SetBranchAddress("STUB_seg",       &pm_stub_segment);
+  m_L1TT->SetBranchAddress("STUB_strip",     &pm_stub_strip);
   m_L1TT->SetBranchAddress("STUB_pxGEN",     &pm_stub_pxGEN);
   m_L1TT->SetBranchAddress("STUB_pyGEN",     &pm_stub_pyGEN);
   m_L1TT->SetBranchAddress("STUB_X0",        &pm_stub_X0);
@@ -403,7 +417,12 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
   m_L1TT->SetBranchAddress("STUB_etaGEN",    &pm_stub_etaGEN);
   m_L1TT->SetBranchAddress("STUB_tp",        &pm_stub_tp);
   m_L1TT->SetBranchAddress("STUB_pdgID",     &pm_stub_pdg);
-  
+  m_L1TT->SetBranchAddress("STUB_clust2",    &pm_stub_clust2);
+  m_L1TT->SetBranchAddress("CLUS_x",         &pm_clus_x);
+  m_L1TT->SetBranchAddress("CLUS_y",         &pm_clus_y);
+  m_L1TT->SetBranchAddress("CLUS_z",         &pm_clus_z);
+
+
 
   // Output file definition (see the header)
 
@@ -432,9 +451,14 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
   m_finaltree->Branch("stub_x",       &stub_x); 
   m_finaltree->Branch("stub_y",       &stub_y); 
   m_finaltree->Branch("stub_z",       &stub_z); 
+  m_finaltree->Branch("stub_x_2",     &stub_x_2); 
+  m_finaltree->Branch("stub_y_2",     &stub_y_2); 
+  m_finaltree->Branch("stub_z_2",     &stub_z_2);
   m_finaltree->Branch("stub_layer",   &stub_layer); 
   m_finaltree->Branch("stub_ladder",  &stub_ladder);
   m_finaltree->Branch("stub_module",  &stub_module);
+  m_finaltree->Branch("stub_segment", &stub_seg);
+  m_finaltree->Branch("stub_strip",   &stub_strip);
   m_finaltree->Branch("stub_tp",      &stub_tp);
   m_finaltree->Branch("stub_inpatt",  &stub_inpatt);
 
@@ -730,9 +754,14 @@ void sector_test::reset()
   stub_x->clear();  
   stub_y->clear();   
   stub_z->clear();   
+  stub_x_2->clear();  
+  stub_y_2->clear();   
+  stub_z_2->clear(); 
   stub_layer->clear();   
   stub_ladder->clear();  
   stub_module->clear();  
+  stub_seg->clear();
+  stub_strip->clear();    
   stub_tp->clear();  
   stub_inpatt->clear();  
  

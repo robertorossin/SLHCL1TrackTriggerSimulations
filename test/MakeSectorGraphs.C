@@ -175,12 +175,12 @@ void do_disk_map(std::string filename,int disk)
 
   int count_e[142000];
 
-  double n_lad_endcap[14]   = {24,26,28,30,34,34,38,40,48,54,62,66,72,78};
-  double n_start_endcap[14] = {0,0,0,0,0,0,1,0,0,1,0,0,0,1};
+  double n_lad_endcap[15]   = {20,24,28,28,32,36,36,40,40,48,56,64,68,72,80};
+  double n_start_endcap[15] = {0,0,0,0,0,0,1,0,0,0,1,0,0,0,1};
 
   if (disk>=7) // -Z case
   {
-    for (int i=0;i<14;++i) n_start_endcap[i] = 0; // There is no problem in this case
+    for (int i=0;i<15;++i) n_start_endcap[i] = 0; // There is no problem in this case
   }
 
   TFile *oldfile = TFile::Open(filename.c_str());
@@ -193,7 +193,7 @@ void do_disk_map(std::string filename,int disk)
 
   float maxval = 0;
 
-  for (int i=0;i<14;++i)
+  for (int i=0;i<15;++i)
   { 
     for (int j=10000*i;j<10000*i+2000;++j)
     { 
@@ -201,21 +201,22 @@ void do_disk_map(std::string filename,int disk)
     }
   }
 
-  TH2F *cadre  = new TH2F("zz","zz",28,-14.,14.,28,-14.,14.);
-  TH2F *ring1  = new TH2F("r1","r1",n_lad_endcap[0],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring2  = new TH2F("r2","r2",n_lad_endcap[1],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring3  = new TH2F("r3","r3",n_lad_endcap[2],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring4  = new TH2F("r4","r4",n_lad_endcap[3],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring5  = new TH2F("r5","r5",n_lad_endcap[4],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring6  = new TH2F("r6","r6",n_lad_endcap[5],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring7  = new TH2F("r7","r7",n_lad_endcap[6],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring8  = new TH2F("r8","r8",n_lad_endcap[7],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring9  = new TH2F("r9","r9",n_lad_endcap[8],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring10 = new TH2F("r10","r10",n_lad_endcap[9],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring11 = new TH2F("r11","r11",n_lad_endcap[10],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring12 = new TH2F("r12","r12",n_lad_endcap[11],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring13 = new TH2F("r13","r13",n_lad_endcap[12],0.,8*atan(1.),25,0.,25.);
-  TH2F *ring14 = new TH2F("r14","r14",n_lad_endcap[13],0.,8*atan(1.),25,0.,25.);
+  TH2F *cadre  = new TH2F("zz","zz",30,-15.,15.,30,-15.,15.);
+  TH2F *ring1  = new TH2F("r1","r1",n_lad_endcap[0],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring2  = new TH2F("r2","r2",n_lad_endcap[1],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring3  = new TH2F("r3","r3",n_lad_endcap[2],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring4  = new TH2F("r4","r4",n_lad_endcap[3],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring5  = new TH2F("r5","r5",n_lad_endcap[4],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring6  = new TH2F("r6","r6",n_lad_endcap[5],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring7  = new TH2F("r7","r7",n_lad_endcap[6],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring8  = new TH2F("r8","r8",n_lad_endcap[7],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring9  = new TH2F("r9","r9",n_lad_endcap[8],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring10 = new TH2F("r10","r10",n_lad_endcap[9],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring11 = new TH2F("r11","r11",n_lad_endcap[10],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring12 = new TH2F("r12","r12",n_lad_endcap[11],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring13 = new TH2F("r13","r13",n_lad_endcap[12],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring14 = new TH2F("r14","r14",n_lad_endcap[13],0.,8*atan(1.),26,0.,26.);
+  TH2F *ring15 = new TH2F("r15","r15",n_lad_endcap[14],0.,8*atan(1.),26,0.,26.);
 
   fill_histo(ring1,count_e,n_lad_endcap[0],n_start_endcap[0],disk,0,maxval);
   fill_histo(ring2,count_e,n_lad_endcap[1],n_start_endcap[1],disk,1,maxval);
@@ -231,6 +232,7 @@ void do_disk_map(std::string filename,int disk)
   fill_histo(ring12,count_e,n_lad_endcap[11],n_start_endcap[11],disk,11,maxval);
   fill_histo(ring13,count_e,n_lad_endcap[12],n_start_endcap[12],disk,12,maxval);
   fill_histo(ring14,count_e,n_lad_endcap[13],n_start_endcap[13],disk,13,maxval);
+  fill_histo(ring15,count_e,n_lad_endcap[14],n_start_endcap[14],disk,14,maxval);
 
   const Int_t NRGBs = 5;
   const Int_t NCont = 20;
@@ -278,6 +280,7 @@ void do_disk_map(std::string filename,int disk)
   ring12->Draw("polcolsame");
   ring13->Draw("polcolsame");
   ring14->Draw("polcolzsame");
+  ring15->Draw("polcolzsame");
      
   TPaveText *pt = new TPaveText(-14.55731,13.00358,-5.683091,14.59651,"br");
 
@@ -326,6 +329,6 @@ void fill_histo(TH2F *hist,int val[], double nlad, double dec, int disk, int rin
     hist->Fill(phi_sec,0.5+ring,val[idx]);
   }
  
-  hist->Fill(0.5*scale,24.5,0);
-  hist->Fill(1.5*scale,24.5,max);
+  hist->Fill(0.5*scale,25.5,0);
+  hist->Fill(1.5*scale,25.5,max);
 }
