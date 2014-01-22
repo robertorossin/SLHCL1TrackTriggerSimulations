@@ -230,6 +230,7 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
   int   nsat       = 0;
   int   nstrips    = 0;
   float bary_strip = 0.;
+  float bary_col   = 0.;
 
   int ref_lay  = -1;
   int ref_lad  = -1;
@@ -270,12 +271,19 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
 	   << pix->module(idx) << " / "  
 	   << pix->column(idx) << " / "  
 	   << pix->row(idx) << " / "  
+	   << pix->pitchx(idx) << " / "  
 	   << m_clus << endl;
 
     if (pix->e(idx)>m_thresh)
     {
-      if (is_neighbour(pix,idx,ref_lay,ref_lad,ref_mod))
-      {
+      if (is_neighbour(pix,idx,ref_lay,ref_lad,ref_mod)) // This is not perfect
+      {                                                  // Could lead to two clusters instead of 1 
+
+	// To see a good implementation, based on detid and map of digis, see:
+	//
+	// https://github.com/cms-sw/cmssw/blob/CMSSW_6_2_0_SLHC5/L1Trigger/TrackTrigger/src/TTClusterAlgorithm_2d2013.cc
+	//
+
 	// If so we add it to the growing cluster
 	
 	if (m_verb) cout << "ACCUMULATE" << endl;
@@ -305,6 +313,7 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
 	bary_y     += pix->y(idx);
 	bary_z     += pix->z(idx);
 	bary_strip += pix->row(idx);
+	bary_col   += pix->column(idx);
       
 	if (pix->e(idx)==255) ++nsat;
 	++nstrips;
@@ -339,7 +348,8 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
 	bary_y     = pix->y(idx);
 	bary_z     = pix->z(idx);
 	bary_strip = pix->row(idx);
-	
+	bary_col   = pix->column(idx);
+
 	if (pix->e(idx)==255) ++nsat;
 	++nstrips;
 	++m_clus;
@@ -385,6 +395,8 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
       m_clus_strip->push_back(bary_strip/bary_sum-fmod(bary_strip/bary_sum,0.5));
     }
   }
+
+
 }
 
 
@@ -613,6 +625,7 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 
 
   double strip_cor= 0.;
+  double strip_cor_chosen= 0.;
   double SW       = 0.;
   double SW_min   = 0.;
   double SW_min_s = 0.;
@@ -707,9 +720,18 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 	i_b = j;
       }
 
-      strip_cor = (d_t/d_b-1.)*(m_clus_strip->at(i_b)-m_clus_nrows->at(i_b)/2.);
-      strip_cor = static_cast<int>(2*strip_cor)/2.;
+      strip_cor = (d_t/d_b-1.)*(m_clus_strip->at(i_b)-m_clus_nrows->at(i_b)/2.+0.5);
 
+      
+      if (strip_cor<0)
+      {
+	strip_cor = -floor(fabs(2*strip_cor))/2.;
+      }
+      else
+      {
+	strip_cor = floor(fabs(2*strip_cor))/2.;
+      }
+      
 
       SW = m_clus_strip->at(i_t) - m_clus_strip->at(i_b); 
       SW -= strip_cor; 
@@ -721,6 +743,7 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 
       // If more than one cand, take the closest one
       SW_min=fabs(SW);
+      strip_cor_chosen=strip_cor;
       SW_min_s=SW;
       i_ts = i_t;
       i_bs = i_b;
@@ -772,7 +795,8 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
       std::cout<< "Problem!" << std::endl;
 
     m_clus_used->at(i_bs) = 1;
-    m_clus_used->at(i_ts) = 1;
+    if (m_clus_PS->at(i_bs)!=32) m_clus_used->at(i_ts) = 1; // This produces double stubs, like in the official maker
+    //m_clus_used->at(i_ts) = 1;
     
     pt_stub    = 0.15*B*dR/dphi*sqrt(1+(R*dphi/dR)*(R*dphi/dR))/100.;
 
@@ -796,7 +820,7 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
     m_stub_z->push_back(m_clus_z->at(i_bs));
  
     m_stub_deltas->push_back(SW);
-    m_stub_cor->push_back(0);
+    m_stub_cor->push_back(strip_cor_chosen);
 
     if (matching_tp!=-1)
     {
@@ -895,7 +919,7 @@ bool L1TrackTrigger_analysis::is_neighbour(PixelExtractor *pix, int idx, int lay
     dseg = abs(clus_col.at(j)-pix->column(idx));
 
     if (drow <= 1 && dseg == 0) return true;
-    if (drow <= 1 && dseg <= 1 && pix->ncolumn(idx)>2) return true;
+    if (drow == 0 && dseg <= 1 && pix->ncolumn(idx)>2) return true;
   }
   
   return false;

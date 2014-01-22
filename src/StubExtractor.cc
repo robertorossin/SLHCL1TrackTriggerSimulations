@@ -298,8 +298,6 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
   int module = 0;
   int segs   = 0;
   int rows   = 0;
-  int disk   = 0;
-  int lad_cor= 0;
   
   /// Go on only if there are L1TkCluster from PixelDigis
   if ( PixelDigiL1TkClusterHandle->size() > 0 )
@@ -447,7 +445,7 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
 	m_stub_seg->push_back(m_clus_seg->at(clust1));
 	m_stub_chip->push_back(m_clus_strip->at(clust1)/(rows/8));
 	m_stub_strip->push_back(m_clus_strip->at(clust1));
-	m_stub_deltas->push_back(offsetStub-displStub);
+	m_stub_deltas->push_back(displStub-offsetStub);
 	m_stub_cor->push_back(offsetStub);
 	m_stub_pt->push_back(theStackedGeometry->findRoughPt( mMagneticFieldStrength, &(*tempStubPtr) ));
 
@@ -455,24 +453,19 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
 	if ( detIdStub.isBarrel() )
 	{
 	  layer  = detIdStub.iLayer()+4;
-	  ladder = detIdStub.iPhi();
+	  ladder = detIdStub.iPhi()-1;
 	  module = detIdStub.iZ()*2-1;
 	}
 	else if ( detIdStub.isEndcap() )
 	{	
 	  layer  = 10+detIdStub.iZ()+abs(detIdStub.iSide()-2)*7;
-	  
-	  if (layer>10 && layer<=17) disk=(layer-10)%8;
-	  if (layer>17 && layer<=24) disk=(layer-17)%8;
-	  if (disk>=5) lad_cor = (disk-4)%4;
-	  
-	  ladder = detIdStub.iRing()-1+lad_cor;
+	  ladder = detIdStub.iRing()-1;
 	  module = detIdStub.iPhi()*2-1;
 	}
 
 	m_stub_layer->push_back(layer);
 	m_stub_ladder->push_back(ladder);
-	m_stub_module->push_back(module);
+	m_stub_module->push_back((module-1)/2);
 	
 	if ( genuineStub )
 	{

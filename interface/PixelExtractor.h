@@ -88,6 +88,9 @@ class PixelExtractor
   float x(int i) {return m_pixclus_x->at(i);}
   float y(int i) {return m_pixclus_y->at(i);}
   float z(int i) {return m_pixclus_z->at(i);}
+  float pitchx(int i) {return m_pixclus_pitchx->at(i);}
+  float pitchy(int i) {return m_pixclus_pitchy->at(i);}
+
 
   int layer(int i)  {return m_pixclus_layer->at(i);}
   int ladder(int i) {return m_pixclus_ladder->at(i);}
@@ -96,6 +99,7 @@ class PixelExtractor
   int column(int i) {return m_pixclus_column->at(i);}
   int nrow(int i)    {return m_pixclus_nrow->at(i);}
   int ncolumn(int i) {return m_pixclus_ncolumn->at(i);}
+
  private:
   
   TTree* m_tree;
