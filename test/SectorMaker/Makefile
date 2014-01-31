@@ -1,6 +1,6 @@
 CXX = g++
 LD  = g++
-CFLAGS = -Wall -g 
+CFLAGS = -Wall -g -std=c++11
 
 INCS = $(ROOTSYS)/include/ $(PWD)/tclap-1.2.1/include/ .
 
