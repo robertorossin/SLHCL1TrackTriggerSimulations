@@ -8,7 +8,8 @@ RecoExtractor::RecoExtractor(const edm::ParameterSet& config) :
   do_PIX_        (config.getUntrackedParameter<bool>("doPixel",    false)),
   do_MC_         (config.getUntrackedParameter<bool>("doMC",       false)),
   do_STUB_       (config.getUntrackedParameter<bool>("doSTUB",     false)),
-  do_TK_         (config.getUntrackedParameter<bool>("doTranslation", false)),
+  do_L1TRK_      (config.getUntrackedParameter<bool>("doL1TRK",    false)),
+  do_BANK_       (config.getUntrackedParameter<bool>("doBANK",     false)),
   do_MATCH_      (config.getUntrackedParameter<bool>("doMatch",    false)),
   do_L1tt_       (config.getUntrackedParameter<bool>("doL1TT", false)),
   nevts_         (config.getUntrackedParameter<int>("n_events", 10000)),
@@ -32,8 +33,6 @@ void RecoExtractor::beginJob()
 {
   // Initializations
 
-  std::cout << "Enter BeginJob" << std::endl;
-
   // If do_fill is set to True, you extract the whole data, otherwise you start 
   // from a file already extracted (inFilename_)
 
@@ -44,11 +43,12 @@ void RecoExtractor::beginJob()
   if (do_MC_ && do_PIX_ && do_L1tt_) 
     m_L1TT_analysis = new L1TrackTrigger_analysis(m_ana_settings,skip_);
 
+  if (do_BANK_ && do_STUB_) 
+    m_BK = new StubTranslator();
+
   skip_=0; // Temporary hack, process files separately..
 
   nevent_tot = skip_;
-
-  std::cout << "Exit BeginJob" << std::endl;
 
 }
 
@@ -57,13 +57,12 @@ void RecoExtractor::beginRun(Run const& run, EventSetup const& setup)
 {
   nevent = 0;
 
-  std::cout << "Enter BeginRun" << std::endl;
-
   if (do_fill_) // We are filling the ntuple, first init the geom stuff
   {
     if (do_PIX_)      m_PIX->init(&setup);
     if (do_MC_)       m_MC->init(&setup);
     if (do_STUB_)     m_STUB->init(&setup);
+    if (do_L1TRK_)    m_L1TRK->init(&setup);
   }
 
   // If we start from existing file we don't have to loop over events
@@ -85,27 +84,6 @@ void RecoExtractor::beginRun(Run const& run, EventSetup const& setup)
       ++nevent_tot; 
     }
   }
-
-  if (!do_fill_ && do_TK_ && m_TK->n_events()) 
-  {    
-    // If you start from an extracted file, the number of events you want to loop on
-    // is defined as an option, not in CMSSW...
-
-    nevent = min(skip_+nevts_,m_TK->n_events()); 
-
-    for (int i=skip_;i<nevent;++i) 
-    {
-      if (i%100000 == 0)
-	std::cout << "Processing " << i << "th event" << std::endl;
-
-      RecoExtractor::getInfo(i);// Retrieve the info from an existing ROOTuple      
-      RecoExtractor::doAna();   // Then do the analysis on request  
-
-      ++nevent_tot; 
-    }
-  }
-
-  std::cout << "Exit BeginRun" << std::endl;
 }
 
 
@@ -150,9 +128,10 @@ void RecoExtractor::endJob() {
 
 void RecoExtractor::fillInfo(const edm::Event *event) 
 {
-  if (do_PIX_)             m_PIX->writeInfo(event);
-  if (do_MC_)              m_MC->writeInfo(event);
-  if (do_STUB_ && do_MC_)  m_STUB->writeInfo(event,m_MC);
+  if (do_PIX_)               m_PIX->writeInfo(event);
+  if (do_MC_)                m_MC->writeInfo(event);
+  if (do_STUB_ && do_MC_)    m_STUB->writeInfo(event,m_MC);
+  if (do_STUB_ && do_L1TRK_)  m_L1TRK->writeInfo(event,m_STUB);
 }   
 
 
@@ -162,8 +141,8 @@ void RecoExtractor::getInfo(int ievent)
 {
   if (do_MC_)       m_MC->getInfo(ievent);
   if (do_PIX_)      m_PIX->getInfo(ievent);
-  if (do_TK_)       m_TK->getInfo(ievent);
   if (do_STUB_)     m_STUB->getInfo(ievent);
+  if (do_L1TRK_)    m_L1TRK->getInfo(ievent);
 }
 
 
@@ -174,6 +153,7 @@ void RecoExtractor::initialize()
   m_outfile  = new TFile(outFilename_.c_str(),"RECREATE");
   m_MC       = new MCExtractor(do_MC_);
   m_STUB     = new StubExtractor(do_STUB_);
+  m_L1TRK    = new L1TrackExtractor(do_L1TRK_);
   m_PIX      = new PixelExtractor(PIX_tag_,do_PIX_,do_MATCH_);
 }  
 
@@ -188,14 +168,14 @@ void RecoExtractor::retrieve()
 
   m_MC         = new MCExtractor(m_infile);
   m_PIX        = new PixelExtractor(m_infile);
-  m_TK         = new TkLayout_Translator(m_infile);
+  m_STUB       = new StubExtractor(m_infile);
 
   // We set some variables wrt the info retrieved 
   // (if the tree is not there, don't go further...)  
 
   do_PIX_      = m_PIX->isOK();
   do_MC_       = m_MC->isOK();
-  do_TK_       = m_TK->isOK();
+  do_STUB_     = m_STUB->isOK();
 
 }
 
@@ -214,9 +194,9 @@ void RecoExtractor::doAna()
     m_L1TT_analysis->fillTree();
   }
 
-  if (do_TK_) 
+  if (do_STUB_ && do_BANK_) 
   {  
-    m_TK->do_translation();
-    m_TK->fillTree();
+    m_BK->do_translation(m_STUB);
+    m_BK->fillTree();
   }
 }

@@ -26,7 +26,16 @@ StubExtractor::StubExtractor(bool doTree)
   m_clus_pid     = new  std::vector<int>;  
   m_clus_pdgID   = new  std::vector<int>;  
   m_clus_ptGEN   = new  std::vector<float>; 
-  
+  m_clus_rank_PIX= new  std::vector<int>;  
+  m_clus_rank_STR= new  std::vector<int>; 
+  m_clus_rank_PIX_4= new  std::vector<int>; 
+  m_clus_rank_STR_4= new  std::vector<int>; 
+  m_clus_rank_PIX_8= new  std::vector<int>; 
+  m_clus_rank_STR_8= new  std::vector<int>;  
+  m_clus_tp      = new  std::vector<int>;  
+  m_clus_pix     = new  std::vector<std::vector<int> >; 
+  m_clus_mult    = new  std::vector<std::vector<int> >; 
+
   m_stub_pt      = new  std::vector<float>;
   m_stub_ptMC    = new  std::vector<float>; 
   m_stub_pxGEN   = new  std::vector<float>; 
@@ -54,6 +63,7 @@ StubExtractor::StubExtractor(bool doTree)
   m_stub_tp      = new  std::vector<int>;  
   m_stub_pdg     = new  std::vector<int>;  
   m_stub_pid     = new  std::vector<int>;  
+  m_stub_rank    = new  std::vector<int>;  
 
   StubExtractor::reset();
 
@@ -88,12 +98,18 @@ StubExtractor::StubExtractor(bool doTree)
     m_tree->Branch("L1TkCLUS_pdgID",     &m_clus_pdgID);
     m_tree->Branch("L1TkCLUS_ptGEN",     &m_clus_ptGEN);
     m_tree->Branch("L1TkCLUS_process",   &m_clus_pid);
+    m_tree->Branch("L1TkCLUS_rank_PIX",  &m_clus_rank_PIX);
+    m_tree->Branch("L1TkCLUS_rank_STR",  &m_clus_rank_STR);
+    m_tree->Branch("L1TkCLUS_rank_PIX_4",  &m_clus_rank_PIX_4);
+    m_tree->Branch("L1TkCLUS_rank_STR_4",  &m_clus_rank_STR_4);
+    m_tree->Branch("L1TkCLUS_rank_PIX_8",  &m_clus_rank_PIX_8);
+    m_tree->Branch("L1TkCLUS_rank_STR_8",  &m_clus_rank_STR_8);
+    m_tree->Branch("L1TkCLUS_PIX",       &m_clus_pix);
+    m_tree->Branch("L1TkCLUS_MULT",       &m_clus_mult);
+    m_tree->Branch("L1TkCLUS_tp",        &m_clus_tp);
 
-    //m_tree->Branch("L1TkSTUB_ptMC",      &m_stub_ptMC);
     m_tree->Branch("L1TkSTUB_clust1",    &m_stub_clust1);
     m_tree->Branch("L1TkSTUB_clust2",    &m_stub_clust2);
-    //m_tree->Branch("L1TkSTUB_cw1",       &m_stub_cw1);
-    //m_tree->Branch("L1TkSTUB_cw2",       &m_stub_cw2);
     m_tree->Branch("L1TkSTUB_cor",       &m_stub_cor);
     m_tree->Branch("L1TkSTUB_PHI0",      &m_stub_PHI0);
     m_tree->Branch("L1TkSTUB_tp",        &m_stub_tp);
@@ -117,6 +133,7 @@ StubExtractor::StubExtractor(bool doTree)
     m_tree->Branch("L1TkSTUB_X0",        &m_stub_X0);
     m_tree->Branch("L1TkSTUB_Y0",        &m_stub_Y0);
     m_tree->Branch("L1TkSTUB_Z0",        &m_stub_Z0);
+    m_tree->Branch("L1TkSTUB_rank",      &m_stub_rank);
   }
 }
 
@@ -142,7 +159,16 @@ StubExtractor::StubExtractor(TFile *a_file)
   m_clus_pid     = new  std::vector<int>;  
   m_clus_pdgID   = new  std::vector<int>;  
   m_clus_ptGEN   = new  std::vector<float>; 
-  
+  m_clus_rank_PIX= new  std::vector<int>; 
+  m_clus_rank_STR= new  std::vector<int>; 
+  m_clus_rank_PIX_4= new  std::vector<int>; 
+  m_clus_rank_STR_4= new  std::vector<int>; 
+  m_clus_rank_PIX_8= new  std::vector<int>; 
+  m_clus_rank_STR_8= new  std::vector<int>; 
+  m_clus_tp      = new  std::vector<int>;  
+  m_clus_pix     = new  std::vector<std::vector<int> >; 
+  m_clus_mult    = new  std::vector<std::vector<int> >; 
+
   m_stub_pt      = new  std::vector<float>;
   m_stub_ptMC    = new  std::vector<float>; 
   m_stub_pxGEN   = new  std::vector<float>; 
@@ -170,6 +196,7 @@ StubExtractor::StubExtractor(TFile *a_file)
   m_stub_tp      = new  std::vector<int>;  
   m_stub_pdg     = new  std::vector<int>;  
   m_stub_pid     = new  std::vector<int>; 
+  m_stub_rank    = new  std::vector<int>; 
 
   // Tree definition
   m_OK = false;
@@ -213,12 +240,18 @@ StubExtractor::StubExtractor(TFile *a_file)
   m_tree->SetBranchAddress("L1TkCLUS_pdgID",     &m_clus_pdgID);
   m_tree->SetBranchAddress("L1TkCLUS_ptGEN",     &m_clus_ptGEN);
   m_tree->SetBranchAddress("L1TkCLUS_process",   &m_clus_pid);
-  
-  //m_tree->SetBranchAddress("L1TkSTUB_ptMC",      &m_stub_ptMC);
+  m_tree->SetBranchAddress("L1TkCLUS_rank_PIX",  &m_clus_rank_PIX);
+  m_tree->SetBranchAddress("L1TkCLUS_rank_STR",  &m_clus_rank_STR);
+  m_tree->SetBranchAddress("L1TkCLUS_rank_PIX_4",  &m_clus_rank_PIX_4);
+  m_tree->SetBranchAddress("L1TkCLUS_rank_STR_4",  &m_clus_rank_STR_4);
+  m_tree->SetBranchAddress("L1TkCLUS_rank_PIX_8",  &m_clus_rank_PIX_8);
+  m_tree->SetBranchAddress("L1TkCLUS_rank_STR_8",  &m_clus_rank_STR_8);
+  m_tree->SetBranchAddress("L1TkCLUS_PIX",       &m_clus_pix);
+  m_tree->SetBranchAddress("L1TkCLUS_MULT",       &m_clus_mult);
+  m_tree->SetBranchAddress("L1TkCLUS_tp",        &m_clus_tp);
+
   m_tree->SetBranchAddress("L1TkSTUB_clust1",    &m_stub_clust1);
   m_tree->SetBranchAddress("L1TkSTUB_clust2",    &m_stub_clust2);
-  //  m_tree->SetBranchAddress("L1TkSTUB_cw1",       &m_stub_cw1);
-  //  m_tree->SetBranchAddress("L1TkSTUB_cw2",       &m_stub_cw2);
   m_tree->SetBranchAddress("L1TkSTUB_cor",       &m_stub_cor);
   m_tree->SetBranchAddress("L1TkSTUB_PHI0",      &m_stub_PHI0);
   m_tree->SetBranchAddress("L1TkSTUB_tp",        &m_stub_tp);
@@ -242,6 +275,7 @@ StubExtractor::StubExtractor(TFile *a_file)
   m_tree->SetBranchAddress("L1TkSTUB_X0",        &m_stub_X0);
   m_tree->SetBranchAddress("L1TkSTUB_Y0",        &m_stub_Y0);
   m_tree->SetBranchAddress("L1TkSTUB_Z0",        &m_stub_Z0);
+  m_tree->SetBranchAddress("L1TkSTUB_rank",      &m_stub_rank);
 
   std::cout << "This file contains " << m_n_events << " events..." << std::endl;
 
@@ -298,7 +332,12 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
   int module = 0;
   int segs   = 0;
   int rows   = 0;
-  
+
+  std::vector<int> clus_coords;
+
+  std::vector<int> clus_rows;
+  std::vector<int> clus_cols;
+
   /// Go on only if there are L1TkCluster from PixelDigis
   if ( PixelDigiL1TkClusterHandle->size() > 0 )
   {
@@ -318,21 +357,27 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
 	edm::Ref< edmNew::DetSetVector< TTCluster< Ref_PixelDigi_ > >, TTCluster< Ref_PixelDigi_ > > tempCluRef = 
 	  edmNew::makeRefTo( PixelDigiL1TkClusterHandle, contentIter );
 
-
-
-
-	//	unsigned int memberClu = tempCluRef->getStackMember();
 	bool genuineClu = MCTruthTTClusterHandle->isGenuine( tempCluRef );
-	//	bool combinClu = MCTruthTTClusterHandle->isCombinatoric( tempCluRef );
 
 	StackedTrackerDetId detIdClu( tempCluRef->getDetId() );
 	GlobalPoint posClu      = theStackedGeometry->findAverageGlobalPosition( &(*tempCluRef) );
 	MeasurementPoint coords = tempCluRef->findAverageLocalCoordinates();
 	int    stack            = tempCluRef->getStackMember();
 
+	clus_rows = tempCluRef->getRows();
+	clus_cols = tempCluRef->getCols();
+	clus_coords.clear();
+
+	for (unsigned int i=0;i<clus_rows.size();++i) 
+	{
+	  clus_coords.push_back(clus_rows.at(i));
+	  clus_coords.push_back(clus_cols.at(i));
+	}
 
 	++m_clus;
-	
+
+	m_clus_pix->push_back(clus_coords);
+
 	m_clus_x->push_back(posClu.x());
 	m_clus_y->push_back(posClu.y());
 	m_clus_z->push_back(posClu.z());
@@ -342,13 +387,15 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
 	m_clus_nstrips->push_back(tempCluRef->findWidth());
 	
 	segs=2;
-	
+	rows=1024;
+
 	if ( detIdClu.isBarrel() )
 	{
 	  layer  = detIdClu.iLayer()+4;
 	  ladder = detIdClu.iPhi();
 	  module = detIdClu.iZ()*2-1+stack;
 	  if (layer<8 && stack==0) segs=32;	
+	  if (layer<8) rows=960;	
 	}
 	else if ( detIdClu.isEndcap() )
 	{	
@@ -356,6 +403,7 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
 	  ladder = detIdClu.iRing();
 	  module = detIdClu.iPhi()*2-1+stack;
 	  if (ladder<9 && stack==0) segs=32;
+	  if (ladder<9) rows=960;
 	}
 	
 	m_clus_layer->push_back(layer);
@@ -370,21 +418,199 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
 	  m_clus_matched->push_back(1);
 	  m_clus_ptGEN->push_back(tpPtr->p4().pt()); 
 	  m_clus_pdgID->push_back(tpPtr->pdgId());
+	  m_clus_tp->push_back(mc->getMatchingTP(tpPtr->vertex().x(),tpPtr->vertex().y(),tpPtr->vertex().z(),
+						 tpPtr->p4().px(),tpPtr->p4().py(),tpPtr->p4().pz()));
 	}
 	else
 	{
 	  m_clus_matched->push_back(0);
 	  m_clus_ptGEN->push_back(0); 
 	  m_clus_pdgID->push_back(0);
+	  m_clus_tp->push_back(-1);
 	}
 
 	m_clus_sat->push_back(0);
-	m_clus_nrows->push_back(0);
+	m_clus_nrows->push_back(rows);
 	
       } /// End of Loop over L1TkClusters in the detId
     }
   } /// End of if ( PixelDigiL1TkClusterHandle->size() > 0 )
   
+
+  // Clusters are built, now look at the occupancies
+
+  int chip_idx;
+  int chip_basis;
+
+  std::vector<std::vector <int> > chip_mult;
+  std::vector<std::vector<int> > chip_ranks;
+
+  bool found;
+  std::vector<int> chip_st;
+
+  std::vector<int> strip_coord;
+
+  int s_min;
+  int s_max;
+
+  int c_min;
+  int c_max;
+
+  int nums;
+
+  int n_4;
+  int n_8;
+
+  chip_ranks.clear();
+  chip_mult.clear();
+  m_clus_rank_PIX->clear();
+  m_clus_rank_STR->clear();
+
+  for (unsigned int i=0;i<m_clus_layer->size();++i) 
+  {
+    strip_coord = m_clus_pix->at(i);
+
+    s_min=2000;
+    s_max=0;
+
+    for (unsigned int j=0;j<strip_coord.size()/2;++j) 
+    {
+      if (strip_coord.at(2*j)<s_min) s_min = strip_coord.at(2*j);
+      if (strip_coord.at(2*j)>s_max) s_max = strip_coord.at(2*j);
+    }
+
+    //    std::cout << "Cluster spans over " << s_min << "/" << s_max << std::endl;
+
+    c_min = int(s_min/(m_clus_nrows->at(i)/8));
+    c_max = int(s_max/(m_clus_nrows->at(i)/8));
+
+    nums = m_clus_nrows->at(i)/8;
+
+    //    std::cout << "This corresponds to chips " << c_min << " to " << c_max << std::endl;
+
+    chip_basis=0;
+    chip_basis+=(m_clus_layer->at(i))*1000000;
+    chip_basis+=(m_clus_ladder->at(i))*10000;
+    chip_basis+=int((m_clus_module->at(i)-1)/2)*100;
+    chip_basis+=8*int(2*m_clus_seg->at(i)/m_clus_PS->at(i));
+
+    for (int j=c_min;j<=c_max;++j) // Loop over chips
+    {
+      chip_idx=chip_basis+j;
+
+      // Is this idx already registered?
+
+      if (c_min==c_max)
+      {
+	n_4 = int((m_clus_nstrips->at(i)-1)/4+1);
+	n_8 = int((m_clus_nstrips->at(i)-1)/8+1);
+      }
+      else if (j==c_min)
+      {
+	n_4 = int(((c_min+1)*nums-1-s_min)/4+1);
+	n_8 = int(((c_min+1)*nums-1-s_min)/8+1);	
+      }
+      else if (j==c_max)
+      {
+	n_4 = int((s_max-c_max*nums-1)/4+1);
+	n_8 = int((s_max-c_max*nums-1)/8+1);	
+      }
+      else if (j!=c_max && j!=c_min)
+      {
+	n_4 = int((nums-1)/4+1);
+	n_8 = int((nums-1)/8+1);	
+      }    
+
+      found=false;
+
+      for (unsigned int k=0;k<chip_mult.size();++k) 
+      {  
+	if (found) continue;
+
+	if (chip_idx==chip_mult.at(k).at(0))
+	{
+	  found=true;
+	  if (m_clus_PS->at(i)==32)
+	  {
+	    chip_mult.at(k).at(1)+=1;
+	    chip_mult.at(k).at(3)+=n_4;
+	    chip_mult.at(k).at(5)+=n_8;
+	  }
+	  else
+	  {
+	    chip_mult.at(k).at(2)+=1;
+	    chip_mult.at(k).at(4)+=n_4;
+	    chip_mult.at(k).at(6)+=n_8;
+	  }
+	}
+      }
+
+      if (!found)
+      {
+	chip_st.clear(); 
+	chip_st.push_back(chip_idx); 
+	chip_st.push_back(0);
+	chip_st.push_back(0);
+	chip_st.push_back(0);
+	chip_st.push_back(0);
+	chip_st.push_back(0);
+	chip_st.push_back(0);
+	
+	if (m_clus_PS->at(i)==32)
+	{
+	  chip_st.at(1)+=1;
+	  chip_st.at(3)+=n_4;
+	  chip_st.at(5)+=n_8;
+	}
+	else
+	{
+	  chip_st.at(2)+=1;
+	  chip_st.at(4)+=n_4;
+	  chip_st.at(6)+=n_8;
+	}
+
+	chip_mult.push_back(chip_st);
+      }
+    }
+  }
+
+  for (unsigned int k=0;k<chip_mult.size();++k) 
+  {  
+    m_clus_mult->push_back(chip_mult.at(k));
+  }
+
+  //  std::cout << "This event has touched " << chip_mult.size() << " chips" << std::endl;
+
+  for (unsigned int i=0;i<m_clus_layer->size();++i) 
+  {
+    chip_idx=0;
+    chip_idx+=(m_clus_layer->at(i))*1000000;
+    chip_idx+=(m_clus_ladder->at(i))*10000;
+    chip_idx+=int((m_clus_module->at(i)-1)/2)*100;
+    chip_idx+=8*int(2*m_clus_seg->at(i)/m_clus_PS->at(i));
+    chip_idx+=int(m_clus_strip->at(i)/(m_clus_nrows->at(i)/8));
+
+    found=false;
+
+    for (unsigned int k=0;k<chip_mult.size();++k) 
+    {  
+      if (found) continue;
+
+      if (chip_idx==chip_mult.at(k).at(0))
+      {
+	found=true;
+	m_clus_rank_PIX->push_back(chip_mult.at(k).at(1));
+	m_clus_rank_STR->push_back(chip_mult.at(k).at(2));
+	m_clus_rank_PIX_4->push_back(chip_mult.at(k).at(3));
+	m_clus_rank_STR_4->push_back(chip_mult.at(k).at(4));
+	m_clus_rank_PIX_8->push_back(chip_mult.at(k).at(5));
+	m_clus_rank_STR_8->push_back(chip_mult.at(k).at(6));
+      }
+    }
+  }
+
+
+
   int clust1     = -1;
   int clust2     = -1;
  
@@ -412,11 +638,8 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
       
 	// The stub position is the inner cluster position
 	//
-	// See: http://cmssw.cvs.cern.ch/cgi-bin/cmssw.cgi/CMSSW/Geometry/TrackerGeometryBuilder/interface/StackedTrackerGeometry.h?view=markup
-	//
+
 	GlobalPoint posStub = theStackedGeometry->findGlobalPosition( &(*tempStubPtr) );
-
-
 
 	++m_stub;
 
@@ -454,19 +677,20 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
 	{
 	  layer  = detIdStub.iLayer()+4;
 	  ladder = detIdStub.iPhi()-1;
-	  module = detIdStub.iZ()*2-1;
+	  module = detIdStub.iZ()-1;
 	}
 	else if ( detIdStub.isEndcap() )
 	{	
 	  layer  = 10+detIdStub.iZ()+abs(detIdStub.iSide()-2)*7;
 	  ladder = detIdStub.iRing()-1;
-	  module = detIdStub.iPhi()*2-1;
+	  module = detIdStub.iPhi()-1;
 	}
 
 	m_stub_layer->push_back(layer);
 	m_stub_ladder->push_back(ladder);
-	m_stub_module->push_back((module-1)/2);
-	
+	m_stub_module->push_back(module);
+	m_stub_rank->push_back(0);
+
 	if ( genuineStub )
 	{
 	  
@@ -476,13 +700,13 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
 	  m_stub_pyGEN->push_back(tpPtr->p4().py());
 	  m_stub_etaGEN->push_back(tpPtr->momentum().eta());
 	  m_stub_pdg->push_back(tpPtr->pdgId());
-	  //	m_stub_pid->push_back(m_clus_pid->at(i_bs));
 	  m_stub_pid->push_back(0);
 	  m_stub_X0->push_back(tpPtr->vertex().x());
 	  m_stub_Y0->push_back(tpPtr->vertex().y());
 	  m_stub_Z0->push_back(tpPtr->vertex().z());
 	  m_stub_PHI0->push_back(tpPtr->momentum().phi());
-	  m_stub_tp->push_back(0);
+	  m_stub_tp->push_back(mc->getMatchingTP(tpPtr->vertex().x(),tpPtr->vertex().y(),tpPtr->vertex().z(),
+						 tpPtr->p4().px(),tpPtr->p4().py(),tpPtr->p4().pz()));
 	}
 	else
 	{
@@ -497,10 +721,107 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
 	  m_stub_pid->push_back(0);
 	  m_stub_tp->push_back(-1);
 	}
+
+	
+	chip_idx=0;
+	chip_idx+=(layer)*1000000;
+	chip_idx+=(ladder)*10000;
+	chip_idx+=(module)*100;
+	chip_idx+=8*int(2*m_clus_seg->at(clust1)/m_clus_PS->at(clust1));
+	chip_idx+=int(m_clus_strip->at(clust1)/(m_clus_nrows->at(clust1)/8));
+	
+	// Is this idx already registered?
+	
+	found=false;
+	
+	for (unsigned int k=0;k<chip_ranks.size();++k) 
+	{  
+	  if (found) continue;
+
+	  if (chip_idx==chip_ranks.at(k).at(0))
+	  {
+	    found=true;
+	    chip_ranks.at(k).push_back(m_stub_pt->size()-1);
+	  }
+	}
+
+	if (!found)
+	{
+	  chip_st.clear(); 
+	  chip_st.push_back(chip_idx); 
+	  chip_st.push_back(m_stub_pt->size()-1); 
+	  chip_ranks.push_back(chip_st);
+	}
       } /// End of loop over L1TkStubs
     } 
   } /// End of if ( PixelDigiL1TkStubHandle->size() > 0 ) 
  
+  
+  std::vector<int> rank;
+  std::vector<float> bends;
+  std::vector<float> strip;
+
+  float b_min;
+  float s_min2;
+  unsigned int   i_min;
+
+  for (unsigned int k=0;k<chip_ranks.size();++k) 
+  { 
+    chip_st=chip_ranks.at(k); 
+
+    if (chip_st.size()==2) continue; // Only one stub, rank is 0
+
+    rank.clear();
+    bends.clear();
+    strip.clear();
+
+    for (unsigned int l=1;l<chip_st.size();++l) 
+    { 
+      rank.push_back(chip_st.at(l));
+      bends.push_back(fabs(m_stub_deltas->at(chip_st.at(l))));
+      strip.push_back(m_stub_strip->at(chip_st.at(l)));
+    }
+
+    // We now have the list, we do the sorting
+
+
+    for (unsigned int l=0;l<rank.size();++l) 
+    { 
+      i_min=l;
+      b_min=bends.at(l);
+      s_min2=strip.at(l);
+
+      for (unsigned int ll=l;ll<rank.size();++ll) 
+      { 
+	if (bends.at(ll)<b_min)
+	{
+	  i_min=ll;
+	  b_min=bends.at(ll);
+	  s_min2=strip.at(ll);
+	}
+	if (bends.at(ll)==b_min && strip.at(ll)<s_min2)
+	{
+	  i_min=ll;
+	  b_min=bends.at(ll);
+	  s_min2=strip.at(ll);
+	}
+      }
+
+      if (i_min!=l)
+      {
+	rank.at(i_min)=rank.at(l);
+	bends.at(i_min)=bends.at(l);
+	strip.at(i_min)=strip.at(l);
+	
+	rank.at(l)=i_min;
+	bends.at(l)=b_min;
+	strip.at(l)=s_min2;
+      }
+    }
+
+    for (unsigned int l=0;l<rank.size();++l) m_stub_rank->at(rank.at(l)) = l; 
+  }
+
   StubExtractor::fillTree();
 }
 
@@ -539,7 +860,16 @@ void StubExtractor::reset()
   m_clus_pid->clear();
   m_clus_pdgID->clear();
   m_clus_ptGEN->clear();
-  
+  m_clus_rank_PIX->clear(); 
+  m_clus_rank_STR->clear(); 
+  m_clus_rank_PIX_4->clear(); 
+  m_clus_rank_STR_4->clear();
+  m_clus_rank_PIX_8->clear(); 
+  m_clus_rank_STR_8->clear();
+  m_clus_pix->clear(); 
+  m_clus_tp->clear(); 
+  m_clus_mult->clear(); 
+
   m_stub_X0->clear();     
   m_stub_Y0->clear();     
   m_stub_Z0->clear();     
@@ -567,7 +897,7 @@ void StubExtractor::reset()
   m_stub_cor->clear(); 
   m_stub_pdg->clear();
   m_stub_pid->clear();
-
+  m_stub_rank->clear(); 
 
 }
 
@@ -628,4 +958,29 @@ int  StubExtractor::getClust2Idx(int idx1, float dist)
     std::cout << "STRANGE: a stub without matching 2 cluster..." << std::endl;
 
   return idx2;
+}
+
+int  StubExtractor::get_id(int lay,int lad,int mod,float x,float y,float z)
+{
+  int idx = -1;
+
+  for (int i=0;i<m_stub;++i) // Loop over stubs
+  { 
+    if (idx!=-1) return idx;
+
+    if (m_stub_layer->at(i)  !=lay) continue;
+    if (m_stub_ladder->at(i) !=lad) continue;
+    if (m_stub_module->at(i) !=mod) continue;
+    if (fabs(m_stub_x->at(i)-x)>0.001) continue;
+    if (fabs(m_stub_y->at(i)-y)>0.001) continue;
+    if (fabs(m_stub_z->at(i)-z)>0.001) continue;
+
+    idx=i;
+  }
+
+  if (idx!=-1) return idx;
+
+  std::cout << "StubExtractor::get_id: you are not supposed to get here!" << std::endl;
+
+  return idx;
 }

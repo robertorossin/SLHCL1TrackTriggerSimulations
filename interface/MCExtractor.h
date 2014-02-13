@@ -105,6 +105,9 @@ class MCExtractor
   void findMatchingTP(const int &stID, const int &evtID,
 		      int &itp, bool verb);
 
+  int getMatchingTP(float x,float y, float z,
+		    float px,float py, float pz);
+
  private:
  			      
 

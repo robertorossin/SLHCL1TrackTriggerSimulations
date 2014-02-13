@@ -91,9 +91,19 @@ class StubExtractor
 
   int getClust1Idx(float x, float y, float z);
   int getClust2Idx(int idx1, float dist);
+  int get_id(int lay,int lad,int mod,float x,float y,float z);
 
   int getNDigis() {return m_clus;}
 
+  float getStub_ptGen(int i) {return sqrt(m_stub_pxGEN->at(i)*m_stub_pxGEN->at(i)
+					 +m_stub_pyGEN->at(i)*m_stub_pyGEN->at(i));}
+  float getStub_etaGen(int i) {return m_stub_etaGEN->at(i);}
+  float getStub_strip(int i) {return m_stub_strip->at(i);}
+
+  int getStub_ID(int i) {return 1000000*m_stub_layer->at(i)+10000*m_stub_ladder->at(i)
+      +100*m_stub_module->at(i)+m_stub_seg->at(i);}
+  int getStub_tp(int i) {return m_stub_tp->at(i);}
+  int getNStub() {return m_stub;}
 
  private:
   
@@ -165,7 +175,15 @@ class StubExtractor
   std::vector<int>    *m_clus_pdgID;  // list of tracking particles inducing cluster i
   std::vector<float>  *m_clus_ptGEN;  // list of simhits inducing cluster i
   std::vector<int>    *m_clus_pid;    // process id inducing cluster i (see MCExtractor.h)
-
+  std::vector<int>    *m_clus_rank_PIX;   // Number of pixel clusters in the chip (no size limit)  
+  std::vector<int>    *m_clus_rank_STR;   // Number of strip clusters in the chip (no size limit)  
+  std::vector<int>    *m_clus_rank_PIX_4; // Number of pixel clusters in the chip (4 strips limit)    
+  std::vector<int>    *m_clus_rank_STR_4; // Number of strip clusters in the chip (4 strips limit)    
+  std::vector<int>    *m_clus_rank_PIX_8; // Number of pixel clusters in the chip (8 strips limit)      
+  std::vector<int>    *m_clus_rank_STR_8; // Number of strip clusters in the chip (8 strips limit)    
+  std::vector<int>    *m_clus_tp;  
+  std::vector<std::vector<int> >    *m_clus_pix;   // Pixel digis linked to the cluster 
+  std::vector<std::vector<int> >    *m_clus_mult;  // Overall chip cluster occupancies for the event
 
   int m_stub;
 
@@ -197,11 +215,7 @@ class StubExtractor
   std::vector<int>    *m_stub_tp;     // index of the TP inducing the stub in the MC tree
   std::vector<int>    *m_stub_pdg;    // PDG code of the particle inducing the stub
   std::vector<int>    *m_stub_pid;    // process id inducing cluster i (see MCExtractor.h)
-
-
-  // Pixel info
-
-
+  std::vector<int>    *m_stub_rank;   // Rank of the stub at the FE output (in bend order, then strip)
 };
 
 #endif 

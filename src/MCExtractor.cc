@@ -344,6 +344,30 @@ void MCExtractor::clearTP(float ptmin,float rmax)
  }
 }
 
+int MCExtractor::getMatchingTP(float x,float y, float z,
+			       float px,float py, float pz)
+{
+  int idx = -1;
+
+  for (int i=0;i<getNTP();++i) // Loop over TPs
+  { 
+    if (idx!=-1) return idx;
+
+    if (fabs(getTP_x(i)-x)>0.001) continue;
+    if (fabs(getTP_y(i)-y)>0.001) continue;
+    if (fabs(getTP_z(i)-z)>0.001) continue;
+    if (fabs(getTP_px(i)-px)>0.001) continue;
+    if (fabs(getTP_py(i)-py)>0.001) continue;
+    if (fabs(getTP_pz(i)-pz)>0.001) continue;
+
+    idx=i;
+  }
+
+  return idx;
+}
+
+
+
 void MCExtractor::findMatchingTP(const int &stID,const int &evtID,
 				 int &itp, bool verb)
 {
@@ -375,4 +399,3 @@ void MCExtractor::findMatchingTP(const int &stID,const int &evtID,
 
   return;
 }
-

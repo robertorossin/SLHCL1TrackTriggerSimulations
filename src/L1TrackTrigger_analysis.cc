@@ -2,10 +2,13 @@
 
 The private Cluster and STUB maker
 
-Adapted to CMSSW 6_2_0_SLHC5
+Adapted to CMSSW 6_2_0_SLHC7
+
+The private cluster maker is not optimal, particularly in Pixel modules
+Please use the official cluster/stub maker for official analysis
 
 Contact: viret@in2p3.fr
-Last review : 10/01/2014
+Last review : 13/02/2014
  */
 
 
@@ -134,6 +137,7 @@ void L1TrackTrigger_analysis::get_digis(PixelExtractor *pix, MCExtractor *mc)
 
   std::vector<int> matching_tps;
   std::vector<int> matching_hits;
+  std::vector<int> mods;
 
   // Remove some hits from the TPs in order to save some 
   // time for the matching (in particular for high-PU event)
@@ -188,21 +192,17 @@ void L1TrackTrigger_analysis::get_digis(PixelExtractor *pix, MCExtractor *mc)
 
     if (static_cast<int>(matching_tps.size())==0) matching_tps.push_back(-1);
 
-    if (m_verb) cout << "Here " << endl;
-
     // Update the global params
     m_digi_ref->push_back(i);
     m_digi_tp->push_back(matching_tps);
-
   } // End of the digi loop
-
-
 
   if (m_verb) // Printouts (for verbose mode)
   {
     int idx;
 
     cout << "Event " << n_tot_evt << " contains " << ndigis << " digis" << endl;
+    cout << " covering " << m_digi_modids->size() << " modules" << endl;
 
     for (int i=0;i<static_cast<int>(m_digi_ref->size());++i) // Loop over pixel hits
     {
@@ -257,8 +257,9 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
   clus_row.clear();  
   clus_col.clear();  
 
-  for (int i=0;i<static_cast<int>(m_digi_ref->size());++i) // Loop over pixel hits
+  for (int i=0;i<static_cast<int>(m_digi_ref->size());++i) // Loop over modules
   { 
+
     idx = static_cast<int>(m_digi_ref->at(i));
   
     // First we check is this cluster is adjacent to the previous one 
@@ -281,7 +282,7 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
 
 	// To see a good implementation, based on detid and map of digis, see:
 	//
-	// https://github.com/cms-sw/cmssw/blob/CMSSW_6_2_0_SLHC5/L1Trigger/TrackTrigger/src/TTClusterAlgorithm_2d2013.cc
+	// https://github.com/cms-sw/cmssw/blob/CMSSW_6_2_0_SLHC7/L1Trigger/TrackTrigger/src/TTClusterAlgorithm_2d2013.cc
 	//
 
 	// If so we add it to the growing cluster
@@ -397,6 +398,72 @@ void L1TrackTrigger_analysis::get_clusters(PixelExtractor *pix, MCExtractor *mc)
   }
 
 
+  // Clusters are built, now look at the occupancies
+
+  int chip_idx;
+  std::vector<std::vector <int> > chip_mult;
+  bool found;
+  std::vector<int> chip_st;
+
+  chip_mult.clear();
+  m_clus_rank->clear();
+
+  for (unsigned int i=0;i<m_clus_layer->size();++i) 
+  {
+    chip_idx=0;
+    chip_idx+=(m_clus_layer->at(i)-1)*1000000;
+    chip_idx+=(m_clus_ladder->at(i)-1)*10000;
+    chip_idx+=((m_clus_module->at(i)-2+m_clus_module->at(i)%2)/2)*100;
+    chip_idx+=8*(2*m_clus_seg->at(i))/m_clus_PS->at(i);
+    chip_idx+=m_clus_strip->at(i)/(m_clus_nrows->at(i)/8);
+
+
+    // Is this idx already registered?
+    
+    found=false;
+
+    for (unsigned int k=0;k<chip_mult.size();++k) 
+    {  
+      if (found) continue;
+
+      if (chip_idx==chip_mult.at(k).at(0))
+      {
+	found=true;
+	chip_mult.at(k).at(1)+=1;
+      }
+    }
+
+    if (!found)
+    {
+      chip_st.clear(); 
+      chip_st.push_back(chip_idx); 
+      chip_st.push_back(1); 
+      chip_mult.push_back(chip_st);
+    }
+  }
+
+  for (unsigned int i=0;i<m_clus_layer->size();++i) 
+  {
+    chip_idx=0;
+    chip_idx+=(m_clus_layer->at(i)-1)*1000000;
+    chip_idx+=(m_clus_ladder->at(i)-1)*10000;
+    chip_idx+=((m_clus_module->at(i)-2+m_clus_module->at(i)%2)/2)*100;
+    chip_idx+=8*(2*m_clus_seg->at(i))/m_clus_PS->at(i);
+    chip_idx+=m_clus_strip->at(i)/(m_clus_nrows->at(i)/8);
+
+    found=false;
+
+    for (unsigned int k=0;k<chip_mult.size();++k) 
+    {  
+      if (found) continue;
+
+      if (chip_idx==chip_mult.at(k).at(0))
+      {
+	found=true;
+	m_clus_rank->push_back(chip_mult.at(k).at(1));
+      }
+    }
+  }
 }
 
 
@@ -592,7 +659,7 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 
 
   double B  = 3.8;
-
+  int n_stub=0;
 	
   double d_b = 0.;
   double d_t = 0.;
@@ -634,6 +701,14 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
   int n_candidates = 0;
  
   double PI = 4.*atan(1.);
+
+  bool found;
+
+  std::vector<std::vector<int> > chip_ranks;
+  chip_ranks.clear();
+
+  int chip_idx;
+  std::vector<int> chip_st; 
 
   for (int i=0;i<m_clus;++i) // Loop over clusters
   {
@@ -722,7 +797,6 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
 
       strip_cor = (d_t/d_b-1.)*(m_clus_strip->at(i_b)-m_clus_nrows->at(i_b)/2.+0.5);
 
-      
       if (strip_cor<0)
       {
 	strip_cor = -floor(fabs(2*strip_cor))/2.;
@@ -778,6 +852,35 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
     dR   = R2-R1;
     SW   = SW_min_s;
 
+    chip_idx=0;
+    chip_idx+=(m_clus_layer->at(i)-1)*1000000;
+    chip_idx+=(m_clus_ladder->at(i)+lad_cor-1)*10000;
+    chip_idx+=((m_clus_module->at(i_bs)-1)/2)*100;
+    chip_idx+=8*(2*m_clus_seg->at(i_bs))/m_clus_PS->at(i_bs);
+    chip_idx+=m_clus_strip->at(i_bs)/(m_clus_nrows->at(i_bs)/8);
+
+    // Is this idx already registered?
+    
+    found=false;
+
+    for (unsigned int k=0;k<chip_ranks.size();++k) 
+    {  
+      if (chip_idx==chip_ranks.at(k).at(0))
+      {
+	found=true;
+	chip_ranks.at(k).push_back(m_stub_pt->size());
+	//	break;
+      }
+    }
+
+    if (!found)
+    {
+      chip_st.clear(); 
+      chip_st.push_back(chip_idx); 
+      chip_st.push_back(m_stub_pt->size()); 
+      chip_ranks.push_back(chip_st);
+    }
+    //    cout << chip_idx << " / " << chip_ranks.size() << endl; 
 
     if (m_verb) 
       cout << m_stub << " / " 
@@ -804,9 +907,12 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
     m_stub_tp->push_back(matching_tp);
 
     m_stub_layer->push_back(m_clus_layer->at(i));
-    m_stub_module->push_back((m_clus_module->at(i)-1)/2);
+    m_stub_module->push_back((m_clus_module->at(i_bs)-1)/2);
     m_stub_ladder->push_back(m_clus_ladder->at(i)+lad_cor-1);
     m_stub_seg->push_back(m_clus_seg->at(i_bs));
+
+    m_stub_modid->push_back(1000000*m_clus_layer->at(i)+10000*(m_clus_ladder->at(i)+lad_cor-1)
+			    +100*((m_clus_module->at(i_bs)-1)/2)+m_clus_seg->at(i_bs));
 
     m_stub_strip->push_back(m_clus_strip->at(i_bs)); 
     m_stub_chip->push_back(m_clus_strip->at(i_bs)/(m_clus_nrows->at(i_bs)/8)); 
@@ -821,9 +927,11 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
  
     m_stub_deltas->push_back(SW);
     m_stub_cor->push_back(strip_cor_chosen);
+    m_stub_rank->push_back(0);
 
     if (matching_tp!=-1)
     {
+      m_stub_ptGEN->push_back(sqrt(mc->getTP_px(matching_tp)*mc->getTP_px(matching_tp)+mc->getTP_py(matching_tp)*mc->getTP_py(matching_tp)));
       m_stub_pxGEN->push_back(mc->getTP_px(matching_tp));
       m_stub_pyGEN->push_back(mc->getTP_py(matching_tp));
       m_stub_etaGEN->push_back(asinh(mc->getTP_pz(matching_tp)/sqrt(mc->getTP_px(matching_tp)*mc->getTP_px(matching_tp)
@@ -856,8 +964,93 @@ void L1TrackTrigger_analysis::get_stubs(int layer,MCExtractor *mc)
       m_stub_pid->push_back(0);
     }
 
-    ++m_stub;    
+    ++m_stub; 
+    ++n_stub;   
   }
+
+
+  // End of loop over stub, time to fill the ranks
+
+  if (n_stub<2) return;
+
+  if (m_verb) 
+    cout << "Found " << n_stub << " stubs belonging to " << chip_ranks.size() << " chips" << endl; 
+
+  std::vector<int> rank;
+  std::vector<float> bends;
+  std::vector<float> strip;
+
+  float b_min;
+  float s_min;
+  unsigned int   i_min;
+
+  for (unsigned int k=0;k<chip_ranks.size();++k) 
+  { 
+    chip_st=chip_ranks.at(k); 
+
+    if (m_verb) 
+      cout << "Chip " << chip_st.at(0) << " contains " << chip_st.size()-1 << " stubs" << endl; 
+
+    if (chip_st.size()==2) continue;
+
+    rank.clear();
+    bends.clear();
+    strip.clear();
+
+    for (unsigned int l=1;l<chip_st.size();++l) 
+    { 
+      rank.push_back(chip_st.at(l));
+      bends.push_back(fabs(m_stub_deltas->at(chip_st.at(l))));
+      strip.push_back(m_stub_strip->at(chip_st.at(l)));
+    }
+
+    // We now have the list, we do the sorting
+
+
+    for (unsigned int l=0;l<rank.size();++l) 
+    { 
+      i_min=l;
+      b_min=bends.at(l);
+      s_min=strip.at(l);
+
+      for (unsigned int ll=l;ll<rank.size();++ll) 
+      { 
+	if (bends.at(ll)<b_min)
+	{
+	  i_min=ll;
+	  b_min=bends.at(ll);
+	  s_min=strip.at(ll);
+	}
+	if (bends.at(ll)==b_min && strip.at(ll)<s_min)
+	{
+	  i_min=ll;
+	  b_min=bends.at(ll);
+	  s_min=strip.at(ll);
+	}
+      }
+      
+      if (i_min!=l)
+      {
+	rank.at(i_min)=rank.at(l);
+	bends.at(i_min)=bends.at(l);
+	strip.at(i_min)=strip.at(l);
+	
+	rank.at(l)=i_min;
+	bends.at(l)=b_min;
+	strip.at(l)=s_min;
+      }
+    }
+
+
+    for (unsigned int l=0;l<rank.size();++l) 
+    {
+      if (m_verb) 
+	cout << rank.at(l) << " / " << bends.at(l) << " / " << strip.at(l) << endl;
+
+      m_stub_rank->at(rank.at(l)) = l;
+    }
+  }
+
 }
 
 
@@ -935,7 +1128,8 @@ void L1TrackTrigger_analysis::initialize()
 {  
   m_digi_ref     = new  std::vector<int>;
   m_digi_tp      = new  std::vector< std::vector<int> >; 
-  
+  m_digi_modids  = new  std::vector< std::vector<int> >; 
+
   m_clus_x       = new  std::vector<float>;
   m_clus_y       = new  std::vector<float>;
   m_clus_z       = new  std::vector<float>; 
@@ -955,6 +1149,7 @@ void L1TrackTrigger_analysis::initialize()
   m_clus_PS      = new  std::vector<int>;  
   m_clus_nrows   = new  std::vector<int>;
   m_clus_pid     = new  std::vector<int>;  
+  m_clus_rank    = new  std::vector<int>;  
   m_clus_tp      = new  std::vector< std::vector<int> >;  
   m_clus_hits    = new  std::vector< std::vector<int> >; 
   m_clus_pix     = new  std::vector< std::vector<int> >;  
@@ -985,6 +1180,10 @@ void L1TrackTrigger_analysis::initialize()
   m_stub_tp      = new  std::vector<int>;  
   m_stub_pdg     = new  std::vector<int>;  
   m_stub_pid     = new  std::vector<int>;  
+  m_stub_rank    = new  std::vector<int>;  
+  m_stub_ptGEN   = new  std::vector<float>;  
+  m_stub_modid   = new  std::vector<int>;  
+
 
   L1TrackTrigger_analysis::reset();
 
@@ -995,14 +1194,13 @@ void L1TrackTrigger_analysis::initialize()
   
   /// Branches definition
 
-  m_tree_L1TrackTrigger->Branch("evt", &n_tot_evt); // Simple evt number or event ID
-
-
   // If we don't request only matched stubs, we keep all the info
   // otherwise we skim the data file (useful for BANK generation)
 
   if (!m_matchStubs)
   {
+    m_tree_L1TrackTrigger->Branch("evt", &n_tot_evt); // Simple evt number or event ID
+
     m_tree_L1TrackTrigger->Branch("CLUS_n",         &m_clus);
     m_tree_L1TrackTrigger->Branch("CLUS_x",         &m_clus_x);
     m_tree_L1TrackTrigger->Branch("CLUS_y",         &m_clus_y);
@@ -1025,6 +1223,7 @@ void L1TrackTrigger_analysis::initialize()
     m_tree_L1TrackTrigger->Branch("CLUS_hits",      &m_clus_hits);
     m_tree_L1TrackTrigger->Branch("CLUS_pix" ,      &m_clus_pix);
     m_tree_L1TrackTrigger->Branch("CLUS_process",   &m_clus_pid);
+    m_tree_L1TrackTrigger->Branch("CLUS_rank",      &m_clus_rank);
 
     m_tree_L1TrackTrigger->Branch("STUB_clust1",    &m_stub_clust1);
     m_tree_L1TrackTrigger->Branch("STUB_clust2",    &m_stub_clust2);
@@ -1036,25 +1235,31 @@ void L1TrackTrigger_analysis::initialize()
     m_tree_L1TrackTrigger->Branch("STUB_pdgID",     &m_stub_pdg);
     m_tree_L1TrackTrigger->Branch("STUB_process",   &m_stub_pid);
     m_tree_L1TrackTrigger->Branch("STUB_chip",      &m_stub_chip);
+    m_tree_L1TrackTrigger->Branch("STUB_rank",      &m_stub_rank);
+
+    m_tree_L1TrackTrigger->Branch("STUB_pt",        &m_stub_pt);
+    m_tree_L1TrackTrigger->Branch("STUB_x",         &m_stub_x);
+    m_tree_L1TrackTrigger->Branch("STUB_y",         &m_stub_y);
+    m_tree_L1TrackTrigger->Branch("STUB_z",         &m_stub_z);
+    m_tree_L1TrackTrigger->Branch("STUB_deltas",    &m_stub_deltas);
+    m_tree_L1TrackTrigger->Branch("STUB_X0",        &m_stub_X0);
+    m_tree_L1TrackTrigger->Branch("STUB_Y0",        &m_stub_Y0);
+    m_tree_L1TrackTrigger->Branch("STUB_Z0",        &m_stub_Z0);
+
+    m_tree_L1TrackTrigger->Branch("STUB_pxGEN",     &m_stub_pxGEN);
+    m_tree_L1TrackTrigger->Branch("STUB_pyGEN",     &m_stub_pyGEN);
+    m_tree_L1TrackTrigger->Branch("STUB_layer",     &m_stub_layer);
+    m_tree_L1TrackTrigger->Branch("STUB_module",    &m_stub_module);
+    m_tree_L1TrackTrigger->Branch("STUB_ladder",    &m_stub_ladder);
+    m_tree_L1TrackTrigger->Branch("STUB_seg",       &m_stub_seg);
   }
 
-  m_tree_L1TrackTrigger->Branch("STUB_n",         &m_stub);
-  m_tree_L1TrackTrigger->Branch("STUB_pt",        &m_stub_pt);
-  m_tree_L1TrackTrigger->Branch("STUB_pxGEN",     &m_stub_pxGEN);
-  m_tree_L1TrackTrigger->Branch("STUB_pyGEN",     &m_stub_pyGEN);
-  m_tree_L1TrackTrigger->Branch("STUB_etaGEN",    &m_stub_etaGEN);
-  m_tree_L1TrackTrigger->Branch("STUB_layer",     &m_stub_layer);
-  m_tree_L1TrackTrigger->Branch("STUB_module",    &m_stub_module);
-  m_tree_L1TrackTrigger->Branch("STUB_ladder",    &m_stub_ladder);
-  m_tree_L1TrackTrigger->Branch("STUB_seg",       &m_stub_seg);
-  m_tree_L1TrackTrigger->Branch("STUB_strip",     &m_stub_strip);
-  m_tree_L1TrackTrigger->Branch("STUB_x",         &m_stub_x);
-  m_tree_L1TrackTrigger->Branch("STUB_y",         &m_stub_y);
-  m_tree_L1TrackTrigger->Branch("STUB_z",         &m_stub_z);
-  m_tree_L1TrackTrigger->Branch("STUB_deltas",    &m_stub_deltas);
-  m_tree_L1TrackTrigger->Branch("STUB_X0",        &m_stub_X0);
-  m_tree_L1TrackTrigger->Branch("STUB_Y0",        &m_stub_Y0);
-  m_tree_L1TrackTrigger->Branch("STUB_Z0",        &m_stub_Z0);
+  m_tree_L1TrackTrigger->Branch("STUB_n",           &m_stub);
+  m_tree_L1TrackTrigger->Branch("STUB_ptGEN",       &m_stub_ptGEN);
+  m_tree_L1TrackTrigger->Branch("STUB_etaGEN",      &m_stub_etaGEN);
+  m_tree_L1TrackTrigger->Branch("STUB_modid",       &m_stub_modid);
+  m_tree_L1TrackTrigger->Branch("STUB_strip",       &m_stub_strip);
+
 }
 
 
@@ -1066,6 +1271,7 @@ void L1TrackTrigger_analysis::reset()
 
   m_digi_tp->clear();
   m_digi_ref->clear();
+  m_digi_modids->clear();
 
   m_clus_x->clear(); 
   m_clus_y->clear(); 
@@ -1087,6 +1293,7 @@ void L1TrackTrigger_analysis::reset()
   m_clus_nrows->clear();
   m_clus_pix->clear();
   m_clus_pid->clear();
+  m_clus_rank->clear();
 
   m_clus_tp->clear();
   m_clus_hits->clear();
@@ -1118,4 +1325,7 @@ void L1TrackTrigger_analysis::reset()
   m_stub_cor->clear(); 
   m_stub_pdg->clear();
   m_stub_pid->clear();
+  m_stub_rank->clear();
+  m_stub_ptGEN->clear();
+  m_stub_modid->clear();
 }

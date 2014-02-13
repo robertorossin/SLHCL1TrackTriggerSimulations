@@ -1,3 +1,15 @@
+2014-02-13  Seb Viret  <viret@in2p3.fr>
+ 
+       	* Lot of modifs in the official stub stream (in particular for occupancies studies). 
+	A new package StubTranslator, is now creating the root files for bank generation 
+	from official stubs. 
+
+	* TkLayoutTranslator module has been removed
+
+	* L1TrackExtractor package added for the official L1Track objects
+
+	This version has been tested against CMSSW_6_2_0_SLHC7
+
 2014-01-10  Seb Viret  <viret@in2p3.fr>
  
        	* Lot of modifs in the MC/STub and L1TrackTrigger parts (adaptation to 620_SLHC5)  

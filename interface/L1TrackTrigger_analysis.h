@@ -121,6 +121,7 @@ class L1TrackTrigger_analysis
   std::vector<int>                 *m_digi_ref;
   std::vector< std::vector<int> >  *m_digi_match;
   std::vector< std::vector<int> >  *m_digi_tp;
+  std::vector< std::vector<int> >  *m_digi_modids;
   std::vector<int>                 *m_clus_used;   
 
   int m_clus;
@@ -147,12 +148,13 @@ class L1TrackTrigger_analysis
   std::vector< std::vector<int> >    *m_clus_hits; // list of simhits inducing cluster i
   std::vector< std::vector<int> >    *m_clus_pix;  // list of pixels inducing cluster i
   std::vector<int>    *m_clus_pid;    // process id inducing cluster i (see MCExtractor.h)
-
+  std::vector<int>    *m_clus_rank;   // the number of clusters in the chip
 
   int m_stub;
 
   // Size of the following vectors is m_stub
   std::vector<float>  *m_stub_pt;     // pt calculated for stub i (in GeV/c)
+  std::vector<float>  *m_stub_ptGEN;  // pt generated of stub i (in GeV/c)
   std::vector<float>  *m_stub_pxGEN;  // px generated of stub i (in GeV/c)
   std::vector<float>  *m_stub_pyGEN;  // py generated of stub i (in GeV/c)
   std::vector<float>  *m_stub_etaGEN; // eta generated of stub i (in GeV/c)
@@ -160,6 +162,7 @@ class L1TrackTrigger_analysis
   std::vector<float>  *m_stub_Y0;     // y origin of particle inducing stub i (in cm)
   std::vector<float>  *m_stub_Z0;     // z origin of particle inducing stub i (in cm)
   std::vector<float>  *m_stub_PHI0;   // phi origin of particle inducing stub i (in rad)
+  std::vector<int>    *m_stub_modid;  // 1000000*layer+10000*ladder+100*module+seg
   std::vector<int>    *m_stub_layer;  // layer of stub i
   std::vector<int>    *m_stub_module; // module of stub i
   std::vector<int>    *m_stub_ladder; // ladder/ring of stub i
@@ -178,6 +181,10 @@ class L1TrackTrigger_analysis
   std::vector<int>    *m_stub_tp;     // index of the TP inducing the stub in the MC tree
   std::vector<int>    *m_stub_pdg;    // PDG code of the particle inducing the stub
   std::vector<int>    *m_stub_pid;    // process id inducing cluster i (see MCExtractor.h)
+  std::vector<int>    *m_stub_rank;   // the priority rank of the stub at the FE (CBC/MPA) level
+                                      // Classification per chip from lower bend to higher bend
+
+
 
 };
 

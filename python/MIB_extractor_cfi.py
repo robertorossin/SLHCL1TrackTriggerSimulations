@@ -27,14 +27,15 @@ MIBextraction = cms.EDAnalyzer("RecoExtractor",
 
   # Main stuff                        
   doMC             = cms.untracked.bool(False),          # Extract the MC information (MC tree)
-  doSTUB           = cms.untracked.bool(False),          # Extract the official STUB information (TkStub tree)  
+  doSTUB           = cms.untracked.bool(False),          # Extract the official STUB information (TkStub tree)
+  doL1TRK          = cms.untracked.bool(False),          # Extract the official L1track information  
   # Add Pixel information                              
   doPixel          = cms.untracked.bool(False),          # Extract the Tracker information (Pixel tree)
   pixel_tag        = cms.InputTag( "simSiPixelDigis" ),  # The collection where to fing the pixel info
   doMatch          = cms.untracked.bool(False),          # Add the simtrack index to each digi                             
 
                                
-  doTranslation    = cms.untracked.bool(False),          # For TkLayout tool (not maintained)
+  doBANK           = cms.untracked.bool(False),          # Stub container creation for bank (need official stubs)
   doL1TT           = cms.untracked.bool(False),          # Extract the cluster/stub information
 
   n_events         = cms.untracked.int32(10),            # How many events you want to analyze (only if fillTree=False)
