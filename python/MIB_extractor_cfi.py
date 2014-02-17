@@ -27,7 +27,13 @@ MIBextraction = cms.EDAnalyzer("RecoExtractor",
 
   # Main stuff                        
   doMC             = cms.untracked.bool(False),          # Extract the MC information (MC tree)
+
   doSTUB           = cms.untracked.bool(False),          # Extract the official STUB information (TkStub tree)
+  CLUS_container   = cms.string( "TTClustersFromPixelDigis" ),
+  STUB_container   = cms.string( "TTStubsFromPixelDigis" ),
+  CLUS_name        = cms.string( "ClusterInclusive" ),
+  STUB_name        = cms.string( "StubAccepted" ),
+
   doL1TRK          = cms.untracked.bool(False),          # Extract the official L1track information  
   # Add Pixel information                              
   doPixel          = cms.untracked.bool(False),          # Extract the Tracker information (Pixel tree)

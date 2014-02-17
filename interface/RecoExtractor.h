@@ -69,6 +69,12 @@ class RecoExtractor : public edm::EDAnalyzer{
   int  nevts_;
   int  skip_;
 
+  std::string CLUS_tag;
+  std::string STUB_tag;
+
+  std::string CLUS_name;
+  std::string STUB_name;
+
   edm::InputTag PIX_tag_;  // 
   edm::InputTag MC_tag_;  // 
 

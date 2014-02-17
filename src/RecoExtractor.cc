@@ -14,7 +14,10 @@ RecoExtractor::RecoExtractor(const edm::ParameterSet& config) :
   do_L1tt_       (config.getUntrackedParameter<bool>("doL1TT", false)),
   nevts_         (config.getUntrackedParameter<int>("n_events", 10000)),
   skip_          (config.getUntrackedParameter<int>("skip_events", 0)),
-
+  CLUS_tag       (config.getParameter<std::string>("CLUS_container")),
+  STUB_tag       (config.getParameter<std::string>("STUB_container")),
+  CLUS_name      (config.getParameter<std::string>("CLUS_name")),
+  STUB_name      (config.getParameter<std::string>("STUB_name")),
   PIX_tag_       (config.getParameter<edm::InputTag>("pixel_tag")),
   outFilename_   (config.getParameter<std::string>("extractedRootFile")),
   inFilename_    (config.getParameter<std::string>("inputRootFile")),
@@ -152,7 +155,7 @@ void RecoExtractor::initialize()
 {
   m_outfile  = new TFile(outFilename_.c_str(),"RECREATE");
   m_MC       = new MCExtractor(do_MC_);
-  m_STUB     = new StubExtractor(do_STUB_);
+  m_STUB     = new StubExtractor(CLUS_tag,CLUS_name,STUB_tag,STUB_name,do_STUB_);
   m_L1TRK    = new L1TrackExtractor(do_L1TRK_);
   m_PIX      = new PixelExtractor(PIX_tag_,do_PIX_,do_MATCH_);
 }  

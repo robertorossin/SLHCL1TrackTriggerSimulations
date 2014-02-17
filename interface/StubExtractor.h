@@ -52,6 +52,7 @@
 #include "DataFormats/SiPixelDetId/interface/PixelSubdetector.h"
 #include "DataFormats/SiPixelDetId/interface/PixelBarrelName.h"
 #include "DataFormats/SiPixelDetId/interface/PixelEndcapName.h"
+#include "FWCore/Utilities/interface/InputTag.h"
 
 //Include std C++
 #include <iostream>
@@ -70,7 +71,7 @@ class StubExtractor
 
  public:
 
-  StubExtractor(bool doTree);
+  StubExtractor(std::string CLUS_tag,std::string CLUS_name,std::string STUB_tag,std::string STUB_name, bool doTree);
   StubExtractor(TFile *a_file);
   ~StubExtractor();
 
@@ -107,6 +108,12 @@ class StubExtractor
 
  private:
   
+  std::string m_CLUS_tag;
+  std::string m_STUB_tag;
+
+  std::string m_CLUS_name;
+  std::string m_STUB_name;
+
 
   int n_tot_evt;
   int m_nstubs;

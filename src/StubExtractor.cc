@@ -1,8 +1,15 @@
 #include "../interface/StubExtractor.h"
 
 
-StubExtractor::StubExtractor(bool doTree)
+StubExtractor::StubExtractor(std::string CLUS_tag,std::string CLUS_name,std::string STUB_tag,std::string STUB_name, bool doTree)
 {
+
+  m_CLUS_tag   = CLUS_tag;
+  m_STUB_tag   = STUB_tag;
+
+  m_CLUS_name  = CLUS_name;
+  m_STUB_name  = STUB_name;
+
   m_OK = false;
   n_tot_evt=0;
 
@@ -312,16 +319,17 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
 
   mc->clearTP(0.001,10000000.0);
   /// Sim Tracks and Vtx
+
   event->getByLabel( "g4SimHits", SimTrackHandle );
   event->getByLabel( "g4SimHits", SimVtxHandle );
 
   /// Track Trigger
-  event->getByLabel( "TTClustersFromPixelDigis", "ClusterInclusive",    PixelDigiL1TkClusterHandle );
-  event->getByLabel( "TTStubsFromPixelDigis", "StubAccepted",    PixelDigiL1TkStubHandle );
+  event->getByLabel( m_CLUS_tag, m_CLUS_name,    PixelDigiL1TkClusterHandle );
+  event->getByLabel( m_STUB_tag, m_STUB_name,    PixelDigiL1TkStubHandle );
 
   /// Track Trigger MC Truth
-  event->getByLabel( "TTClusterAssociatorFromPixelDigis", "ClusterInclusive", MCTruthTTClusterHandle );
-  event->getByLabel( "TTStubAssociatorFromPixelDigis", "StubAccepted",    MCTruthTTStubHandle );
+  event->getByLabel( "TTClusterAssociatorFromPixelDigis", m_CLUS_name, MCTruthTTClusterHandle );
+  event->getByLabel( "TTStubAssociatorFromPixelDigis", m_STUB_name,    MCTruthTTStubHandle );
 
   /// TrackingParticles
   event->getByLabel( "mix", "MergedTrackTruth", TrackingParticleHandle );
@@ -353,7 +361,6 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
 	    contentIter != inputIter->end();
 	    ++contentIter )
       {
-
 	edm::Ref< edmNew::DetSetVector< TTCluster< Ref_PixelDigi_ > >, TTCluster< Ref_PixelDigi_ > > tempCluRef = 
 	  edmNew::makeRefTo( PixelDigiL1TkClusterHandle, contentIter );
 
