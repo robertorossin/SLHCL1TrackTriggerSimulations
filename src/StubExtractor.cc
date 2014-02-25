@@ -771,6 +771,7 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
   float b_min;
   float s_min2;
   unsigned int   i_min;
+  int tmp;
 
   for (unsigned int k=0;k<chip_ranks.size();++k) 
   { 
@@ -791,14 +792,13 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
 
     // We now have the list, we do the sorting
 
-
-    for (unsigned int l=0;l<rank.size();++l) 
+    for (unsigned int l=0;l<rank.size()-1;++l) 
     { 
       i_min=l;
       b_min=bends.at(l);
       s_min2=strip.at(l);
 
-      for (unsigned int ll=l;ll<rank.size();++ll) 
+      for (unsigned int ll=l+1;ll<rank.size();++ll) 
       { 
 	if (bends.at(ll)<b_min)
 	{
@@ -816,11 +816,12 @@ void StubExtractor::writeInfo(const edm::Event *event, MCExtractor *mc)
 
       if (i_min!=l)
       {
+	tmp=rank.at(i_min);
 	rank.at(i_min)=rank.at(l);
 	bends.at(i_min)=bends.at(l);
 	strip.at(i_min)=strip.at(l);
 	
-	rank.at(l)=i_min;
+	rank.at(l)=tmp;
 	bends.at(l)=b_min;
 	strip.at(l)=s_min2;
       }
