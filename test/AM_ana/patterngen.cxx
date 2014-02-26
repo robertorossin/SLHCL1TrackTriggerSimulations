@@ -79,7 +79,39 @@ void patterngen::get_MPA_input(int nevt)
   float d0GEN;
   bool isGOOD;
 
+
+  for (int j=0;j<80000;++j)
+  {
+    for (int k=0;k<2;++k)
+    {
+      for (int l=0;l<2;++l)
+      {
+	Conc_CBC_eff_480_8[j][k][l] = 0;
+	Conc_CBC_eff_480_4[j][k][l] = 0;
+	Conc_CBC_eff_320_8[j][k][l] = 0;
+	Conc_CBC_eff_320_4[j][k][l] = 0;
+	Conc_MPA_eff_480_8[j][k][l] = 0;
+	Conc_MPA_eff_320_8[j][k][l] = 0;
+      }
+    }
+  
+    for (int k=0;k<16;++k)
+    {
+      for (int l=0;l<4;++l)
+      {
+	MPA_eff_4_4_4[j][k][l] = 0;
+	MPA_eff_4_4_8[j][k][l] = 0;
+	MPA_eff_5_5_4[j][k][l] = 0;
+	MPA_eff_5_5_8[j][k][l] = 0;
+      }
+    }
+  }
+
+
+  int thresh=30;
+
   for (int j=0;j<nevt;++j)
+    //for (int j=0;j<1;++j)
   { 
     L1TT->GetEntry(j); 
     PIX->GetEntry(j);
@@ -87,6 +119,10 @@ void patterngen::get_MPA_input(int nevt)
 
     m_pix_idx.clear();
     m_mod_list.clear();
+
+    ana_chip(); // Analyze the chip content of the event
+
+    continue;
 
     std::cout << std::endl;
     std::cout << "##################################################" << std::endl;
@@ -100,7 +136,10 @@ void patterngen::get_MPA_input(int nevt)
     for (int i=0;i<m_pix;++i)
     {
       if (m_pix_layer[i]!=5) continue; // Only interested into this PS layer
+      if (m_pix_ch[i]<thresh) continue; 
 
+      //      std::cout << i << " / " << m_pix_ch[i] << std::endl;
+      
       ladder= m_pix_ladder[i];
       module= static_cast<int>((m_pix_module[i]-1)/2); 
 
@@ -153,7 +192,7 @@ void patterngen::get_MPA_input(int nevt)
       std::cout << "Module 1 " << ladder << " " << module << std::endl;	 
      
       
-      ana_pix(5,ladder,modid-100*ladder); // Link the stub/cluster info
+      ana_pix(5,ladder,modid-100*ladder,m_digi_list); // Link the stub/cluster info
 
       //      m_evt_pix.clear();
       //      m_evt_clu.clear();
@@ -187,7 +226,7 @@ void patterngen::get_MPA_input(int nevt)
 	  ptGEN = sqrt(m_part_px[itp]*m_part_px[itp]+m_part_py[itp]*m_part_py[itp]);
 	  d0GEN = sqrt(m_part_x[itp]*m_part_x[itp]+m_part_y[itp]*m_part_y[itp]); 
 
-	  if (ptGEN>2 && d0GEN<0.1) isGOOD=true;
+	  if (ptGEN>2 && d0GEN<0.2) isGOOD=true;
 	}
 
 	(m_pix_module[idx]%2==1)
@@ -225,7 +264,154 @@ void patterngen::get_MPA_input(int nevt)
     }
     
   }
+
+  int final_4_4_4[4];
+  int final_4_4_8[4];
+  int final_5_5_4[4];
+  int final_5_5_8[4];
+
+
+  for (int j=0;j<4;++j)
+  {
+    final_4_4_4[j] = 0;
+    final_4_4_8[j] = 0;
+    final_5_5_4[j] = 0;
+    final_5_5_8[j] = 0;
+  }
+
+  for (int j=0;j<80000;++j)
+  {
+    for (int k=0;k<16;++k)
+    {
+      if (MPA_eff_4_4_4[j][k][0]!=0)
+      {
+	final_4_4_4[0] += MPA_eff_4_4_4[j][k][0];
+	final_4_4_4[1] += MPA_eff_4_4_4[j][k][1];
+	final_4_4_4[2] += MPA_eff_4_4_4[j][k][2];
+	final_4_4_4[3] += MPA_eff_4_4_4[j][k][3];
+
+	final_4_4_8[0] += MPA_eff_4_4_8[j][k][0];
+	final_4_4_8[1] += MPA_eff_4_4_8[j][k][1];
+	final_4_4_8[2] += MPA_eff_4_4_8[j][k][2];
+	final_4_4_8[3] += MPA_eff_4_4_8[j][k][3];
+
+	final_5_5_4[0] += MPA_eff_5_5_4[j][k][0];
+	final_5_5_4[1] += MPA_eff_5_5_4[j][k][1];
+	final_5_5_4[2] += MPA_eff_5_5_4[j][k][2];
+	final_5_5_4[3] += MPA_eff_5_5_4[j][k][3];
+
+	final_5_5_8[0] += MPA_eff_5_5_8[j][k][0];
+	final_5_5_8[1] += MPA_eff_5_5_8[j][k][1];
+	final_5_5_8[2] += MPA_eff_5_5_8[j][k][2];
+	final_5_5_8[3] += MPA_eff_5_5_8[j][k][3];
+      }
+    }
+  }
+
+  std::cout << "Final eff result for 4_4_4 :" 
+	    << final_4_4_4[0] << "/" 
+	    << final_4_4_4[1] << "/" 
+	    << final_4_4_4[2] << "/" 
+	    << final_4_4_4[3] << std::endl;
+
+  std::cout << "Final eff result for 4_4_8 :" 
+	    << final_4_4_8[0] << "/" 
+	    << final_4_4_8[1] << "/" 
+	    << final_4_4_8[2] << "/" 
+	    << final_4_4_8[3] << std::endl;
+
+  std::cout << "Final eff result for 5_5_4 :" 
+	    << final_5_5_4[0] << "/" 
+	    << final_5_5_4[1] << "/" 
+	    << final_5_5_4[2] << "/" 
+	    << final_5_5_4[3] << std::endl;
+
+  std::cout << "Final eff result for 5_5_8 :" 
+	    << final_5_5_8[0] << "/" 
+	    << final_5_5_8[1] << "/" 
+	    << final_5_5_8[2] << "/" 
+	    << final_5_5_8[3] << std::endl;
+
+
+
+  int final_conc_MPA_320[2];
+  int final_conc_MPA_480[2];
+
+  int final_conc_CBC_320_4[2];
+  int final_conc_CBC_480_4[2];
+  int final_conc_CBC_320_8[2];
+  int final_conc_CBC_480_8[2];
+
+  for (int j=0;j<2;++j)
+  {
+    final_conc_MPA_320[j]   = 0;
+    final_conc_MPA_480[j]   = 0;
+    final_conc_CBC_320_4[j] = 0;
+    final_conc_CBC_480_4[j] = 0;
+    final_conc_CBC_320_8[j] = 0;
+    final_conc_CBC_480_8[j] = 0;
+  }
+
+  for (int j=0;j<80000;++j)
+  {
+    for (int k=0;k<2;++k)
+    {
+      if (Conc_MPA_eff_480_8[j][k][0]!=0)
+      {
+	final_conc_MPA_320[0] += Conc_MPA_eff_320_8[j][k][0];
+	final_conc_MPA_320[1] += Conc_MPA_eff_320_8[j][k][1];
+
+	final_conc_MPA_480[0] += Conc_MPA_eff_480_8[j][k][0];
+	final_conc_MPA_480[1] += Conc_MPA_eff_480_8[j][k][1];
+      }
+
+      if (Conc_CBC_eff_480_4[j][k][0]!=0)
+      {
+	final_conc_CBC_320_4[0] += Conc_CBC_eff_320_4[j][k][0];
+	final_conc_CBC_320_4[1] += Conc_CBC_eff_320_4[j][k][1];
+
+	final_conc_CBC_480_4[0] += Conc_CBC_eff_480_4[j][k][0];
+	final_conc_CBC_480_4[1] += Conc_CBC_eff_480_4[j][k][1];
+
+
+	final_conc_CBC_320_8[0] += Conc_CBC_eff_320_8[j][k][0];
+	final_conc_CBC_320_8[1] += Conc_CBC_eff_320_8[j][k][1];
+
+	final_conc_CBC_480_8[0] += Conc_CBC_eff_480_8[j][k][0];
+	final_conc_CBC_480_8[1] += Conc_CBC_eff_480_8[j][k][1];
+      }
+    }
+  }
+
+
+  std::cout << "Final eff result for MPA_CONC 320 :" 
+	    << final_conc_MPA_320[0] << "/" 
+	    << final_conc_MPA_320[1] << std::endl;
+
+  std::cout << "Final eff result for MPA_CONC 480 :" 
+	    << final_conc_MPA_480[0] << "/" 
+	    << final_conc_MPA_480[1] << std::endl;
+
+
+  std::cout << "Final eff result for CBC_CONC 320 4 :" 
+	    << final_conc_CBC_320_4[0] << "/" 
+	    << final_conc_CBC_320_4[1] << std::endl;
+
+  std::cout << "Final eff result for CBC_CONC 320 8 :" 
+	    << final_conc_CBC_320_8[0] << "/" 
+	    << final_conc_CBC_320_8[1] << std::endl;
+
+  std::cout << "Final eff result for CBC_CONC 480 4 :" 
+	    << final_conc_CBC_480_4[0] << "/" 
+	    << final_conc_CBC_480_4[1] << std::endl;
+
+  std::cout << "Final eff result for CBC_CONC 480 8 :" 
+	    << final_conc_CBC_480_8[0] << "/" 
+	    << final_conc_CBC_480_8[1] << std::endl;
+
 }
+
+
 
 //
 // This method creates, for one module, a list of the pixels used 
@@ -234,7 +420,214 @@ void patterngen::get_MPA_input(int nevt)
 // Three tables are built. One for the digi flagged, one for the corresp.
 // clusters, and one for the stubs when applicable
 
-void patterngen::ana_pix(int lay,int lad,int mod)
+void patterngen::ana_chip()
+{
+  std::vector<int> chip_cnt;
+  
+  int mod;
+  int lad;
+  int lay;
+  int chp;
+
+  int modid;
+  int modid_s;
+
+  int s_4_4_4;
+  int s_4_4_8;
+  int s_5_5_4;
+  int s_5_5_8;
+
+  int np_4,np_8,ns_4,ns_8;
+
+  for (int j=0;j<80000;++j)
+  {
+    for (int k=0;k<2;++k)
+    {
+      for (int l=0;l<3;++l) mod_fifos_4[j][k][l] = 0;
+      for (int l=0;l<3;++l) mod_fifos_8[j][k][l] = 0;
+    }
+  }
+
+  for (unsigned int i=0;i<m_clus_mult.size();++i)
+  {
+    chip_cnt = m_clus_mult.at(i);
+    modid    = chip_cnt.at(0);
+
+    lay    = modid/1000000;    
+    modid -= 1000000*lay;
+    lad    = modid/10000;
+
+    if (lay>7 || (lay>10 && lad>9)) continue;
+
+    if (lay<=7) lay-=5;
+    if (lay>7)  lay-=8;
+
+    modid -= 10000*lad;
+    mod    = modid/100;
+    modid -= 100*mod;
+    chp    = modid;
+
+    modid_s = 10000*lay+100*lad+mod;
+
+    np_4   = chip_cnt.at(3);
+    np_8   = chip_cnt.at(5);
+    ns_4   = chip_cnt.at(4);
+    ns_8   = chip_cnt.at(6);
+
+    // Compute the size of the L1 words with different formats
+
+    s_4_4_4 = 35 + 13*np_4 +  9*ns_4;
+    s_4_4_8 = 35 + 14*np_8 + 10*ns_8;
+    s_5_5_4 = 37 + 13*np_4 +  9*ns_4;
+    s_5_5_8 = 37 + 14*np_8 + 10*ns_8;
+
+    mod_fifos_4[modid_s][chp/8][0] += np_4;
+    mod_fifos_8[modid_s][chp/8][0] += np_8;
+    mod_fifos_4[modid_s][chp/8][1] += ns_4;
+    mod_fifos_8[modid_s][chp/8][1] += ns_8;
+
+    ++MPA_eff_4_4_4[modid_s][chp][0];
+    ++MPA_eff_4_4_8[modid_s][chp][0];
+    ++MPA_eff_5_5_4[modid_s][chp][0];
+    ++MPA_eff_5_5_8[modid_s][chp][0];
+
+    if (np_4>15)     ++MPA_eff_4_4_4[modid_s][chp][1];
+    if (ns_4>15)     ++MPA_eff_4_4_4[modid_s][chp][2];
+    if (np_4>15 || ns_4>15) ++MPA_eff_4_4_4[modid_s][chp][3];
+
+    //if (s_4_4_4>320) ++MPA_eff_4_4_4[modid_s][chp][3];
+
+    if (np_4>23)     ++MPA_eff_5_5_4[modid_s][chp][1];
+    if (ns_4>16)     ++MPA_eff_5_5_4[modid_s][chp][2];
+    if (np_4>23 || ns_4>16) ++MPA_eff_5_5_4[modid_s][chp][3];
+
+    //    if (s_5_5_4>320) ++MPA_eff_5_5_4[modid_s][chp][3];
+
+    if (np_8>15)     ++MPA_eff_4_4_8[modid_s][chp][1];
+    if (ns_8>15)     ++MPA_eff_4_4_8[modid_s][chp][2];
+    if (np_8>15 || ns_8>15) ++MPA_eff_4_4_8[modid_s][chp][3];
+
+    //    if (s_4_4_8>320) ++MPA_eff_4_4_8[modid_s][chp][3];
+
+    if (np_8>21)     ++MPA_eff_5_5_8[modid_s][chp][1];
+    if (ns_8>15)     ++MPA_eff_5_5_8[modid_s][chp][2];
+    if (np_8>21 || ns_8>15) ++MPA_eff_5_5_8[modid_s][chp][3];
+
+    //    if (s_5_5_8>320) ++MPA_eff_5_5_8[modid_s][chp][3];
+
+    /*
+    std::cout << lay << "/" << lad << "/" 
+	      << mod << "/" << chp << ":" << std::endl;
+
+    std::cout << "cluster content (pix/str) " << chip_cnt.at(1) << "/" <<  chip_cnt.at(2) << std::endl;
+    std::cout << "cluster content (CW8 cut) " << chip_cnt.at(5) << "/" <<  chip_cnt.at(6) << std::endl;
+    std::cout << "cluster content (CW4 cut) " << chip_cnt.at(3) << "/" <<  chip_cnt.at(4) << std::endl;
+
+    std::cout << "L1 word size (CW8) " << 35+13*chip_cnt.at(5)+9*chip_cnt.at(2) << std::endl;
+    std::cout << "L1 word size (CW4) " << 35+13*chip_cnt.at(3)+9*chip_cnt.at(4) << std::endl;
+    */
+  } // End of loop over clusters
+
+  // Now we can look at the half-module level and therefore test the concentrator L1 block
+
+  int MPA_conc_length;
+
+
+  for (int j=0;j<80000;++j)
+  {
+    for (int k=0;k<2;++k)
+    {
+      if (mod_fifos_8[j][k][0]==0 && mod_fifos_8[j][k][1]==0) continue;
+
+      MPA_conc_length = 40 + 17*mod_fifos_8[j][k][0] + 13*mod_fifos_8[j][k][1];
+
+      ++Conc_MPA_eff_320_8[j][k][0];
+      ++Conc_MPA_eff_480_8[j][k][0];
+
+      if (MPA_conc_length>320) ++Conc_MPA_eff_320_8[j][k][1];
+      if (MPA_conc_length>480) ++Conc_MPA_eff_480_8[j][k][1];
+    }
+  }
+
+  // Do another loop for the 2S modules
+
+
+  for (int j=0;j<80000;++j)
+  {
+    for (int k=0;k<2;++k)
+    {
+      for (int l=0;l<3;++l) mod_fifos_4[j][k][l] = 0;
+      for (int l=0;l<3;++l) mod_fifos_8[j][k][l] = 0;
+    }
+  }
+
+  for (unsigned int i=0;i<m_clus_mult.size();++i)
+  {
+    chip_cnt = m_clus_mult.at(i);
+    modid    = chip_cnt.at(0);
+
+    lay    = modid/1000000;    
+    modid -= 1000000*lay;
+    lad    = modid/10000;
+
+    if (lay<=7 || (lay>10 && lad<=9)) continue;
+
+    lay-=8;
+
+    modid -= 10000*lad;
+    mod    = modid/100;
+    modid -= 100*mod;
+    chp    = modid;
+
+    modid_s = 10000*lay+100*lad+mod;
+
+    ns_4   = chip_cnt.at(4);
+    ns_8   = chip_cnt.at(6);
+
+    mod_fifos_4[modid_s][chp/8][1] += ns_4;
+    mod_fifos_8[modid_s][chp/8][1] += ns_8;
+
+  } // End of loop over clusters
+
+
+  int CBC_conc_length;
+
+
+  for (int j=0;j<80000;++j)
+  {
+    for (int k=0;k<2;++k)
+    {
+      if (mod_fifos_8[j][k][1]==0) continue;
+
+      CBC_conc_length = 35 + 14*mod_fifos_8[j][k][1];
+
+      ++Conc_CBC_eff_320_8[j][k][0];
+      ++Conc_CBC_eff_480_8[j][k][0];
+
+      if (CBC_conc_length>320) ++Conc_CBC_eff_320_8[j][k][1];
+      if (CBC_conc_length>480) ++Conc_CBC_eff_480_8[j][k][1];
+
+      CBC_conc_length = 35 + 13*mod_fifos_4[j][k][1];
+
+      ++Conc_CBC_eff_320_4[j][k][0];
+      ++Conc_CBC_eff_480_4[j][k][0];
+
+      if (CBC_conc_length>320) ++Conc_CBC_eff_320_4[j][k][1];
+      if (CBC_conc_length>480) ++Conc_CBC_eff_480_4[j][k][1];
+
+    }
+  }
+}
+
+
+//
+// This method creates, for one module, a list of the pixels used 
+// to make a cluster and a stub
+//
+// Three tables are built. One for the digi flagged, one for the corresp.
+// clusters, and one for the stubs when applicable
+
+void patterngen::ana_pix(int lay,int lad,int mod, std::vector<int> digits)
 {
   m_evt_pix.clear();
   m_evt_clu.clear();
@@ -245,28 +638,56 @@ void patterngen::ana_pix(int lay,int lad,int mod)
   int c2 = -1;
 
   std::vector<int> list_pix;
+  std::vector<int> list_pix_coords;
+
+  int row,col,idx;
+  bool found;
 
   for (int i=0;i<m_clus;++i)
   {      
     if (m_clus_layer[i]!=5) continue;
-
     if (m_clus_ladder[i]!=lad) continue;
     if (int(m_clus_module[i]-1)/2!=mod) continue;
 
     // First of all we compute the ID of the stub's module
 
     list_pix.clear();
-    list_pix = m_clus_pix[i];
+    list_pix_coords.clear();
+    list_pix_coords = m_clus_pix[i];
 
-    for (unsigned int j=0;j<list_pix.size();++j)
+    for (unsigned int j=0;j<list_pix_coords.size()/2;++j)
     {
-      m_evt_pix.push_back(list_pix.at(j));
-      m_evt_clu.push_back(i);
-      m_evt_stu.push_back(-1);
+      row=list_pix_coords.at(2*j);
+      col=list_pix_coords.at(2*j+1);
 
-      (m_clus_tp[i].size()!=0)
-	? m_evt_tp.push_back(m_clus_tp[i].at(0))
-	: m_evt_tp.push_back(-1);
+      found=false;
+
+      //      cout << row << "/" << col << endl;
+
+      for (unsigned int k=0;k<digits.size();++k)
+      {
+	if (found) continue;
+
+	idx = digits.at(k);
+
+	//cout << m_pix_module[idx] << "/" << m_pix_row[idx] << "/" << m_pix_col[idx] << endl;
+	
+
+	if (m_pix_module[idx]!=m_clus_module[i]) continue;
+	if (m_pix_row[idx]!=row) continue;
+	if (m_pix_col[idx]!=col) continue;
+
+	//	cout << idx << endl;
+
+	found=true;
+
+	m_evt_pix.push_back(idx);
+	m_evt_clu.push_back(i);
+	m_evt_stu.push_back(-1);
+	m_evt_tp.push_back(m_clus_tp[i]);
+      }
+
+      //      if (!found) cout << "no match!"<< endl;
 
     }
   }
@@ -650,7 +1071,10 @@ void patterngen::initTuple(std::string in,std::string out,int type)
 
   if (type == 0) return;
 
-  L1TT   = new TChain("L1TrackTrigger"); 
+  (type!=2)
+    ? L1TT   = new TChain("L1TrackTrigger")
+    : L1TT   = new TChain("TkStubs");
+ 
   PIX    = new TChain("Pixels"); 
   MC     = new TChain("MC");   
  
@@ -718,6 +1142,7 @@ void patterngen::initTuple(std::string in,std::string out,int type)
   pm_pix_x=&m_pix_x;
   pm_pix_y=&m_pix_y;
   pm_pix_z=&m_pix_z;
+  pm_pix_ch=&m_pix_ch;
 
   PIX->SetBranchAddress("PIX_n",         &m_pix);
   if (type == 2) PIX->SetBranchAddress("PIX_nPU",       &m_npu);
@@ -726,6 +1151,7 @@ void patterngen::initTuple(std::string in,std::string out,int type)
   PIX->SetBranchAddress("PIX_module",    &pm_pix_module);
   PIX->SetBranchAddress("PIX_row",       &pm_pix_row);
   PIX->SetBranchAddress("PIX_column",    &pm_pix_col);
+  PIX->SetBranchAddress("PIX_charge",    &pm_pix_ch);
   PIX->SetBranchAddress("PIX_x",         &pm_pix_x);
   PIX->SetBranchAddress("PIX_y",         &pm_pix_y);
   PIX->SetBranchAddress("PIX_z",         &pm_pix_z);
@@ -740,6 +1166,7 @@ void patterngen::initTuple(std::string in,std::string out,int type)
   pm_stub_seg=&m_stub_seg;
   pm_clus_nseg=&m_clus_nseg;
   pm_clus_pix=&m_clus_pix;
+  pm_clus_mult=&m_clus_mult;
   pm_stub_chip=&m_stub_chip;
   pm_stub_clust1=&m_stub_clust1;
   pm_stub_clust2=&m_stub_clust2;
@@ -754,39 +1181,63 @@ void patterngen::initTuple(std::string in,std::string out,int type)
   pm_clus_ladder=&m_clus_ladder;
   pm_clus_module=&m_clus_module;
   pm_clus_tp=&m_clus_tp;
-  pm_clus_pix=&m_clus_pix;
+ 
 
-
-  L1TT->SetBranchAddress("STUB_n",         &m_stub);
-  L1TT->SetBranchAddress("STUB_layer",     &pm_stub_layer);
-  L1TT->SetBranchAddress("STUB_ladder",    &pm_stub_ladder);
-  L1TT->SetBranchAddress("STUB_module",    &pm_stub_module);
-  L1TT->SetBranchAddress("STUB_pt",        &pm_stub_pt);
-  L1TT->SetBranchAddress("STUB_tp",        &pm_stub_tp);
-  L1TT->SetBranchAddress("STUB_deltas",    &pm_stub_deltas);
-  L1TT->SetBranchAddress("STUB_strip",     &pm_stub_strip);
-  L1TT->SetBranchAddress("STUB_seg",       &pm_stub_seg);
-  L1TT->SetBranchAddress("STUB_chip",      &pm_stub_chip);
-  L1TT->SetBranchAddress("STUB_clust1",    &pm_stub_clust1);
-  L1TT->SetBranchAddress("STUB_clust2",    &pm_stub_clust2);
-  L1TT->SetBranchAddress("CLUS_PS",        &pm_clus_nseg);
-
-  if (type == 2)
+  if (type!=2)
   {
-    L1TT->SetBranchAddress("CLUS_n",         &m_clus);
-    L1TT->SetBranchAddress("CLUS_pix",       &pm_clus_pix);
-    L1TT->SetBranchAddress("CLUS_tp",        &pm_clus_tp);
-    L1TT->SetBranchAddress("CLUS_layer",     &pm_clus_layer);
-    L1TT->SetBranchAddress("CLUS_ladder",    &pm_clus_ladder);
-    L1TT->SetBranchAddress("CLUS_module",    &pm_clus_module);
+    L1TT->SetBranchAddress("STUB_n",         &m_stub);
+    L1TT->SetBranchAddress("STUB_layer",     &pm_stub_layer);
+    L1TT->SetBranchAddress("STUB_ladder",    &pm_stub_ladder);
+    L1TT->SetBranchAddress("STUB_module",    &pm_stub_module);
+    L1TT->SetBranchAddress("STUB_pt",        &pm_stub_pt);
+    L1TT->SetBranchAddress("STUB_tp",        &pm_stub_tp);
+    L1TT->SetBranchAddress("STUB_deltas",    &pm_stub_deltas);
+    L1TT->SetBranchAddress("STUB_strip",     &pm_stub_strip);
+    L1TT->SetBranchAddress("STUB_seg",       &pm_stub_seg);
+    L1TT->SetBranchAddress("STUB_chip",      &pm_stub_chip);
+    L1TT->SetBranchAddress("STUB_clust1",    &pm_stub_clust1);
+    L1TT->SetBranchAddress("STUB_clust2",    &pm_stub_clust2);
+    L1TT->SetBranchAddress("CLUS_PS",        &pm_clus_nseg);
+    
+    L1TT->SetBranchAddress("STUB_pxGEN",     &pm_stub_pxGEN);
+    L1TT->SetBranchAddress("STUB_pyGEN",     &pm_stub_pyGEN);
+    L1TT->SetBranchAddress("STUB_etaGEN",    &pm_stub_etaGEN);
+    L1TT->SetBranchAddress("STUB_X0",        &pm_stub_X0);
+    L1TT->SetBranchAddress("STUB_Y0",        &pm_stub_Y0);
+    L1TT->SetBranchAddress("STUB_Z0",        &pm_stub_Z0);
+  }
+  else
+  {
+    L1TT->SetBranchAddress("L1TkSTUB_n",         &m_stub);
+    L1TT->SetBranchAddress("L1TkSTUB_layer",     &pm_stub_layer);
+    L1TT->SetBranchAddress("L1TkSTUB_ladder",    &pm_stub_ladder);
+    L1TT->SetBranchAddress("L1TkSTUB_module",    &pm_stub_module);
+    L1TT->SetBranchAddress("L1TkSTUB_pt",        &pm_stub_pt);
+    L1TT->SetBranchAddress("L1TkSTUB_tp",        &pm_stub_tp);
+    L1TT->SetBranchAddress("L1TkSTUB_deltas",    &pm_stub_deltas);
+    L1TT->SetBranchAddress("L1TkSTUB_strip",     &pm_stub_strip);
+    L1TT->SetBranchAddress("L1TkSTUB_seg",       &pm_stub_seg);
+    L1TT->SetBranchAddress("L1TkSTUB_chip",      &pm_stub_chip);
+    L1TT->SetBranchAddress("L1TkSTUB_clust1",    &pm_stub_clust1);
+    L1TT->SetBranchAddress("L1TkSTUB_clust2",    &pm_stub_clust2);
+    L1TT->SetBranchAddress("L1TkCLUS_PS",        &pm_clus_nseg);
+
+    L1TT->SetBranchAddress("L1TkCLUS_n",         &m_clus);
+    L1TT->SetBranchAddress("L1TkCLUS_PIX",       &pm_clus_pix);
+    L1TT->SetBranchAddress("L1TkCLUS_MULT",      &pm_clus_mult);
+    L1TT->SetBranchAddress("L1TkCLUS_tp",        &pm_clus_tp);
+    L1TT->SetBranchAddress("L1TkCLUS_layer",     &pm_clus_layer);
+    L1TT->SetBranchAddress("L1TkCLUS_ladder",    &pm_clus_ladder);
+    L1TT->SetBranchAddress("L1TkCLUS_module",    &pm_clus_module);
+  
+    L1TT->SetBranchAddress("L1TkSTUB_pxGEN",     &pm_stub_pxGEN);
+    L1TT->SetBranchAddress("L1TkSTUB_pyGEN",     &pm_stub_pyGEN);
+    L1TT->SetBranchAddress("L1TkSTUB_etaGEN",    &pm_stub_etaGEN);
+    L1TT->SetBranchAddress("L1TkSTUB_X0",        &pm_stub_X0);
+    L1TT->SetBranchAddress("L1TkSTUB_Y0",        &pm_stub_Y0);
+    L1TT->SetBranchAddress("L1TkSTUB_Z0",        &pm_stub_Z0);
   }
 
-  L1TT->SetBranchAddress("STUB_pxGEN",     &pm_stub_pxGEN);
-  L1TT->SetBranchAddress("STUB_pyGEN",     &pm_stub_pyGEN);
-  L1TT->SetBranchAddress("STUB_etaGEN",    &pm_stub_etaGEN);
-  L1TT->SetBranchAddress("STUB_X0",        &pm_stub_X0);
-  L1TT->SetBranchAddress("STUB_Y0",        &pm_stub_Y0);
-  L1TT->SetBranchAddress("STUB_Z0",        &pm_stub_Z0);
 
   m_outbinary.open("concentrator_input.txt");
   

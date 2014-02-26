@@ -1,46 +1,37 @@
-// Class for the sector testing
+// Class for the L1 track reco efficiency tests
 // For more info, look at the header file
 
-#include "sector_test.h"
+#include "track_eff.h"
 
-sector_test::sector_test(std::string filename, std::string secfilename, 
-			 std::string pattfilename, std::string outfile
-			 , int nevt, bool dbg)
+track_eff::track_eff(std::string filename, std::string secfilename, 
+		     std::string outfile, int nevt, float pt_min, 
+		     float d0_min, bool dbg)
 {  
   m_dbg    = dbg;
-  evtIDmax = 0;
+  m_d0_min = d0_min;
+  m_pt_min = pt_min;
 
-  if (pattfilename!="") 
-  {
-    sector_test::translateTuple(pattfilename,"rewritten.root",m_dbg); // Merging and reordering stage
-    sector_test::initTuple(filename,"rewritten.root",outfile);
-  }
-  else
-  {
-    sector_test::initTuple(filename,pattfilename,outfile);
-    evtIDmax = m_L1TT->GetEntries();
-  }
+  track_eff::initTuple(filename,outfile);
+  
+  if (!track_eff::convert(secfilename)) return; // Don't go further if there is no sector file
 
-  if (!sector_test::convert(secfilename)) return; // Don't go further if there is no sector file
-
-  sector_test::do_test(nevt); // Launch the test loop over n events
+  track_eff::do_test(nevt); // Launch the test loop over n events
 }
 
 
 /////////////////////////////////////////////////////////////////////////////////
 //
-// ==> sector_test::do_test(int nevt)
+// ==> track_eff::do_test(int nevt)
 //
 // Main method, where the efficiency calculations are made
 //
 /////////////////////////////////////////////////////////////////////////////////
 
-void sector_test::do_test(int nevt)
+void track_eff::do_test(int nevt)
 {
   int id;
 
-  const int m_nsec = m_sec_mult; // How many sectors are in the file
-  const int m_nevt = evtIDmax;   // The max eventID in the sample
+  const int m_nsec = m_sec_mult; // How many sectors are in the file (from convert)
 
   int ndat = std::min(nevt,static_cast<int>(m_L1TT->GetEntries())); // How many events will we test
 
@@ -64,53 +55,59 @@ void sector_test::do_test(int nevt)
   std::vector<int> stubs;
   std::vector<int> parts;
 
-
-  // We do a linking 
-  // the older version of the PatternExtractor (before Sept. 20th 2013)) 
-
   // Loop over the events
  
   for (int i=0;i<ndat;++i)
+    //for (int i=0;i<10;++i)
   {    
-    sector_test::reset();
+    track_eff::reset();
 
     m_L1TT->GetEntry(i);
+    m_PATT->GetEntry(i);      
 
-    if (i%10000==0) 
-      cout << "Processed " << i << "/" << ndat << "/" << m_evtid << endl;
+    if (i%1000==0) 
+      cout << "Processed " << i << "/" << ndat << endl;
 
     if (m_stub == 0) continue; // No stubs, don't go further
 
-    if (m_dbg) m_evtid=i;
-
-    if (m_evtid>=m_nevt) continue; // No PR output available
-
     evt = i;
     n_stub_total=m_stub; 
+    n_patt=nb_patterns; 
+    n_track=nb_tracks; 
 
-    if (do_patt)
-    {
-      m_PATT->GetEntry(m_evtid);      
-      evt = event_id;
-      n_patt=nb_patterns; 
+    parts.clear();
 
-      parts.clear();
+    // Here we fill the pattern and tracks containers    
+    // the info is already there
 
-      if (nb_patterns>0)
-      {	  
-	for(int kk=0;kk<nb_patterns;kk++)
-	{
-	  patt_sec->push_back(m_secid.at(kk));  
-	  patt_parts->push_back(parts);   
-	  patt_stubs->push_back(m_links.at(kk));
-	}
-      }
+    if (nb_patterns>0)
+    {	  
+      for(int kk=0;kk<nb_patterns;kk++)
+      {
+	patt_sec->push_back(m_pattsecid.at(kk));  
+	patt_parts->push_back(parts);   
+	patt_stubs->push_back(m_pattlinks.at(kk));
+      }     
     }    
-
+    
+      
+    if (nb_tracks>0)
+    {	  
+      for(int kk=0;kk<nb_tracks;kk++)
+      {
+	trk_sec->push_back(m_trksecid.at(kk));  
+	trk_pt->push_back(m_trkpt.at(kk));   
+	trk_eta->push_back(2*m_trketa.at(kk));   
+	trk_phi->push_back(m_trkphi.at(kk));   
+	trk_z->push_back(m_trkz.at(kk));  
+	trk_parts->push_back(parts);   
+	trk_stubs->push_back(m_trklinks.at(kk));
+      }     
+    } 
 
     //
     // First, we make a loop on the stubs in order to check 
-    // how many primary tracks we have
+    // how many interesting primary tracks we have
     //
     // The info is then stored in the m_primaries vector
     //
@@ -122,9 +119,6 @@ void sector_test::do_test(int nevt)
       stub_x->push_back(m_stub_x[j]);  
       stub_y->push_back(m_stub_y[j]);   
       stub_z->push_back(m_stub_z[j]);  
-      stub_x_2->push_back(m_clus_x[m_stub_clust2[j]]);  
-      stub_y_2->push_back(m_clus_y[m_stub_clust2[j]]);   
-      stub_z_2->push_back(m_clus_z[m_stub_clust2[j]]);  
       stub_layer->push_back(m_stub_layer[j]);   
       stub_ladder->push_back(m_stub_ladder[j]);  
       stub_module->push_back(m_stub_module[j]);  
@@ -132,12 +126,13 @@ void sector_test::do_test(int nevt)
       stub_strip->push_back(m_stub_strip[j]);  
       stub_tp->push_back(-1);  
       stub_inpatt->push_back(0);  
-
+      stub_intrk->push_back(0);  
+  
       if (m_stub_tp[j]<0) continue; // Bad stub  
-
+      
       // Basic primary selection (pt and d0 cuts)
-      if (sqrt(m_stub_pxGEN[j]*m_stub_pxGEN[j]+m_stub_pyGEN[j]*m_stub_pyGEN[j])<0.2) continue;
-      //  if (sqrt(m_stub_X0[j]*m_stub_X0[j]+m_stub_Y0[j]*m_stub_Y0[j])>2.) continue; 
+      if (sqrt(m_stub_pxGEN[j]*m_stub_pxGEN[j]+m_stub_pyGEN[j]*m_stub_pyGEN[j])<m_d0_min) continue;
+      if (sqrt(m_stub_X0[j]*m_stub_X0[j]+m_stub_Y0[j]*m_stub_Y0[j])>m_pt_min) continue; 
 
       already_there = false;
 
@@ -160,6 +155,7 @@ void sector_test::do_test(int nevt)
       part_nsec->push_back(0);   
       part_nhits->push_back(0);   
       part_npatt->push_back(0);   
+      part_ntrk->push_back(0);   
       part_pt->push_back(sqrt(m_stub_pxGEN[j]*m_stub_pxGEN[j]+m_stub_pyGEN[j]*m_stub_pyGEN[j]));   
       part_rho->push_back(sqrt(m_stub_X0[j]*m_stub_X0[j]+m_stub_Y0[j]*m_stub_Y0[j]));  
       part_z0->push_back(m_stub_Z0[j]);    
@@ -173,18 +169,19 @@ void sector_test::do_test(int nevt)
       m_primaries.push_back(prim_stubs);
 
       stub_tp->at(j)=m_primaries.size()-1;  
+      
     }
 
     if (m_primaries.size()>10)
       std::cout << "Found " << m_primaries.size() 
 		<< " primary particles in the event" << i << std::endl; 
-
+    
 
     //
     // Then, in the second loop, we test all the primaries 
-    // in order to check if they have matched a pattern
+    // in order to check if they have matched a pattern or a track
     //
-
+     
     int idx = 0;
 
     for (unsigned int k=0;k<m_primaries.size();++k)
@@ -207,12 +204,13 @@ void sector_test::do_test(int nevt)
       phi=0.;
       d0=-1.;
       npatt=-1;
+      ntrack=-1;
 
-      // Here we make a loop to compute the value of NHits
+      // Here we make a loop over prim stubs to compute the value of NHits
 
       for (unsigned int j=1;j<m_primaries.at(k).size();++j)
       {
-	idx    = m_primaries.at(k).at(j);
+	idx    = m_primaries.at(k).at(j); // stub index
 
 	// First of all we compute the ID of the stub's module
 	layer  = m_stub_layer[idx]; 
@@ -265,67 +263,95 @@ void sector_test::do_test(int nevt)
       part_nsec->at(k) = nsec;   
       part_nhits->at(k)= nhits;   
 
-      // Finally we do the pattern loop
-      
-      if (do_patt)
-      {
-	ntotpatt = nb_patterns; // The total number of patterns in the sector/event
-	npatt    = 0;           // The patterns containing at least 4 prim hits
+      // Finally we do the pattern/track loops
+
+      ntotpatt = nb_patterns; // The total number of patterns in the event
+      ttrack   = nb_tracks;   // The total number of tracks in the event
+
+      npatt    = 0;           // The patterns containing at least 4 prim hits
+      ntrack   = 0;           // The tracks containing at least 4 prim hits
+
+      if (nb_patterns>0)
+      {	  
+	for(int kk=0;kk<nb_patterns;kk++)
+	{
+	  for (int j=0;j<20;++j) n_per_lay_patt[j]=0;
+	  
+	  // First we count the number of prim stubs in the pattern
 	
-	if (nb_patterns>0)
-	{	  
-	  for(int kk=0;kk<nb_patterns;kk++)
+	  if (m_pattlinks.at(kk).size()==0) continue;
+	  
+	  for(unsigned int m=0;m<m_pattlinks.at(kk).size();m++) // Loop over pattern stubs
 	  {
-	    for (int j=0;j<20;++j) n_per_lay_patt[j]=0;
-	   
-	    // First we count the number of prim stubs in the 
-	    // pattern layers/disks
+	    if (m_stub_tp[m_pattlinks.at(kk).at(m)]==m_primaries.at(k).at(0)) // Stub belongs to the primary
+	      n_per_lay_patt[m_stub_layer[m_pattlinks.at(kk).at(m)]-5]++;
+
+	    if (stub_inpatt->at(m_pattlinks.at(kk).at(m))==0)
+	    {
+	      stub_inpatt->at(m_pattlinks.at(kk).at(m))=1;
+	      ++n_stub;
+	    }		    
+	  }
+	  
+	  nhits_p=0; 
+	  
+	  for (int jk=0;jk<20;++jk)
+	  {
+	    if (n_per_lay_patt[jk]!=0) ++nhits_p;
+	  }
+
+	  if (nhits_p>=4) 
+	  {
+	    ++npatt; // More than 4, the pattern is good
+	    patt_parts->at(kk).push_back(k); 
+	  }
+	}	  	  
+      }
+
+      if (nb_tracks>0)
+      {	  
+	for(int kk=0;kk<nb_tracks;kk++)
+	{
+	  for (int j=0;j<20;++j) n_per_lay_patt[j]=0;
+	  
+	  // First we count the number of prim stubs in the track
 	
-	    if (m_links.at(kk).size()==0) continue;
+	  if (m_trklinks.at(kk).size()==0) continue;
+	  
+	  for(unsigned int m=0;m<m_trklinks.at(kk).size();m++) // Loop over track stubs
+	  {
+	    if (m_stub_tp[m_trklinks.at(kk).at(m)]==m_primaries.at(k).at(0)) // Stub belongs to the primary
+	      n_per_lay_patt[m_stub_layer[m_trklinks.at(kk).at(m)]-5]++;
 
-	    for(unsigned int m=0;m<m_links.at(kk).size();m++)
+	    if (stub_intrk->at(m_trklinks.at(kk).at(m))==0)
 	    {
-	      if (m_links.at(kk).at(m)>=m_stub || m_links.at(kk).at(m)<0)
-	      {
-		cout << " !!! Reordering problem !!! " << m_stub << endl;
-		cout << m_links.at(kk).at(m) << " / " << m_stub << endl;
-		//cout << m_evtid << " // " << event_id << endl;
-		cout << evt << " // " << event_id << endl;
-	      }
-	      
-	      if (m_stub_tp[m_links.at(kk).at(m)]==m_primaries.at(k).at(0))
-		n_per_lay_patt[m_stub_layer[m_links.at(kk).at(m)]-5]++;
+	      stub_intrk->at(m_trklinks.at(kk).at(m))=1;
+	      ++n_stub_t;
+	    }		    
+	  }
+	  
+	  nhits_p=0; 
+	  
+	  for (int jk=0;jk<20;++jk)
+	  {
+	    if (n_per_lay_patt[jk]!=0) ++nhits_p;
+	  }
 
-	      if (stub_inpatt->at(m_links.at(kk).at(m))==0)
-	      {
-		stub_inpatt->at(m_links.at(kk).at(m))=1;
-		++n_stub;
-	      }	
-	    }
-	   
-	    // First we get the number of different layers/disks hit by the primary
-	    // in the pattern
-
-	    nhits_p=0; 
-      
-	    for (int jk=0;jk<20;++jk)
-	    {
-	      if (n_per_lay_patt[jk]!=0) ++nhits_p;
-	    }
-
-	    if (nhits_p>=4) 
-	    {
-	      ++npatt; // More than 4, the pattern is good
-	      patt_parts->at(kk).push_back(k); 
-	    }
-	  }	  	  
-	}	
+	  if (nhits_p>=4) 
+	  {
+	    ++ntrack; // More than 4, the track is good
+	    trk_parts->at(kk).push_back(k); 
+	  }
+	}	  	  
       }
       
       part_npatt->at(k) = npatt; 
-
-      m_efftree->Fill();
+      part_ntrk->at(k)  = ntrack; 
+    
+      m_efftree->Fill();    
     }
+     
+
 
     m_finaltree->Fill(); 
   }
@@ -334,19 +360,19 @@ void sector_test::do_test(int nevt)
   m_outfile->Close();
 }
 
-
 /////////////////////////////////////////////////////////////////////////////////
 //
-// ==> sector_test::initTuple(std::string test,std::string patt,std::string out)
+// ==> track_eff::initTuple(std::string test,std::string out)
 //
-// This method opens and creates the differe rootuples involved
+// This method opens the input  roottuple
 //
 /////////////////////////////////////////////////////////////////////////////////
 
 
-void sector_test::initTuple(std::string test,std::string patt,std::string out)
+void track_eff::initTuple(std::string test,std::string out)
 {
-  m_L1TT   = new TChain("L1TrackTrigger"); 
+  m_L1TT   = new TChain("TkStubs");   // Tree containing the stub info 
+  m_PATT   = new TChain("L1tracks");  // Tree containing the L1 track reco info
 
   // Input data file 
 
@@ -356,6 +382,7 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
   if (found!=std::string::npos)
   {
     m_L1TT->Add(test.c_str());
+    m_PATT->Add(test.c_str());
   }
   else // This is a list provided into a text file
   {
@@ -372,7 +399,11 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
       getline(in,STRING);
 
       found = STRING.find(".root");
-      if (found!=std::string::npos) m_L1TT->Add(STRING.c_str());   
+      if (found!=std::string::npos)
+      {
+	m_L1TT->Add(STRING.c_str());   
+	m_PATT->Add(STRING.c_str());   
+      }
     }
 
     in.close();
@@ -399,29 +430,52 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
   pm_clus_z=&m_clus_z;
   pm_stub_clust2=&m_stub_clust2;
 
-  m_L1TT->SetBranchAddress("evt",            &m_evtid); 
-  m_L1TT->SetBranchAddress("STUB_n",         &m_stub);
-  m_L1TT->SetBranchAddress("STUB_layer",     &pm_stub_layer);
-  m_L1TT->SetBranchAddress("STUB_ladder",    &pm_stub_ladder);
-  m_L1TT->SetBranchAddress("STUB_module",    &pm_stub_module);
-  m_L1TT->SetBranchAddress("STUB_seg",       &pm_stub_segment);
-  m_L1TT->SetBranchAddress("STUB_strip",     &pm_stub_strip);
-  m_L1TT->SetBranchAddress("STUB_pxGEN",     &pm_stub_pxGEN);
-  m_L1TT->SetBranchAddress("STUB_pyGEN",     &pm_stub_pyGEN);
-  m_L1TT->SetBranchAddress("STUB_X0",        &pm_stub_X0);
-  m_L1TT->SetBranchAddress("STUB_Y0",        &pm_stub_Y0);
-  m_L1TT->SetBranchAddress("STUB_Z0",        &pm_stub_Z0);
-  m_L1TT->SetBranchAddress("STUB_x",         &pm_stub_x);
-  m_L1TT->SetBranchAddress("STUB_y",         &pm_stub_y);
-  m_L1TT->SetBranchAddress("STUB_z",         &pm_stub_z);
-  m_L1TT->SetBranchAddress("STUB_etaGEN",    &pm_stub_etaGEN);
-  m_L1TT->SetBranchAddress("STUB_tp",        &pm_stub_tp);
-  m_L1TT->SetBranchAddress("STUB_pdgID",     &pm_stub_pdg);
-  m_L1TT->SetBranchAddress("STUB_clust2",    &pm_stub_clust2);
-  m_L1TT->SetBranchAddress("CLUS_x",         &pm_clus_x);
-  m_L1TT->SetBranchAddress("CLUS_y",         &pm_clus_y);
-  m_L1TT->SetBranchAddress("CLUS_z",         &pm_clus_z);
+  pm_pattlinks=&m_pattlinks;
+  pm_pattsecid=&m_pattsecid;
 
+  pm_trklinks=&m_trklinks;
+  pm_trksecid=&m_trksecid;
+  pm_trkpt=&m_trkpt;
+  pm_trketa=&m_trketa;
+  pm_trkphi=&m_trkphi;
+  pm_trkz=&m_trkz;
+
+
+
+  m_L1TT->SetBranchAddress("L1Tkevt",            &m_evtid); 
+  m_L1TT->SetBranchAddress("L1TkSTUB_n",         &m_stub);
+  m_L1TT->SetBranchAddress("L1TkSTUB_layer",     &pm_stub_layer);
+  m_L1TT->SetBranchAddress("L1TkSTUB_ladder",    &pm_stub_ladder);
+  m_L1TT->SetBranchAddress("L1TkSTUB_module",    &pm_stub_module);
+  m_L1TT->SetBranchAddress("L1TkSTUB_seg",       &pm_stub_segment);
+  m_L1TT->SetBranchAddress("L1TkSTUB_strip",     &pm_stub_strip);
+  m_L1TT->SetBranchAddress("L1TkSTUB_pxGEN",     &pm_stub_pxGEN);
+  m_L1TT->SetBranchAddress("L1TkSTUB_pyGEN",     &pm_stub_pyGEN);
+  m_L1TT->SetBranchAddress("L1TkSTUB_X0",        &pm_stub_X0);
+  m_L1TT->SetBranchAddress("L1TkSTUB_Y0",        &pm_stub_Y0);
+  m_L1TT->SetBranchAddress("L1TkSTUB_Z0",        &pm_stub_Z0);
+  m_L1TT->SetBranchAddress("L1TkSTUB_x",         &pm_stub_x);
+  m_L1TT->SetBranchAddress("L1TkSTUB_y",         &pm_stub_y);
+  m_L1TT->SetBranchAddress("L1TkSTUB_z",         &pm_stub_z);
+  m_L1TT->SetBranchAddress("L1TkSTUB_etaGEN",    &pm_stub_etaGEN);
+  m_L1TT->SetBranchAddress("L1TkSTUB_tp",        &pm_stub_tp);
+  m_L1TT->SetBranchAddress("L1TkSTUB_pdgID",     &pm_stub_pdg);
+  m_L1TT->SetBranchAddress("L1TkSTUB_clust2",    &pm_stub_clust2);
+  m_L1TT->SetBranchAddress("L1TkCLUS_x",         &pm_clus_x);
+  m_L1TT->SetBranchAddress("L1TkCLUS_y",         &pm_clus_y);
+  m_L1TT->SetBranchAddress("L1TkCLUS_z",         &pm_clus_z);
+
+  m_PATT->SetBranchAddress("L1PATT_n",           &nb_patterns);
+  m_PATT->SetBranchAddress("L1PATT_links",       &pm_pattlinks);
+  m_PATT->SetBranchAddress("L1PATT_secid",       &pm_pattsecid);
+
+  m_PATT->SetBranchAddress("L1TRK_n",            &nb_tracks);
+  m_PATT->SetBranchAddress("L1TRK_links",        &pm_trklinks);
+  m_PATT->SetBranchAddress("L1TRK_secid",        &pm_trksecid);
+  m_PATT->SetBranchAddress("L1TRK_pt",           &pm_trkpt);
+  m_PATT->SetBranchAddress("L1TRK_eta",          &pm_trketa);
+  m_PATT->SetBranchAddress("L1TRK_phi",          &pm_trkphi);
+  m_PATT->SetBranchAddress("L1TRK_z",            &pm_trkz);
 
 
   // Output file definition (see the header)
@@ -434,7 +488,9 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
   m_efftree->Branch("nsec",       &nsec,    "nsec/I"); 
   m_efftree->Branch("nhits",      &nhits,   "nhits/I"); 
   m_efftree->Branch("npatt",      &npatt,   "npatt/I"); 
+  m_efftree->Branch("ntrack",     &ntrack,  "ntrack/I"); 
   m_efftree->Branch("tpatt",      &ntotpatt,"tpatt/I"); 
+  m_efftree->Branch("ttrack",     &ttrack,  "ttrack/I"); 
   m_efftree->Branch("nplay",      &nplay,   "nplay[20]/I"); 
   m_efftree->Branch("pt",         &pt,      "pt/F"); 
   m_efftree->Branch("eta",        &eta,     "eta/F"); 
@@ -448,12 +504,10 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
 
   m_finaltree->Branch("n_stub_total", &n_stub_total); 
   m_finaltree->Branch("n_stub_inpat", &n_stub); 
+  m_finaltree->Branch("n_stub_intrk", &n_stub_t); 
   m_finaltree->Branch("stub_x",       &stub_x); 
   m_finaltree->Branch("stub_y",       &stub_y); 
   m_finaltree->Branch("stub_z",       &stub_z); 
-  m_finaltree->Branch("stub_x_2",     &stub_x_2); 
-  m_finaltree->Branch("stub_y_2",     &stub_y_2); 
-  m_finaltree->Branch("stub_z_2",     &stub_z_2);
   m_finaltree->Branch("stub_layer",   &stub_layer); 
   m_finaltree->Branch("stub_ladder",  &stub_ladder);
   m_finaltree->Branch("stub_module",  &stub_module);
@@ -461,12 +515,14 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
   m_finaltree->Branch("stub_strip",   &stub_strip);
   m_finaltree->Branch("stub_tp",      &stub_tp);
   m_finaltree->Branch("stub_inpatt",  &stub_inpatt);
+  m_finaltree->Branch("stub_intrack", &stub_intrk);
 
   m_finaltree->Branch("n_part",       &n_part); 
   m_finaltree->Branch("part_pdg",     &part_pdg); 
   m_finaltree->Branch("part_nsec",    &part_nsec); 
   m_finaltree->Branch("part_nhits",   &part_nhits); 
   m_finaltree->Branch("part_npatt",   &part_npatt); 
+  m_finaltree->Branch("part_ntrk",    &part_ntrk); 
   m_finaltree->Branch("part_pt",      &part_pt); 
   m_finaltree->Branch("part_rho",     &part_rho);
   m_finaltree->Branch("part_z0",      &part_z0);
@@ -478,210 +534,20 @@ void sector_test::initTuple(std::string test,std::string patt,std::string out)
   m_finaltree->Branch("patt_parts",   &patt_parts); 
   m_finaltree->Branch("patt_stubs",   &patt_stubs); 
 
-
-  // Pattern file information only if available
-
-  do_patt=false;
-
-  if (patt!="")
-  {
-    do_patt = true;
-    m_pattfile  = TFile::Open(patt.c_str());
-
-    m_PATT    = (TTree*)m_pattfile->Get("L1PatternReco");
-    
-    pm_links=&m_links;
-    pm_secid=&m_secid;
-    
-    m_PATT->SetBranchAddress("evt",            &event_id); 
-    m_PATT->SetBranchAddress("PATT_n",         &nb_patterns);
-    m_PATT->SetBranchAddress("PATT_links",     &pm_links);
-    m_PATT->SetBranchAddress("PATT_secID",     &pm_secid);
-  }
+  m_finaltree->Branch("n_track",      &n_track); 
+  m_finaltree->Branch("trk_sec",      &trk_sec); 
+  m_finaltree->Branch("trk_parts",    &trk_parts); 
+  m_finaltree->Branch("trk_stubs",    &trk_stubs); 
+  m_finaltree->Branch("trk_pt",       &trk_pt); 
+  m_finaltree->Branch("trk_phi",      &trk_phi); 
+  m_finaltree->Branch("trk_z",        &trk_z); 
+  m_finaltree->Branch("trk_eta",      &trk_eta); 
 }
 
 
 /////////////////////////////////////////////////////////////////////////////////
 //
-// ==> sector_test::translateTuple(std::string pattin,std::string pattout)
-//
-// This method performs the merging and reordering stage.
-//
-// The input file (pattin) contains a rough merging of all the PR output files from CMSSW jobs.
-// It is obtained via hadd, and therefore has still to be reordered.
-//
-// The method loops over all pattin entries in order to get the number of different events 
-// contained into it, and then group the results for all these event.
-//
-// The output file pattout contains the same tree than pattin, but with only one entry per event.
-// This entry contains all the pattern matched for this event, for all the sectors (the sector ID info 
-// is kept also)
-//
-/////////////////////////////////////////////////////////////////////////////////
-
-void sector_test::translateTuple(std::string pattin,std::string pattout,bool m_dbg)
-{
-  std::vector< std::vector<int> > m_links;
-  std::vector<int> m_secid;
-  std::vector< std::vector<int> > *pm_links = new std::vector< std::vector<int> >;
-  std::vector<int> *pm_secid = new std::vector<int> ;
-
-  pm_links=&m_links;
-  pm_secid=&m_secid;
-
-  std::vector<int> links;
-
-  int evtID;
-  int m_patt;
-
-  const int MAX_NB_PATTERNS = 1500;
-  const int MAX_NB_HITS     = 100;
-
-  int   pattern_sector_id[MAX_NB_PATTERNS];  
-  int   nbHitPerPattern[MAX_NB_PATTERNS];
-  int   hit_idx[MAX_NB_PATTERNS*MAX_NB_HITS];
-
-  if (m_dbg) // The file from a standalone PR (use for debugging)
-  {
-    data = new TChain("Patterns");
-
-    data->SetBranchAddress("eventID",             &evtID);         
-    data->SetBranchAddress("nbPatterns",          &m_patt);
-    data->SetBranchAddress("sectorID",            pattern_sector_id); 
-    data->SetBranchAddress("nbStubs",             nbHitPerPattern);   
-    data->SetBranchAddress("stub_idx",            hit_idx);      
-  }
-  else // The classic PR output (using CMSSW)
-  {
-    data = new TChain("L1PatternReco");
-    
-    data->SetBranchAddress("evt",            &evtID); // Simple evt number or event ID
-    data->SetBranchAddress("PATT_n",         &m_patt);
-    data->SetBranchAddress("PATT_links",     &pm_links);
-    data->SetBranchAddress("PATT_secID",     &pm_secid);
-  }
-
-  data->Add(pattin.c_str());
-
-  std::vector< std::vector<int> > *f_links = new std::vector< std::vector<int> >;
-  std::vector<int> *f_secid = new std::vector<int> ;
-
-  int f_evtID;
-  int f_patt;
-
-  TFile hfile(pattout.c_str(),"RECREATE","");
-
-  TTree *m_tree_L1PatternReco = new TTree("L1PatternReco","L1PatternReco Analysis info");  
-  
-  /// Branches definition
-
-  m_tree_L1PatternReco->Branch("evt",            &f_evtID); // Simple evt number or event ID
-  m_tree_L1PatternReco->Branch("PATT_n",         &f_patt);
-  m_tree_L1PatternReco->Branch("PATT_links",     &f_links);
-  m_tree_L1PatternReco->Branch("PATT_secID",     &f_secid);
-
-  int ndat = data->GetEntries();
-
-  evtIDmax = -1;
-
-  std::vector<int> indexes;
-  std::vector< std::vector<int> > indexes_ordered;
-
-  indexes.clear();
-
-  // First loop is over all pattin entries
-    
-  for(int i=0;i<ndat;i++)
-  {    
-    data->GetEntry(i);
-
-    if (evtID>evtIDmax) evtIDmax=evtID;
-
-    indexes.push_back(evtID);
-  }
- 
-
-  // We have the maximum event number contained in pattin. We create index table of this size
-  //
-
-
-  evtIDmax+=1;
-
-  indexes_ordered.resize(evtIDmax);
-
-  for(int i=0;i<evtIDmax;i++) indexes_ordered[i].clear();
-  for(int i=0;i<ndat;i++)     indexes_ordered[indexes[i]].push_back(i);
-
-  // index_ordered contains, for each evtid, a vector containing 
-  // the related entries of pattin related to this evtid 
-
-  // Then we fill the new rootuple 
-  //
-
-  int hitIndex;
-
-  for(int i=0;i<evtIDmax;i++)
-  { 
-    if (i%100000==0)
-      cout << "Reordering event ID " << i << endl;
-  
-    //f_evtID = i+1;
-    f_evtID = i;
-    f_patt = 0;
-    f_links->clear();
-    f_secid->clear();
-    hitIndex = 0; 
-
-    if (indexes_ordered[i].size()!=0) 
-    {
-      for(unsigned int j=0;j<indexes_ordered[i].size();j++)
-      {    
-	data->GetEntry(indexes_ordered[i].at(j));
-      
-	if (evtID!=i) continue; 
-	if (m_patt==0) continue;
-
-	f_patt += m_patt;
-
-	for(int k=0;k<m_patt;k++)
-	{ 
-	  if (m_dbg) // Debug mode
-	  {
-	    links.clear();
-
-	    for(int m=0;m<nbHitPerPattern[k];m++)
-	    {
-	      links.push_back(hit_idx[hitIndex]);
-	      hitIndex++;
-	    }
-
-	    f_links->push_back(links);
-	    f_secid->push_back(pattern_sector_id[k]);
-	  }
-	  else
-	  {
-	    f_links->push_back(m_links.at(k));
-	    f_secid->push_back(m_secid.at(k));
-	  }
-	}
-      }
-    }
-    else // This event is not in the PR output, skip it
-    {
-      f_patt = -1;
-    }
-
-    m_tree_L1PatternReco->Fill();
-  }
-
-  hfile.Write();
-  hfile.Close();
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////
-//
-// ==> sector_test::convert(std::string sectorfilename) 
+// ==> track_eff::convert(std::string sectorfilename) 
 //
 // Here we retrieve info from the TKLayout CSV file containing the sector definition
 //
@@ -691,7 +557,7 @@ void sector_test::translateTuple(std::string pattin,std::string pattout,bool m_d
 //
 /////////////////////////////////////////////////////////////////////////////////
 
-bool sector_test::convert(std::string sectorfilename) 
+bool track_eff::convert(std::string sectorfilename) 
 {
   m_sec_mult = 0;
 
@@ -744,19 +610,19 @@ bool sector_test::convert(std::string sectorfilename)
 }
 
 
-void sector_test::reset() 
+void track_eff::reset() 
 {
   ntotpatt=0; 
+  ttrack=0; 
   m_primaries.clear(); 
 
   n_stub_total=0; 
   n_stub=0; 
+  n_stub_t=0;
+ 
   stub_x->clear();  
   stub_y->clear();   
   stub_z->clear();   
-  stub_x_2->clear();  
-  stub_y_2->clear();   
-  stub_z_2->clear(); 
   stub_layer->clear();   
   stub_ladder->clear();  
   stub_module->clear();  
@@ -764,12 +630,14 @@ void sector_test::reset()
   stub_strip->clear();    
   stub_tp->clear();  
   stub_inpatt->clear();  
+  stub_intrk->clear();  
  
   n_part=0; 
   part_pdg->clear();   
   part_nsec->clear();   
   part_nhits->clear();   
   part_npatt->clear();   
+  part_ntrk->clear();   
   part_pt->clear();   
   part_rho->clear();  
   part_z0->clear();  
@@ -780,4 +648,13 @@ void sector_test::reset()
   patt_sec->clear();   
   patt_parts->clear();   
   patt_stubs->clear(); 
+
+  n_track=0;
+  trk_parts->clear();   
+  trk_stubs->clear();
+  trk_sec->clear();   
+  trk_pt->clear();   
+  trk_phi->clear();   
+  trk_z->clear();   
+  trk_eta->clear();   
 }

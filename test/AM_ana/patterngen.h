@@ -63,9 +63,11 @@ class patterngen
   void  initVars();
   void  initTuple(std::string in,std::string out,int type);
   void  readConcOutput(std::string filename);
-  void  ana_pix(int lay,int lad,int mod);
+  void  ana_pix(int lay,int lad,int mod, std::vector<int> digits);
   void  get_MPA_input(int nevt);
   void  do_stub(int lay,int lad,int mod);
+  void  ana_chip();
+
 
  private:
 
@@ -114,6 +116,7 @@ class patterngen
   std::vector<int>    m_pix_module;
   std::vector<int>    m_pix_row;
   std::vector<int>    m_pix_col;
+  std::vector<float>  m_pix_ch;
   std::vector<float>  m_pix_x;
   std::vector<float>  m_pix_y;
   std::vector<float>  m_pix_z;
@@ -123,6 +126,7 @@ class patterngen
   std::vector<int>    *pm_pix_module;
   std::vector<int>    *pm_pix_row;
   std::vector<int>    *pm_pix_col;
+  std::vector<float>  *pm_pix_ch;
   std::vector<float>  *pm_pix_x;
   std::vector<float>  *pm_pix_y;
   std::vector<float>  *pm_pix_z;
@@ -132,16 +136,18 @@ class patterngen
   std::vector<int>   m_clus_ladder;
   std::vector<int>   m_clus_module;
   std::vector<int>   m_clus_nrows;
-  std::vector<std::vector<int> >   m_clus_tp;
+  std::vector<int>   m_clus_tp;
   std::vector<std::vector<int> >   m_clus_pix;
+  std::vector<std::vector<int> >   m_clus_mult;
   std::vector<int>    m_clus_nseg;
 
   std::vector<int>   *pm_clus_layer;
   std::vector<int>   *pm_clus_ladder;
   std::vector<int>   *pm_clus_module;
   std::vector<int>   *pm_clus_nrows;
-  std::vector<std::vector<int> >   *pm_clus_tp;
+  std::vector<int>   *pm_clus_tp;
   std::vector<std::vector<int> >   *pm_clus_pix;
+  std::vector<std::vector<int> >   *pm_clus_mult;
   std::vector<int>   *pm_clus_nseg;
 
 
@@ -214,6 +220,25 @@ class patterngen
   std::vector<int>   m_evt_clu;
   std::vector<int>   m_evt_stu;
   std::vector<int>   m_evt_tp;
+
+
+  int MPA_eff_4_4_4[80000][16][4];
+  int MPA_eff_4_4_8[80000][16][4];
+  int MPA_eff_5_5_4[80000][16][4];
+  int MPA_eff_5_5_8[80000][16][4];
+
+
+
+  int Conc_CBC_eff_480_8[80000][2][2];
+  int Conc_CBC_eff_480_4[80000][2][2];
+  int Conc_CBC_eff_320_8[80000][2][2];
+  int Conc_CBC_eff_320_4[80000][2][2];
+
+  int Conc_MPA_eff_480_8[80000][2][2];
+  int Conc_MPA_eff_320_8[80000][2][2];
+
+  int mod_fifos_4[80000][2][3];
+  int mod_fifos_8[80000][2][3];
 };
 
 #endif

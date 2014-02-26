@@ -30,13 +30,11 @@ class jobparams{
   std::string testfile() const;
   std::string outfile() const;
   std::string pattfile() const;
-  int         eta() const;
-  int         phi() const;
-  int         oeta() const;
-  int         ophi() const;
+  float       rmax() const;
+  float       ptmin() const;
   int         nevt() const;
-  int         rate() const;
   int         type() const;
+  int         rate() const;
 
  private:
 
@@ -46,14 +44,11 @@ class jobparams{
   std::string  m_outfile;
   std::string  m_testfile; 
   std::string  m_pattfile;  
-  int          m_eta;
-  int          m_phi;
-  int          m_oeta;
-  int          m_ophi;
+  float        m_rmax;
+  float        m_ptmin;
   int          m_nevt;
-  int          m_rate;
   int          m_type;
-
+  int          m_rate;
 };
 
 inline std::string jobparams::option() const{
@@ -80,32 +75,24 @@ inline bool jobparams::dbg() const{
   return m_dbg;
 }
 
-inline int jobparams::eta() const{
-  return m_eta;
+inline float jobparams::rmax() const{
+  return m_rmax;
 }
 
-inline int jobparams::phi() const{
-  return m_phi;
-}
-
-inline int jobparams::oeta() const{
-  return m_oeta;
-}
-
-inline int jobparams::ophi() const{
-  return m_ophi;
+inline float jobparams::ptmin() const{
+  return m_ptmin;
 }
 
 inline int jobparams::nevt() const{
   return m_nevt;
 }
 
-inline int jobparams::rate() const{
-  return m_rate;
-}
-
 inline int jobparams::type() const{
   return m_type;
+}
+
+inline int jobparams::rate() const{
+  return m_rate;
 }
 
 #endif

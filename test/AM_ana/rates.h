@@ -33,13 +33,12 @@ using namespace std;
 //
 // Info about the code:
 //
-//  http://sviret.web.cern.ch/sviret/Welcome.php?n=CMS.HLLHCTuto (STEP III)
+//  http://sviret.web.cern.ch/sviret/Welcome.php?n=CMS.HLLHCTuto620 (Part 3.2.2)
 // 
 // This code was developped for the BE classic geometry, but also works for 
 // the 5 disks alternative
 //
 //  Author: viret@in2p3_dot_fr
-//  Date: 23/05/2013
 //
 ///////////////////////////////////
 
@@ -77,66 +76,22 @@ class rates
 
   // Following tables are for rates
   float m_b_rate[16][58000]; // Contains the barrel chips module rates (in stubs/bx)
-  int   m_b_c_max[16][58000]; 
-  int   m_b_max[58000];     
   float m_b_rate_p[58000];   // Contains the barrel primary stubs module rates (in stubs/bx)
-  float m_b_rate_pp[58000];   // Contains the barrel primary stubs module rates (in stubs/bx)
+  float m_b_rate_pp[58000];  // Contains the barrel primary stubs module rates (in stubs/bx)
   float m_b_rate_s[58000];   // Contains the barrel secondary stubs module rates (in stubs/bx)
   float m_b_rate_f[58000];   // Contains the barrel fake stubs module rates (in stubs/bx)
   float m_b_crate[58000];    // Contains the barrel cluster module rates (in stubs/bx)
-  float m_b_drate[58000];    // Contains the barrel digi module rates (in stubs/bx)
   float m_b_bylc_rate[600];  // Contains the barrel clus ladder rates (in stubs/bx)
-  float m_b_byls_rate[600];  // Contains the barrel clus ladder rates (in stubs/bx)
+  float m_b_byls_rate[600];  // Contains the barrel stub ladder rates (in stubs/bx)
  
   float m_e_rate[16][142000];// Contains the endcap chips module rates (in stubs/bx)
   float m_e_rate_p[142000];  // Contains the endcap primary stubs module rates (in stubs/bx)
-  float m_e_rate_pp[142000];  // Contains the endcap primary stubs module rates (in stubs/bx)
+  float m_e_rate_pp[142000]; // Contains the endcap primary stubs module rates (in stubs/bx)
   float m_e_rate_s[142000];  // Contains the endcap secondary stubs module rates (in stubs/bx)
   float m_e_rate_f[142000];  // Contains the endcap fake stubs module rates (in stubs/bx)
-  float m_e_crate[142000];    // Contains the barrel cluster module rates (in stubs/bx)
-  float m_e_drate[142000];    // Contains the barrel digi module rates (in stubs/bx)
-  float m_e_bylc_rate[1500];  // Contains the barrel clus ladder rates (in stubs/bx)
-  float m_e_byls_rate[1500];  // Contains the barrel clus ladder rates (in stubs/bx)
-
-  // Following tables are for sector definition
-  float m_b_etamin[58000];   // Contains the barrel module min eta value
-  float m_b_etamax[58000];   // Contains the barrel module max eta value
-  float m_b_phimin[58000];   // Contains the barrel module min phi value
-  float m_b_phimax[58000];   // Contains the barrel module max phi value
-  float m_e_etamin[142000];  // Contains the endcap module min eta value
-  float m_e_etamax[142000];  // Contains the endcap module max eta value
-  float m_e_phimin[142000];  // Contains the endcap module min phi value
-  float m_e_phimax[142000];  // Contains the endcap module max phi value
-  float m_e_stmin[142000];   // Minimum strip number 
-  float m_e_stmax[142000];   // Maximum strip number 
-  float m_e_segmin[142000];  // Minimum segment number  
-  float m_e_segmax[142000];  // Maximum segment number   
-  float m_e_nseg[142000];    // Number of segments in the module  
-  float m_e_nstrip[142000];  // Number of strips in the module  
-  float m_b_stmin[58000];    // 
-  float m_b_stmax[58000];    //
-  float m_b_segmin[58000];   // Idem for barrel
-  float m_b_segmax[58000];   //
-  float m_b_nseg[58000];     // 
-  float m_b_nstrip[58000];   // 
-
-  int tempo_ps_b[58000];   //
-  int tempo_ss_b[58000];   //
-
-  int n_conc_half1[58000];
-  int n_conc_half2[58000];
-
-  int tempo_c_ps_b[16][58000];   //
-  int tempo_c_ss_b[16][58000];   //
-
-  int evt_maxPSb;
-  int evt_maxSSb;
-
-  int evt_nsPSb;
-  int evt_nsSSb;
-
-  int n_max_PSb;
-  int n_max_SSb;
+  float m_e_crate[142000];   // Contains the barrel cluster module rates (in stubs/bx)
+  float m_e_bylc_rate[1500]; // Contains the barrel clus ladder rates (in stubs/bx)
+  float m_e_byls_rate[1500]; // Contains the barrel stub ladder rates (in stubs/bx)
 
   // Here are the parameters needed from the data
   // Details on these might be found on
@@ -146,18 +101,12 @@ class rates
 
 
   int m_clus;
-  std::vector<float> m_clus_x;
-  std::vector<float> m_clus_y;
-  std::vector<float> m_clus_z;
   std::vector<int>   m_clus_layer;
   std::vector<int>   m_clus_ladder;
   std::vector<int>   m_clus_module;
   std::vector<int>   m_clus_nrows;
   std::vector<int>   m_clus_nseg;
 
-  std::vector<float> *pm_clus_x;
-  std::vector<float> *pm_clus_y;
-  std::vector<float> *pm_clus_z;
   std::vector<int>   *pm_clus_layer;
   std::vector<int>   *pm_clus_ladder;
   std::vector<int>   *pm_clus_module;
@@ -175,10 +124,6 @@ class rates
   std::vector<float> m_stub_etaGEN;
   std::vector<float> m_stub_X0;
   std::vector<float> m_stub_Y0;
-  std::vector<float> m_stub_x;
-  std::vector<float> m_stub_y;
-  std::vector<float> m_stub_z;
-  std::vector<float> m_stub_strip;
   std::vector<int>   m_stub_seg;
   std::vector<int>   m_stub_chip;
   std::vector<int>   m_stub_pdgID;
@@ -194,10 +139,6 @@ class rates
   std::vector<float> *pm_stub_etaGEN;
   std::vector<float> *pm_stub_X0;
   std::vector<float> *pm_stub_Y0;
-  std::vector<float> *pm_stub_x;
-  std::vector<float> *pm_stub_y;
-  std::vector<float> *pm_stub_z;
-  std::vector<float> *pm_stub_strip;
   std::vector<int>   *pm_stub_seg;
   std::vector<int>   *pm_stub_chip;
   std::vector<int>   *pm_stub_pdgID;
@@ -213,10 +154,6 @@ class rates
   int m_sen;
   int m_chp;
   float m_rate;
-  int m_bar_clus[6];
-  int m_bar_stub[6];
-  int m_ss; 
-  int m_cbc_ss;
 
 };
 

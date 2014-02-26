@@ -77,7 +77,7 @@ class sector_test
 
   TTree  *m_efftree;
   TTree  *m_finaltree;
-  TTree  *m_PATT;
+  TChain *m_PATT;
 
   // List of stubs from primaries (one vector of stub ids per prim track) 
   // for a given event 
@@ -159,6 +159,8 @@ class sector_test
   float d0;         // The origin radius
   int   npatt;      // The number of patterns containing at least 5 stubs of the prim. track
   int   ntotpatt;   // The total number of patterns 
+  int   ntrack;     // 
+  int   ttrack;     // 
   int   mult[500];  // The total number of stubs per sector 
   int   nhits;      // The total number of layers/disks hit by the prim track
   int   nplay[20];  // The total number of prim stubs per layer 
@@ -198,7 +200,13 @@ class sector_test
   std::vector< std::vector<int> >   *patt_parts; // tp index of ALL the particles contained in the pattern (in part_*** vectors of this tree!!!!)
   std::vector< std::vector<int> >   *patt_stubs; // index of ALL the stubs contained in the pattern (in stub_*** vectors of this tree!!!!) 
 
-
+  int n_track;                        // 
+  std::vector<int>                  *trk_sec;
+  std::vector<int>                  *trk_parts;
+  std::vector<float>                *trk_pt;   
+  std::vector<float>                *trk_eta;   
+  std::vector<float>                *trk_z;   
+  std::vector<float>                *trk_phi;   
   
   // Informations contained in the pattern file
 
@@ -213,6 +221,27 @@ class sector_test
 
   std::vector< std::vector<int> > *pm_links; 
   std::vector<int>                *pm_secid;
+
+  // Informations contained in the pattern tree of official file
+
+  int nb_tracks; // Number of L1 tracks in event
+
+  std::vector< std::vector<int> > m_pattlinks; // Links to the stub ids of the pattern 
+  std::vector<int>                m_pattsecid; // Link to the sector ids of the pattern 
+  std::vector<int>                m_trksecid;  // Link to the sector ids of the track
+  std::vector<float>              m_trkpt; 
+  std::vector<float>              m_trketa; 
+  std::vector<float>              m_trkz; 
+  std::vector<float>              m_trkphi; 
+
+
+  std::vector< std::vector<int> > *pm_pattlinks; 
+  std::vector<int>                *pm_pattsecid;
+  std::vector<int>                *pm_trksecid; 
+  std::vector<float>              *pm_trkpt; 
+  std::vector<float>              *pm_trketa; 
+  std::vector<float>              *pm_trkz; 
+  std::vector<float>              *pm_trkphi; 
 
 
   // Info id dbg==true (Standalone mode)
