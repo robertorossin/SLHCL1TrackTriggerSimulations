@@ -70,7 +70,7 @@ class L1TrackExtractor
 
  public:
 
-  L1TrackExtractor(bool doTree);
+  L1TrackExtractor(edm::InputTag  STUB_tag, edm::InputTag  PATT_tag, edm::InputTag  TRCK_tag, bool doTree);
   L1TrackExtractor(TFile *a_file);
   ~L1TrackExtractor();
 
@@ -91,6 +91,11 @@ class L1TrackExtractor
 
  private:
   
+
+  edm::InputTag m_STUB_tag;
+  edm::InputTag m_PATT_tag;
+  edm::InputTag m_TRCK_tag;
+
   TTree* m_tree;
   bool m_OK;
   double mMagneticFieldStrength ;

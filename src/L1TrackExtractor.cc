@@ -1,10 +1,14 @@
 #include "../interface/L1TrackExtractor.h"
 
 
-L1TrackExtractor::L1TrackExtractor(bool doTree)
+L1TrackExtractor::L1TrackExtractor(edm::InputTag STUB_tag, edm::InputTag PATT_tag, edm::InputTag TRCK_tag, bool doTree)
 {
   m_OK = false;
   n_tot_evt=0;
+
+  m_STUB_tag   = STUB_tag;
+  m_PATT_tag   = PATT_tag;
+  m_TRCK_tag   = TRCK_tag;
 
   // Tree definition
  
@@ -128,9 +132,9 @@ void L1TrackExtractor::writeInfo(const edm::Event *event, StubExtractor *stub)
   edm::Handle< std::vector< TTTrack< Ref_PixelDigi_ > > > TTPatternHandle;
   edm::Handle< std::vector< TTTrack< Ref_PixelDigi_ > > > TTTrackHandle;
 
-  event->getByLabel( "TTStubsFromPixelDigis", "StubAccepted", TTStubHandle );
-  event->getByLabel( "TTTracksFromPixelDigisAM","AML1Tracks", TTPatternHandle );
-  event->getByLabel( "TTTracksFromPatterns","HoughL1Tracks", TTTrackHandle );
+  event->getByLabel( m_STUB_tag, TTStubHandle );
+  event->getByLabel( m_PATT_tag, TTPatternHandle );
+  event->getByLabel( m_TRCK_tag, TTTrackHandle );
 
   int layer  = 0;
   int ladder = 0;
@@ -237,6 +241,10 @@ void L1TrackExtractor::writeInfo(const edm::Event *event, StubExtractor *stub)
       m_trk_phi->push_back(tempTrackPtr->getMomentum().phi());
       m_trk_z->push_back(tempTrackPtr->getPOCA().z());
 
+      std::cout << tempTrackPtr->getMomentum().perp() << " / " 
+		<< tempTrackPtr->getMomentum().eta() << " / " 
+		<< tempTrackPtr->getPOCA().z() << std::endl;
+      
       stub_list.clear();
 
       for(unsigned int i=0;i<trackStubs.size();i++)
@@ -247,7 +255,7 @@ void L1TrackExtractor::writeInfo(const edm::Event *event, StubExtractor *stub)
 	/// Calculate average coordinates col/row for inner/outer Cluster
 	/// These are already corrected for being at the center of each pixel
 	//	MeasurementPoint mp0 = tempStubRef->getClusterRef(0)->findAverageLocalCoordinates();
-	//GlobalPoint posStub  = theStackedGeometry->findGlobalPosition( &(*tempStubRef) );
+	GlobalPoint posStub  = theStackedGeometry->findGlobalPosition( &(*tempStubRef) );
 	
 	StackedTrackerDetId detIdStub( tempStubRef->getDetId() );
 	
@@ -266,7 +274,7 @@ void L1TrackExtractor::writeInfo(const edm::Event *event, StubExtractor *stub)
 	}
 
 	//	std::cout << layer << "//" << ladder << "//" << module << std::endl;
-	//	stub_list.push_back(stub->get_id(layer,ladder,module,posStub.x(),posStub.y(),posStub.z()));
+	stub_list.push_back(stub->get_id(layer,ladder,module,posStub.x(),posStub.y(),posStub.z()));
 
 
       } /// End of loop over track stubs

@@ -77,6 +77,9 @@ class RecoExtractor : public edm::EDAnalyzer{
 
   edm::InputTag PIX_tag_;  // 
   edm::InputTag MC_tag_;  // 
+  edm::InputTag L1_STUB_tag_;
+  edm::InputTag L1_PATT_tag_;
+  edm::InputTag L1_TRCK_tag_;
 
   //
   // Definition of root-tuple :
