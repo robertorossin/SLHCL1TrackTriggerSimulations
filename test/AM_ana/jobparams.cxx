@@ -44,17 +44,17 @@ jobparams::jobparams(int argc, char** argv){
 			   false, 2., "float");
      cmd.add(ptmin);
  
-     ValueArg<float> rmax("i","rmax","maximal d0 value for primary selection (in cm)",
+     ValueArg<float> qmax("q","qmax","maximal d0 value for primary selection (in cm)",
 			  false, 0.1, "float");
-     cmd.add(rmax);
+     cmd.add(qmax);
 
      ValueArg<int> type("t","type","PDG id of the particle to analyze",
 			false, 13, "int");
      cmd.add(type);
 
-     ValueArg<int> rate("r","type","L1 rate (for pattern gen, in kHz)",
+     ValueArg<int> rate("r","rate","L1 rate (for pattern gen, in kHz)",
 			false, 100, "int");
-     cmd.add(type);
+     cmd.add(rate);
 
      // parse
      cmd.parse(argc, argv);
@@ -67,7 +67,7 @@ jobparams::jobparams(int argc, char** argv){
      m_nevt         = nevt.getValue();
      m_dbg          = dbg.getValue();
      m_type         = type.getValue();
-     m_rmax         = rmax.getValue();
+     m_rmax         = qmax.getValue();
      m_ptmin        = ptmin.getValue();
      m_rate         = rate.getValue();
    }

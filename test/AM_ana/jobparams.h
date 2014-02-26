@@ -30,7 +30,7 @@ class jobparams{
   std::string testfile() const;
   std::string outfile() const;
   std::string pattfile() const;
-  float       rmax() const;
+  float       qmax() const;
   float       ptmin() const;
   int         nevt() const;
   int         type() const;
@@ -75,7 +75,7 @@ inline bool jobparams::dbg() const{
   return m_dbg;
 }
 
-inline float jobparams::rmax() const{
+inline float jobparams::qmax() const{
   return m_rmax;
 }
 

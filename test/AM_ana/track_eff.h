@@ -65,6 +65,7 @@ class track_eff
 
   bool do_patt;
   bool m_dbg;
+  bool has_patt;
   float m_pt_min;
   float m_d0_min;
 
