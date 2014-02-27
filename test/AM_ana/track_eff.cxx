@@ -10,6 +10,7 @@ track_eff::track_eff(std::string filename, std::string secfilename,
   m_dbg    = dbg;
   m_d0_min = d0_min;
   m_pt_min = pt_min;
+  has_patt = true;
 
   track_eff::initTuple(filename,outfile);
   
@@ -63,7 +64,7 @@ void track_eff::do_test(int nevt)
     track_eff::reset();
 
     m_L1TT->GetEntry(i);
-    m_PATT->GetEntry(i);      
+    if (has_patt) m_PATT->GetEntry(i);      
 
     if (i%1000==0) 
       cout << "Processed " << i << "/" << ndat << endl;
@@ -131,8 +132,8 @@ void track_eff::do_test(int nevt)
       if (m_stub_tp[j]<0) continue; // Bad stub  
       
       // Basic primary selection (pt and d0 cuts)
-      if (sqrt(m_stub_pxGEN[j]*m_stub_pxGEN[j]+m_stub_pyGEN[j]*m_stub_pyGEN[j])<m_d0_min) continue;
-      if (sqrt(m_stub_X0[j]*m_stub_X0[j]+m_stub_Y0[j]*m_stub_Y0[j])>m_pt_min) continue; 
+      if (sqrt(m_stub_pxGEN[j]*m_stub_pxGEN[j]+m_stub_pyGEN[j]*m_stub_pyGEN[j])<m_pt_min) continue;
+      if (sqrt(m_stub_X0[j]*m_stub_X0[j]+m_stub_Y0[j]*m_stub_Y0[j])>m_d0_min) continue; 
 
       already_there = false;
 
@@ -382,7 +383,7 @@ void track_eff::initTuple(std::string test,std::string out)
   if (found!=std::string::npos)
   {
     m_L1TT->Add(test.c_str());
-    m_PATT->Add(test.c_str());
+    if (has_patt) m_PATT->Add(test.c_str());
   }
   else // This is a list provided into a text file
   {
@@ -402,7 +403,7 @@ void track_eff::initTuple(std::string test,std::string out)
       if (found!=std::string::npos)
       {
 	m_L1TT->Add(STRING.c_str());   
-	m_PATT->Add(STRING.c_str());   
+	if (has_patt) m_PATT->Add(STRING.c_str());   
       }
     }
 
@@ -464,19 +465,21 @@ void track_eff::initTuple(std::string test,std::string out)
   m_L1TT->SetBranchAddress("L1TkCLUS_x",         &pm_clus_x);
   m_L1TT->SetBranchAddress("L1TkCLUS_y",         &pm_clus_y);
   m_L1TT->SetBranchAddress("L1TkCLUS_z",         &pm_clus_z);
-
-  m_PATT->SetBranchAddress("L1PATT_n",           &nb_patterns);
-  m_PATT->SetBranchAddress("L1PATT_links",       &pm_pattlinks);
-  m_PATT->SetBranchAddress("L1PATT_secid",       &pm_pattsecid);
-
-  m_PATT->SetBranchAddress("L1TRK_n",            &nb_tracks);
-  m_PATT->SetBranchAddress("L1TRK_links",        &pm_trklinks);
-  m_PATT->SetBranchAddress("L1TRK_secid",        &pm_trksecid);
-  m_PATT->SetBranchAddress("L1TRK_pt",           &pm_trkpt);
-  m_PATT->SetBranchAddress("L1TRK_eta",          &pm_trketa);
-  m_PATT->SetBranchAddress("L1TRK_phi",          &pm_trkphi);
-  m_PATT->SetBranchAddress("L1TRK_z",            &pm_trkz);
-
+  
+  if (has_patt)
+  {
+    m_PATT->SetBranchAddress("L1PATT_n",           &nb_patterns);
+    m_PATT->SetBranchAddress("L1PATT_links",       &pm_pattlinks);
+    m_PATT->SetBranchAddress("L1PATT_secid",       &pm_pattsecid);
+    
+    m_PATT->SetBranchAddress("L1TRK_n",            &nb_tracks);
+    m_PATT->SetBranchAddress("L1TRK_links",        &pm_trklinks);
+    m_PATT->SetBranchAddress("L1TRK_secid",        &pm_trksecid);
+    m_PATT->SetBranchAddress("L1TRK_pt",           &pm_trkpt);
+    m_PATT->SetBranchAddress("L1TRK_eta",          &pm_trketa);
+    m_PATT->SetBranchAddress("L1TRK_phi",          &pm_trkphi);
+    m_PATT->SetBranchAddress("L1TRK_z",            &pm_trkz);
+  }
 
   // Output file definition (see the header)
 
