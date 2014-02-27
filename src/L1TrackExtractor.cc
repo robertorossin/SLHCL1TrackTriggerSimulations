@@ -134,7 +134,9 @@ void L1TrackExtractor::writeInfo(const edm::Event *event, StubExtractor *stub)
 
   event->getByLabel( m_STUB_tag, TTStubHandle );
   event->getByLabel( m_PATT_tag, TTPatternHandle );
-  event->getByLabel( m_TRCK_tag, TTTrackHandle );
+
+  if (m_TRCK_tag.label()!="" && m_TRCK_tag.instance()!="") // Do this to run extractor only on PR info
+    event->getByLabel( m_TRCK_tag, TTTrackHandle );
 
   int layer  = 0;
   int ladder = 0;
@@ -217,6 +219,10 @@ void L1TrackExtractor::writeInfo(const edm::Event *event, StubExtractor *stub)
 
   
   /// Go on only if there are Tracks from Patterns
+
+
+  if (m_TRCK_tag.label()!="" && m_TRCK_tag.instance()!="")
+  {
   if ( TTTrackHandle->size() > 0 )
   {
     /// Loop over Patterns
@@ -241,9 +247,9 @@ void L1TrackExtractor::writeInfo(const edm::Event *event, StubExtractor *stub)
       m_trk_phi->push_back(tempTrackPtr->getMomentum().phi());
       m_trk_z->push_back(tempTrackPtr->getPOCA().z());
 
-      std::cout << tempTrackPtr->getMomentum().perp() << " / " 
-		<< tempTrackPtr->getMomentum().eta() << " / " 
-		<< tempTrackPtr->getPOCA().z() << std::endl;
+      //      std::cout << tempTrackPtr->getMomentum().perp() << " / " 
+      //		<< tempTrackPtr->getMomentum().eta() << " / " 
+      //		<< tempTrackPtr->getPOCA().z() << std::endl;
       
       stub_list.clear();
 
@@ -286,10 +292,7 @@ void L1TrackExtractor::writeInfo(const edm::Event *event, StubExtractor *stub)
 
     m_trk =  tkCnt;
   }
-
-    
-  
-
+  }      
  
   L1TrackExtractor::fillTree();
 }
