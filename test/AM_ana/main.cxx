@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
   {
     track_eff* my_test = new track_eff(params.testfile(),params.inputfile(),
 				       params.outfile(),params.nevt(),params.ptmin(),
-				       params.rmax(),params.dbg());
+				       params.qmax(),params.dbg());
 
     delete my_test;
   }
