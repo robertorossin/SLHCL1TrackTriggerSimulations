@@ -6,43 +6,51 @@
 
 
 NTupleGenMET::NTupleGenMET(const edm::ParameterSet& iConfig) :
-    inputTag(iConfig.getParameter<edm::InputTag>("InputTag")),
-    prefix  (iConfig.getParameter<std::string>  ("Prefix")),
-    suffix  (iConfig.getParameter<std::string>  ("Suffix"))
-{
-    produces <double> ( prefix + "Px" + suffix );
-    produces <double> ( prefix + "Py" + suffix );
+  inputTag_(iConfig.getParameter<edm::InputTag>("inputTag")),
+  prefix_  (iConfig.getParameter<std::string>("prefix")),
+  suffix_  (iConfig.getParameter<std::string>("suffix")) {
+
+    produces<float> (prefix_ + "px"    + suffix_);
+	produces<float> (prefix_ + "py"    + suffix_);
+    produces<float> (prefix_ + "pt"    + suffix_);
+	produces<float> (prefix_ + "phi"   + suffix_);
+    produces<float> (prefix_ + "sumEt" + suffix_);
 }
 
-void NTupleGenMET::
-produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+void NTupleGenMET::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
-    std::auto_ptr <double> px(new double());
-    std::auto_ptr <double> py(new double());
+    std::auto_ptr<float> v_px    (new float());
+    std::auto_ptr<float> v_py    (new float());
+    std::auto_ptr<float> v_pt    (new float());
+    std::auto_ptr<float> v_phi   (new float());
+    std::auto_ptr<float> v_sumEt (new float());
 
-    //-----------------------------------------------------------------
+    //__________________________________________________________________________
     if (!iEvent.isRealData()) {
         edm::Handle < reco::GenMETCollection > mets;
-        iEvent.getByLabel(inputTag, mets);
+        iEvent.getByLabel(inputTag_, mets);
 
-        if (mets.isValid()) {
-            edm::LogInfo("NTupleGenMET") << "Total # GenMETs: " << mets->size();
-            reco::GenMET met(mets->at(0));
-            *px = met.px();
-            *py = met.py();
-//            for (reco::GenMETCollection::const_iterator it = mets->begin(); it != mets->end(); ++it) {
-//
-//                // fill in all the vectors
-//                px->push_back(it->px());
-//                py->push_back(it->py());
-//            }
+        if (mets.isValid() && mets->size() > 0) {
+            edm::LogInfo("NTupleGenMET") << "Size: " << mets->size();
+
+            reco::GenMETCollection::const_iterator it = mets->begin();
+
+            // Fill the values
+            *v_px    = it->px();
+            *v_py    = it->py();
+            *v_pt    = it->pt();
+            *v_phi   = it->phi();
+            *v_sumEt = it->sumEt();
+
         } else {
-            edm::LogError("NTupleGenMET") << "Error! Can't get the product " << inputTag;
+            edm::LogError("NTupleGenMET") << "Cannot get the product: " << inputTag_;
         }
     }
 
-    //-----------------------------------------------------------------
-    // put vectors in the event
-    iEvent.put( px, prefix + "Px" + suffix );
-    iEvent.put( py, prefix + "Py" + suffix );
+    //__________________________________________________________________________
+    iEvent.put(v_px    , prefix_ + "px"    + suffix_);
+	iEvent.put(v_py    , prefix_ + "py"    + suffix_);
+    iEvent.put(v_pt    , prefix_ + "pt"    + suffix_);
+    iEvent.put(v_phi   , prefix_ + "phi"   + suffix_);
+    iEvent.put(v_sumEt , prefix_ + "sumEt" + suffix_);
 }

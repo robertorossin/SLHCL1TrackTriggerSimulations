@@ -1,81 +1,77 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleGenJets.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
+#include "DataFormats/JetReco/interface/GenJet.h"
 #include "DataFormats/JetReco/interface/GenJetCollection.h"
 
 
 NTupleGenJets::NTupleGenJets(const edm::ParameterSet& iConfig) :
-    inputTag(iConfig.getParameter<edm::InputTag>("InputTag")),
-    prefix  (iConfig.getParameter<std::string>  ("Prefix")),
-    suffix  (iConfig.getParameter<std::string>  ("Suffix")),
-    minPt (iConfig.getParameter<double> ("minPt")),
-    maxAbsoluteEta (iConfig.getParameter<double> ("maxAbsoluteEta")),
-    maxSize (iConfig.getParameter<unsigned int> ("MaxSize"))
-{
-	produces < std::vector<double> > (prefix + "Px" + suffix);
-	produces < std::vector<double> > (prefix + "Py" + suffix);
-	produces < std::vector<double> > (prefix + "Pz" + suffix);
-	produces < std::vector<double> > (prefix + "Energy" + suffix);
-	produces < std::vector<double> > (prefix + "Charge" + suffix);
-	produces < std::vector<double> > (prefix + "Mass" + suffix);
+  inputTag_(iConfig.getParameter<edm::InputTag>("inputTag")),
+  prefix_  (iConfig.getParameter<std::string>("prefix")),
+  suffix_  (iConfig.getParameter<std::string>("suffix")),
+  minPt_   (iConfig.getParameter<double>("minPt")),
+  maxEta_  (iConfig.getParameter<double>("maxEta")),
+  maxN_    (iConfig.getParameter<unsigned int>("maxN")) {
 
-	produces < std::vector<double> > (prefix + "EMF" + suffix);
-	produces < std::vector<double> > (prefix + "HADF" + suffix);
+    produces<std::vector<float> > (prefix_ + "px"    + suffix_);
+	produces<std::vector<float> > (prefix_ + "py"    + suffix_);
+	produces<std::vector<float> > (prefix_ + "pz"    + suffix_);
+	produces<std::vector<float> > (prefix_ + "E"     + suffix_);
+    produces<std::vector<float> > (prefix_ + "pt"    + suffix_);
+	produces<std::vector<float> > (prefix_ + "eta"   + suffix_);
+	produces<std::vector<float> > (prefix_ + "phi"   + suffix_);
+    produces<std::vector<float> > (prefix_ + "M"     + suffix_);
 }
 
 void NTupleGenJets::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
-	std::auto_ptr < std::vector<double> > px(new std::vector<double>());
-	std::auto_ptr < std::vector<double> > py(new std::vector<double>());
-	std::auto_ptr < std::vector<double> > pz(new std::vector<double>());
-	std::auto_ptr < std::vector<double> > energy(new std::vector<double>());
-	std::auto_ptr < std::vector<double> > charge(new std::vector<double>());
-	std::auto_ptr < std::vector<double> > mass(new std::vector<double>());
+	std::auto_ptr<std::vector<float> > v_px    (new std::vector<float>());
+	std::auto_ptr<std::vector<float> > v_py    (new std::vector<float>());
+	std::auto_ptr<std::vector<float> > v_pz    (new std::vector<float>());
+    std::auto_ptr<std::vector<float> > v_E     (new std::vector<float>());
+	std::auto_ptr<std::vector<float> > v_pt    (new std::vector<float>());
+	std::auto_ptr<std::vector<float> > v_eta   (new std::vector<float>());
+    std::auto_ptr<std::vector<float> > v_phi   (new std::vector<float>());
+    std::auto_ptr<std::vector<float> > v_M     (new std::vector<float>());
 
-	std::auto_ptr < std::vector<double> > emf(new std::vector<double>());
-	std::auto_ptr < std::vector<double> > hadf(new std::vector<double>());
-
-	//-----------------------------------------------------------------
+	//__________________________________________________________________________
 	if (!iEvent.isRealData()) {
-		edm::Handle < reco::GenJetCollection > genJets;
-		iEvent.getByLabel(inputTag, genJets);
+		edm::Handle<reco::GenJetCollection> jets;
+		iEvent.getByLabel(inputTag_, jets);
 
-		if (genJets.isValid()) {
-			edm::LogInfo("NTupleGenJets") << "Total # GenJets: " << genJets->size();
+		if (jets.isValid()) {
+			edm::LogInfo("NTupleGenJets") << "Size: " << jets->size();
 
-			for (reco::GenJetCollection::const_iterator it = genJets->begin(); it != genJets->end(); ++it) {
-				// exit from loop when you reach the required number of GenJets
-				if (px->size() >= maxSize)
+            unsigned int n = 0;
+			for (reco::GenJetCollection::const_iterator it = jets->begin(); it != jets->end(); ++it) {
+				if (n >= maxN_)
 					break;
-
-				if (it->pt() < minPt || fabs(it->eta()) > maxAbsoluteEta)
+				if (it->pt() < minPt_ || fabs(it->eta()) > maxEta_)
 					continue;
 
-				// fill in all the vectors
-				px->push_back(it->px());
-				py->push_back(it->py());
-				pz->push_back(it->pz());
-				energy->push_back(it->energy());
-				charge->push_back(it->charge());
-				mass->push_back(it->mass());
-
-				emf->push_back(it->emEnergy() / it->energy());
-				hadf->push_back(it->hadEnergy() / it->energy());
+				// Fill the vectors
+				v_px    ->push_back(it->px());
+				v_py    ->push_back(it->py());
+				v_pz    ->push_back(it->pz());
+                v_E     ->push_back(it->energy());
+                v_pt    ->push_back(it->pt());
+                v_eta   ->push_back(it->eta());
+                v_phi   ->push_back(it->phi());
+                v_M     ->push_back(it->mass());
 			}
+
 		} else {
-			edm::LogError("NTupleGenJets") << "Error! Can't get the product " << inputTag;
+			edm::LogError("NTupleGenJets") << "Cannot get the product: " << inputTag_;
 		}
 	}
 
-	//-----------------------------------------------------------------
-	// put vectors in the event
-	iEvent.put(px, prefix + "Px" + suffix);
-	iEvent.put(py, prefix + "Py" + suffix);
-	iEvent.put(pz, prefix + "Pz" + suffix);
-	iEvent.put(energy, prefix + "Energy" + suffix);
-	iEvent.put(charge, prefix + "Charge" + suffix);
-	iEvent.put(mass, prefix + "Mass" + suffix);
-
-	iEvent.put(emf, prefix + "EMF" + suffix);
-	iEvent.put(hadf, prefix + "HADF" + suffix);
+	//__________________________________________________________________________
+	iEvent.put(v_px    , prefix_ + "px"    + suffix_);
+	iEvent.put(v_py    , prefix_ + "py"    + suffix_);
+	iEvent.put(v_pz    , prefix_ + "pz"    + suffix_);
+    iEvent.put(v_E     , prefix_ + "E"     + suffix_);
+	iEvent.put(v_pt    , prefix_ + "pt"    + suffix_);
+	iEvent.put(v_eta   , prefix_ + "eta"   + suffix_);
+    iEvent.put(v_phi   , prefix_ + "phi"   + suffix_);
+    iEvent.put(v_M     , prefix_ + "M"     + suffix_);
 }

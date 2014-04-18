@@ -6,13 +6,16 @@
 #include "FWCore/Utilities/interface/InputTag.h"
 
 class NTupleGenMET : public edm::EDProducer {
- public:
-  explicit NTupleGenMET(const edm::ParameterSet&);
+  public:
+    explicit NTupleGenMET(const edm::ParameterSet&);
 
- private:
-  void produce( edm::Event &, const edm::EventSetup & );
-  const edm::InputTag   inputTag;
-  const std::string     prefix,suffix;
+  private:
+    //virtual void beginJob();
+    virtual void produce(edm::Event&, const edm::EventSetup&);
+    //virtual void endJob();
+
+    const edm::InputTag inputTag_;
+    const std::string   prefix_, suffix_;
 };
 
 #endif

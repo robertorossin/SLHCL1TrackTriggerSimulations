@@ -52,3 +52,12 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+# Other
+__init__.py
+log
+*.log
+*.root
+*~
+*.bak
+*.orig
+

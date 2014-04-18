@@ -6,15 +6,19 @@
 #include "FWCore/Utilities/interface/InputTag.h"
 
 class NTupleGenJets : public edm::EDProducer {
- public:
-  explicit NTupleGenJets(const edm::ParameterSet&);
+  public:
+    explicit NTupleGenJets(const edm::ParameterSet&);
 
- private:
-  void produce( edm::Event &, const edm::EventSetup & );
-  const edm::InputTag   inputTag;
-  const std::string     prefix,suffix;
-  const double minPt, maxAbsoluteEta;
-  const unsigned int    maxSize;
+  private:
+    //virtual void beginJob();
+    virtual void produce(edm::Event&, const edm::EventSetup&);
+    //virtual void endJob();
+
+    const edm::InputTag inputTag_;
+    const std::string   prefix_, suffix_;
+
+    const double        minPt_, maxEta_;
+    const unsigned int  maxN_;
 };
 
 #endif
