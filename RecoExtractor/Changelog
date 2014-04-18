@@ -1,0 +1,78 @@
+2014-02-17  Seb Viret  <viret@in2p3.fr>
+ 
+       	* Some modifs in the StubExtractor package (can pass the container names as option)
+	For more flexibility
+
+	This version has been tested against CMSSW_6_2_0_SLHC7
+
+2014-02-13  Seb Viret  <viret@in2p3.fr>
+ 
+       	* Lot of modifs in the official stub stream (in particular for occupancies studies). 
+	A new package StubTranslator, is now creating the root files for bank generation 
+	from official stubs. 
+
+	* TkLayoutTranslator module has been removed
+
+	* L1TrackExtractor package added for the official L1Track objects
+
+	This version has been tested against CMSSW_6_2_0_SLHC7
+
+2014-01-10  Seb Viret  <viret@in2p3.fr>
+ 
+       	* Lot of modifs in the MC/STub and L1TrackTrigger parts (adaptation to 620_SLHC5)  
+
+	This version has been tested against CMSSW_6_2_0_SLHC5
+
+2013-07-19  Seb Viret  <viret@in2p3.fr>
+ 
+       	* Adding a new pT threshold option
+
+	This version has been tested against CMSSW_6_1_2_SLHC6_patch1
+
+2013-06-17  Seb Viret  <viret@in2p3.fr>
+ 
+       	* Adding the Stub extractor class in order to 
+	retrieve the official stub info
+
+	This version has been tested against CMSSW_6_1_2_SLHC4
+
+2013-05-28  Seb Viret  <viret@in2p3.fr>
+ 
+       	* Added sector efficiency calculator 
+	  to the SectorMaker
+
+	This version has been tested against CMSSW_6_1_2_SLHC2
+
+2013-05-24  Seb Viret  <viret@in2p3.fr>
+ 
+       	* Added a the MakeRatesGraphs.C macro in 
+          the /test/ directory
+
+2013-05-23  Seb Viret  <viret@in2p3.fr>
+ 
+       	* Added a first version of the trigger sector builder in
+          the /test/ directory
+
+2013-04-19  Seb Viret  <viret@in2p3.fr>
+ 
+       	* Added helper macros in Test directory
+
+       	* Code improvement in L1TrackTriggerAnalysis.cc
+
+
+2013-04-19  Seb Viret  <viret@in2p3.fr>
+ 
+       	* Bugfix in L1TrackTriggerAnalysis.cc
+
+
+2013-04-12  Seb Viret  <viret@in2p3.fr>
+ 
+       	* First import of the RecoExtractor package in the HL_LHC.
+
+	* Documentation on this package might be fouund on the following page:
+	
+	  http://sviret.web.cern.ch/sviret/Welcome.php?n=CMS.HLLHCTuto
+
+  	  Look at STEP III
+
+	This version has been tested against CMSSW_6_1_2_SLHC1
