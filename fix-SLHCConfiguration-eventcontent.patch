@@ -1,0 +1,23 @@
+diff --git a/SLHCUpgradeSimulations/Configuration/python/combinedCustoms_TTI.py b/SLHCUpgradeSimulations/Configuration/python/combinedCustoms_TTI.py
+index b02134d..34504d5 100644
+--- a/SLHCUpgradeSimulations/Configuration/python/combinedCustoms_TTI.py
++++ b/SLHCUpgradeSimulations/Configuration/python/combinedCustoms_TTI.py
+@@ -46,13 +46,13 @@ def l1EventContent_TTI(process):
+             getattr(process,b).outputCommands.append('drop PixelDigiSimLinkedmDetSetVector_mix_*_*')
+             getattr(process,b).outputCommands.append('drop PixelDigiedmDetSetVector_mix_*_*')
+ 
+-	    getattr(process,b).outputCommands.append('drop *_simSiPixelDigis_*_*')
++	    getattr(process,b).outputCommands.append('keep *_simSiPixelDigis_*_*')
+ 
+ 	    # drop what is not used in the stubs
+-            getattr(process,b).outputCommands.append('drop *_TTStubAssociatorFromPixelDigis_StubRejected_*')
+-	    getattr(process,b).outputCommands.append('drop *_TTStubsFromPixelDigis_StubRejected_*')
+-	    getattr(process,b).outputCommands.append('drop *_TTClustersFromPixelDigis_ClusterInclusive_*')
+-	    getattr(process,b).outputCommands.append('drop *_TTClusterAssociatorFromPixelDigis_ClusterInclusive_*')
++	    #getattr(process,b).outputCommands.append('drop *_TTStubAssociatorFromPixelDigis_StubRejected_*')
++	    #getattr(process,b).outputCommands.append('drop *_TTStubsFromPixelDigis_StubRejected_*')
++	    #getattr(process,b).outputCommands.append('drop *_TTClustersFromPixelDigis_ClusterInclusive_*')
++	    #getattr(process,b).outputCommands.append('drop *_TTClusterAssociatorFromPixelDigis_ClusterInclusive_*')
+ 
+ 	    # other savings. The following collections can be obtained from RAW2DIGI
+ 	    #getattr(process,b).outputCommands.append('drop EcalTriggerPrimitiveDigisSorted_simEcalTriggerPrimitiveDigis_*_*')
