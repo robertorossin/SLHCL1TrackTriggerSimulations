@@ -1,0 +1,11 @@
+<export>
+</export>
+<library   name="ExtractorsNTupleTools_plugins" file="*.cc">
+  <use   name="Extractors/NTupleTools"/>
+  <use   name="FWCore/Framework"/>
+  <use   name="FWCore/ParameterSet"/>
+  <use   name="FWCore/MessageLogger"/>
+  <use   name="FWCore/MessageService"/>
+  <use   name="root"/>
+</library>
+

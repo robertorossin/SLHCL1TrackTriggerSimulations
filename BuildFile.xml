@@ -1,0 +1,12 @@
+<use   name="FWCore/Framework"/>
+<use   name="FWCore/PluginManager"/>
+<use   name="FWCore/ParameterSet"/>
+<use   name="FWCore/ServiceRegistry"/>
+<use   name="CommonTools/UtilAlgos"/>
+<use   name="DataFormats/JetReco"/>
+<use   name="DataFormats/METReco"/>
+<use   name="clhep"/>
+<flags EDM_PLUGIN="1"/>
+<!--export-->
+  <!--lib   name="1"/-->
+<!--/export-->
