@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 # Ideal geometry, needed for transient ECAL alignement
-from DataProduction.SkimGeometry.GeometryExtendedPhase2TkBE_SKIM_cff import *
+from SLHCL1TrackTriggerSimulations.SkimGeometry.GeometryExtendedPhase2TkBE_SKIM_cff import *
 
 
 

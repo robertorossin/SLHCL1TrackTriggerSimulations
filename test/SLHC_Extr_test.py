@@ -33,8 +33,8 @@ process.load('SimTracker.TrackTriggerAssociation.TrackTriggerAssociator_cff')
 
 
 # Special geometry (Tracker only)
-process.load('DataProduction.SkimGeometry.GeometryExtendedPhase2TkBEReco_SKIM_cff')
-process.load('DataProduction.SkimGeometry.Digi_SKIM_cff')
+process.load('SLHCL1TrackTriggerSimulations.SkimGeometry.GeometryExtendedPhase2TkBEReco_SKIM_cff')
+process.load('SLHCL1TrackTriggerSimulations.SkimGeometry.Digi_SKIM_cff')
 
 # Other statements
 

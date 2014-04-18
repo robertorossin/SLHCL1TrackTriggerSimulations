@@ -17,10 +17,10 @@ process.load('L1Trigger.TrackTrigger.TrackTrigger_cff')
 process.load('SimTracker.TrackTriggerAssociation.TrackTriggerAssociator_cff')
 
 # Special geometry (Tracker only)
-process.load('DataProduction.SkimGeometry.Sim_SKIM_cff')
-process.load('DataProduction.SkimGeometry.GeometryExtendedPhase2TkBEReco_SKIM_cff')
-process.load('DataProduction.SkimGeometry.mixPU_SKIM_cfi')
-process.load('DataProduction.SkimGeometry.Digi_SKIM_cff')
+process.load('SLHCL1TrackTriggerSimulations.SkimGeometry.Sim_SKIM_cff')
+process.load('SLHCL1TrackTriggerSimulations.SkimGeometry.GeometryExtendedPhase2TkBEReco_SKIM_cff')
+process.load('SLHCL1TrackTriggerSimulations.SkimGeometry.mixPU_SKIM_cfi')
+process.load('SLHCL1TrackTriggerSimulations.SkimGeometry.Digi_SKIM_cff')
 
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(NEVTS)

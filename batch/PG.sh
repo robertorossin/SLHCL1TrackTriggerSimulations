@@ -141,7 +141,7 @@ if [ ${1} = "FASTPR" ]; then
     #  
 
     cd $TOP
-    cp $CMSSW_PROJECT_SRC/src/DataProduction/test/base/SLHC_PR_BASE.py BH_dummy.py 
+    cp $CMSSW_PROJECT_SRC/src/SLHCL1TrackTriggerSimulations/test/base/SLHC_PR_BASE.py BH_dummy.py 
 
     # Finally the script is modified according to the requests
     

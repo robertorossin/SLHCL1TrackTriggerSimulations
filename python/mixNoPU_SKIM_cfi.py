@@ -3,8 +3,8 @@ import FWCore.ParameterSet.Config as cms
 # this is a minimum configuration of the Mixing module,
 # to run it in the zero-pileup mode
 #
-from DataProduction.SkimGeometry.aliases_SKIM_cfi import * 
-from DataProduction.SkimGeometry.mixObjects_SKIM_cfi import * 
+from SLHCL1TrackTriggerSimulations.SkimGeometry.aliases_SKIM_cfi import * 
+from SLHCL1TrackTriggerSimulations.SkimGeometry.mixObjects_SKIM_cfi import * 
 from SimGeneral.MixingModule.pixelDigitizer_cfi import *
 from SimGeneral.MixingModule.stripDigitizer_cfi import *
 from SimGeneral.MixingModule.trackingTruthProducer_cfi import *

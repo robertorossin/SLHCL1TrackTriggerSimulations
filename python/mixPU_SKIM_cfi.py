@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 # this is the configuration to model pileup for final scheme
-from DataProduction.SkimGeometry.aliases_SKIM_cfi import * 
+from SLHCL1TrackTriggerSimulations.SkimGeometry.aliases_SKIM_cfi import * 
 from SimGeneral.MixingModule.mixObjects_cfi import *
 from SimGeneral.MixingModule.mixPoolSource_cfi import *
 from SimGeneral.MixingModule.pixelDigitizer_cfi import *

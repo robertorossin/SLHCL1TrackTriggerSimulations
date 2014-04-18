@@ -33,8 +33,8 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 # Special geometry (Tracker only)
-process.load('DataProduction.SkimGeometry.Sim_SKIM_cff')
-process.load('DataProduction.SkimGeometry.GeometryExtendedPhase2TkBEReco_SKIM_cff')
+process.load('SLHCL1TrackTriggerSimulations.SkimGeometry.Sim_SKIM_cff')
+process.load('SLHCL1TrackTriggerSimulations.SkimGeometry.GeometryExtendedPhase2TkBEReco_SKIM_cff')
 
 
 process.maxEvents = cms.untracked.PSet(
