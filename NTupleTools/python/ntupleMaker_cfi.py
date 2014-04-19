@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-ntuplemaker = cms.EDAnalyzer("NTupleMaker",
+ntupler = cms.EDAnalyzer("NTupleMaker",
     outputCommands = cms.untracked.vstring(
         "drop *",
         "keep *_ntuple*_*_*",

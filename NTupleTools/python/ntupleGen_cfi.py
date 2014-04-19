@@ -29,9 +29,9 @@ ntupleGenEventInfo = cms.EDProducer('NTupleGenEventInfo',
     pileupInfo = cms.InputTag('addPileupInfo'),
     pileupWeight = cms.InputTag(''),
     pdfWeight = cms.InputTag(''),
-    prefix = cms.string('genMET@'),
+    prefix = cms.string('gen@'),
     suffix = cms.string(''),
 )
 
-ntuplegen = cms.Sequence(ntupleGenParticles * ntupleGenJets * ntupleGenMET * ntupleGenEventInfo)
+ntupleGen = cms.Sequence(ntupleGenParticles * ntupleGenJets * ntupleGenMET * ntupleGenEventInfo)
 

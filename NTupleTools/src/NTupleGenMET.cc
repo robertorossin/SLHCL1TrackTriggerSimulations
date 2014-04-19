@@ -13,9 +13,9 @@ NTupleGenMET::NTupleGenMET(const edm::ParameterSet& iConfig) :
   maxN_    (iConfig.getParameter<unsigned int>("maxN")) {
 
     produces<float> (prefix_ + "px"    + suffix_);
-	produces<float> (prefix_ + "py"    + suffix_);
+    produces<float> (prefix_ + "py"    + suffix_);
     produces<float> (prefix_ + "pt"    + suffix_);
-	produces<float> (prefix_ + "phi"   + suffix_);
+    produces<float> (prefix_ + "phi"   + suffix_);
     produces<float> (prefix_ + "sumEt" + suffix_);
 }
 
@@ -51,7 +51,7 @@ void NTupleGenMET::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
     //__________________________________________________________________________
     iEvent.put(v_px    , prefix_ + "px"    + suffix_);
-	iEvent.put(v_py    , prefix_ + "py"    + suffix_);
+    iEvent.put(v_py    , prefix_ + "py"    + suffix_);
     iEvent.put(v_pt    , prefix_ + "pt"    + suffix_);
     iEvent.put(v_phi   , prefix_ + "phi"   + suffix_);
     iEvent.put(v_sumEt , prefix_ + "sumEt" + suffix_);

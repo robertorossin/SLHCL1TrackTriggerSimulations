@@ -1,0 +1,3 @@
+/store/user/l1upgrades/SLHC/GEN/620_SLHC10/SingleMuPlusMinus_20140417/SingleMuPlusMinus_E2023TTI_20_1_5dg.root
+/store/user/l1upgrades/SLHC/GEN/620_SLHC10/SingleMuPlusMinus_20140417/SingleMuPlusMinus_E2023TTI_21_1_JHj.root
+/store/user/l1upgrades/SLHC/GEN/620_SLHC10/SingleMuPlusMinus_20140417/SingleMuPlusMinus_E2023TTI_22_1_kj3.root

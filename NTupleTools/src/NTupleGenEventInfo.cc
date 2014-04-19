@@ -14,7 +14,7 @@ NTupleGenEventInfo::NTupleGenEventInfo(const edm::ParameterSet& iConfig) :
   suffix_  (iConfig.getParameter<std::string>("suffix")) {
 
     produces<float> (prefix_ + "trueNPV"  + suffix_);
-	produces<float> (prefix_ + "weightMC" + suffix_);
+    produces<float> (prefix_ + "weightMC" + suffix_);
     produces<float> (prefix_ + "weightPU" + suffix_);
     produces<float> (prefix_ + "weightPDF"+ suffix_);
 }
@@ -59,7 +59,7 @@ void NTupleGenEventInfo::produce(edm::Event& iEvent, const edm::EventSetup& iSet
 
     //__________________________________________________________________________
     iEvent.put(v_trueNPV  , prefix_ + "trueNPV"  + suffix_);
-	iEvent.put(v_weightMC , prefix_ + "weightMC" + suffix_);
+    iEvent.put(v_weightMC , prefix_ + "weightMC" + suffix_);
     iEvent.put(v_weightPU , prefix_ + "weightPU" + suffix_);
     iEvent.put(v_weightPDF, prefix_ + "weightPDF"+ suffix_);
 }
