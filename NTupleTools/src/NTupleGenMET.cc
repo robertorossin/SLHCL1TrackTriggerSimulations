@@ -8,7 +8,9 @@
 NTupleGenMET::NTupleGenMET(const edm::ParameterSet& iConfig) :
   inputTag_(iConfig.getParameter<edm::InputTag>("inputTag")),
   prefix_  (iConfig.getParameter<std::string>("prefix")),
-  suffix_  (iConfig.getParameter<std::string>("suffix")) {
+  suffix_  (iConfig.getParameter<std::string>("suffix")),
+  selector_(iConfig.existsAs<std::string>("cut") ? iConfig.getParameter<std::string>("cut") : "", true),
+  maxN_    (iConfig.getParameter<unsigned int>("maxN")) {
 
     produces<float> (prefix_ + "px"    + suffix_);
 	produces<float> (prefix_ + "py"    + suffix_);
@@ -19,15 +21,15 @@ NTupleGenMET::NTupleGenMET(const edm::ParameterSet& iConfig) :
 
 void NTupleGenMET::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
-    std::auto_ptr<float> v_px    (new float());
-    std::auto_ptr<float> v_py    (new float());
-    std::auto_ptr<float> v_pt    (new float());
-    std::auto_ptr<float> v_phi   (new float());
-    std::auto_ptr<float> v_sumEt (new float());
+    std::auto_ptr<float> v_px    (new float(-999.));
+    std::auto_ptr<float> v_py    (new float(-999.));
+    std::auto_ptr<float> v_pt    (new float(-999.));
+    std::auto_ptr<float> v_phi   (new float(-999.));
+    std::auto_ptr<float> v_sumEt (new float(-999.));
 
     //__________________________________________________________________________
     if (!iEvent.isRealData()) {
-        edm::Handle < reco::GenMETCollection > mets;
+        edm::Handle<reco::GenMETCollection> mets;
         iEvent.getByLabel(inputTag_, mets);
 
         if (mets.isValid() && mets->size() > 0) {
