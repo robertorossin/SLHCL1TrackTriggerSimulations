@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 
 ntupleGenJets = cms.EDProducer("NTupleGenJets",
     inputTag = cms.InputTag('ak5GenJets'),
-    prefix = cms.string('genJet'),
+    prefix = cms.string('genJets@'),
     suffix = cms.string(''),
     minPt = cms.double(-1),
     maxEta = cms.double(999),
@@ -11,6 +11,6 @@ ntupleGenJets = cms.EDProducer("NTupleGenJets",
 
 ntupleGenMET = cms.EDProducer( "NTupleGenMET",
     inputTag = cms.InputTag('genMetTrue'),
-    prefix = cms.string('genMET'),
+    prefix = cms.string('genMET@'),
     suffix = cms.string('')
 )

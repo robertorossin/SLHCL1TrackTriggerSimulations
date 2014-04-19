@@ -22,24 +22,31 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
+#include <map>
+#include <string>
+#include <vector>
 #include "TTree.h"
 
 class NTupleMaker : public edm::EDAnalyzer {
   public:
+    // NOTE: STRING is not implemented
     enum LeafType {
-        FLOAT, FLOATS
+        CHAR_T=1, UCHAR_T , SHORT_T , USHORT_T , INT_T, UINT_T,
+        FLOAT_T , DOUBLE_T, LONG64_T, ULONG64_T, BOOL_T,
+        CHAR_V  , UCHAR_V , SHORT_V , USHORT_V , INT_V, UINT_V,
+        FLOAT_V , DOUBLE_V, LONG64_V, ULONG64_V, BOOL_V,
+        STRING,
+        NumLeafTypes
     };
 
-    explicit NTupleMaker(const edm::ParameterSet& iConfig) : pset(iConfig) {
-        edm::Service<TFileService> fs;
-        tree = fs->make<TTree>("tree", "");
-    }
+    explicit NTupleMaker(const edm::ParameterSet&);
 
   private:
     virtual void beginJob();
     virtual void analyze(const edm::Event&, const edm::EventSetup&);
     virtual void endJob(){}
 
+    // Connect branch to handle
     class BranchConnector {
       public:
         BranchConnector() {};
@@ -58,7 +65,7 @@ class NTupleMaker : public edm::EDAnalyzer {
         std::string instanceName_;
         std::string processName_;
         T object_;
-        T* object_ptr_;
+        T* ptr_object_;
     };
 
     edm::ParameterSet pset;
