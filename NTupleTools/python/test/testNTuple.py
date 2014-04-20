@@ -11,6 +11,7 @@ class TestNTuple(unittest.TestCase):
 
     def setUp(self):
         gROOT.SetBatch(True)
+        self.runOnMC = True
         self.tfile = TFile.Open(self.infile)
         self.ttree = self.tfile.Get("ntupler/tree")
         self.nevents = self.ttree.GetEntriesFast()
@@ -23,6 +24,15 @@ class TestNTuple(unittest.TestCase):
     def test_nevents(self):
         self.assertEqual(self.nevents, 20)
 
+    def test_eventInfo(self):
+        tree = self.ttree
+        for i in xrange(self.nevents):
+            tree.GetEntry(i)
+            run = getattr(tree, "run")
+            event = getattr(tree, "event")
+            lumi = getattr(tree, "lumi")
+            print "Processing Run %i, Event %i, LumiSection %i." % (run, event, lumi)
+
     def test_genParticles(self):
         tree = self.ttree
         tree.SetBranchAddress("genParticles_pt", self.fvec1)
@@ -34,6 +44,8 @@ class TestNTuple(unittest.TestCase):
             for j in xrange(nparts):
                 self.assertTrue(self.fvec1[j] > 0)
                 self.assertTrue(abs(self.fvec2[j]) < pi+1e-6)
+            with self.assertRaises(IndexError):
+                print self.fvec1[nparts]
 
     def test_genJets(self):
         tree = self.ttree
@@ -42,10 +54,12 @@ class TestNTuple(unittest.TestCase):
         for i in xrange(self.nevents):
             tree.GetEntry(i)
             njets = getattr(tree, "genJets_size")
-            self.assertTrue(njets > 0)
+            self.assertTrue(njets >= 0)  # can be zero
             for j in xrange(njets):
                 self.assertTrue(self.fvec1[j] > 0)
                 self.assertTrue(abs(self.fvec2[j]) < pi+1e-6)
+            with self.assertRaises(IndexError):
+                print self.fvec1[njets]
 
     def test_genMET(self):
         tree = self.ttree
@@ -65,9 +79,18 @@ class TestNTuple(unittest.TestCase):
             self.assertTrue(fval1 >= 0)
             self.assertTrue(fval2 >= 0)
 
+    #@unittest.skipIf(process != "particleGun", "Not particle gun")
+    def test_particleGun(self):
+        tree = self.ttree
+        for i in xrange(self.nevents):
+            tree.GetEntry(i)
+            self.assertEqual(tree.genParticles_size, 1)
+            self.assertEqual(abs(tree.genParticles_pdgId[0]), 13)
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         TestNTuple.infile = sys.argv.pop()
 
     unittest.main()
+

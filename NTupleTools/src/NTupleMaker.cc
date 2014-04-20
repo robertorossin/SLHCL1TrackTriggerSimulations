@@ -1,13 +1,11 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleMaker.h"
 
-#include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/ConstProductRegistry.h"
 #include "FWCore/Framework/interface/ProductSelector.h"
 #include "FWCore/Framework/interface/ProductSelectorRules.h"
 #include "FWCore/Utilities/interface/TypeID.h"
 #include "DataFormats/Provenance/interface/Selections.h"
-#include "DataFormats/Math/interface/LorentzVector.h"
-#include "DataFormats/Math/interface/Point3D.h"
+
 
 template <class T>
 NTupleMaker::TypedBranchConnector<T>::TypedBranchConnector(edm::BranchDescription const* desc, std::string t, TTree * tree) :

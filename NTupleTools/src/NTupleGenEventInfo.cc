@@ -1,6 +1,5 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleGenEventInfo.h"
-#include "FWCore/Framework/interface/Event.h"
-#include "FWCore/MessageLogger/interface/MessageLogger.h"
+
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 

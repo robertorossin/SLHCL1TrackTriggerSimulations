@@ -1,10 +1,8 @@
 #ifndef NTupleTools_NTupleGenMET_h_
 #define NTupleTools_NTupleGenMET_h_
 
-#include "FWCore/Framework/interface/EDProducer.h"
-#include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "FWCore/Utilities/interface/InputTag.h"
-#include "CommonTools/Utils/interface/StringCutObjectSelector.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleCommon.h"
+
 
 namespace reco { class GenMET; }
 
@@ -25,3 +23,4 @@ class NTupleGenMET : public edm::EDProducer {
 };
 
 #endif
+

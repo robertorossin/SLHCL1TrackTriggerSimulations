@@ -1,6 +1,5 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleGenJets.h"
-#include "FWCore/Framework/interface/Event.h"
-#include "FWCore/MessageLogger/interface/MessageLogger.h"
+
 #include "DataFormats/JetReco/interface/GenJet.h"
 #include "DataFormats/JetReco/interface/GenJetCollection.h"
 
@@ -59,6 +58,8 @@ void NTupleGenJets::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 v_eta   ->push_back(it->eta());
                 v_phi   ->push_back(it->phi());
                 v_M     ->push_back(it->mass());
+
+                n++;
             }
             *v_size = v_px->size();
 

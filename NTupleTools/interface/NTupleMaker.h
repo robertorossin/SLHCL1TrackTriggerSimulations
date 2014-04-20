@@ -16,9 +16,10 @@
  *  \author Burt Betchart - University of Rochester <burton.andrew.betchart@cern.ch>
  */
 
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleCommon.h"
+
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
-#include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
@@ -26,6 +27,7 @@
 #include <string>
 #include <vector>
 #include "TTree.h"
+
 
 class NTupleMaker : public edm::EDAnalyzer {
   public:

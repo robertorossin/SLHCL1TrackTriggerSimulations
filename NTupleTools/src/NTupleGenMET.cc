@@ -1,6 +1,5 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleGenMET.h"
-#include "FWCore/Framework/interface/Event.h"
-#include "FWCore/MessageLogger/interface/MessageLogger.h"
+
 #include "DataFormats/METReco/interface/GenMET.h"
 #include "DataFormats/METReco/interface/GenMETFwd.h"
 

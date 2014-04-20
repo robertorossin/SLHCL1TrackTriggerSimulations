@@ -1,3 +1,4 @@
-/store/user/l1upgrades/SLHC/GEN/620_SLHC10/SingleMuPlusMinus_20140417/SingleMuPlusMinus_E2023TTI_20_1_5dg.root
-/store/user/l1upgrades/SLHC/GEN/620_SLHC10/SingleMuPlusMinus_20140417/SingleMuPlusMinus_E2023TTI_21_1_JHj.root
-/store/user/l1upgrades/SLHC/GEN/620_SLHC10/SingleMuPlusMinus_20140417/SingleMuPlusMinus_E2023TTI_22_1_kj3.root
+#edmCopyPickMerge inputFiles_load=rawsim_input.txt outputFile=rawsim.root maxEvents=20
+/store/user/l1upgrades/SLHC/GEN/620_SLHC10/SingleMuMinus_20140420/SingleMu_E2023TTI_20_1_CpG.root
+/store/user/l1upgrades/SLHC/GEN/620_SLHC10/SingleMuMinus_20140420/SingleMu_E2023TTI_21_1_2pz.root
+/store/user/l1upgrades/SLHC/GEN/620_SLHC10/SingleMuMinus_20140420/SingleMu_E2023TTI_22_1_1A2.root

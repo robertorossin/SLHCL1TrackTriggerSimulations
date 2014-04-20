@@ -1,11 +1,13 @@
 import FWCore.ParameterSet.Config as cms
 
+from SLHCL1TrackTriggerSimulations.NTupleTools.prunedGenParticles_cfi import prunedGenParticles
+
 ntupleGenParticles = cms.EDProducer('NTupleGenParticles',
-    inputTag = cms.InputTag('genParticles'),
+    inputTag = cms.InputTag('prunedGenParticles'),
     prefix = cms.string('genParticles@'),
     suffix = cms.string(''),
     cut = cms.string(''),
-    maxN = cms.uint32(999)
+    maxN = cms.uint32(999999)
 )
 
 ntupleGenJets = cms.EDProducer('NTupleGenJets',
@@ -13,7 +15,7 @@ ntupleGenJets = cms.EDProducer('NTupleGenJets',
     prefix = cms.string('genJets@'),
     suffix = cms.string(''),
     cut = cms.string(''),
-    maxN = cms.uint32(999)
+    maxN = cms.uint32(999999)
 )
 
 ntupleGenMET = cms.EDProducer('NTupleGenMET',
@@ -21,7 +23,7 @@ ntupleGenMET = cms.EDProducer('NTupleGenMET',
     prefix = cms.string('genMET@'),
     suffix = cms.string(''),
     cut = cms.string(''),
-    maxN = cms.uint32(999)
+    maxN = cms.uint32(999999)
 )
 
 ntupleGenEventInfo = cms.EDProducer('NTupleGenEventInfo',
@@ -33,5 +35,5 @@ ntupleGenEventInfo = cms.EDProducer('NTupleGenEventInfo',
     suffix = cms.string(''),
 )
 
-ntupleGen = cms.Sequence(ntupleGenParticles * ntupleGenJets * ntupleGenMET * ntupleGenEventInfo)
+ntupleGen = cms.Sequence((prunedGenParticles * ntupleGenParticles) * ntupleGenJets * ntupleGenMET * ntupleGenEventInfo)
 

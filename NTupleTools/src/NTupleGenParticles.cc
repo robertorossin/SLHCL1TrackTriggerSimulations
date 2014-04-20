@@ -1,6 +1,5 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleGenParticles.h"
-#include "FWCore/Framework/interface/Event.h"
-#include "FWCore/MessageLogger/interface/MessageLogger.h"
+
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
 
@@ -77,6 +76,8 @@ void NTupleGenParticles::produce(edm::Event& iEvent, const edm::EventSetup& iSet
                 v_charge->push_back(it->charge());
                 v_pdgId ->push_back(it->pdgId());
                 v_status->push_back(it->status());
+
+                n++;
             }
             *v_size = v_px->size();
 
