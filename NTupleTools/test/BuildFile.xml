@@ -1,0 +1,6 @@
+<environment>
+  <bin   name="TestNTuple" file="TestNTuple.cpp">
+    <flags   TEST_RUNNER_ARGS=" /bin/bash SLHCL1TrackTriggerSimulations/NTupleTools/test runtests_ntuple.sh"/>
+    <use   name="FWCore/Utilities"/>
+  </bin>
+</environment>

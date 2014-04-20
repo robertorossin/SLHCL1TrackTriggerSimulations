@@ -1,16 +1,16 @@
-#ifndef NTupleTools_NTupleGenJets_h_
-#define NTupleTools_NTupleGenJets_h_
+#ifndef NTupleTools_NTupleGenParticles_h_
+#define NTupleTools_NTupleGenParticles_h_
 
 #include "FWCore/Framework/interface/EDProducer.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "CommonTools/Utils/interface/StringCutObjectSelector.h"
 
-namespace reco { class GenJet; }
+namespace reco { class GenParticle; }
 
-class NTupleGenJets : public edm::EDProducer {
+class NTupleGenParticles : public edm::EDProducer {
   public:
-    explicit NTupleGenJets(const edm::ParameterSet&);
+    explicit NTupleGenParticles(const edm::ParameterSet&);
 
   private:
     //virtual void beginJob();
@@ -20,7 +20,7 @@ class NTupleGenJets : public edm::EDProducer {
     const edm::InputTag inputTag_;
     const std::string   prefix_, suffix_;
 
-    StringCutObjectSelector<reco::GenJet> selector_;
+    StringCutObjectSelector<reco::GenParticle> selector_;
     const unsigned int  maxN_;
 };
 

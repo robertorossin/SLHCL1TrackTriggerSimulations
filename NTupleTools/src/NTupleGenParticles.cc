@@ -1,11 +1,11 @@
-#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleGenJets.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleGenParticles.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
-#include "DataFormats/JetReco/interface/GenJet.h"
-#include "DataFormats/JetReco/interface/GenJetCollection.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
 
 
-NTupleGenJets::NTupleGenJets(const edm::ParameterSet& iConfig) :
+NTupleGenParticles::NTupleGenParticles(const edm::ParameterSet& iConfig) :
   inputTag_(iConfig.getParameter<edm::InputTag>("inputTag")),
   prefix_  (iConfig.getParameter<std::string>("prefix")),
   suffix_  (iConfig.getParameter<std::string>("suffix")),
@@ -20,10 +20,16 @@ NTupleGenJets::NTupleGenJets(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> > (prefix_ + "eta"   + suffix_);
     produces<std::vector<float> > (prefix_ + "phi"   + suffix_);
     produces<std::vector<float> > (prefix_ + "M"     + suffix_);
+    produces<std::vector<float> > (prefix_ + "vx"    + suffix_);
+    produces<std::vector<float> > (prefix_ + "vy"    + suffix_);
+    produces<std::vector<float> > (prefix_ + "vz"    + suffix_);
+    produces<std::vector<int> >   (prefix_ + "charge"+ suffix_);
+    produces<std::vector<int> >   (prefix_ + "pdgId" + suffix_);
+    produces<std::vector<int> >   (prefix_ + "status"+ suffix_);
     produces<unsigned int>        (prefix_ + "size"  + suffix_);
 }
 
-void NTupleGenJets::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+void NTupleGenParticles::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
     std::auto_ptr<std::vector<float> > v_px    (new std::vector<float>());
     std::auto_ptr<std::vector<float> > v_py    (new std::vector<float>());
@@ -33,18 +39,24 @@ void NTupleGenJets::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> > v_eta   (new std::vector<float>());
     std::auto_ptr<std::vector<float> > v_phi   (new std::vector<float>());
     std::auto_ptr<std::vector<float> > v_M     (new std::vector<float>());
+    std::auto_ptr<std::vector<float> > v_vx    (new std::vector<float>());
+    std::auto_ptr<std::vector<float> > v_vy    (new std::vector<float>());
+    std::auto_ptr<std::vector<float> > v_vz    (new std::vector<float>());
+    std::auto_ptr<std::vector<int> >   v_charge(new std::vector<int>());
+    std::auto_ptr<std::vector<int> >   v_pdgId (new std::vector<int>());
+    std::auto_ptr<std::vector<int> >   v_status(new std::vector<int>());
     std::auto_ptr<unsigned int>        v_size  (new unsigned int(0));
 
     //__________________________________________________________________________
     if (!iEvent.isRealData()) {
-        edm::Handle<reco::GenJetCollection> jets;
-        iEvent.getByLabel(inputTag_, jets);
+        edm::Handle<reco::GenParticleCollection> parts;
+        iEvent.getByLabel(inputTag_, parts);
 
-        if (jets.isValid()) {
-            edm::LogInfo("NTupleGenJets") << "Size: " << jets->size();
+        if (parts.isValid()) {
+            edm::LogInfo("NTupleGenParticles") << "Size: " << parts->size();
 
             unsigned int n = 0;
-            for (reco::GenJetCollection::const_iterator it = jets->begin(); it != jets->end(); ++it) {
+            for (reco::GenParticleCollection::const_iterator it = parts->begin(); it != parts->end(); ++it) {
                 if (n >= maxN_)
                     break;
                 if (!selector_(*it))
@@ -59,11 +71,17 @@ void NTupleGenJets::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 v_eta   ->push_back(it->eta());
                 v_phi   ->push_back(it->phi());
                 v_M     ->push_back(it->mass());
+                v_vx    ->push_back(it->vx());
+                v_vy    ->push_back(it->vy());
+                v_vz    ->push_back(it->vz());
+                v_charge->push_back(it->charge());
+                v_pdgId ->push_back(it->pdgId());
+                v_status->push_back(it->status());
             }
             *v_size = v_px->size();
 
         } else {
-            edm::LogError("NTupleGenJets") << "Cannot get the product: " << inputTag_;
+            edm::LogError("NTupleGenParticles") << "Cannot get the product: " << inputTag_;
         }
     }
 
@@ -76,5 +94,11 @@ void NTupleGenJets::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(v_eta   , prefix_ + "eta"   + suffix_);
     iEvent.put(v_phi   , prefix_ + "phi"   + suffix_);
     iEvent.put(v_M     , prefix_ + "M"     + suffix_);
+    iEvent.put(v_vx    , prefix_ + "vx"    + suffix_);
+    iEvent.put(v_vy    , prefix_ + "vy"    + suffix_);
+    iEvent.put(v_vz    , prefix_ + "vz"    + suffix_);
+    iEvent.put(v_charge, prefix_ + "charge"+ suffix_);
+    iEvent.put(v_pdgId , prefix_ + "pdgId" + suffix_);
+    iEvent.put(v_status, prefix_ + "status"+ suffix_);
     iEvent.put(v_size  , prefix_ + "size"  + suffix_);
 }

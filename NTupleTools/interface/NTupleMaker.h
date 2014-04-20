@@ -3,6 +3,9 @@
 
 /** \class NTupleMaker
  *
+ *  This is stolen from:
+ *    https://github.com/BristolTopGroup/NTupleProduction/blob/master/src/RootTupleMakerV2_Tree.cc
+ *
  *  Makes a tree out of C++ standard types and vectors of C++ standard types
  *
  *  This class, which is an EDAnalyzer, takes the same "keep" and
@@ -10,67 +13,66 @@
  *  tree of the selected variables, which it obtains from the EDM
  *  tree.
  *
- *  $Date: 2012/08/08 21:54:24 $
- *  $Revision: 1.5 $
  *  \author Burt Betchart - University of Rochester <burton.andrew.betchart@cern.ch>
  */
 
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
-#include "FWCore/Framework/interface/Event.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
+#include <map>
 #include <string>
 #include <vector>
-#include <TTree.h>
-#include <TH1I.h>
+#include "TTree.h"
 
 class NTupleMaker : public edm::EDAnalyzer {
-private:
-  virtual void beginJob();
-  virtual void analyze(const edm::Event&, const edm::EventSetup&);
-  virtual void endJob(){}
-
-  class BranchConnector {
   public:
-    virtual ~BranchConnector() {};
-    virtual void connect(const edm::Event&) = 0;
-  };
+    // NOTE: STRING is not implemented
+    enum LeafType {
+        CHAR_T=1, UCHAR_T , SHORT_T , USHORT_T , INT_T, UINT_T,
+        FLOAT_T , DOUBLE_T, LONG64_T, ULONG64_T, BOOL_T,
+        CHAR_V  , UCHAR_V , SHORT_V , USHORT_V , INT_V, UINT_V,
+        FLOAT_V , DOUBLE_V, LONG64_V, ULONG64_V, BOOL_V,
+        STRING,
+        NumLeafTypes
+    };
 
-  template <class T>
-  class TypedBranchConnector : public BranchConnector {
+    explicit NTupleMaker(const edm::ParameterSet&);
+
   private:
-    std::string ml;   //module label
-    std::string pin;  //product instance name
-    T object_;
-    T* object_ptr_;
-  public:
-    TypedBranchConnector(edm::BranchDescription const*, std::string, TTree*);
-    void connect(const edm::Event&);
-  };
+    virtual void beginJob();
+    virtual void analyze(const edm::Event&, const edm::EventSetup&);
+    virtual void endJob(){}
 
-  edm::Service<TFileService> fs;
-  TTree * tree;
+    // Connect branch to handle
+    class BranchConnector {
+      public:
+        BranchConnector() {};
+        virtual ~BranchConnector() {};
+        virtual void connect(const edm::Event&) = 0;
+    };
 
-  std::vector<BranchConnector*> connectors;
-  edm::ParameterSet pset;
+    template <class T>
+    class TypedBranchConnector : public BranchConnector {
+      public:
+        TypedBranchConnector(edm::BranchDescription const*, std::string, TTree*);
+        void connect(const edm::Event&);
 
-public:
-  explicit NTupleMaker(const edm::ParameterSet& iConfig) : pset(iConfig) {}
+      private:
+        std::string moduleLabel_;
+        std::string instanceName_;
+        std::string processName_;
+        T object_;
+        T* ptr_object_;
+    };
 
-  enum LEAFTYPE {BOOL=1,  BOOL_V,
-                 SHORT,   SHORT_V,           U_SHORT, U_SHORT_V,
-                 INT,     INT_V,             U_INT,   U_INT_V,
-                 FLOAT,   FLOAT_V,           DOUBLE,  DOUBLE_V,
-                 LONG,    LONG_V,            U_LONG,  U_LONG_V,
-                 STRING,  STRING_V,
-		 STRING_BOOL_M, STRING_INT_M, STRING_STRING_M,
-		 STRING_FLOAT_V_M,
-		 FLOAT_V_V,
-		 INT_V_V
-                 };
+    edm::ParameterSet pset;
+    TTree * tree;
+
+    std::map<std::string, LeafType> leafmap;
+    std::vector<BranchConnector*> connectors;
 };
 
 #endif

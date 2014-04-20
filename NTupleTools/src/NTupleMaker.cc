@@ -1,150 +1,127 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleMaker.h"
 
+#include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/ConstProductRegistry.h"
 #include "FWCore/Framework/interface/ProductSelector.h"
 #include "FWCore/Framework/interface/ProductSelectorRules.h"
+#include "FWCore/Utilities/interface/TypeID.h"
 #include "DataFormats/Provenance/interface/Selections.h"
-#include "Math/LorentzVector.h"
-#include "Math/Vector3D.h"
+#include "DataFormats/Math/interface/LorentzVector.h"
+#include "DataFormats/Math/interface/Point3D.h"
 
-#include <map>
-#include "boost/foreach.hpp"
-#include <TBranch.h>
-#include <TLorentzVector.h>
+template <class T>
+NTupleMaker::TypedBranchConnector<T>::TypedBranchConnector(edm::BranchDescription const* desc, std::string t, TTree * tree) :
+  moduleLabel_ (desc->moduleLabel() ),
+  instanceName_(desc->productInstanceName() ),
+  processName_ (desc->processName() ){
 
-void NTupleMaker::
-analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
-  BOOST_FOREACH( BranchConnector* connector, connectors)
-    connector->connect(iEvent);
-  tree->Fill();
+    ptr_object_ = &object_;
+    std::string s = instanceName_;
+    std::replace(s.begin(), s.end(), '@', '_');
+    if (t != "") {
+        tree->Branch(s.c_str(), ptr_object_, (s+"/"+t).c_str());  // raw type
+    } else {
+        tree->Branch(s.c_str(), &ptr_object_);  // STL type
+    }
 }
 
 template <class T>
-void NTupleMaker::TypedBranchConnector<T>::
-connect(const edm::Event& iEvent) {
-  edm::Handle<T> handle_;
-  iEvent.getByLabel(ml, pin, handle_);
-  object_ = *handle_;
+void NTupleMaker::TypedBranchConnector<T>::connect(const edm::Event& iEvent) {
+    edm::Handle<T> handle;
+    iEvent.getByLabel(moduleLabel_, instanceName_, handle);
+    object_ = *handle;
 }
 
-template <class T> 
-NTupleMaker::TypedBranchConnector<T>::
-TypedBranchConnector(edm::BranchDescription const* desc,
-                     std::string t,
-                     TTree * tree)
-  :  ml( desc->moduleLabel() ),
-     pin( desc->productInstanceName() )
-{
-  object_ptr_ = &object_;
-  std::string s=pin+t;
-  if(t!="")  { tree->Branch(pin.c_str(),  object_ptr_, s.c_str() );}  //raw type
-  else       { tree->Branch(pin.c_str(), &object_ptr_            );}  //vector<type>
+NTupleMaker::NTupleMaker(const edm::ParameterSet& iConfig) : pset(iConfig) {
+
+    edm::Service<TFileService> fs;
+    tree = fs->make<TTree>("tree", "");
+
+    leafmap[edm::TypeID(typeid(Char_t)).friendlyClassName()] = CHAR_T;
+    leafmap[edm::TypeID(typeid(UChar_t)).friendlyClassName()] = UCHAR_T;
+    leafmap[edm::TypeID(typeid(Short_t)).friendlyClassName()] = SHORT_T;
+    leafmap[edm::TypeID(typeid(UShort_t)).friendlyClassName()] = USHORT_T;
+    leafmap[edm::TypeID(typeid(Int_t)).friendlyClassName()] = INT_T;
+    leafmap[edm::TypeID(typeid(UInt_t)).friendlyClassName()] = UINT_T;
+    leafmap[edm::TypeID(typeid(Float_t)).friendlyClassName()] = FLOAT_T;
+    leafmap[edm::TypeID(typeid(Double_t)).friendlyClassName()] = DOUBLE_T;
+    leafmap[edm::TypeID(typeid(Long64_t)).friendlyClassName()] = LONG64_T;
+    leafmap[edm::TypeID(typeid(ULong64_t)).friendlyClassName()] = ULONG64_T;
+
+    leafmap[edm::TypeID(typeid(std::vector<Bool_t>)).friendlyClassName()] = BOOL_V;
+    leafmap[edm::TypeID(typeid(std::vector<Char_t>)).friendlyClassName()] = CHAR_V;
+    leafmap[edm::TypeID(typeid(std::vector<UChar_t>)).friendlyClassName()] = UCHAR_V;
+    leafmap[edm::TypeID(typeid(std::vector<Short_t>)).friendlyClassName()] = SHORT_V;
+    leafmap[edm::TypeID(typeid(std::vector<UShort_t>)).friendlyClassName()] = USHORT_V;
+    leafmap[edm::TypeID(typeid(std::vector<Int_t>)).friendlyClassName()] = INT_V;
+    leafmap[edm::TypeID(typeid(std::vector<UInt_t>)).friendlyClassName()] = UINT_V;
+    leafmap[edm::TypeID(typeid(std::vector<Float_t>)).friendlyClassName()] = FLOAT_V;
+    leafmap[edm::TypeID(typeid(std::vector<Double_t>)).friendlyClassName()] = DOUBLE_V;
+    leafmap[edm::TypeID(typeid(std::vector<Long64_t>)).friendlyClassName()] = LONG64_V;
+    leafmap[edm::TypeID(typeid(std::vector<ULong64_t>)).friendlyClassName()] = ULONG64_V;
+    leafmap[edm::TypeID(typeid(std::vector<Bool_t>)).friendlyClassName()] = BOOL_V;
 }
 
-void NTupleMaker::
-beginJob() {
-  tree = fs->make<TTree>("tree", "");
-
-  typedef std::map<std::string,       bool> mapStringBool;
-  typedef std::map<std::string,        int> mapStringInt;
-  typedef std::map<std::string,std::string> mapStringString;
-  typedef std::map<std::string,std::vector<float> > mapStringDoubles;
-  typedef std::vector<std::vector<float> > vectorVectorFloats;
-  typedef std::vector<std::vector<int> > vectorVectorInts;
-
-  std::map<std::string, LEAFTYPE> leafmap;
-  leafmap["bool"]      = BOOL;       leafmap["bools"]     = BOOL_V;
-  leafmap["short int"] = SHORT;      leafmap["shorts"]    = SHORT_V;
-  leafmap["ushort int"]= U_SHORT;    leafmap["ushorts"]   = U_SHORT_V;
-  leafmap["int"]       = INT;        leafmap["ints"]      = INT_V;
-  leafmap["uint"]      = U_INT;      leafmap["uints"]     = U_INT_V;
-  leafmap["float"]     = FLOAT;      leafmap["floats"]    = FLOAT_V;
-  leafmap["double"]    = DOUBLE;     leafmap["doubles"]   = DOUBLE_V;
-  leafmap["lint"]      = LONG;       leafmap["longs"]     = LONG_V;
-  leafmap["ulint"]     = U_LONG;     leafmap["ulongs"]    = U_LONG_V;
-  leafmap["StringStringstdmap"] = STRING_STRING_M;
-  leafmap["Stringboolstdmap"  ] = STRING_BOOL_M;
-  leafmap["Stringintstdmap"   ] = STRING_INT_M;
-  leafmap["Stringfloatsstdmap"] = STRING_FLOAT_V_M;
-  leafmap["floatss"] = FLOAT_V_V;
-  leafmap["intss"] = INT_V_V;
-  // leafmap[""] = LORENTZ_V_V;
-  
-  //
-  leafmap["String"]     = STRING;     leafmap["Strings"]    = STRING_V;
-
-  edm::Service<edm::ConstProductRegistry> reg;
-  edm::Selections allBranches = reg->allBranchDescriptions();
-  edm::ProductSelectorRules groupSelectorRules_(pset, "outputCommands", "NTupleMaker");
-  edm::ProductSelector groupSelector_;
-  groupSelector_.initialize(groupSelectorRules_, allBranches);
-
-  std::set<std::string> branchnames;
-
-  BOOST_FOREACH( const edm::Selections::value_type& selection, allBranches) {
-    if(groupSelector_.selected(*selection)) {
-
-      //Check for duplicate branch names
-      if (branchnames.find( selection->productInstanceName()) != branchnames.end() ) {
-        throw edm::Exception(edm::errors::Configuration)
-          << "More than one branch named: "
-          << selection->productInstanceName() << std::endl
-          << "Exception thrown from NTupleMaker::beginJob" << std::endl;
-      }
-      else {
-        branchnames.insert( selection->productInstanceName() );
-      }
-
-      //Create NTupleMaker branch
-      switch(leafmap.find( selection->friendlyClassName() )->second) {
-      case BOOL            :  connectors.push_back( new TypedBranchConnector                      <bool>         (selection, "/O", tree) ); break;
-      case BOOL_V          :  connectors.push_back( new TypedBranchConnector<std::vector          <bool> >       (selection,   "", tree) ); break;
-      case INT             :  connectors.push_back( new TypedBranchConnector                       <int>         (selection, "/I", tree) ); break;
-      case INT_V           :  connectors.push_back( new TypedBranchConnector<std::vector           <int> >       (selection,   "", tree) ); break;
-      case U_INT           :  connectors.push_back( new TypedBranchConnector              <unsigned int>         (selection, "/i", tree) ); break;
-      case U_INT_V         :  connectors.push_back( new TypedBranchConnector<std::vector  <unsigned int> >       (selection,   "", tree) ); break;
-      case SHORT           :  connectors.push_back( new TypedBranchConnector                     <short>         (selection, "/S", tree) ); break;
-      case SHORT_V         :  connectors.push_back( new TypedBranchConnector<std::vector         <short> >       (selection,   "", tree) ); break;
-      case U_SHORT         :  connectors.push_back( new TypedBranchConnector            <unsigned short>         (selection, "/s", tree) ); break;
-      case U_SHORT_V       :  connectors.push_back( new TypedBranchConnector<std::vector<unsigned short> >       (selection,   "", tree) ); break;
-      case FLOAT           :  connectors.push_back( new TypedBranchConnector                     <float>         (selection, "/F", tree) ); break;
-      case FLOAT_V         :  connectors.push_back( new TypedBranchConnector<std::vector         <float> >       (selection,   "", tree) ); break;
-      case DOUBLE          :  connectors.push_back( new TypedBranchConnector                    <double>         (selection, "/D", tree) ); break;
-      case DOUBLE_V        :  connectors.push_back( new TypedBranchConnector<std::vector        <double> >       (selection,   "", tree) ); break;
-      case LONG            :  connectors.push_back( new TypedBranchConnector                      <long>         (selection, "/L", tree) ); break;
-      case LONG_V          :  connectors.push_back( new TypedBranchConnector<std::vector          <long> >       (selection,   "", tree) ); break;
-      case U_LONG          :  connectors.push_back( new TypedBranchConnector             <unsigned long>         (selection, "/l", tree) ); break;
-      case U_LONG_V        :  connectors.push_back( new TypedBranchConnector<std::vector <unsigned long> >       (selection,   "", tree) ); break;
-        //	           										         
-      case STRING          :  connectors.push_back( new TypedBranchConnector             <std::string  >         (selection,   "", tree) ); break;
-      case STRING_V        :  connectors.push_back( new TypedBranchConnector<std::vector <std::string  > >       (selection,   "", tree) ); break;
-	
-      case STRING_INT_M    :  connectors.push_back( new TypedBranchConnector<mapStringInt>        (selection,   "", tree) ); break;
-      case STRING_BOOL_M   :  connectors.push_back( new TypedBranchConnector<mapStringBool>       (selection,   "", tree) ); break;
-      case STRING_STRING_M :  connectors.push_back( new TypedBranchConnector<mapStringString>     (selection,   "", tree) ); break;
-      case STRING_FLOAT_V_M:  connectors.push_back( new TypedBranchConnector<mapStringDoubles>    (selection,   "", tree) ); break;
-      case FLOAT_V_V       :  connectors.push_back( new TypedBranchConnector<vectorVectorFloats>  (selection,   "", tree) ); break;
-      case INT_V_V         :  connectors.push_back( new TypedBranchConnector<vectorVectorInts>    (selection,   "", tree) ); break;
-
-      default:
-        {
-          std::string leafstring = "";
-          typedef std::pair<std::string, LEAFTYPE> pair_t;
-          BOOST_FOREACH( const pair_t& leaf, leafmap)
-            leafstring+= "\t" + leaf.first + "\n";
-
-          throw edm::Exception(edm::errors::Configuration)
-            << "class NTupleMaker does not handle leaves of type " << selection->className() << " like\n"
-            <<   selection->friendlyClassName()   << "_"
-            <<   selection->moduleLabel()         << "_"
-            <<   selection->productInstanceName() << "_"
-            <<   selection->processName()         << std::endl
-            << "Valid leaf types are (friendlyClassName):\n"
-            <<   leafstring
-            << "Exception thrown from NTupleMaker::beginJob\n";
-        }
-      }
+void NTupleMaker::beginJob() {
+    edm::Service<edm::ConstProductRegistry> reg;
+    edm::Selections allBranches = reg->allBranchDescriptions();
+    edm::ProductSelectorRules productSelectorRules_(pset, "outputCommands", "NTupleMaker");
+    edm::ProductSelector productSelector;
+    if (!productSelector.initialized()) {
+        productSelector.initialize(productSelectorRules_, allBranches);
     }
-  }
+
+    std::set<std::string> branchNames;
+    for (edm::Selections::const_iterator it = allBranches.begin(); it != allBranches.end(); ++it) {
+        const edm::BranchDescription* selection = *it;
+
+        if(productSelector.selected(*selection)) {
+            //Check for duplicate branch names
+            if (branchNames.find(selection->productInstanceName() ) != branchNames.end() ) {
+                throw edm::Exception(edm::errors::Configuration)
+                    << "Error in NTupleMaker: More than one branch named: "<< selection->productInstanceName() << std::endl;
+            } else {
+                branchNames.insert(selection->productInstanceName() );
+            }
+
+            // Determine the leave type
+            std::map<std::string, LeafType>::iterator found = leafmap.find(selection->friendlyClassName() );
+            switch (found->second) {
+                case CHAR_T   : connectors.push_back(new TypedBranchConnector<Char_t>    (selection, "B", tree) ); break;
+                case UCHAR_T  : connectors.push_back(new TypedBranchConnector<UChar_t>   (selection, "b", tree) ); break;
+                case SHORT_T  : connectors.push_back(new TypedBranchConnector<Short_t>   (selection, "S", tree) ); break;
+                case USHORT_T : connectors.push_back(new TypedBranchConnector<UShort_t>  (selection, "s", tree) ); break;
+                case INT_T    : connectors.push_back(new TypedBranchConnector<Int_t>     (selection, "I", tree) ); break;
+                case UINT_T   : connectors.push_back(new TypedBranchConnector<UInt_t>    (selection, "i", tree) ); break;
+                case FLOAT_T  : connectors.push_back(new TypedBranchConnector<Float_t>   (selection, "F", tree) ); break;
+                case DOUBLE_T : connectors.push_back(new TypedBranchConnector<Double_t>  (selection, "D", tree) ); break;
+                case LONG64_T : connectors.push_back(new TypedBranchConnector<Long64_t>  (selection, "L", tree) ); break;
+                case ULONG64_T: connectors.push_back(new TypedBranchConnector<ULong64_t> (selection, "l", tree) ); break;
+                case BOOL_T   : connectors.push_back(new TypedBranchConnector<Bool_t>    (selection, "O", tree) ); break;
+
+                case CHAR_V   : connectors.push_back(new TypedBranchConnector<std::vector<Char_t> >    (selection, "", tree) ); break;
+                case UCHAR_V  : connectors.push_back(new TypedBranchConnector<std::vector<UChar_t> >   (selection, "", tree) ); break;
+                case SHORT_V  : connectors.push_back(new TypedBranchConnector<std::vector<Short_t> >   (selection, "", tree) ); break;
+                case USHORT_V : connectors.push_back(new TypedBranchConnector<std::vector<UShort_t> >  (selection, "", tree) ); break;
+                case INT_V    : connectors.push_back(new TypedBranchConnector<std::vector<Int_t> >     (selection, "", tree) ); break;
+                case UINT_V   : connectors.push_back(new TypedBranchConnector<std::vector<UInt_t> >    (selection, "", tree) ); break;
+                case FLOAT_V  : connectors.push_back(new TypedBranchConnector<std::vector<Float_t> >   (selection, "", tree) ); break;
+                case DOUBLE_V : connectors.push_back(new TypedBranchConnector<std::vector<Double_t> >  (selection, "", tree) ); break;
+                case LONG64_V : connectors.push_back(new TypedBranchConnector<std::vector<Long64_t> >  (selection, "", tree) ); break;
+                case ULONG64_V: connectors.push_back(new TypedBranchConnector<std::vector<ULong64_t> > (selection, "", tree) ); break;
+                case BOOL_V   : connectors.push_back(new TypedBranchConnector<std::vector<Bool_t> >    (selection, "", tree) ); break;
+
+                default       : throw edm::Exception(edm::errors::Configuration)
+                                    << "Error in NTupleMaker: Cannot handle leaves of friendlyClassName: "
+                                    << selection->friendlyClassName() << std::endl;
+            }
+        }
+    }
 }
 
+void NTupleMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
+    for (std::vector<BranchConnector*>::iterator it = connectors.begin(); it != connectors.end(); ++it) {
+        (*it)->connect(iEvent);
+    }
+    tree->Fill();
+}
