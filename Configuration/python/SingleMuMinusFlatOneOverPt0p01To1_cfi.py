@@ -5,7 +5,7 @@ generator = cms.EDProducer("FlatRandomOneOverPtGunProducer",
     PGunParameters = cms.PSet(
         MaxOneOverPt = cms.double(1),
         MinOneOverPt = cms.double(0.01),
-        PartID = cms.vint32(-13),
+        PartID = cms.vint32(13),
         MaxEta = cms.double(3),
         MaxPhi = cms.double(3.14159265359),
         MinEta = cms.double(-3),
@@ -16,7 +16,7 @@ generator = cms.EDProducer("FlatRandomOneOverPtGunProducer",
     ),
     Verbosity = cms.untracked.int32(0), ## set to 1 (or greater)  for printouts
 
-    psethack = cms.string('single mu+- 1/pt 0.01 to 1'),
-    AddAntiParticle = cms.bool(True),
+    psethack = cms.string('single mu- 1/pt 0.01 to 1'),
+    AddAntiParticle = cms.bool(False),
     firstRun = cms.untracked.uint32(1)
 )
