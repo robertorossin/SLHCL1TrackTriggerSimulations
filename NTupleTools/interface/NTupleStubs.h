@@ -35,8 +35,9 @@ class NTupleStubs : public edm::EDProducer {
     const edm::InputTag inputTagSimTrack_, inputTagSimVertex_, inputTagSimPixelDigi_;
     const edm::InputTag beamSpotTag_;
     const std::string   prefixClus_, prefixStub_, prefixTrack_, suffix_;
+    std::string   prefixTrkPart_, prefixSimTrack_, prefixSimVertex_;  //FIXME
 
-    const unsigned int  maxN_;
+    const unsigned maxN_;
 };
 
 #endif

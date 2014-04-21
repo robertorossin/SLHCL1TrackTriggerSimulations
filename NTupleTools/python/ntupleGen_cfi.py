@@ -4,7 +4,7 @@ from SLHCL1TrackTriggerSimulations.NTupleTools.prunedGenParticles_cfi import pru
 
 ntupleGenParticles = cms.EDProducer('NTupleGenParticles',
     inputTag = cms.InputTag('prunedGenParticles'),
-    prefix = cms.string('genParticles@'),
+    prefix = cms.string('genParts@'),
     suffix = cms.string(''),
     cut = cms.string(''),
     maxN = cms.uint32(999999)

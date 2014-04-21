@@ -35,11 +35,11 @@ class TestNTuple(unittest.TestCase):
 
     def test_genParticles(self):
         tree = self.ttree
-        tree.SetBranchAddress("genParticles_pt", self.fvec1)
-        tree.SetBranchAddress("genParticles_phi", self.fvec2)
+        tree.SetBranchAddress("genParts_pt", self.fvec1)
+        tree.SetBranchAddress("genParts_phi", self.fvec2)
         for i in xrange(self.nevents):
             tree.GetEntry(i)
-            nparts = getattr(tree, "genParticles_size")
+            nparts = getattr(tree, "genParts_size")
             self.assertTrue(nparts > 0)
             for j in xrange(nparts):
                 self.assertTrue(self.fvec1[j] > 0)
@@ -84,8 +84,8 @@ class TestNTuple(unittest.TestCase):
         tree = self.ttree
         for i in xrange(self.nevents):
             tree.GetEntry(i)
-            self.assertEqual(tree.genParticles_size, 1)
-            self.assertEqual(abs(tree.genParticles_pdgId[0]), 13)
+            self.assertEqual(tree.genParts_size, 1)
+            self.assertEqual(abs(tree.genParts_pdgId[0]), 13)
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ class NTupleGenParticles : public edm::EDProducer {
     const std::string   prefix_, suffix_;
 
     StringCutObjectSelector<reco::GenParticle> selector_;
-    const unsigned int  maxN_;
+    const unsigned maxN_;
 };
 
 #endif

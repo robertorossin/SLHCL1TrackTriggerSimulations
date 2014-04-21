@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("EXTR")
+process = cms.Process("TEST")
 runOnMC = True
 
 ## MessageLogger

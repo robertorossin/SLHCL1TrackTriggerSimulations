@@ -19,7 +19,7 @@ class NTupleGenJets : public edm::EDProducer {
     const std::string   prefix_, suffix_;
 
     StringCutObjectSelector<reco::GenJet> selector_;
-    const unsigned int  maxN_;
+    const unsigned maxN_;
 };
 
 #endif

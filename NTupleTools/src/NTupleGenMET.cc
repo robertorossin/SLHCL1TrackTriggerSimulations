@@ -9,7 +9,7 @@ NTupleGenMET::NTupleGenMET(const edm::ParameterSet& iConfig) :
   prefix_  (iConfig.getParameter<std::string>("prefix")),
   suffix_  (iConfig.getParameter<std::string>("suffix")),
   selector_(iConfig.existsAs<std::string>("cut") ? iConfig.getParameter<std::string>("cut") : "", true),
-  maxN_    (iConfig.getParameter<unsigned int>("maxN")) {
+  maxN_    (iConfig.getParameter<unsigned>("maxN")) {
 
     produces<float> (prefix_ + "px"    + suffix_);
     produces<float> (prefix_ + "py"    + suffix_);

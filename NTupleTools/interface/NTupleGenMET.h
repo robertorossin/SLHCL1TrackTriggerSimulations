@@ -19,7 +19,7 @@ class NTupleGenMET : public edm::EDProducer {
     const std::string   prefix_, suffix_;
 
     StringCutObjectSelector<reco::GenMET> selector_;
-    const unsigned int  maxN_;
+    const unsigned maxN_;
 };
 
 #endif

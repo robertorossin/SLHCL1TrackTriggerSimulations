@@ -5,16 +5,16 @@ NTupleEventInfo::NTupleEventInfo(const edm::ParameterSet& iConfig) :
   prefix_  (iConfig.getParameter<std::string>("prefix")),
   suffix_  (iConfig.getParameter<std::string>("suffix")) {
 
-    produces<unsigned int> ("event");
-    produces<unsigned int> ("run");
-    produces<unsigned int> ("lumi");
+    produces<unsigned> ("event");
+    produces<unsigned> ("run");
+    produces<unsigned> ("lumi");
 }
 
 void NTupleEventInfo::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
-    std::auto_ptr<unsigned int> v_event(new unsigned int(0));
-    std::auto_ptr<unsigned int> v_run  (new unsigned int(0));
-    std::auto_ptr<unsigned int> v_lumi (new unsigned int(0));
+    std::auto_ptr<unsigned> v_event(new unsigned(0));
+    std::auto_ptr<unsigned> v_run  (new unsigned(0));
+    std::auto_ptr<unsigned> v_lumi (new unsigned(0));
 
     //__________________________________________________________________________
     *v_event = iEvent.id().event();

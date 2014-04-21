@@ -11,5 +11,6 @@
 <use   name="DataFormats/JetReco"/>
 <use   name="DataFormats/METReco"/>
 <use   name="DataFormats/L1TrackTrigger"/>
+<use   name="SimDataFormats/TrackingAnalysis"/>
 <!--use   name="clhep"/-->
 <flags EDM_PLUGIN="1"/>

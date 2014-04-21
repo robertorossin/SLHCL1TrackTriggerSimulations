@@ -9,7 +9,7 @@ NTupleGenJets::NTupleGenJets(const edm::ParameterSet& iConfig) :
   prefix_  (iConfig.getParameter<std::string>("prefix")),
   suffix_  (iConfig.getParameter<std::string>("suffix")),
   selector_(iConfig.existsAs<std::string>("cut") ? iConfig.getParameter<std::string>("cut") : "", true),
-  maxN_    (iConfig.getParameter<unsigned int>("maxN")) {
+  maxN_    (iConfig.getParameter<unsigned>("maxN")) {
 
     produces<std::vector<float> > (prefix_ + "px"    + suffix_);
     produces<std::vector<float> > (prefix_ + "py"    + suffix_);
@@ -19,7 +19,7 @@ NTupleGenJets::NTupleGenJets(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> > (prefix_ + "eta"   + suffix_);
     produces<std::vector<float> > (prefix_ + "phi"   + suffix_);
     produces<std::vector<float> > (prefix_ + "M"     + suffix_);
-    produces<unsigned int>        (prefix_ + "size"  + suffix_);
+    produces<unsigned>            (prefix_ + "size"  + suffix_);
 }
 
 void NTupleGenJets::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -32,7 +32,7 @@ void NTupleGenJets::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> > v_eta   (new std::vector<float>());
     std::auto_ptr<std::vector<float> > v_phi   (new std::vector<float>());
     std::auto_ptr<std::vector<float> > v_M     (new std::vector<float>());
-    std::auto_ptr<unsigned int>        v_size  (new unsigned int(0));
+    std::auto_ptr<unsigned>            v_size  (new unsigned(0));
 
     //__________________________________________________________________________
     if (!iEvent.isRealData()) {
@@ -42,7 +42,7 @@ void NTupleGenJets::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
         if (jets.isValid()) {
             edm::LogInfo("NTupleGenJets") << "Size: " << jets->size();
 
-            unsigned int n = 0;
+            unsigned n = 0;
             for (reco::GenJetCollection::const_iterator it = jets->begin(); it != jets->end(); ++it) {
                 if (n >= maxN_)
                     break;
