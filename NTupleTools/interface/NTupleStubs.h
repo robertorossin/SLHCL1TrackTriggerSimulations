@@ -13,6 +13,7 @@
 
 
 // TODO: factorize the code...
+// TODO: cluster or chip occupancy?
 
 class NTupleStubs : public edm::EDProducer {
   public:
@@ -35,9 +36,9 @@ class NTupleStubs : public edm::EDProducer {
     const edm::InputTag inputTagClusMCAssoc_, inputTagStubMCAssoc_, inputTagTrackMCAssoc_;
     const edm::InputTag inputTagTrkPart_, inputTagTrkVertex_;
     const edm::InputTag inputTagSimTrack_, inputTagSimVertex_, inputTagSimPixelDigi_;
-    const edm::InputTag beamSpotTag_;
+    const edm::InputTag inputTagSimBeamSpot_;
     const std::string   prefixClus_, prefixStub_, prefixTrack_, suffix_;
-    std::string   prefixTrkPart_, prefixSimTrack_, prefixSimVertex_;  //FIXME
+    std::string   prefixTrkPart_, prefixSimTrack_, prefixSimVertex_, prefixSimPixelDigi_, prefixSimBeamSpot_;  //FIXME
 
     const unsigned maxN_;
 };
