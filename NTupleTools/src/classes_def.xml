@@ -1,0 +1,5 @@
+<lcgdict>
+  <class pattern="edm::Wrapper<*>" />
+  <class name="std::vector<std::vector<unsigned int> >" />
+  <!--class name="edm::Wrapper<std::vector<std::vector<unsigned> > >" /-->
+</lcgdict>

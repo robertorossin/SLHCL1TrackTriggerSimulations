@@ -1,5 +1,6 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleStubs.h"
 
+#include "FWCore/Framework/interface/ESHandle.h"
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
 #include "DataFormats/Common/interface/DetSetVector.h"
 #include "DataFormats/Common/interface/DetSetVectorNew.h"
@@ -7,6 +8,7 @@
 #include "DataFormats/L1TrackTrigger/interface/TTStub.h"
 #include "DataFormats/L1TrackTrigger/interface/TTTrack.h"
 #include "DataFormats/L1TrackTrigger/interface/TTTypes.h"
+#include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/SiPixelDetId/interface/StackedTrackerDetId.h"
 #include "SimTracker/TrackTriggerAssociation/interface/TTClusterAssociationMap.h"
 #include "SimTracker/TrackTriggerAssociation/interface/TTStubAssociationMap.h"
@@ -62,6 +64,8 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> > (prefixTrack_ + "pt"   + suffix_);
     produces<std::vector<float> > (prefixTrack_ + "eta"  + suffix_);
     produces<std::vector<float> > (prefixTrack_ + "phi"  + suffix_);
+    produces<std::vector<float> > (prefixTrack_ + "vx"   + suffix_);
+    produces<std::vector<float> > (prefixTrack_ + "vy"   + suffix_);
     produces<std::vector<float> > (prefixTrack_ + "vz"   + suffix_);
     produces<std::vector<float> > (prefixTrack_ + "rinv" + suffix_);
     produces<std::vector<float> > (prefixTrack_ + "chi2" + suffix_);
@@ -83,10 +87,12 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> > (prefixTrkPart_ + "vy"   + suffix_);
     produces<std::vector<float> > (prefixTrkPart_ + "vz"   + suffix_);
     produces<std::vector<int> >   (prefixTrkPart_ + "pdgId" + suffix_);
+    produces<std::vector<int> >   (prefixTrkPart_ + "genpId" + suffix_);
     produces<std::vector<int> >   (prefixTrkPart_ + "nhits" + suffix_);
     produces<std::vector<int> >   (prefixTrkPart_ + "ntkhits" + suffix_);
     produces<std::vector<int> >   (prefixTrkPart_ + "ntklayers" + suffix_);
-    produces<std::vector<unsigned> >(prefixTrkPart_ + "eventId" + suffix_);
+    produces<std::vector<unsigned> > (prefixTrkPart_ + "evtId" + suffix_);
+    produces<std::vector<std::vector<unsigned> > > (prefixTrkPart_ + "trkIds" + suffix_);
     produces<unsigned>            (prefixTrkPart_ + "size" + suffix_);
 
     produces<std::vector<float> > (prefixSimTrack_ + "px"   + suffix_);
@@ -96,6 +102,8 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> > (prefixSimTrack_ + "eta"  + suffix_);
     produces<std::vector<float> > (prefixSimTrack_ + "phi"  + suffix_);
     produces<std::vector<int> >   (prefixSimTrack_ + "pdgId" + suffix_);
+    produces<std::vector<unsigned> > (prefixSimTrack_ + "trkId" + suffix_);
+    produces<std::vector<unsigned> > (prefixSimTrack_ + "evtId" + suffix_);
     produces<std::vector<int> >   (prefixSimTrack_ + "vtxId" + suffix_);
     produces<std::vector<int> >   (prefixSimTrack_ + "genpId" + suffix_);
     produces<unsigned>            (prefixSimTrack_ + "size" + suffix_);
@@ -104,30 +112,35 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> > (prefixSimVertex_ + "vy"   + suffix_);
     produces<std::vector<float> > (prefixSimVertex_ + "vz"   + suffix_);
     produces<std::vector<float> > (prefixSimVertex_ + "tof"  + suffix_);
-    produces<std::vector<unsigned> > (prefixSimVertex_ + "vtxId" + suffix_);
+    produces<std::vector<int> >   (prefixSimVertex_ + "vtxId" + suffix_);
     produces<unsigned>            (prefixSimVertex_ + "size" + suffix_);
 
 }
 
-void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+void NTupleStubs::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup) {
+    /// Geometry setup
+    /// Set pointers to Geometry
+    edm::ESHandle<TrackerGeometry> geometryHandle;
+    iSetup.get<TrackerDigiGeometryRecord>().get(geometryHandle);
+    theGeometry = geometryHandle.product();
 
-    // Make sure uint32_t == unsigned int
+    /// Set pointers to Stacked Modules
+    edm::ESHandle<StackedTrackerGeometry> stackedGeometryHandle;
+    iSetup.get<StackedTrackerGeometryRecord>().get(stackedGeometryHandle);
+    theStackedGeometry = stackedGeometryHandle.product();
+
+    /// Magnetic field setup
+    edm::ESHandle<MagneticField> magneticFieldHandle;
+    iSetup.get<IdealMagneticFieldRecord>().get(magneticFieldHandle);
+    theMagneticField = magneticFieldHandle.product();
+
+    /// Make sure uint32_t == unsigned int
     unsigned checkunsigned = 4294967295;
     uint32_t checkuint32_t = 4294967295;
     assert(checkunsigned == checkuint32_t);
+}
 
-    /// Geometry setup
-    /// Set pointers to Geometry
-    iSetup.get<TrackerDigiGeometryRecord>().get(geometryHandle);
-    const TrackerGeometry * theGeometry = geometryHandle.product();
-    /// Set pointers to Stacked Modules
-    iSetup.get<StackedTrackerGeometryRecord>().get(stackedGeometryHandle);
-    const StackedTrackerGeometry * theStackedGeometry = stackedGeometryHandle.product();
-
-    /// Magnetic field setup
-    iSetup.get<IdealMagneticFieldRecord>().get(magneticFieldHandle);
-    const MagneticField* theMagneticField = magneticFieldHandle.product();
-    double magfieldStrength = theMagneticField->inTesla(GlobalPoint(0,0,0)).z();
+void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
     std::auto_ptr<std::vector<float> > v_px     (new std::vector<float>());
     std::auto_ptr<std::vector<float> > v_py     (new std::vector<float>());
@@ -145,6 +158,8 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> > vt_pt    (new std::vector<float>());
     std::auto_ptr<std::vector<float> > vt_eta   (new std::vector<float>());
     std::auto_ptr<std::vector<float> > vt_phi   (new std::vector<float>());
+    std::auto_ptr<std::vector<float> > vt_vx    (new std::vector<float>());
+    std::auto_ptr<std::vector<float> > vt_vy    (new std::vector<float>());
     std::auto_ptr<std::vector<float> > vt_vz    (new std::vector<float>());
     std::auto_ptr<std::vector<float> > vt_rinv  (new std::vector<float>());
     std::auto_ptr<std::vector<float> > vt_chi2  (new std::vector<float>());
@@ -166,10 +181,12 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> > vp_vy    (new std::vector<float>());
     std::auto_ptr<std::vector<float> > vp_vz    (new std::vector<float>());
     std::auto_ptr<std::vector<int> >   vp_pdgId (new std::vector<int>());
+    std::auto_ptr<std::vector<int> >   vp_genpId(new std::vector<int>());
     std::auto_ptr<std::vector<int> >   vp_nhits (new std::vector<int>());
     std::auto_ptr<std::vector<int> >   vp_ntkhits(new std::vector<int>());
     std::auto_ptr<std::vector<int> >   vp_ntklayers(new std::vector<int>());
-    std::auto_ptr<std::vector<unsigned> > vp_eventId(new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vp_evtId(new std::vector<unsigned>());
+    std::auto_ptr<std::vector<std::vector<unsigned> > > vp_trkIds(new std::vector<std::vector<unsigned> >());
     std::auto_ptr<unsigned>            vp_size  (new unsigned(0));
 
     std::auto_ptr<std::vector<float> > vs_px    (new std::vector<float>());
@@ -179,6 +196,8 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> > vs_eta   (new std::vector<float>());
     std::auto_ptr<std::vector<float> > vs_phi   (new std::vector<float>());
     std::auto_ptr<std::vector<int> >   vs_pdgId (new std::vector<int>());
+    std::auto_ptr<std::vector<unsigned> > vs_trkId (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vs_evtId (new std::vector<unsigned>());
     std::auto_ptr<std::vector<int> >   vs_vtxId (new std::vector<int>());
     std::auto_ptr<std::vector<int> >   vs_genpId(new std::vector<int>());
     std::auto_ptr<unsigned>            vs_size  (new unsigned(0));
@@ -187,7 +206,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> > vv_vy    (new std::vector<float>());
     std::auto_ptr<std::vector<float> > vv_vz    (new std::vector<float>());
     std::auto_ptr<std::vector<float> > vv_tof   (new std::vector<float>());
-    std::auto_ptr<std::vector<unsigned> > vv_vtxId(new std::vector<unsigned>());
+    std::auto_ptr<std::vector<int> >   vv_vtxId (new std::vector<int>());
     std::auto_ptr<unsigned>            vv_size  (new unsigned(0));
 
 
@@ -243,6 +262,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
         typedef typename edmNew::DetSetVector<TTCluster<Ref_PixelDigi_> >::const_iterator const_dsv_iter;
         typedef typename edmNew::DetSet      <TTCluster<Ref_PixelDigi_> >::const_iterator const_ds_iter;
+        typedef edm::Ref<edmNew::DetSetVector<TTCluster<Ref_PixelDigi_> >, TTCluster<Ref_PixelDigi_> > reference;
         unsigned n = 0;
 
         for (const_dsv_iter itv = pixelDigiTTClusters->begin(); itv != pixelDigiTTClusters->end(); ++itv) {
@@ -265,7 +285,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
                 LocalPoint  localposition = theStackedGeometry->findAverageLocalPosition(&(*it));
                 GlobalPoint position = theStackedGeometry->findAverageGlobalPosition(&(*it));
-                edm::LogError("NTupleClusters") << "localposition: " << localposition << " position: " << position;
+                edm::LogInfo("NTupleClusters") << "localposition: " << localposition << " position: " << position;
 
                 unsigned stackMember = it->getStackMember();
                 unsigned width = it->findWidth();
@@ -273,6 +293,14 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 const std::vector<int>& cols = it->getCols();
                 MeasurementPoint localcoord = it->findAverageLocalCoordinates();
                 edm::LogError("NTupleClusters") << "stackmember: " << stackMember << " width: " << width << " localcoord: " << localcoord;
+
+
+                /// Make the reference to be put in the map
+                reference tempCluRef = edmNew::makeRefTo(pixelDigiTTClusters, it);
+                const DetId aDetId = theStackedGeometry->idToDet(tempCluRef->getDetId(), tempCluRef->getStackMember() )->geographicalId();
+                edm::LogError("NTupleClusters") << "detId: " << detId.rawId() << " aDetId: " << aDetId.rawId();
+
+
 
             }
         }
@@ -304,19 +332,20 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 unsigned iStack = (iLayer != 999999) ? iLayer : 1000 + iRing;
                 unsigned iPhi = detId.iPhi();
                 unsigned iZ = detId.iZ();
-                edm::LogError("NTupleStubs") << "rawId: " << rawId << " iLayer: " << iLayer << " iRing: " << iRing << " iSide: " << iSide << " iStack: " << iStack << " iPhi: " << iPhi << " iZ: " << iZ;
+                edm::LogInfo("NTupleStubs") << "rawId: " << rawId << " iLayer: " << iLayer << " iRing: " << iRing << " iSide: " << iSide << " iStack: " << iStack << " iPhi: " << iPhi << " iZ: " << iZ;
 
+                double magfieldStrength = theMagneticField->inTesla(GlobalPoint(0,0,0)).z();
                 double       roughpt   = theStackedGeometry->findRoughPt(magfieldStrength, &(*it));
                 GlobalPoint  position  = theStackedGeometry->findGlobalPosition(&(*it));
                 GlobalVector direction = theStackedGeometry->findGlobalDirection(&(*it));
-                edm::LogError("NTupleStubs") << "roughpt: " << roughpt << " position: " << position << " direction: " << direction;
+                edm::LogInfo("NTupleStubs") << "roughpt: " << roughpt << " position: " << position << " direction: " << direction;
 
                 // in full-strip units
                 double trigDist   = it->getTriggerDisplacement();
                 double trigOffset = it->getTriggerOffset();
                 double trigPos    = it->getTriggerPosition();
                 double trigBend   = it->getTriggerBend();
-                edm::LogError("NTupleStubs") << "trigDist: " << trigDist << " trigOffset: " << trigOffset << " trigPos: " << trigPos << " trigBend: " << trigBend;
+                edm::LogInfo("NTupleStubs") << "trigDist: " << trigDist << " trigOffset: " << trigOffset << " trigPos: " << trigPos << " trigBend: " << trigBend;
 
 
                 // get cluster info
@@ -372,6 +401,8 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
             vt_pt->push_back(momentum.perp());
             vt_eta->push_back(momentum.eta());
             vt_phi->push_back(momentum.phi());
+            vt_vx->push_back(poca.x());
+            vt_vy->push_back(poca.y());
             vt_vz->push_back(poca.z());
             vt_rinv->push_back(it->getRInv());
             vt_chi2->push_back(it->getChi2());
@@ -408,10 +439,18 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
             vp_vy->push_back(it->vy() - bsPosition.y());
             vp_vz->push_back(it->vz() - bsPosition.z());
             vp_pdgId->push_back(it->pdgId());
+            int genpId = it->genParticles().empty() ? -99 : it->genParticles().begin()->key();
+            vp_genpId->push_back(genpId);
             vp_nhits->push_back(it->numberOfHits());
             vp_ntkhits->push_back(it->numberOfTrackerHits());
             vp_ntklayers->push_back(it->numberOfTrackerLayers());
-            vp_eventId->push_back(it->eventId().rawId());
+            vp_evtId->push_back(it->eventId().rawId());
+
+            std::vector<unsigned> trkIds;  // simTrackId (a.k.a. g4TrackId)
+            for (TrackingParticle::g4t_iterator itsim = it->g4Track_begin(); itsim != it->g4Track_end(); ++itsim) {
+                trkIds.push_back(itsim->trackId());
+            }
+            vp_trkIds->push_back(trkIds);
 
             n++;
         }
@@ -454,6 +493,8 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
             vs_eta->push_back(momentum.eta());
             vs_phi->push_back(momentum.phi());
             vs_pdgId->push_back(it->type());
+            vs_trkId->push_back(it->trackId());
+            vs_evtId->push_back(it->eventId().rawId());
             vs_vtxId->push_back(it->vertIndex());
             vs_genpId->push_back(it->genpartIndex());
 
@@ -502,6 +543,8 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vt_pt    , prefixTrack_ + "pt"   + suffix_);
     iEvent.put(vt_eta   , prefixTrack_ + "eta"  + suffix_);
     iEvent.put(vt_phi   , prefixTrack_ + "phi"  + suffix_);
+    iEvent.put(vt_vx    , prefixTrack_ + "vx"   + suffix_);
+    iEvent.put(vt_vy    , prefixTrack_ + "vy"   + suffix_);
     iEvent.put(vt_vz    , prefixTrack_ + "vz"   + suffix_);
     iEvent.put(vt_rinv  , prefixTrack_ + "rinv" + suffix_);
     iEvent.put(vt_chi2  , prefixTrack_ + "chi2" + suffix_);
@@ -523,10 +566,12 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vp_vy    , prefixTrkPart_ + "vy"   + suffix_);
     iEvent.put(vp_vz    , prefixTrkPart_ + "vz"   + suffix_);
     iEvent.put(vp_pdgId , prefixTrkPart_ + "pdgId" + suffix_);
+    iEvent.put(vp_genpId, prefixTrkPart_ + "genpId" + suffix_);
     iEvent.put(vp_nhits , prefixTrkPart_ + "nhits" + suffix_);
     iEvent.put(vp_ntkhits, prefixTrkPart_ + "ntkhits" + suffix_);
     iEvent.put(vp_ntklayers, prefixTrkPart_ + "ntklayers" + suffix_);
-    iEvent.put(vp_eventId, prefixTrkPart_ + "eventId" + suffix_);
+    iEvent.put(vp_evtId , prefixTrkPart_ + "evtId" + suffix_);
+    iEvent.put(vp_trkIds, prefixTrkPart_ + "trkIds" + suffix_);
     iEvent.put(vp_size  , prefixTrkPart_ + "size" + suffix_);
 
     iEvent.put(vs_px    , prefixSimTrack_ + "px"   + suffix_);
@@ -536,6 +581,8 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vs_eta   , prefixSimTrack_ + "eta"  + suffix_);
     iEvent.put(vs_phi   , prefixSimTrack_ + "phi"  + suffix_);
     iEvent.put(vs_pdgId , prefixSimTrack_ + "pdgId" + suffix_);
+    iEvent.put(vs_trkId , prefixSimTrack_ + "trkId" + suffix_);
+    iEvent.put(vs_evtId , prefixSimTrack_ + "evtId" + suffix_);
     iEvent.put(vs_vtxId , prefixSimTrack_ + "vtxId" + suffix_);
     iEvent.put(vs_genpId, prefixSimTrack_ + "genpId" + suffix_);
     iEvent.put(vs_size  , prefixSimTrack_ + "size" + suffix_);

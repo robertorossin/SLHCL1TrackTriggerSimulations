@@ -13,4 +13,6 @@
 <use   name="DataFormats/L1TrackTrigger"/>
 <use   name="SimDataFormats/TrackingAnalysis"/>
 <!--use   name="clhep"/-->
-<flags EDM_PLUGIN="1"/>
+<export>
+  <lib   name="1"/>
+</export>

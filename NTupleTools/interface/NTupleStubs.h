@@ -3,7 +3,6 @@
 
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleCommon.h"
 
-#include "FWCore/Framework/interface/ESHandle.h"
 #include "Geometry/Records/interface/StackedTrackerGeometryRecord.h"
 #include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
@@ -24,10 +23,13 @@ class NTupleStubs : public edm::EDProducer {
     virtual void produce(edm::Event&, const edm::EventSetup&);
     //virtual void endJob();
 
-    // ESHandle
-    edm::ESHandle<TrackerGeometry>        geometryHandle;
-    edm::ESHandle<StackedTrackerGeometry> stackedGeometryHandle;
-    edm::ESHandle<MagneticField>          magneticFieldHandle;
+    virtual void beginRun(const edm::Run&, const edm::EventSetup&);
+    virtual void endRun(const edm::Run&, const edm::EventSetup&) {}
+
+    // For event setup
+    const TrackerGeometry * theGeometry;
+    const StackedTrackerGeometry * theStackedGeometry;
+    const MagneticField* theMagneticField;
 
     const edm::InputTag inputTagClus_, inputTagStub_, inputTagTrack_;
     const edm::InputTag inputTagClusMCAssoc_, inputTagStubMCAssoc_, inputTagTrackMCAssoc_;

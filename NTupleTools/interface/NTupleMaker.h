@@ -18,7 +18,6 @@
 
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleCommon.h"
 
-#include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
@@ -33,10 +32,12 @@ class NTupleMaker : public edm::EDAnalyzer {
   public:
     // NOTE: STRING is not implemented
     enum LeafType {
-        CHAR_T=1, UCHAR_T , SHORT_T , USHORT_T , INT_T, UINT_T,
-        FLOAT_T , DOUBLE_T, LONG64_T, ULONG64_T, BOOL_T,
-        CHAR_V  , UCHAR_V , SHORT_V , USHORT_V , INT_V, UINT_V,
-        FLOAT_V , DOUBLE_V, LONG64_V, ULONG64_V, BOOL_V,
+        CHAR_T=1, UCHAR_T  , SHORT_T  , USHORT_T  , INT_T  , UINT_T ,
+        FLOAT_T , DOUBLE_T , LONG64_T , ULONG64_T , BOOL_T ,
+        CHAR_V  , UCHAR_V  , SHORT_V  , USHORT_V  , INT_V  , UINT_V ,
+        FLOAT_V , DOUBLE_V , LONG64_V , ULONG64_V , BOOL_V ,
+        CHAR_VV , UCHAR_VV , SHORT_VV , USHORT_VV , INT_VV , UINT_VV,
+        FLOAT_VV, DOUBLE_VV, LONG64_VV, ULONG64_VV, BOOL_VV,
         STRING,
         NumLeafTypes
     };
