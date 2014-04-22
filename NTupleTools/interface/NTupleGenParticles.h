@@ -1,10 +1,8 @@
 #ifndef NTupleTools_NTupleGenParticles_h_
 #define NTupleTools_NTupleGenParticles_h_
 
-#include "FWCore/Framework/interface/EDProducer.h"
-#include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "FWCore/Utilities/interface/InputTag.h"
-#include "CommonTools/Utils/interface/StringCutObjectSelector.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleCommon.h"
+
 
 namespace reco { class GenParticle; }
 
@@ -21,7 +19,7 @@ class NTupleGenParticles : public edm::EDProducer {
     const std::string   prefix_, suffix_;
 
     StringCutObjectSelector<reco::GenParticle> selector_;
-    const unsigned int  maxN_;
+    const unsigned maxN_;
 };
 
 #endif

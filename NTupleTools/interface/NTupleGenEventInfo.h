@@ -1,10 +1,8 @@
 #ifndef NTupleTools_NTupleGenEventInfo_h_
 #define NTupleTools_NTupleGenEventInfo_h_
 
-#include "FWCore/Framework/interface/EDProducer.h"
-#include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "FWCore/Utilities/interface/InputTag.h"
-#include "CommonTools/Utils/interface/StringCutObjectSelector.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleCommon.h"
+
 
 class NTupleGenEventInfo : public edm::EDProducer {
   public:
@@ -23,3 +21,4 @@ class NTupleGenEventInfo : public edm::EDProducer {
 };
 
 #endif
+

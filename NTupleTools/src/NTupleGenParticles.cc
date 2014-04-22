@@ -1,6 +1,5 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleGenParticles.h"
-#include "FWCore/Framework/interface/Event.h"
-#include "FWCore/MessageLogger/interface/MessageLogger.h"
+
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
 
@@ -10,7 +9,7 @@ NTupleGenParticles::NTupleGenParticles(const edm::ParameterSet& iConfig) :
   prefix_  (iConfig.getParameter<std::string>("prefix")),
   suffix_  (iConfig.getParameter<std::string>("suffix")),
   selector_(iConfig.existsAs<std::string>("cut") ? iConfig.getParameter<std::string>("cut") : "", true),
-  maxN_    (iConfig.getParameter<unsigned int>("maxN")) {
+  maxN_    (iConfig.getParameter<unsigned>("maxN")) {
 
     produces<std::vector<float> > (prefix_ + "px"    + suffix_);
     produces<std::vector<float> > (prefix_ + "py"    + suffix_);
@@ -26,7 +25,7 @@ NTupleGenParticles::NTupleGenParticles(const edm::ParameterSet& iConfig) :
     produces<std::vector<int> >   (prefix_ + "charge"+ suffix_);
     produces<std::vector<int> >   (prefix_ + "pdgId" + suffix_);
     produces<std::vector<int> >   (prefix_ + "status"+ suffix_);
-    produces<unsigned int>        (prefix_ + "size"  + suffix_);
+    produces<unsigned>            (prefix_ + "size"  + suffix_);
 }
 
 void NTupleGenParticles::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -45,7 +44,7 @@ void NTupleGenParticles::produce(edm::Event& iEvent, const edm::EventSetup& iSet
     std::auto_ptr<std::vector<int> >   v_charge(new std::vector<int>());
     std::auto_ptr<std::vector<int> >   v_pdgId (new std::vector<int>());
     std::auto_ptr<std::vector<int> >   v_status(new std::vector<int>());
-    std::auto_ptr<unsigned int>        v_size  (new unsigned int(0));
+    std::auto_ptr<unsigned>            v_size  (new unsigned(0));
 
     //__________________________________________________________________________
     if (!iEvent.isRealData()) {
@@ -55,7 +54,7 @@ void NTupleGenParticles::produce(edm::Event& iEvent, const edm::EventSetup& iSet
         if (parts.isValid()) {
             edm::LogInfo("NTupleGenParticles") << "Size: " << parts->size();
 
-            unsigned int n = 0;
+            unsigned n = 0;
             for (reco::GenParticleCollection::const_iterator it = parts->begin(); it != parts->end(); ++it) {
                 if (n >= maxN_)
                     break;
@@ -77,6 +76,8 @@ void NTupleGenParticles::produce(edm::Event& iEvent, const edm::EventSetup& iSet
                 v_charge->push_back(it->charge());
                 v_pdgId ->push_back(it->pdgId());
                 v_status->push_back(it->status());
+
+                n++;
             }
             *v_size = v_px->size();
 

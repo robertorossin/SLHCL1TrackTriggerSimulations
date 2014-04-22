@@ -1,12 +1,18 @@
+<Flags CXXFLAGS="-O0 -g -DDEBUG -Wno-error=unused-but-set-variable -Wno-error=unused-variable"/>
 <use   name="FWCore/Framework"/>
 <use   name="FWCore/PluginManager"/>
 <use   name="FWCore/ParameterSet"/>
 <use   name="FWCore/ServiceRegistry"/>
+<use   name="Geometry/Records"/>
+<use   name="Geometry/TrackerGeometryBuilder"/>
+<use   name="MagneticField/Records"/>
+<use   name="MagneticField/Engine"/>
 <use   name="CommonTools/UtilAlgos"/>
 <use   name="DataFormats/JetReco"/>
 <use   name="DataFormats/METReco"/>
-<use   name="clhep"/>
-<flags EDM_PLUGIN="1"/>
-<!--export-->
-  <!--lib   name="1"/-->
-<!--/export-->
+<use   name="DataFormats/L1TrackTrigger"/>
+<use   name="SimDataFormats/TrackingAnalysis"/>
+<!--use   name="clhep"/-->
+<export>
+  <lib   name="1"/>
+</export>

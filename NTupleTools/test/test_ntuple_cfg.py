@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("EXTR")
+process = cms.Process("TEST")
 runOnMC = True
 
 ## MessageLogger
@@ -19,6 +19,16 @@ process.source = cms.Source("PoolSource",
 )
 ## Maximal Number of Events
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+
+## Geometry and Global Tags
+process.load('Configuration.Geometry.GeometryExtended2023TTIReco_cff')
+process.load('Configuration.Geometry.GeometryExtended2023TTI_cff')
+process.load('Configuration.StandardSequences.MagneticField_38T_PostLS1_cff')
+process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
+from Configuration.AlCa.GlobalTag import GlobalTag
+process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:upgradePLS3', '')
+
+process.load('Geometry.TrackerGeometryBuilder.StackedTrackerGeometry_cfi')
 
 ## Write the TTree
 process.TFileService = cms.Service("TFileService",
