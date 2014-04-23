@@ -12,6 +12,7 @@ NTupleGenEventInfo::NTupleGenEventInfo(const edm::ParameterSet& iConfig) :
   prefix_  (iConfig.getParameter<std::string>("prefix")),
   suffix_  (iConfig.getParameter<std::string>("suffix")) {
 
+    produces<int>   (prefix_ + "nPV"      + suffix_);
     produces<float> (prefix_ + "trueNPV"  + suffix_);
     produces<float> (prefix_ + "weightMC" + suffix_);
     produces<float> (prefix_ + "weightPU" + suffix_);
@@ -20,10 +21,11 @@ NTupleGenEventInfo::NTupleGenEventInfo(const edm::ParameterSet& iConfig) :
 
 void NTupleGenEventInfo::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
-    std::auto_ptr<float> v_trueNPV  (new float(-999.));
-    std::auto_ptr<float> v_weightMC (new float(-999.));
-    std::auto_ptr<float> v_weightPU (new float(-999.));
-    std::auto_ptr<float> v_weightPDF(new float(-999.));
+    std::auto_ptr<int>   v_nPV      (new int(-99.));
+    std::auto_ptr<float> v_trueNPV  (new float(-99.));
+    std::auto_ptr<float> v_weightMC (new float(-99.));
+    std::auto_ptr<float> v_weightPU (new float(-99.));
+    std::auto_ptr<float> v_weightPDF(new float(-99.));
 
     //__________________________________________________________________________
     if (!iEvent.isRealData()) {
@@ -37,6 +39,13 @@ void NTupleGenEventInfo::produce(edm::Event& iEvent, const edm::EventSetup& iSet
         iEvent.getByLabel(pileupInfoTag_, pileupInfo);
         if (pileupInfo.isValid()) {
             *v_trueNPV = pileupInfo->front().getTrueNumInteractions();
+
+            for(std::vector<PileupSummaryInfo>::const_iterator it = pileupInfo->begin(); it != pileupInfo->end(); ++it) {
+                if (it->getBunchCrossing()==0) {
+                    *v_nPV = it->getPU_NumInteractions();
+                    break;
+                }
+            }
         }
 
         if (pileupWeightTag_.encode() != "") {
@@ -57,6 +66,7 @@ void NTupleGenEventInfo::produce(edm::Event& iEvent, const edm::EventSetup& iSet
     }
 
     //__________________________________________________________________________
+    iEvent.put(v_nPV      , prefix_ + "nPV"  + suffix_);
     iEvent.put(v_trueNPV  , prefix_ + "trueNPV"  + suffix_);
     iEvent.put(v_weightMC , prefix_ + "weightMC" + suffix_);
     iEvent.put(v_weightPU , prefix_ + "weightPU" + suffix_);

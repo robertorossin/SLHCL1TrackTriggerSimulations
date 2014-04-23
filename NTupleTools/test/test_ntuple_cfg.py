@@ -3,6 +3,16 @@ import FWCore.ParameterSet.Config as cms
 process = cms.Process("TEST")
 runOnMC = True
 
+from FWCore.ParameterSet.VarParsing import VarParsing
+options = VarParsing('analysis')
+options.parseArguments()
+# Modify the defaults
+if not options.inputFiles:
+    options.inputFiles = ['file:rawsim_numEvent20.root']
+if options.outputFile == "output.root":
+    options.outputFile = "test_ntuple.root"
+
+
 ## MessageLogger
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 1
@@ -15,7 +25,7 @@ process.options = cms.untracked.PSet(
 
 ## Source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring("file:rawsim_numEvent20.root")
+    fileNames = cms.untracked.vstring(options.inputFiles)
 )
 ## Maximal Number of Events
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
@@ -32,7 +42,7 @@ process.load('Geometry.TrackerGeometryBuilder.StackedTrackerGeometry_cfi')
 
 ## Write the TTree
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string("test_ntuple.root")
+    fileName = cms.string(options.outputFile)
 )
 
 process.load("SLHCL1TrackTriggerSimulations.NTupleTools.sequences_cff")
