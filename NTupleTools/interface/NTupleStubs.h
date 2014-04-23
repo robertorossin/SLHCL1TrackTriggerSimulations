@@ -12,7 +12,7 @@
 #include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
 
 
-// TODO: factorize the code...
+// TODO: factorize tracks from clusters/stubs?
 // TODO: cluster or chip occupancy?
 
 class NTupleStubs : public edm::EDProducer {
@@ -32,15 +32,9 @@ class NTupleStubs : public edm::EDProducer {
     const StackedTrackerGeometry * theStackedGeometry;
     const MagneticField* theMagneticField;
 
-    const edm::InputTag inputTagClus_, inputTagStub_, inputTagTrack_;
+    const edm::InputTag inputTagClus_, inputTagStub_, inputTagTrack_, inputTagPixelDigi_;
     const edm::InputTag inputTagClusMCAssoc_, inputTagStubMCAssoc_, inputTagTrackMCAssoc_;
-    const edm::InputTag inputTagTrkPart_, inputTagTrkVertex_;
-    const edm::InputTag inputTagSimTrack_, inputTagSimVertex_, inputTagSimPixelDigi_;
-    const edm::InputTag inputTagSimBeamSpot_;
-    const std::string   prefixClus_, prefixStub_, prefixTrack_, suffix_;
-    std::string   prefixTrkPart_, prefixSimTrack_, prefixSimVertex_, prefixSimPixelDigi_, prefixSimBeamSpot_;  //FIXME
-
-    const unsigned maxN_;
+    const std::string   prefixClus_, prefixStub_, prefixTrack_, prefixPixelDigi_, suffix_;
 };
 
 #endif

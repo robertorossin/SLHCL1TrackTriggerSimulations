@@ -20,11 +20,11 @@ NTupleGenMET::NTupleGenMET(const edm::ParameterSet& iConfig) :
 
 void NTupleGenMET::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
-    std::auto_ptr<float> v_px    (new float(-999.));
-    std::auto_ptr<float> v_py    (new float(-999.));
-    std::auto_ptr<float> v_pt    (new float(-999.));
-    std::auto_ptr<float> v_phi   (new float(-999.));
-    std::auto_ptr<float> v_sumEt (new float(-999.));
+    std::auto_ptr<float> v_px    (new float(-99.));
+    std::auto_ptr<float> v_py    (new float(-99.));
+    std::auto_ptr<float> v_pt    (new float(-99.));
+    std::auto_ptr<float> v_phi   (new float(-99.));
+    std::auto_ptr<float> v_sumEt (new float(-99.));
 
     //__________________________________________________________________________
     if (!iEvent.isRealData()) {

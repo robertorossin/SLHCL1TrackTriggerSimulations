@@ -1,7 +1,6 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleStubs.h"
 
 #include "FWCore/Framework/interface/ESHandle.h"
-#include "DataFormats/BeamSpot/interface/BeamSpot.h"
 #include "DataFormats/Common/interface/DetSetVector.h"
 #include "DataFormats/Common/interface/DetSetVectorNew.h"
 #include "DataFormats/SiPixelDigi/interface/PixelDigi.h"
@@ -14,16 +13,8 @@
 #include "SimTracker/TrackTriggerAssociation/interface/TTClusterAssociationMap.h"
 #include "SimTracker/TrackTriggerAssociation/interface/TTStubAssociationMap.h"
 #include "SimTracker/TrackTriggerAssociation/interface/TTTrackAssociationMap.h"
-#include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
-#include "SimDataFormats/TrackingAnalysis/interface/TrackingParticleFwd.h"
-#include "SimDataFormats/TrackingAnalysis/interface/TrackingVertex.h"
-#include "SimDataFormats/TrackingAnalysis/interface/TrackingVertexContainer.h"
 //#include "SimDataFormats/TrackingHit/interface/PSimHitContainer.h"
 //#include "SimDataFormats/TrackingHit/interface/PSimHit.h"
-#include "SimDataFormats/Track/interface/SimTrack.h"
-#include "SimDataFormats/Track/interface/SimTrackContainer.h"
-#include "SimDataFormats/Vertex/interface/SimVertex.h"
-#include "SimDataFormats/Vertex/interface/SimVertexContainer.h"
 
 
 unsigned findById(const std::vector<unsigned>& vec, unsigned id) {
@@ -38,26 +29,15 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
   inputTagClus_        (iConfig.getParameter<edm::InputTag>("inputTagClus")),
   inputTagStub_        (iConfig.getParameter<edm::InputTag>("inputTagStub")),
   inputTagTrack_       (iConfig.getParameter<edm::InputTag>("inputTagTrack")),
+  inputTagPixelDigi_   (iConfig.getParameter<edm::InputTag>("inputTagPixelDigi")),
   inputTagClusMCAssoc_ (iConfig.getParameter<edm::InputTag>("inputTagClusMCAssoc")),
   inputTagStubMCAssoc_ (iConfig.getParameter<edm::InputTag>("inputTagStubMCAssoc")),
   inputTagTrackMCAssoc_(iConfig.getParameter<edm::InputTag>("inputTagTrackMCAssoc")),
-  inputTagTrkPart_     (iConfig.getParameter<edm::InputTag>("inputTagTrkPart")),
-  inputTagTrkVertex_   (iConfig.getParameter<edm::InputTag>("inputTagTrkVertex")),
-  inputTagSimTrack_    (iConfig.getParameter<edm::InputTag>("inputTagSimTrack")),
-  inputTagSimVertex_   (iConfig.getParameter<edm::InputTag>("inputTagSimVertex")),
-  inputTagSimPixelDigi_(iConfig.getParameter<edm::InputTag>("inputTagSimPixelDigi")),
-  inputTagSimBeamSpot_ (iConfig.getParameter<edm::InputTag>("inputTagSimBeamSpot")),
   prefixClus_          (iConfig.getParameter<std::string>("prefixClus")),
   prefixStub_          (iConfig.getParameter<std::string>("prefixStub")),
   prefixTrack_         (iConfig.getParameter<std::string>("prefixTrack")),
-  suffix_              (iConfig.getParameter<std::string>("suffix")),
-  maxN_                (iConfig.getParameter<unsigned>("maxN")) {
-
-    prefixTrkPart_ = "trkParts@";
-    prefixSimTrack_ = "simTracks@";
-    prefixSimVertex_ = "simVertices@";
-    prefixSimPixelDigi_ = "simPixelDigis@";
-    prefixSimBeamSpot_ = "simBeamSpot@";
+  prefixPixelDigi_     (iConfig.getParameter<std::string>("prefixPixelDigi")),
+  suffix_              (iConfig.getParameter<std::string>("suffix")) {
 
     produces<std::vector<float> >    (prefixClus_ + "x"      + suffix_);
     produces<std::vector<float> >    (prefixClus_ + "y"      + suffix_);
@@ -144,48 +124,6 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >    (prefixTrack_ + "simPt" + suffix_);
     produces<std::vector<float> >    (prefixTrack_ + "simEta" + suffix_);
     produces<unsigned>               (prefixTrack_ + "size"  + suffix_);
-
-    produces<std::vector<float> >    (prefixTrkPart_ + "px"    + suffix_);
-    produces<std::vector<float> >    (prefixTrkPart_ + "py"    + suffix_);
-    produces<std::vector<float> >    (prefixTrkPart_ + "pz"    + suffix_);
-    produces<std::vector<float> >    (prefixTrkPart_ + "pt"    + suffix_);
-    produces<std::vector<float> >    (prefixTrkPart_ + "eta"   + suffix_);
-    produces<std::vector<float> >    (prefixTrkPart_ + "phi"   + suffix_);
-    produces<std::vector<float> >    (prefixTrkPart_ + "vx"    + suffix_);
-    produces<std::vector<float> >    (prefixTrkPart_ + "vy"    + suffix_);
-    produces<std::vector<float> >    (prefixTrkPart_ + "vz"    + suffix_);
-    produces<std::vector<int> >      (prefixTrkPart_ + "pdgId" + suffix_);
-    produces<std::vector<int> >      (prefixTrkPart_ + "genpId" + suffix_);
-    produces<std::vector<int> >      (prefixTrkPart_ + "nhits" + suffix_);
-    produces<std::vector<int> >      (prefixTrkPart_ + "ntkhits" + suffix_);
-    produces<std::vector<int> >      (prefixTrkPart_ + "ntklayers" + suffix_);
-    produces<std::vector<unsigned> > (prefixTrkPart_ + "evtId" + suffix_);
-    produces<std::vector<std::vector<unsigned> > > (prefixTrkPart_ + "trkIds" + suffix_);
-    produces<unsigned>               (prefixTrkPart_ + "size"  + suffix_);
-
-    produces<std::vector<float> >    (prefixSimTrack_ + "px"    + suffix_);
-    produces<std::vector<float> >    (prefixSimTrack_ + "py"    + suffix_);
-    produces<std::vector<float> >    (prefixSimTrack_ + "pz"    + suffix_);
-    produces<std::vector<float> >    (prefixSimTrack_ + "pt"    + suffix_);
-    produces<std::vector<float> >    (prefixSimTrack_ + "eta"   + suffix_);
-    produces<std::vector<float> >    (prefixSimTrack_ + "phi"   + suffix_);
-    produces<std::vector<int> >      (prefixSimTrack_ + "pdgId" + suffix_);
-    produces<std::vector<unsigned> > (prefixSimTrack_ + "trkId" + suffix_);
-    produces<std::vector<unsigned> > (prefixSimTrack_ + "evtId" + suffix_);
-    produces<std::vector<int> >      (prefixSimTrack_ + "vtxId" + suffix_);
-    produces<std::vector<int> >      (prefixSimTrack_ + "genpId" + suffix_);
-    produces<unsigned>               (prefixSimTrack_ + "size"  + suffix_);
-
-    produces<std::vector<float> >    (prefixSimVertex_ + "vx"    + suffix_);
-    produces<std::vector<float> >    (prefixSimVertex_ + "vy"    + suffix_);
-    produces<std::vector<float> >    (prefixSimVertex_ + "vz"    + suffix_);
-    produces<std::vector<float> >    (prefixSimVertex_ + "tof"   + suffix_);
-    produces<std::vector<int> >      (prefixSimVertex_ + "vtxId" + suffix_);
-    produces<unsigned>               (prefixSimVertex_ + "size"  + suffix_);
-
-    produces<float>                  (prefixSimBeamSpot_ + "bx"    + suffix_);
-    produces<float>                  (prefixSimBeamSpot_ + "by"    + suffix_);
-    produces<float>                  (prefixSimBeamSpot_ + "bz"    + suffix_);
 }
 
 void NTupleStubs::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup) {
@@ -299,49 +237,6 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> > vt_simEta(new std::vector<float>());
     std::auto_ptr<unsigned>            vt_size  (new unsigned(0));
 
-    std::auto_ptr<std::vector<float> > vp_px    (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vp_py    (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vp_pz    (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vp_pt    (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vp_eta   (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vp_phi   (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vp_vx    (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vp_vy    (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vp_vz    (new std::vector<float>());
-    std::auto_ptr<std::vector<int> >   vp_pdgId (new std::vector<int>());
-    std::auto_ptr<std::vector<int> >   vp_genpId(new std::vector<int>());
-    std::auto_ptr<std::vector<int> >   vp_nhits (new std::vector<int>());
-    std::auto_ptr<std::vector<int> >   vp_ntkhits(new std::vector<int>());
-    std::auto_ptr<std::vector<int> >   vp_ntklayers(new std::vector<int>());
-    std::auto_ptr<std::vector<unsigned> > vp_evtId(new std::vector<unsigned>());
-    std::auto_ptr<std::vector<std::vector<unsigned> > > vp_trkIds(new std::vector<std::vector<unsigned> >());
-    std::auto_ptr<unsigned>            vp_size  (new unsigned(0));
-
-    std::auto_ptr<std::vector<float> > vs_px    (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vs_py    (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vs_pz    (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vs_pt    (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vs_eta   (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vs_phi   (new std::vector<float>());
-    std::auto_ptr<std::vector<int> >   vs_pdgId (new std::vector<int>());
-    std::auto_ptr<std::vector<unsigned> > vs_trkId (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> > vs_evtId (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<int> >   vs_vtxId (new std::vector<int>());
-    std::auto_ptr<std::vector<int> >   vs_genpId(new std::vector<int>());
-    std::auto_ptr<unsigned>            vs_size  (new unsigned(0));
-
-    std::auto_ptr<std::vector<float> > vv_vx    (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vv_vy    (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vv_vz    (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vv_tof   (new std::vector<float>());
-    std::auto_ptr<std::vector<int> >   vv_vtxId (new std::vector<int>());
-    std::auto_ptr<unsigned>            vv_size  (new unsigned(0));
-
-    std::auto_ptr<float>               vv_bx    (new float(0.));
-    std::auto_ptr<float>               vv_by    (new float(0.));
-    std::auto_ptr<float>               vv_bz    (new float(0.));
-
-
     //__________________________________________________________________________
     /// Get all the handles!
 
@@ -361,27 +256,12 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     edm::Handle<TTTrackAssociationMap<Ref_PixelDigi_> >   mcAssocTTTracks;
     iEvent.getByLabel(inputTagTrackMCAssoc_, mcAssocTTTracks);
 
-    /// Tracking particles, tracking vertices
-    edm::Handle<TrackingParticleCollection> trackingParticles;
-    iEvent.getByLabel(inputTagTrkPart_, trackingParticles);
-    edm::Handle<TrackingVertexCollection> trackingVertices;
-    iEvent.getByLabel(inputTagTrkVertex_, trackingVertices);
-
-    /// SimHits
-    edm::Handle<edm::SimTrackContainer> simTracks;
-    iEvent.getByLabel(inputTagSimTrack_, simTracks);
-    edm::Handle<edm::SimVertexContainer> simVertices;
-    iEvent.getByLabel(inputTagSimVertex_, simVertices);
-
     /// SimPixelDigis
-    edm::Handle<edm::DetSetVector<PixelDigi> > simPixelDigis;
-    iEvent.getByLabel(inputTagSimPixelDigi_, simPixelDigis);
-    edm::Handle<edm::DetSetVector<PixelDigiSimLink> >  simPixelDigiSimLinks;
-    iEvent.getByLabel(inputTagSimPixelDigi_, simPixelDigiSimLinks);
+    edm::Handle<edm::DetSetVector<PixelDigi> > pixelDigis;
+    iEvent.getByLabel(inputTagPixelDigi_, pixelDigis);
+    edm::Handle<edm::DetSetVector<PixelDigiSimLink> >  pixelDigiSimLinks;
+    iEvent.getByLabel(inputTagPixelDigi_, pixelDigiSimLinks);
 
-    /// Beamspot
-    edm::Handle<reco::BeamSpot> beamSpot;
-    iEvent.getByLabel(inputTagSimBeamSpot_, beamSpot);
 
     //__________________________________________________________________________
     /// TTClusters
@@ -486,6 +366,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     } else {
         edm::LogError("NTupleClusters") << "Cannot get the product: " << inputTagClus_;
     }
+
 
     /// TTStubs
     if (pixelDigiTTStubs.isValid() && mcAssocTTStubs.isValid()) {
@@ -595,6 +476,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
         edm::LogError("NTupleStubs") << "Cannot get the product: " << inputTagStub_;
     }
 
+
     /// TTTracks
     if (pixelDigiTTTracks.isValid() && mcAssocTTTracks.isValid()) {
         edm::LogInfo("NTupleTracks") << "Size: " << pixelDigiTTTracks->size();
@@ -649,129 +531,37 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
         edm::LogError("NTupleTracks") << "Cannot get the product: " << inputTagTrack_;
     }
 
-    /// Tracking particles, tracking vertices
-    if (trackingParticles.isValid() && trackingVertices.isValid()) {
-        edm::LogInfo("NTupleTrkPart") << "Size: " << trackingParticles->size();
 
+    /// SimPixelDigis -- skipped for now
+    if (pixelDigis.isValid() && pixelDigiSimLinks.isValid()) {
+        edm::LogInfo("NTupleSimPixelDigis") << "Size: " << pixelDigis->size();
+
+        typedef edm::DetSetVector<PixelDigi>::const_iterator const_dsv_iterator;
+        typedef edm::DetSet      <PixelDigi>::const_iterator const_ds_iterator;
         unsigned n = 0;
-        for (TrackingParticleCollection::const_iterator it = trackingParticles->begin(); it != trackingParticles->end(); ++it) {
-            vp_px->push_back(it->px()); // first simTrack
-            vp_py->push_back(it->py());
-            vp_pz->push_back(it->pz());
-            vp_pt->push_back(it->pt());
-            vp_eta->push_back(it->eta());
-            vp_phi->push_back(it->phi());
-            vp_vx->push_back(it->vx()); // parent vertex
-            vp_vy->push_back(it->vy());
-            vp_vz->push_back(it->vz());
-            vp_pdgId->push_back(it->pdgId());
-            int genpId = it->genParticles().empty() ? -99 : it->genParticles().begin()->key();
-            vp_genpId->push_back(genpId);
-            vp_nhits->push_back(it->numberOfHits());
-            vp_ntkhits->push_back(it->numberOfTrackerHits());
-            vp_ntklayers->push_back(it->numberOfTrackerLayers());
-            vp_evtId->push_back(it->eventId().rawId());
+        for (const_dsv_iterator itv = pixelDigis->begin(); itv != pixelDigis->end(); ++itv) {
+            uint32_t rawId = itv->detId();
+            StackedTrackerDetId detId(rawId);
+            DetId::Detector det = detId.det();  // Tracker=1,Muon=2,Ecal=3,Hcal=4,Calo=5,Forward=6
+            int subdetId = detId.subdetId();  // PXB=1,PXF=2,...
+            unsigned size = itv->size();
+            edm::LogInfo("NTupleSimPixelDigis") << "rawId: " << rawId << " det: " << det << " subdetId: " << subdetId << " size: " << size;
 
-            std::vector<unsigned> trkIds;  // simTrackId (a.k.a. g4TrackId)
-            for (TrackingParticle::g4t_iterator itsim = it->g4Track_begin(); itsim != it->g4Track_end(); ++itsim) {
-                trkIds.push_back(itsim->trackId());
+            for (const_ds_iterator it = itv->begin(); it != itv->end(); ++it) {
+                int row = it->row();
+                int col = it->column();
+                int channel = PixelDigi::pixelToChannel(row, col);
+                unsigned short adc = it->adc();
+                edm::LogInfo("NTupleSimPixelDigis") << "row: " << row << " col: " << col << " channel: " << channel << " adc: " << adc;
             }
-            vp_trkIds->push_back(trkIds);
 
             n++;
         }
-        *vp_size = vp_px->size();
 
     } else {
-        edm::LogError("NTupleTrkPart") << "Cannot get the product: " << inputTagTrkPart_;
+        edm::LogError("NTupleSimPixelDigis") << "Cannot get the product: " << inputTagPixelDigi_;
     }
 
-    /// SimTracks
-    if (simTracks.isValid()) {
-        edm::LogInfo("NTupleSimTrack") << "Size: " << simTracks->size();
-
-        unsigned n = 0;
-        for (edm::SimTrackContainer::const_iterator it = simTracks->begin(); it != simTracks->end(); ++it) {
-            const math::XYZTLorentzVectorD& momentum = it->momentum();
-            vs_px->push_back(momentum.px());
-            vs_py->push_back(momentum.py());
-            vs_pz->push_back(momentum.pz());
-            vs_pt->push_back(momentum.pt());
-            vs_eta->push_back(momentum.eta());
-            vs_phi->push_back(momentum.phi());
-            vs_pdgId->push_back(it->type());
-            vs_trkId->push_back(it->trackId());
-            vs_evtId->push_back(it->eventId().rawId());
-            vs_vtxId->push_back(it->vertIndex());
-            vs_genpId->push_back(it->genpartIndex());
-
-            n++;
-        }
-        *vs_size = vs_px->size();
-    } else {
-        edm::LogError("NTupleSimTrack") << "Cannot get the product: " << inputTagSimTrack_;
-    }
-
-    /// SimVertices
-    if (simVertices.isValid()) {
-        edm::LogInfo("NTupleSimVertex") << "Size: " << simVertices->size();
-
-        unsigned n = 0;
-        for (edm::SimVertexContainer::const_iterator it = simVertices->begin(); it != simVertices->end(); ++it) {
-            const math::XYZTLorentzVectorD& position = it->position();
-            vv_vx->push_back(position.x());
-            vv_vy->push_back(position.y());
-            vv_vz->push_back(position.z());
-            vv_tof->push_back(position.t());
-            vv_vtxId->push_back(it->vertexId());
-
-            n++;
-        }
-        *vv_size = vv_vx->size();
-    } else {
-        edm::LogError("NTupleSimVertex") << "Cannot get the product: " << inputTagSimVertex_;
-    }
-
-    /// SimPixelDigi -- skipped for now
-    //if (simPixelDigis.isValid() && simPixelDigiSimLinks.isValid()) {
-    //    edm::LogInfo("NTupleSimPixelDigis") << "Size: " << simPixelDigis->size();
-    //
-    //    typedef edm::DetSetVector<PixelDigi>::const_iterator const_dsv_iterator;
-    //    typedef edm::DetSet      <PixelDigi>::const_iterator const_ds_iterator;
-    //    unsigned n = 0;
-    //    for (const_dsv_iterator itv = simPixelDigis->begin(); itv != simPixelDigis->end(); ++itv) {
-    //        uint32_t rawId = itv->detId();
-    //        StackedTrackerDetId detId(rawId);
-    //        DetId::Detector det = detId.det();  // Tracker=1,Muon=2,Ecal=3,Hcal=4,Calo=5,Forward=6
-    //        int subdetId = detId.subdetId();  // PXB=1,PXF=2,...
-    //        unsigned size = itv->size();
-    //        edm::LogInfo("NTupleSimPixelDigis") << "rawId: " << rawId << " det: " << det << " subdetId: " << subdetId << " size: " << size;
-    //
-    //        for (const_ds_iterator it = itv->begin(); it != itv->end(); ++it) {
-    //            int row = it->row();
-    //            int col = it->column();
-    //            int channel = PixelDigi::pixelToChannel(row, col);
-    //            unsigned short adc = it->adc();
-    //            edm::LogInfo("NTupleSimPixelDigis") << "row: " << row << " col: " << col << " channel: " << channel << " adc: " << adc;
-    //        }
-    //
-    //        n++;
-    //    }
-    //
-    //} else {
-    //    edm::LogError("NTupleSimPixelDigis") << "Cannot get the product: " << inputTagSimPixelDigi_;
-    //}
-
-    /// SimBeamSpot
-    if (beamSpot.isValid()) {
-        math::XYZPoint position = beamSpot->position();
-        *vv_bx = position.x();
-        *vv_by = position.y();
-        *vv_bz = position.z();
-
-    } else {
-        edm::LogError("NTupleSimBeamSpot") << "Cannot get the product: " << inputTagSimBeamSpot_;
-    }
 
     //__________________________________________________________________________
     iEvent.put(vc_x             , prefixClus_ + "x"      + suffix_);
@@ -859,46 +649,4 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vt_simPt         , prefixTrack_ + "simPt" + suffix_);
     iEvent.put(vt_simEta        , prefixTrack_ + "simEta" + suffix_);
     iEvent.put(vt_size          , prefixTrack_ + "size"  + suffix_);
-
-    iEvent.put(vp_px            , prefixTrkPart_ + "px"   + suffix_);
-    iEvent.put(vp_py            , prefixTrkPart_ + "py"   + suffix_);
-    iEvent.put(vp_pz            , prefixTrkPart_ + "pz"   + suffix_);
-    iEvent.put(vp_pt            , prefixTrkPart_ + "pt"   + suffix_);
-    iEvent.put(vp_eta           , prefixTrkPart_ + "eta"  + suffix_);
-    iEvent.put(vp_phi           , prefixTrkPart_ + "phi"  + suffix_);
-    iEvent.put(vp_vx            , prefixTrkPart_ + "vx"   + suffix_);
-    iEvent.put(vp_vy            , prefixTrkPart_ + "vy"   + suffix_);
-    iEvent.put(vp_vz            , prefixTrkPart_ + "vz"   + suffix_);
-    iEvent.put(vp_pdgId         , prefixTrkPart_ + "pdgId" + suffix_);
-    iEvent.put(vp_genpId        , prefixTrkPart_ + "genpId" + suffix_);
-    iEvent.put(vp_nhits         , prefixTrkPart_ + "nhits" + suffix_);
-    iEvent.put(vp_ntkhits       , prefixTrkPart_ + "ntkhits" + suffix_);
-    iEvent.put(vp_ntklayers     , prefixTrkPart_ + "ntklayers" + suffix_);
-    iEvent.put(vp_evtId         , prefixTrkPart_ + "evtId" + suffix_);
-    iEvent.put(vp_trkIds        , prefixTrkPart_ + "trkIds" + suffix_);
-    iEvent.put(vp_size          , prefixTrkPart_ + "size" + suffix_);
-
-    iEvent.put(vs_px            , prefixSimTrack_ + "px"   + suffix_);
-    iEvent.put(vs_py            , prefixSimTrack_ + "py"   + suffix_);
-    iEvent.put(vs_pz            , prefixSimTrack_ + "pz"   + suffix_);
-    iEvent.put(vs_pt            , prefixSimTrack_ + "pt"   + suffix_);
-    iEvent.put(vs_eta           , prefixSimTrack_ + "eta"  + suffix_);
-    iEvent.put(vs_phi           , prefixSimTrack_ + "phi"  + suffix_);
-    iEvent.put(vs_pdgId         , prefixSimTrack_ + "pdgId" + suffix_);
-    iEvent.put(vs_trkId         , prefixSimTrack_ + "trkId" + suffix_);
-    iEvent.put(vs_evtId         , prefixSimTrack_ + "evtId" + suffix_);
-    iEvent.put(vs_vtxId         , prefixSimTrack_ + "vtxId" + suffix_);
-    iEvent.put(vs_genpId        , prefixSimTrack_ + "genpId" + suffix_);
-    iEvent.put(vs_size          , prefixSimTrack_ + "size" + suffix_);
-
-    iEvent.put(vv_vx            , prefixSimVertex_ + "vx"   + suffix_);
-    iEvent.put(vv_vy            , prefixSimVertex_ + "vy"   + suffix_);
-    iEvent.put(vv_vz            , prefixSimVertex_ + "vz"   + suffix_);
-    iEvent.put(vv_tof           , prefixSimVertex_ + "tof"  + suffix_);
-    iEvent.put(vv_vtxId         , prefixSimVertex_ + "vtxId" + suffix_);
-    iEvent.put(vv_size          , prefixSimVertex_ + "size" + suffix_);
-
-    iEvent.put(vv_bx            , prefixSimBeamSpot_ + "bx"    + suffix_);
-    iEvent.put(vv_by            , prefixSimBeamSpot_ + "by"    + suffix_);
-    iEvent.put(vv_bz            , prefixSimBeamSpot_ + "bz"    + suffix_);
 }
