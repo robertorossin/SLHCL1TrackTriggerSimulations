@@ -9,6 +9,8 @@
 #include "DataFormats/L1TrackTrigger/interface/TTTrack.h"
 #include "DataFormats/L1TrackTrigger/interface/TTTypes.h"
 #include "DataFormats/DetId/interface/DetId.h"
+#include "DataFormats/SiPixelDetId/interface/PXBDetId.h"
+#include "DataFormats/SiPixelDetId/interface/PXFDetId.h"
 #include "DataFormats/SiPixelDetId/interface/StackedTrackerDetId.h"
 #include "SimTracker/TrackTriggerAssociation/interface/TTClusterAssociationMap.h"
 #include "SimTracker/TrackTriggerAssociation/interface/TTStubAssociationMap.h"
@@ -17,13 +19,65 @@
 //#include "SimDataFormats/TrackingHit/interface/PSimHit.h"
 
 
-unsigned findById(const std::vector<unsigned>& vec, unsigned id) {
+unsigned NTupleStubs::findById(const std::vector<unsigned>& vec, unsigned id) {
     std::vector<unsigned>::const_iterator found;
     found = std::find(vec.begin(), vec.end(), id);
     if (found == vec.end())
         throw cms::Exception("LogicError") << "Id not found: " << id << ".\n";
     return (found - vec.begin());
 }
+
+unsigned NTupleStubs::getModuleLayer(const DetId& id) {
+    if (id.subdetId() == 1) {  // barrel
+        PXBDetId pxbId(id);
+        uint32_t layer  = pxbId.layer();
+        return layer;
+    } else if (id.subdetId() == 2) {  // endcap
+        PXFDetId pxfId(id);
+        uint32_t side   = pxfId.side();
+        uint32_t disk   = pxfId.disk();
+        uint32_t layer  = (side == 2) ? disk : disk+7;
+        return layer;
+    } else { // error
+        return 999999;
+    }
+}
+
+unsigned NTupleStubs::getModuleLadder(const DetId& id) {
+    if (id.subdetId() == 1) {  // barrel
+        PXBDetId pxbId(id);
+        uint32_t ladder = pxbId.ladder();
+        return ladder;
+    } else if (id.subdetId() == 2) {  // endcap
+        PXFDetId pxfId(id);
+        uint32_t ring   = pxfId.ring();
+        return ring;
+    } else { // error
+        return 999999;
+    }
+}
+
+unsigned NTupleStubs::getModuleModule(const DetId& id) {
+    if (id.subdetId() == 1) {  // barrel
+        PXBDetId pxbId(id);
+        uint32_t module = pxbId.module();
+        return module;
+    } else if (id.subdetId() == 2) {  // endcap
+        PXFDetId pxfId(id);
+        uint32_t module = pxfId.module();
+        return module;
+    } else { // error
+        return 999999;
+    }
+}
+
+unsigned NTupleStubs::getModuleId(const DetId& id) {
+    uint32_t layer  = getModuleLayer(id);
+    uint32_t ladder = getModuleLadder(id);
+    uint32_t module = getModuleModule(id);
+    return 10000*layer + 100*ladder + module;
+}
+
 
 NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
   inputTagClus_        (iConfig.getParameter<edm::InputTag>("inputTagClus")),
@@ -46,11 +100,17 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >    (prefixClus_ + "localy" + suffix_);
     produces<std::vector<float> >    (prefixClus_ + "localz" + suffix_);
     produces<std::vector<unsigned> > (prefixClus_ + "rawId"  + suffix_);
-    produces<std::vector<unsigned> > (prefixClus_ + "ilayer" + suffix_);
-    produces<std::vector<unsigned> > (prefixClus_ + "iring"  + suffix_);
-    produces<std::vector<unsigned> > (prefixClus_ + "iside"  + suffix_);
-    produces<std::vector<unsigned> > (prefixClus_ + "iphi"   + suffix_);
-    produces<std::vector<unsigned> > (prefixClus_ + "iz"     + suffix_);
+    produces<std::vector<unsigned> > (prefixClus_ + "iLayer" + suffix_);
+    produces<std::vector<unsigned> > (prefixClus_ + "iRing"  + suffix_);
+    produces<std::vector<unsigned> > (prefixClus_ + "iSide"  + suffix_);
+    produces<std::vector<unsigned> > (prefixClus_ + "iPhi"   + suffix_);
+    produces<std::vector<unsigned> > (prefixClus_ + "iZ"     + suffix_);
+    produces<std::vector<unsigned> > (prefixClus_ + "iModLayer" + suffix_);
+    produces<std::vector<unsigned> > (prefixClus_ + "iModLadder" + suffix_);
+    produces<std::vector<unsigned> > (prefixClus_ + "iModModule" + suffix_);
+    produces<std::vector<unsigned> > (prefixClus_ + "iModSubLadder" + suffix_);
+    produces<std::vector<unsigned> > (prefixClus_ + "iModSubModule" + suffix_);
+    produces<std::vector<unsigned> > (prefixClus_ + "modId" + suffix_);
     produces<std::vector<bool> >     (prefixClus_ + "barrel" + suffix_);
     produces<std::vector<unsigned> > (prefixClus_ + "geoId"  + suffix_);
     produces<std::vector<unsigned> > (prefixClus_ + "stack"  + suffix_);
@@ -78,11 +138,17 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >    (prefixStub_ + "dirz"   + suffix_);
     produces<std::vector<float> >    (prefixStub_ + "roughPt"+ suffix_);
     produces<std::vector<unsigned> > (prefixStub_ + "rawId"  + suffix_);
-    produces<std::vector<unsigned> > (prefixStub_ + "ilayer" + suffix_);
-    produces<std::vector<unsigned> > (prefixStub_ + "iring"  + suffix_);
-    produces<std::vector<unsigned> > (prefixStub_ + "iside"  + suffix_);
-    produces<std::vector<unsigned> > (prefixStub_ + "iphi"   + suffix_);
-    produces<std::vector<unsigned> > (prefixStub_ + "iz"     + suffix_);
+    produces<std::vector<unsigned> > (prefixStub_ + "iLayer" + suffix_);
+    produces<std::vector<unsigned> > (prefixStub_ + "iRing"  + suffix_);
+    produces<std::vector<unsigned> > (prefixStub_ + "iSide"  + suffix_);
+    produces<std::vector<unsigned> > (prefixStub_ + "iPhi"   + suffix_);
+    produces<std::vector<unsigned> > (prefixStub_ + "iZ"     + suffix_);
+    produces<std::vector<unsigned> > (prefixStub_ + "iModLayer" + suffix_);
+    produces<std::vector<unsigned> > (prefixStub_ + "iModLadder" + suffix_);
+    produces<std::vector<unsigned> > (prefixStub_ + "iModModule" + suffix_);
+    produces<std::vector<unsigned> > (prefixStub_ + "iModSubLadder" + suffix_);
+    produces<std::vector<unsigned> > (prefixStub_ + "iModSubModule" + suffix_);
+    produces<std::vector<unsigned> > (prefixStub_ + "modId" + suffix_);
     produces<std::vector<bool> >     (prefixStub_ + "barrel" + suffix_);
     produces<std::vector<float> >    (prefixStub_ + "trigDist" + suffix_);
     produces<std::vector<float> >    (prefixStub_ + "trigOffset" + suffix_);
@@ -147,6 +213,8 @@ void NTupleStubs::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup) 
     unsigned checkunsigned = 4294967295;
     uint32_t checkuint32_t = 4294967295;
     assert(checkunsigned == checkuint32_t);
+
+    /// Translate to tkLayout module number
 }
 
 void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -158,11 +226,17 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> >    vc_localy(new std::vector<float>());
     std::auto_ptr<std::vector<float> >    vc_localz(new std::vector<float>());
     std::auto_ptr<std::vector<unsigned> > vc_rawId (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> > vc_ilayer(new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> > vc_iring (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> > vc_iside (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> > vc_iphi  (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> > vc_iz    (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vc_iLayer(new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vc_iRing (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vc_iSide (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vc_iPhi  (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vc_iZ    (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vc_iModLayer(new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vc_iModLadder(new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vc_iModModule(new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vc_iModSubLadder(new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vc_iModSubModule(new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vc_modId (new std::vector<unsigned>());
     std::auto_ptr<std::vector<bool> >     vc_barrel(new std::vector<bool>());
     std::auto_ptr<std::vector<unsigned> > vc_geoId (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> > vc_stack (new std::vector<unsigned>());
@@ -190,11 +264,17 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> >    vb_dirz  (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    vb_roughPt(new std::vector<float>());
     std::auto_ptr<std::vector<unsigned> > vb_rawId (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> > vb_ilayer(new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> > vb_iring (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> > vb_iside (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> > vb_iphi  (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> > vb_iz    (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vb_iLayer(new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vb_iRing (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vb_iSide (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vb_iPhi  (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vb_iZ    (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vb_iModLayer(new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vb_iModLadder(new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vb_iModModule(new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vb_iModSubLadder(new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vb_iModSubModule(new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > vb_modId (new std::vector<unsigned>());
     std::auto_ptr<std::vector<bool> >     vb_barrel(new std::vector<bool>());
     std::auto_ptr<std::vector<unsigned> > vb_geoId0(new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> > vb_geoId1(new std::vector<unsigned>());
@@ -311,11 +391,26 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                     channels.push_back(PixelDigi::pixelToChannel(rows.at(ii), cols.at(ii)) );
                 }
 
+                uint32_t iModuleSubLadder = 2;
+                uint32_t iModuleSubModule = 1024;
                 const DetId geoId = theStackedGeometry->idToDet(detId, stack)->geographicalId();
+                unsigned iModuleLayer = getModuleLayer(geoId);
+                unsigned iModuleLadder = getModuleLadder(geoId);
+                unsigned iModuleModule = getModuleModule(geoId);
+                unsigned moduleId = getModuleId(geoId);
+                if (isBarrel) {
+                    if (iModuleLayer<8 && stack==0)  iModuleSubLadder = 32;
+                    if (iModuleLayer<8)  iModuleSubModule = 960;
+                } else {
+                    if (iModuleLadder<9 && stack==0)  iModuleSubLadder = 32;
+                    if (iModuleLadder<9)  iModuleSubModule = 960;
+                }
+
                 LocalPoint  localposition = theStackedGeometry->findAverageLocalPosition(&(*it));
                 GlobalPoint position = theStackedGeometry->findAverageGlobalPosition(&(*it));
 
                 edm::LogInfo("NTupleClusters") << "rawId: " << rawId << " iLayer: " << iLayer << " iRing: " << iRing << " iSide: " << iSide << " iPhi: " << iPhi << " iZ: " << iZ << " isBarrel: " << isBarrel << " geoId: " << geoId.rawId() << " stack: " << stack << " width: " << width << " localcoord: " << localcoord << " localposition: " << localposition << " position: " << position;
+
 
                 vc_x->push_back(position.x());
                 vc_y->push_back(position.y());
@@ -324,11 +419,17 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vc_localy->push_back(localposition.y());
                 vc_localz->push_back(localposition.z());
                 vc_rawId->push_back(rawId);  // this is stub raw Id
-                vc_ilayer->push_back(iLayer);
-                vc_iring->push_back(iRing);
-                vc_iside->push_back(iSide);
-                vc_iphi->push_back(iPhi);
-                vc_iz->push_back(iZ);
+                vc_iLayer->push_back(iLayer);
+                vc_iRing->push_back(iRing);
+                vc_iSide->push_back(iSide);
+                vc_iPhi->push_back(iPhi);
+                vc_iZ->push_back(iZ);
+                vc_iModLayer->push_back(iModuleLayer);  // sviret/HL_LHC: CLUS_layer
+                vc_iModLadder->push_back(iModuleLadder);  // sviret/HL_LHC: CLUS_ladder
+                vc_iModModule->push_back(iModuleModule);  // sviret/HL_LHC: CLUS_module
+                vc_iModSubLadder->push_back(iModuleSubLadder);  // sviret/HL_LHC: CLUS_PS
+                vc_iModSubModule->push_back(iModuleSubModule);  // sviret/HL_LHC: CLUS_nrows
+                vc_modId->push_back(moduleId);
                 vc_barrel->push_back(isBarrel);
                 vc_geoId->push_back(geoId.rawId());
                 vc_stack->push_back(stack);
@@ -422,6 +523,21 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 unsigned clusId0 = findById(*vc_geoId, geoId0.rawId());
                 unsigned clusId1 = findById(*vc_geoId, geoId1.rawId());
 
+                // For moduleId, we use the inner cluster (geoId0)
+                uint32_t iModuleSubLadder = 2;
+                uint32_t iModuleSubModule = 1024;
+                unsigned iModuleLayer = getModuleLayer(geoId0);
+                unsigned iModuleLadder = getModuleLadder(geoId0);
+                unsigned iModuleModule = getModuleModule(geoId0);
+                unsigned moduleId = getModuleId(geoId0);
+                if (isBarrel) {
+                    if (iModuleLayer<8)  iModuleSubLadder = 32;
+                    if (iModuleLayer<8)  iModuleSubModule = 960;
+                } else {
+                    if (iModuleLadder<9)  iModuleSubLadder = 32;
+                    if (iModuleLadder<9)  iModuleSubModule = 960;
+                }
+
                 edm::LogInfo("NTupleStubs") << "rawId: " << rawId << " iLayer: " << iLayer << " iRing: " << iRing << " iSide: " << iSide << " iPhi: " << iPhi << " iZ: " << iZ << " isBarrel: " << isBarrel << " roughPt: " << roughPt << " position: " << position << " direction: " << direction << " geoId0: " << geoId0.rawId() << " geoId1: " << geoId1.rawId() << " clusId0: " << clusId0 << " clusId1: " << clusId1;
 
                 vb_x->push_back(position.x());
@@ -432,11 +548,17 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vb_dirz->push_back(direction.z());
                 vb_roughPt->push_back(roughPt);
                 vb_rawId->push_back(rawId);
-                vb_ilayer->push_back(iLayer);
-                vb_iring->push_back(iRing);
-                vb_iside->push_back(iSide);
-                vb_iphi->push_back(iPhi);
-                vb_iz->push_back(iZ);
+                vb_iLayer->push_back(iLayer);
+                vb_iRing->push_back(iRing);
+                vb_iSide->push_back(iSide);
+                vb_iPhi->push_back(iPhi);
+                vb_iZ->push_back(iZ);
+                vb_iModLayer->push_back(iModuleLayer);
+                vb_iModLadder->push_back(iModuleLadder);
+                vb_iModModule->push_back(iModuleModule);
+                vb_iModSubLadder->push_back(iModuleSubLadder);
+                vb_iModSubModule->push_back(iModuleSubModule);
+                vb_modId->push_back(moduleId);
                 vb_barrel->push_back(isBarrel);
                 vb_geoId0->push_back(geoId0.rawId());
                 vb_geoId1->push_back(geoId1.rawId());
@@ -571,11 +693,17 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vc_localy        , prefixClus_ + "localy" + suffix_);
     iEvent.put(vc_localz        , prefixClus_ + "localz" + suffix_);
     iEvent.put(vc_rawId         , prefixClus_ + "rawId"  + suffix_);
-    iEvent.put(vc_ilayer        , prefixClus_ + "ilayer" + suffix_);
-    iEvent.put(vc_iring         , prefixClus_ + "iring"  + suffix_);
-    iEvent.put(vc_iside         , prefixClus_ + "iside"  + suffix_);
-    iEvent.put(vc_iphi          , prefixClus_ + "iphi"   + suffix_);
-    iEvent.put(vc_iz            , prefixClus_ + "iz"     + suffix_);
+    iEvent.put(vc_iLayer        , prefixClus_ + "iLayer" + suffix_);
+    iEvent.put(vc_iRing         , prefixClus_ + "iRing"  + suffix_);
+    iEvent.put(vc_iSide         , prefixClus_ + "iSide"  + suffix_);
+    iEvent.put(vc_iPhi          , prefixClus_ + "iPhi"   + suffix_);
+    iEvent.put(vc_iZ            , prefixClus_ + "iZ"     + suffix_);
+    iEvent.put(vc_iModLayer     , prefixClus_ + "iModLayer" + suffix_);
+    iEvent.put(vc_iModLadder    , prefixClus_ + "iModLadder" + suffix_);
+    iEvent.put(vc_iModModule    , prefixClus_ + "iModModule" + suffix_);
+    iEvent.put(vc_iModSubLadder , prefixClus_ + "iModSubLadder" + suffix_);
+    iEvent.put(vc_iModSubModule , prefixClus_ + "iModSubModule" + suffix_);
+    iEvent.put(vc_modId         , prefixClus_ + "modId" + suffix_);
     iEvent.put(vc_barrel        , prefixClus_ + "barrel" + suffix_);
     iEvent.put(vc_geoId         , prefixClus_ + "geoId"  + suffix_);
     iEvent.put(vc_stack         , prefixClus_ + "stack"  + suffix_);
@@ -603,11 +731,17 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vb_dirz          , prefixStub_ + "dirz"   + suffix_);
     iEvent.put(vb_roughPt       , prefixStub_ + "roughPt"+ suffix_);
     iEvent.put(vb_rawId         , prefixStub_ + "rawId"  + suffix_);
-    iEvent.put(vb_ilayer        , prefixStub_ + "ilayer" + suffix_);
-    iEvent.put(vb_iring         , prefixStub_ + "iring"  + suffix_);
-    iEvent.put(vb_iside         , prefixStub_ + "iside"  + suffix_);
-    iEvent.put(vb_iphi          , prefixStub_ + "iphi"   + suffix_);
-    iEvent.put(vb_iz            , prefixStub_ + "iz"     + suffix_);
+    iEvent.put(vb_iLayer        , prefixStub_ + "iLayer" + suffix_);
+    iEvent.put(vb_iRing         , prefixStub_ + "iRing"  + suffix_);
+    iEvent.put(vb_iSide         , prefixStub_ + "iSide"  + suffix_);
+    iEvent.put(vb_iPhi          , prefixStub_ + "iPhi"   + suffix_);
+    iEvent.put(vb_iZ            , prefixStub_ + "iZ"     + suffix_);
+    iEvent.put(vb_iModLayer     , prefixStub_ + "iModLayer" + suffix_);
+    iEvent.put(vb_iModLadder    , prefixStub_ + "iModLadder" + suffix_);
+    iEvent.put(vb_iModModule    , prefixStub_ + "iModModule" + suffix_);
+    iEvent.put(vb_iModSubLadder , prefixStub_ + "iModSubLadder" + suffix_);
+    iEvent.put(vb_iModSubModule , prefixStub_ + "iModSubModule" + suffix_);
+    iEvent.put(vb_modId         , prefixStub_ + "modId" + suffix_);
     iEvent.put(vb_barrel        , prefixStub_ + "barrel" + suffix_);
     iEvent.put(vb_trigDist      , prefixStub_ + "trigDist" + suffix_);
     iEvent.put(vb_trigOffset    , prefixStub_ + "trigOffset" + suffix_);
