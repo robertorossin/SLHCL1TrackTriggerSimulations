@@ -27,6 +27,12 @@ class NTupleStubs : public edm::EDProducer {
     virtual void beginRun(const edm::Run&, const edm::EventSetup&);
     virtual void endRun(const edm::Run&, const edm::EventSetup&) {}
 
+    unsigned findById(const std::vector<unsigned>& vec, unsigned id);
+    unsigned getModuleLayer(const DetId& id);
+    unsigned getModuleLadder(const DetId& id);
+    unsigned getModuleModule(const DetId& id);
+    unsigned getModuleId(const DetId& id);
+
     // For event setup
     const TrackerGeometry * theGeometry;
     const StackedTrackerGeometry * theStackedGeometry;
