@@ -31,6 +31,7 @@ ntupleGenEventInfo = cms.EDProducer('NTupleGenEventInfo',
     pileupInfo = cms.InputTag('addPileupInfo'),
     pileupWeight = cms.InputTag(''),
     pdfWeight = cms.InputTag(''),
+    randomSeed = cms.InputTag('randomEngineSeedKeeper'),
     prefix = cms.string('gen@'),
     suffix = cms.string(''),
 )

@@ -19,6 +19,7 @@ class NTupleGenEventInfo : public edm::EDProducer {
     const edm::InputTag pileupInfoTag_;
     const edm::InputTag pileupWeightTag_;
     const edm::InputTag pdfWeightTag_;
+    const edm::InputTag randomSeedTag_;
     const std::string   prefix_, suffix_;
 };
 

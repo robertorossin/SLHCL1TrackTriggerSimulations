@@ -9,23 +9,26 @@ NTupleGenEventInfo::NTupleGenEventInfo(const edm::ParameterSet& iConfig) :
   pileupInfoTag_(iConfig.getParameter<edm::InputTag>("pileupInfo")),
   pileupWeightTag_(iConfig.getParameter<edm::InputTag>("pileupWeight")),
   pdfWeightTag_(iConfig.getParameter<edm::InputTag>("pdfWeight")),
+  randomSeedTag_(iConfig.getParameter<edm::InputTag>("randomSeed")),
   prefix_  (iConfig.getParameter<std::string>("prefix")),
   suffix_  (iConfig.getParameter<std::string>("suffix")) {
 
-    produces<int>   (prefix_ + "nPV"      + suffix_);
-    produces<float> (prefix_ + "trueNPV"  + suffix_);
-    produces<float> (prefix_ + "weightMC" + suffix_);
-    produces<float> (prefix_ + "weightPU" + suffix_);
-    produces<float> (prefix_ + "weightPDF"+ suffix_);
+    produces<int>                     (prefix_ + "nPV"         + suffix_);
+    produces<float>                   (prefix_ + "trueNPV"     + suffix_);
+    produces<float>                   (prefix_ + "weightMC"    + suffix_);
+    produces<float>                   (prefix_ + "weightPU"    + suffix_);
+    produces<float>                   (prefix_ + "weightPDF"   + suffix_);
+    produces<std::vector<unsigned> >  (prefix_ + "randomSeeds" + suffix_);
 }
 
 void NTupleGenEventInfo::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
-    std::auto_ptr<int>   v_nPV      (new int(-99.));
-    std::auto_ptr<float> v_trueNPV  (new float(-99.));
-    std::auto_ptr<float> v_weightMC (new float(-99.));
-    std::auto_ptr<float> v_weightPU (new float(-99.));
-    std::auto_ptr<float> v_weightPDF(new float(-99.));
+    std::auto_ptr<int>                    v_nPV        (new int(-99.));
+    std::auto_ptr<float>                  v_trueNPV    (new float(-99.));
+    std::auto_ptr<float>                  v_weightMC   (new float(-99.));
+    std::auto_ptr<float>                  v_weightPU   (new float(-99.));
+    std::auto_ptr<float>                  v_weightPDF  (new float(-99.));
+    std::auto_ptr<std::vector<unsigned> > v_randomSeeds(new std::vector<unsigned>());
 
     //__________________________________________________________________________
     if (!iEvent.isRealData()) {
@@ -63,12 +66,19 @@ void NTupleGenEventInfo::produce(edm::Event& iEvent, const edm::EventSetup& iSet
                 *v_weightPDF = *pdfWeight;
             }
         }
+
+        edm::Handle<std::vector<unsigned> > randomSeeds;
+        iEvent.getByLabel(randomSeedTag_, randomSeeds);
+        if (randomSeeds.isValid()) {
+            *v_randomSeeds = *randomSeeds;
+        }
     }
 
     //__________________________________________________________________________
-    iEvent.put(v_nPV      , prefix_ + "nPV"  + suffix_);
-    iEvent.put(v_trueNPV  , prefix_ + "trueNPV"  + suffix_);
-    iEvent.put(v_weightMC , prefix_ + "weightMC" + suffix_);
-    iEvent.put(v_weightPU , prefix_ + "weightPU" + suffix_);
-    iEvent.put(v_weightPDF, prefix_ + "weightPDF"+ suffix_);
+    iEvent.put(v_nPV        , prefix_ + "nPV"         + suffix_);
+    iEvent.put(v_trueNPV    , prefix_ + "trueNPV"     + suffix_);
+    iEvent.put(v_weightMC   , prefix_ + "weightMC"    + suffix_);
+    iEvent.put(v_weightPU   , prefix_ + "weightPU"    + suffix_);
+    iEvent.put(v_weightPDF  , prefix_ + "weightPDF"   + suffix_);
+    iEvent.put(v_randomSeeds, prefix_ + "randomSeeds" + suffix_);
 }
