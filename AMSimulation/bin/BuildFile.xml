@@ -1,0 +1,5 @@
+<bin   name="amsim" file="amsim.cpp">
+  <use   name="SLHCL1TrackTriggerSimulations/AMSimulation"/>
+  <use   name="boost_program_options"/>
+  <use   name="root"/>
+</bin>
