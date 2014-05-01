@@ -4,6 +4,7 @@
 namespace slhcl1tt {
 
 static bool g_useColor = true;
+static bool g_useTimer = false;
 
 // Stolen from $ROOTSYS/tmva/src/Tools.cxx
 TString Color(const TString& c) {
@@ -21,6 +22,7 @@ TString Color(const TString& c) {
     static TString gClr_bold         = "\033[1m"    ; // bold
     static TString gClr_black_b      = "\033[30m"   ; // bold black
     static TString gClr_lblue_b      = "\033[1;34m" ; // bold light blue
+    static TString gClr_magenta_b    = "\033[1;35m" ; // bold magenta
     static TString gClr_cyan_b       = "\033[0;36m" ; // bold cyan
     static TString gClr_gray_b       = "\033[0;37m" ; // bold gray
     static TString gClr_lgreen_b     = "\033[1;32m";  // bold light green
@@ -39,6 +41,7 @@ TString Color(const TString& c) {
     if (c == "white" )         return gClr_white;
     if (c == "blue"  )         return gClr_blue;
     if (c == "black"  )        return gClr_black;
+    if (c == "magenta")        return gClr_magenta_b;
     if (c == "lightblue")      return gClr_cyan_b;
     if (c == "gray")           return gClr_gray_b;
     if (c == "yellow")         return gClr_yellow;
@@ -66,6 +69,25 @@ TString EndColor() {
     return gClr_reset;
 }
 
+void NoColor() {
+    g_useColor = false;
+}
+
+void Timing(bool start) {
+    static TStopwatch timer;
+    if (g_useTimer) {
+        if (start) {
+            timer.Start();
+        } else {
+            timer.Stop(); timer.Print(); timer.Continue();
+        }
+    }
+}
+
+void ShowTiming() {
+    g_useTimer = true;
+}
+
 TString Error() {
     return Color("red") + "ERROR" + Color("reset") + "  : ";
 }
@@ -89,4 +111,16 @@ std::size_t hashFileEvent(TString src, unsigned evt) {
 }
 
 }  // namespace slhcl1tt
+
+
+void ResetDeleteBranches (TTree* tree) {
+    TObjArray* branches = tree->GetListOfBranches();
+    Int_t nb = branches->GetEntriesFast();
+    for (Int_t i = 0; i < nb; ++i) {
+        TBranch* br = (TBranch*) branches->UncheckedAt(i);
+        if (br->InheritsFrom(TBranchElement::Class())) {
+            ((TBranchElement*) br)->ResetDeleteObject();
+        }
+    }
+}
 

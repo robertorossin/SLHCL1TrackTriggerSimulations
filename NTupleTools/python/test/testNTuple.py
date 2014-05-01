@@ -14,7 +14,7 @@ class TestNTuple(unittest.TestCase):
         self.runOnMC = True
         self.tfile = TFile.Open(self.infile)
         self.ttree = self.tfile.Get("ntupler/tree")
-        self.nevents = self.ttree.GetEntriesFast()
+        self.nevents = self.ttree.GetEntries()
         self.fvec1 = vector('float')()
         self.fvec2 = vector('float')()
         self.fvec3 = vector('float')()

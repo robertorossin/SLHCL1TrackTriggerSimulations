@@ -51,11 +51,16 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+# ROOT
+*.root
+AutoDict_vector*
+AutoDict_map*
+
 # Other
 __init__.py
 *.log
-*.root
 *~
 *.bak
 *.orig
+
 

@@ -1,88 +1,11 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternGenerator.h"
 
 
-static const unsigned MAX_MODID = 23000;
-static const unsigned MAX_MODCOL = 32;
-static const unsigned MAX_MODROW = 1024;
 static const unsigned MAX_SECTOR = 6 * 8;
 
-// _____________________________________________________________________________
-// Create a dummy tree with randomly generated patterns
-void PatternGenerator::createDummy(TString out, int n) {
-    TFile* tfile = TFile::Open(out, "RECREATE");
-    tfile->mkdir("ntupler");
-    tfile->cd("ntupler");
-
-    TTree* ttree = new TTree("tree", "");
-    std::auto_ptr<std::vector<unsigned> >           vb_iModCols         (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_iModRows         (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_modId            (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_nhits            (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<std::vector<int> > >  vb_hitCols          (new std::vector<std::vector<int> >());
-    std::auto_ptr<std::vector<std::vector<int> > >  vb_hitRows          (new std::vector<std::vector<int> >());
-    std::auto_ptr<std::vector<std::vector<int> > >  vb_hitTrkIds        (new std::vector<std::vector<int> >());
-    std::auto_ptr<std::vector<float> >              vb_simPt            (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vb_simEta           (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vb_simPhi           (new std::vector<float>());
-    std::auto_ptr<std::vector<int> >                vb_trkId            (new std::vector<int>());
-    std::auto_ptr<unsigned>                         v_event             (new unsigned(0));
-
-    ttree->Branch("TTStubs_iModCols" , &(*vb_iModCols));
-    ttree->Branch("TTStubs_iModRows" , &(*vb_iModRows));
-    ttree->Branch("TTStubs_modId"    , &(*vb_modId));
-    ttree->Branch("TTStubs_nhits"    , &(*vb_nhits));
-    ttree->Branch("TTStubs_hitCols"  , &(*vb_hitCols));
-    ttree->Branch("TTStubs_hitRows"  , &(*vb_hitRows));
-    ttree->Branch("TTStubs_hitTrkIds", &(*vb_hitTrkIds));
-    ttree->Branch("TTStubs_simPt"    , &(*vb_simPt));
-    ttree->Branch("TTStubs_simEta"   , &(*vb_simEta));
-    ttree->Branch("TTStubs_simPhi"   , &(*vb_simPhi));
-    ttree->Branch("TTStubs_trkId"    , &(*vb_trkId));
-    ttree->Branch("event"            , &(*v_event));
-
-    // Throw random numbers
-    for (int i=0; i<n; ++i) {
-        vb_iModCols->clear();
-        vb_iModRows->clear();
-        vb_modId->clear();
-        vb_nhits->clear();
-        vb_hitCols->clear();
-        vb_hitRows->clear();
-        vb_hitTrkIds->clear();
-        vb_simPt->clear();
-        vb_simEta->clear();
-        vb_simPhi->clear();
-        vb_trkId->clear();
-        *v_event = 0;
-
-        for (int l=0; l<nLayers_; ++l) {  // make one stub in each layer
-            vb_iModCols->push_back(MAX_MODCOL);
-            vb_iModRows->push_back(MAX_MODROW);
-            vb_modId->push_back(gRandom->Uniform(0,MAX_MODID));
-            vb_nhits->push_back(1);
-            std::vector<int> rows, cols, trkIds;
-            rows.push_back(gRandom->Uniform(0,MAX_MODCOL));
-            cols.push_back(gRandom->Uniform(0,MAX_MODROW));
-            trkIds.push_back(0);
-            vb_hitRows->push_back(rows);
-            vb_hitCols->push_back(cols);
-            vb_hitTrkIds->push_back(trkIds);
-            vb_simPt->push_back(gRandom->Uniform(minPt_, maxPt_));
-            vb_simEta->push_back(gRandom->Uniform(minEta_, maxEta_));
-            vb_simPhi->push_back(gRandom->Uniform(minPhi_, maxPhi_));
-            vb_trkId->push_back(0);
-            *v_event = 0;
-        }
-        ttree->Fill();
-    }
-    assert(ttree->GetEntries() == n);
-    tfile->Write();
-    delete ttree;
-    delete tfile;
-}
 
 // _____________________________________________________________________________
-// Read and parse the sector map csv file
+// Read and parse the trigger sector csv file
 int PatternGenerator::readSectorFile(TString src) {
     Pattern::vuint32_t values;
     if (src.EndsWith(".csv")) {
@@ -130,13 +53,7 @@ int PatternGenerator::readSectorFile(TString src) {
 // _____________________________________________________________________________
 // Read the input ntuples
 int PatternGenerator::readFile(TString src) {
-    if (src == "EMPTY") {
-        TString out = "dummy.root";
-        if (verbose_)  std::cout << Info() << "Recreating " << out << " with 10000 events." << std::endl;
-        createDummy(out, 10000);
-        chain_->Add(out);
-
-    } else if (src.EndsWith(".root")) {
+    if (src.EndsWith(".root")) {
         if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
         chain_->Add(src);
 
@@ -160,8 +77,14 @@ int PatternGenerator::readFile(TString src) {
 }
 
 // _____________________________________________________________________________
-// Set up all the patterns
-int PatternGenerator::readTree() {
+// Select one stub per layer, one hit per stub
+int PatternGenerator::readAndFilterTree(TString out_tmp) {
+    if (!out_tmp.EndsWith(".root")) {
+        std::cout << Error() << "Output filename must be .root" << std::endl;
+        return 1;
+    }
+
+    out_tmp.ReplaceAll(".root", "_tmp.root");
     Long64_t nentries = chain_->GetEntries();
     if (nentries <= 0) {
         std::cout << Error() << "Input source has zero entry." << std::endl;
@@ -170,8 +93,242 @@ int PatternGenerator::readTree() {
 
     if (nEvents_ > (int) nentries)
         nEvents_ = nentries;
-    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events." << std::endl;
+    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events; recreating " << out_tmp << " after event filtering." << std::endl;
 
+    // For reading
+    std::vector<unsigned> *           vb_iModCols         = 0;
+    std::vector<unsigned> *           vb_iModRows         = 0;
+    std::vector<unsigned> *           vb_modId            = 0;
+    std::vector<unsigned> *           vb_nhits            = 0;
+    std::vector<std::vector<int> > *  vb_hitCols          = 0;
+    std::vector<std::vector<int> > *  vb_hitRows          = 0;
+    std::vector<std::vector<int> > *  vb_hitTrkIds        = 0;
+    std::vector<float> *              vb_simPt            = 0;
+    std::vector<float> *              vb_simEta           = 0;
+    std::vector<float> *              vb_simPhi           = 0;
+    std::vector<int> *                vb_trkId            = 0;
+    unsigned                          v_event             = 0;
+
+    chain_->SetBranchStatus("*", 0);
+    chain_->SetBranchStatus("TTStubs_iModCols" , 1);
+    chain_->SetBranchStatus("TTStubs_iModRows" , 1);
+    chain_->SetBranchStatus("TTStubs_modId"    , 1);
+    chain_->SetBranchStatus("TTStubs_nhits"    , 1);
+    chain_->SetBranchStatus("TTStubs_hitCols"  , 1);
+    chain_->SetBranchStatus("TTStubs_hitRows"  , 1);
+    chain_->SetBranchStatus("TTStubs_hitTrkIds", 1);
+    chain_->SetBranchStatus("TTStubs_simPt"    , 1);
+    chain_->SetBranchStatus("TTStubs_simEta"   , 1);
+    chain_->SetBranchStatus("TTStubs_simPhi"   , 1);
+    chain_->SetBranchStatus("TTStubs_trkId"    , 1);
+    chain_->SetBranchStatus("event"            , 1);
+
+    // Unfortunately, very different semantics for Branch(...) vs SetBranchAddress(...)
+    chain_->SetBranchAddress("TTStubs_iModCols" , &(vb_iModCols));
+    chain_->SetBranchAddress("TTStubs_iModRows" , &(vb_iModRows));
+    chain_->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
+    chain_->SetBranchAddress("TTStubs_nhits"    , &(vb_nhits));
+    chain_->SetBranchAddress("TTStubs_hitCols"  , &(vb_hitCols));
+    chain_->SetBranchAddress("TTStubs_hitRows"  , &(vb_hitRows));
+    chain_->SetBranchAddress("TTStubs_hitTrkIds", &(vb_hitTrkIds));
+    chain_->SetBranchAddress("TTStubs_simPt"    , &(vb_simPt));
+    chain_->SetBranchAddress("TTStubs_simEta"   , &(vb_simEta));
+    chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
+    chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
+    chain_->SetBranchAddress("event"            , &(v_event));
+
+    // For writing
+    TFile* tfile = TFile::Open(out_tmp, "RECREATE");
+    tfile->mkdir("ntupler");
+    tfile->cd("ntupler");
+
+    TTree *ttree = (TTree*) chain_->CloneTree(0); // Do no copy the data yet
+    // The clone should not delete any shared i/o buffers.
+    ResetDeleteBranches(ttree);
+
+
+    Long64_t nPassed = 0;
+    for (Long64_t ievt=0; ievt<nEvents_; ++ievt) {
+        chain_->GetEntry(ievt);
+        unsigned nstubs = vb_modId->size();
+        if (verbose_>1 && ievt%1000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7lld", ievt, nPassed) << std::endl;
+        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " [# patterns: " << allPatterns_.size() << "]" << std::endl;
+
+        if (!nstubs) {  // skip if no stub
+            if (!filter_) {
+                ++nPassed;
+                ttree->Fill();
+            }
+            continue;
+        }
+
+        bool keep = true;
+
+        // Check min # of layers
+        bool require = ((int) nstubs >= nLayers_);
+        if (!require && filter_)
+            keep = false;
+
+        // Check sim info
+        // Take the sim-matched particle info from the outermost stub
+        float simPt = vb_simPt->back();
+        float simEta = vb_simEta->back();
+        float simPhi = vb_simPhi->back();
+        int trkId = vb_trkId->back();
+        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " simPt: " << simPt << " simEta: " << simEta << " simPhi: " << simPhi << " trkId: " << trkId << std::endl;
+
+        bool sim = (po.minPt  <= simPt  && simPt  <= po.maxPt  &&
+                    po.minEta <= simEta && simEta <= po.maxEta &&
+                    po.minPhi <= simPhi && simPhi <= po.maxPhi);
+        if (!sim && filter_)
+            keep = false;
+
+        // Build a list of goodLayers and goodLayerModules that are unique
+        // Work from the outermost stub
+        Pattern::vuint32_t goodLayers;  // stores mlayer, not layer
+        Pattern::vuint32_t goodLayerModules;
+        for (unsigned l=0; (l<nstubs) && keep; ++l) {
+            unsigned ll = (nstubs-1) - l;  // reverse iteration order
+            unsigned moduleId = vb_modId->at(ll);
+            uint32_t layer = Pattern::decodeLayer(moduleId);
+            uint32_t mlayer = layerMap_.at(layer);  // mapping of layer --> mlayer must exist
+
+            unsigned count = std::count(goodLayers.begin(), goodLayers.end(), mlayer);
+            if (!count) {
+                goodLayers.push_back(mlayer);
+                goodLayerModules.push_back(moduleId);
+            }
+        }
+        if (verbose_>2) {
+            std::cout << Debug() << "... evt: " << ievt << " goodLayers: ";
+            std::copy(goodLayers.begin(), goodLayers.end(), std::ostream_iterator<uint32_t>(std::cout, " "));
+            std::cout << std::endl;
+            std::cout << Debug() << "... evt: " << ievt << " goodLayerModules: ";
+            std::copy(goodLayerModules.begin(), goodLayerModules.end(), std::ostream_iterator<uint32_t>(std::cout, " "));
+            std::cout << std::endl;
+        }
+
+        // Check again min # of layers
+        require = ((int) goodLayers.size() >= nLayers_);
+        if (!require && filter_)
+            keep = false;
+
+        // Find layers with at least one sim-matched hit
+        // If more than one sim-matched hit in a layer, take only the first hit
+        unsigned ngoodstubs = 0;
+        for (unsigned l=0; (l<nstubs) && keep; ++l) {
+            bool keepstub = true;
+
+            unsigned moduleId = vb_modId->at(l);
+            unsigned nhits = vb_nhits->at(l);
+            assert(nhits > 0);
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
+
+            // Check sim info
+            sim = (vb_trkId->at(l) == trkId);
+            if (!sim && filter_)
+                keepstub = false;
+
+            for (unsigned m=0; (m<nhits) && keepstub; ++m) {
+                bool keephit = true;
+
+                if (verbose_>2)  std::cout << Debug() << "... ... ... hit: " << m << " col: " << vb_hitCols->at(l).at(m) << " row: " << vb_hitRows->at(l).at(m) << " trkId: " << vb_hitTrkIds->at(l).at(m) << std::endl;
+
+                sim = (vb_hitTrkIds->at(l).at(m) == trkId);
+                if (!sim && filter_)
+                    keephit = false;
+
+                if (keephit) {  // only need one hit
+                    // Keep and move it to be the first element
+                    vb_hitCols->at(l).at(0)    = vb_hitCols->at(l).at(m);
+                    vb_hitRows->at(l).at(0)    = vb_hitRows->at(l).at(m);
+                    vb_hitTrkIds->at(l).at(0)  = vb_hitTrkIds->at(l).at(m);
+                    break;
+                }
+            }
+            vb_hitCols->at(l)  .resize(1);  // only need one hit
+            vb_hitRows->at(l)  .resize(1);
+            vb_hitTrkIds->at(l).resize(1);
+            vb_nhits->at(l)    = 1;
+
+            // Check module id
+            unsigned count = std::count(goodLayerModules.begin(), goodLayerModules.end(), moduleId);
+            if (!count)  // do not keep even if filter_ is false
+                keepstub = false;
+            else  // keep and invalidate the next stub with identical moduleId
+                goodLayerModules.erase(std::remove(goodLayerModules.begin(), goodLayerModules.end(), moduleId), goodLayerModules.end());
+
+            if (keepstub) {
+                // Keep and move it to be the 'ngoodstubs' element
+                vb_iModCols->at(ngoodstubs)   = vb_iModCols->at(l);
+                vb_iModRows->at(ngoodstubs)   = vb_iModRows->at(l);
+                vb_modId->at(ngoodstubs)      = vb_modId->at(l);
+                vb_nhits->at(ngoodstubs)      = vb_nhits->at(l);
+                vb_hitCols->at(ngoodstubs)    = vb_hitCols->at(l);
+                vb_hitRows->at(ngoodstubs)    = vb_hitRows->at(l);
+                vb_hitTrkIds->at(ngoodstubs)  = vb_hitTrkIds->at(l);
+                vb_simPt->at(ngoodstubs)      = vb_simPt->at(l);
+                vb_simEta->at(ngoodstubs)     = vb_simEta->at(l);
+                vb_simPhi->at(ngoodstubs)     = vb_simPhi->at(l);
+                vb_trkId->at(ngoodstubs)      = vb_trkId->at(l);
+                ++ngoodstubs;
+            }
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " keep? " << keepstub << std::endl;
+        }
+
+        // Check again min # of layers
+        require = ((int) ngoodstubs >= nLayers_);
+        if (!require && filter_)
+            keep = false;
+
+        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " keep? " << keep << std::endl;
+
+        if (keep) {
+            ++nPassed;
+        } else {  // do not keep any stub
+            ngoodstubs = 0;
+        }
+
+        vb_iModCols ->resize(ngoodstubs);
+        vb_iModRows ->resize(ngoodstubs);
+        vb_modId    ->resize(ngoodstubs);
+        vb_nhits    ->resize(ngoodstubs);
+        vb_hitCols  ->resize(ngoodstubs);
+        vb_hitRows  ->resize(ngoodstubs);
+        vb_hitTrkIds->resize(ngoodstubs);
+        vb_simPt    ->resize(ngoodstubs);
+        vb_simEta   ->resize(ngoodstubs);
+        vb_simPhi   ->resize(ngoodstubs);
+        vb_trkId    ->resize(ngoodstubs);
+
+        ttree->Fill();
+    }
+    if (verbose_)  std::cout << Info() << "Processed " << nEvents_ << " events, kept " << nPassed << " events." << std::endl;
+
+    //assert(ttree->GetEntries() == nEvents_);
+    tfile->Write();
+    delete ttree;
+    delete tfile;
+    return 0;
+}
+
+// _____________________________________________________________________________
+int PatternGenerator::makeTree(TString out_tmp) {
+    if (!out_tmp.EndsWith(".root")) {
+        std::cout << Error() << "Output filename must be .root" << std::endl;
+        return 1;
+    }
+
+    out_tmp.ReplaceAll(".root", "_tmp.root");
+    chain_->Add(out_tmp);
+    Long64_t nentries = chain_->GetEntries();
+    assert(nentries > 0);
+
+    if (nEvents_ > (int) nentries)
+        nEvents_ = nentries;
+    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events from " << out_tmp << std::endl;
+
+    // For reading
     std::vector<unsigned> *           vb_iModCols         = 0;
     std::vector<unsigned> *           vb_iModRows         = 0;
     std::vector<unsigned> *           vb_modId            = 0;
@@ -220,97 +377,60 @@ int PatternGenerator::readTree() {
         return 1;
     }
 
+    Long64_t nPassed = 0;
     for (Long64_t ievt=0; ievt<nEvents_; ++ievt) {
         chain_->GetEntry(ievt);
         unsigned nstubs = vb_modId->size();
-        if (verbose_>1 && ievt%1000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, allPatterns_.size()) << std::endl;
-        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " [# patterns: " << allPatterns_.size() << "]." << std::endl;
-        if (!nstubs)  // skip if no stub
+        if (verbose_>1 && ievt%1000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7lld", ievt, nPassed) << std::endl;
+        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " [# patterns: " << allPatterns_.size() << "]" << std::endl;
+
+        if (!nstubs) {  // skip if no stub
             continue;
+        }
 
-        // Take the sim-matched particle info from the outermost stub
-        float simPt = vb_simPt->back();
-        float simEta = vb_simEta->back();
-        float simPhi = vb_simPhi->back();
-        int trkId = vb_trkId->back();
-        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " simPt: " << simPt << " simEta: " << simEta << " simPhi: " << simPhi << std::endl;
-
-        bool sim = (minPt_  <= simPt  && simPt  <= maxPt_  &&
-                    minEta_ <= simEta && simEta <= maxEta_ &&
-                    minPhi_ <= simPhi && simPhi <= maxPhi_);
-        if (!sim && doFilter_)  // skip if sim-matched particle is out of defined range
-            continue;
-
-        // Find layers with at least one sim-matched hit
-        // If more than one sim-matched hit in a layer, take only the first hit
-        Pattern::vuint32_t goodLayers;
+        // Loop over reconstructed stubs
         Pattern::vuint64_t goodHitIds;
         for (unsigned l=0; l<nstubs; ++l) {
             unsigned moduleId = vb_modId->at(l);
             unsigned ncols = vb_iModCols->at(l);
             unsigned nrows = vb_iModRows->at(l);
             unsigned nhits = vb_nhits->at(l);
-            int col = 0;
-            int row = 0;
-            assert(nhits > 0);
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << trkId << " # hits: " << nhits << std::endl;
-
-            sim = (vb_trkId->at(l) == trkId);
-            if (!sim && doFilter_)  // skip if stub is not associated to the same sim-matched particle
-                continue;
-
-            for (unsigned ii=0; ii<nhits; ++ii) {
-                col = vb_hitCols->at(l).at(ii);
-                row = vb_hitRows->at(l).at(ii);
-                sim = (vb_hitTrkIds->at(l).at(ii) == trkId);
-                if (verbose_>2)  std::cout << Debug() << "... ... ... hit: " << ii << " col: " << col << " row: " << row << " sim: " << sim << std::endl;
-
-                if (sim)  // stop as soon as a hit is associated to the same sim-matched particle
-                    break;
-            }
-            if (!sim && doFilter_)  // skip if a sim-matched hit is never found
-                continue;
-
-            uint32_t layer = Pattern::decodeLayer(moduleId);
-            uint32_t mlayer = layerMap_.at(layer);  // must exist
-            unsigned count = std::count(goodLayers.begin(), goodLayers.end(), mlayer);
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " layer: " << layer << " mlayer: " << mlayer << " count: " << count << std::endl;
-
-            if (count>0 && doFilter_)  // skip if this layer is already considered in goodLayers
-                continue;
+            assert(nhits == 1);
+            //int trkId = vb_trkId->at(l);
+            int col = vb_hitCols->at(l).at(0);
+            int row = vb_hitRows->at(l).at(0);
 
             // Set to lower resolution according to nSubLadders and nSubModules
-            col /= (ncols / std::min((int) ncols, nSubLadders_));
-            row /= (nrows / std::min((int) nrows, nSubModules_));
+            col /= (ncols / std::min((int) ncols, po.nSubLadders));
+            row /= (nrows / std::min((int) nrows, po.nSubModules));
             uint64_t hitId = Pattern::encodeHitId(moduleId, col, row);
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " hitId: " << hitId << " col: " << col << " row: " << row << " ncols: " << ncols << " nrows: " << nrows << std::endl;
 
-            goodLayers.push_back(mlayer);
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " #0 hitId: " << hitId << " col: " << col << " row: " << row << " trkId: " << vb_hitTrkIds->at(l).at(0) << std::endl;
+
             goodHitIds.push_back(hitId);
         }
         if (verbose_>2) {
-            std::cout << Debug() << "... evt: " << ievt << " # goodHitIds: " << goodHitIds.size() << " goodLayers: ";
-            std::copy(goodLayers.begin(), goodLayers.end(), std::ostream_iterator<uint64_t>(std::cout, " "));
-            std::cout << std::endl;
+            std::cout << Debug() << "... evt: " << ievt << " # goodHitIds: " << goodHitIds.size() << " {";
+            std::copy(goodHitIds.begin(), goodHitIds.end(), std::ostream_iterator<uint64_t>(std::cout, " "));
+            std::cout << "}" << std::endl;
         }
 
-        if ((int) goodLayers.size()<nLayers_ && doFilter_)  // skip if number of goodLayers less than requirement
-            continue;
 
         // Only consider up to the first nLayers_
-        uint32_t hash = hashFileEvent(chain_->GetCurrentFile()->GetName(), v_event);
+        uint32_t hash = hashFileEvent(chain_->GetCurrentFile()->GetName(), v_event);  // FIXME: use generator seed instead
         Pattern patt(nLayers_, hash);
         for (int l=0; l<nLayers_; ++l) {
-            if (!doFilter_ && l==(int) goodHitIds.size())  break;
+            if (l==(int) goodHitIds.size())  break;  // avoid problem when goodHitIds.size() < nLayers_
             uint64_t hitId = goodHitIds.at(l);
 
             HitIdBoolMap::const_iterator found = hitIdMap_.find(hitId);
-            if (found == hitIdMap_.end()) {
+            if (found == hitIdMap_.end()) {  // if not exist, insert the hitId
                 std::shared_ptr<bool> abool(new bool(false));
                 hitIdMap_.insert(std::make_pair(hitId, abool) );
                 patt.setHit(l, hitId, abool.get());  // the address of the bool
 
-            } else {
+            } else {  // if exist, retrieve the hitId
                 patt.setHit(l, hitId, found->second.get());  // the address of the bool
             }
 
@@ -318,40 +438,46 @@ int PatternGenerator::readTree() {
             if (verbose_>2)  std::cout << Debug() << "... ... bin: " << l << " lay: " << Pattern::decodeHitLayer(hitId) << " lad: " << Pattern::decodeHitLadder(hitId) << " mod: " << Pattern::decodeHitModule(hitId) << " col: " << Pattern::decodeHitSubLadder(hitId) << " row: " << Pattern::decodeHitSubModule(hitId) << std::endl;
         }
 
+        ++nPassed;
         allPatterns_.push_back(patt);  // save the patterns
     }
-    if (verbose_>1)  std::cout << Debug() << "Identified " << hitIdMap_.size() << " possible 'hitId's." << std::endl;
 
-    // Resolve ambiguity and process the patterns with DC bits, sector customizations, etc...
+    // Process the patterns with DC bits, sector customizations, etc...
     goodPatterns_.clear();
-    for (unsigned i=0; i<allPatterns_.size(); ++i) {
-        Pattern& patt = allPatterns_.at(i);  // pass by reference
+    for (unsigned ievt=0; ievt<allPatterns_.size(); ++ievt) {
+        Pattern& patt = allPatterns_.at(ievt);  // pass by reference
         const Pattern::pattern8_t& pattId = patt.getPatternId();
 
         PatternIdIndexMap::const_iterator found = patternIdMap_.find(pattId);
-        if (found == patternIdMap_.end()) {  // new pattern
+        if (found == patternIdMap_.end()) {  // if not exist, insert the pattern
             goodPatterns_.push_back(patt);
             patternIdMap_.insert(std::make_pair(pattId, goodPatterns_.size()-1) );
 
-        } else {  // old pattern, increase frequency
+        } else {  // if exist, increase the frequency
             uint32_t index = found->second;
             goodPatterns_.at(index).touch();
         }
         if (verbose_>2) {
-            std::cout << Debug() << "... patt: " << i << " ";
+            std::cout << Debug() << "... patt: " << ievt << " ";
             std::copy(pattId.begin(), pattId.end(), std::ostream_iterator<uint64_t>(std::cout, " "));
             std::cout << " freq: " << patt.frequency() << std::endl;
         }
     }
+    if (verbose_>1)  std::cout << Debug() << "Identified " << hitIdMap_.size() << " possible 'hitId's." << std::endl;
     if (verbose_)  std::cout << Info() << "Made " << goodPatterns_.size() << " final patterns, out of " << allPatterns_.size() << " inclusive, full-resolution patterns." << std::endl;
 
     std::sort(goodPatterns_.begin(), goodPatterns_.end(), sortByFrequency);
     return 0;
 }
 
-
+// _____________________________________________________________________________
 // Output patterns into a TTree
 int PatternGenerator::writeTree(TString out) {
+    if (!out.EndsWith(".root")) {
+        std::cout << Error() << "Output filename must be .root" << std::endl;
+        return 1;
+    }
+
     if (nPatterns_ > (int) goodPatterns_.size())
         nPatterns_ = goodPatterns_.size();
     if (verbose_)  std::cout << Info() << "Recreating " << out << " with " << nPatterns_ << " patterns." << std::endl;
@@ -364,14 +490,15 @@ int PatternGenerator::writeTree(TString out) {
     uint64_t pattern[nLayers_];
     uint8_t bit[nLayers_];
 
-    ttree->Branch("nLayers", &nLayers, "nLayers/I");
-    ttree->Branch("hash", &hash, "hash/i");
-    ttree->Branch("frequency", &frequency, "frequency/i");
-    ttree->Branch("pattern", pattern, "pattern[nLayers]/l");  // l for ULong64_t
-    ttree->Branch("bit", bit, "bit[nLayers]/b");  // b for UChar_t
+    ttree->Branch("nLayers", &nLayers, "nLayers/I");            // I for Int_t
+    ttree->Branch("hash", &hash, "hash/i");                     // i for UInt_t
+    ttree->Branch("frequency", &frequency, "frequency/i");      // i for UInt_t
+    ttree->Branch("pattern", pattern, "pattern[nLayers]/l");    // l for ULong64_t
+    ttree->Branch("bit", bit, "bit[nLayers]/b");                // b for UChar_t
 
-    for (int i=0; i<nPatterns_; ++i) {
-        const Pattern& patt = goodPatterns_.at(i);
+    for (int ievt=0; ievt<nPatterns_; ++ievt) {
+        if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7i", ievt) << std::endl;
+        const Pattern& patt = goodPatterns_.at(ievt);
 
         for (int l=0; l<nLayers_; ++l) {
             pattern[l] = patt.getHitId(l);
@@ -393,24 +520,30 @@ int PatternGenerator::writeTree(TString out) {
 // Main driver
 int PatternGenerator::run(TString src, TString out, TString layout) {
     int exitcode = 0;
-    TStopwatch timer;
-    if (doTiming_)  timer.Start();
+    Timing(1);
 
     exitcode = readSectorFile(layout);
     if (exitcode)  return exitcode;
-    if (doTiming_) { timer.Stop(); timer.Continue(); timer.Print(); }
+    Timing();
 
     exitcode = readFile(src);
     if (exitcode)  return exitcode;
-    if (doTiming_) { timer.Stop(); timer.Continue(); timer.Print(); }
+    Timing();
 
-    exitcode = readTree();
+    exitcode = readAndFilterTree(out);
     if (exitcode)  return exitcode;
-    if (doTiming_) { timer.Stop(); timer.Continue(); timer.Print(); }
+    Timing();
+
+    if (verbose_)  std::cout << Info() << "Closing input source." << std::endl;
+    chain_->Reset();
+    exitcode = makeTree(out);
+    if (exitcode)  return exitcode;
+    Timing();
 
     exitcode = writeTree(out);
     if (exitcode)  return exitcode;
-    if (doTiming_) { timer.Stop(); timer.Continue(); timer.Print(); }
+    Timing();
 
+    chain_->Reset();
     return exitcode;
 }

@@ -2,6 +2,7 @@
 #define AMSimulation_PatternGenerator_h_
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Pattern.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 using namespace slhcl1tt;
 
@@ -9,7 +10,6 @@ using namespace slhcl1tt;
 #include "TChain.h"
 #include "TTree.h"
 #include "TString.h"
-#include "TStopwatch.h"
 #include "TRandom3.h"
 
 
@@ -17,9 +17,7 @@ using namespace slhcl1tt;
 // FIXME: implement DC bit
 // FIXME: fake hits
 // FIXME: bank merging
-// FIXME: majority logic
 // FIXME: print configuration
-// FIXME: add timing
 
 // SETTINGS: DC bits, superstrip size, etc
 // INPUT   : TTree with moduleId, hitId, sim info + sector file
@@ -33,14 +31,11 @@ class PatternGenerator {
     typedef std::map<Pattern::pattern8_t, uint32_t> PatternIdIndexMap;
 
     // Constructor
-    PatternGenerator()
-    : minPt_(2.0), maxPt_(9999.0),
-      minEta_(-2.5), maxEta_(2.5),
-      minPhi_(-M_PI), maxPhi_(M_PI),
-      nLayers_(6), nSubLadders_(32), nSubModules_(1024),
-      nFakeHits_(0), nDCBits_(1),
-      doFilter_(true), doTiming_(false),
-      nEvents_(999999999), nPatterns_(999999999), verbose_(1) {
+    PatternGenerator(PatternBankOption option)
+    : po(option), nLayers_(po.nLayers),
+      filter_(true),
+      nEvents_(999999999), nPatterns_(999999999),
+      verbose_(1) {
 
         chain_ = new TChain("ntupler/tree");
 
@@ -64,57 +59,24 @@ class PatternGenerator {
 
 
     // Setters
-    void setMinPt(float pt)       { minPt_ = pt; }
-    void setMaxPt(float pt)       { maxPt_ = pt; }
-    void setMinEta(float eta)     { minEta_ = eta; }
-    void setMaxEta(float eta)     { maxEta_ = eta; }
-    void setMinPhi(float phi)     { minPhi_ = phi; }
-    void setMaxPhi(float phi)     { maxPhi_ = phi; }
+    void setNLayers(int n)        { nLayers_ = n; }
 
-    void setNLayers(int n)        { nLayers_   = std::max(0, n); }
-    void setNSubLadders(int n)    { assert(n%2 == 0); nSubLadders_ = std::min(std::max(0, n), nSubLadders_); }
-    void setNSubModules(int n)    { assert(n%2 == 0); nSubModules_ = std::min(std::max(0, n), nSubModules_); }
-    void setNFakeHits(int n)      { nFakeHits_ = std::max(-1, n); }
-    void setNDCBits(int n)        { nDCBits_ = std::max(-1, n); }
-
-    void setActiveLayers(const std::vector<int>& v)   { activeLayers_ = v; }
-    void setInactiveLayers(const std::vector<int>& v) { inactiveLayers_ = v; }
-    void setSectors(const std::vector<int>& v)        { sectors_ = v; }
-
-    void setFilter(bool b=true)   { doFilter_ = b; }
-    void setTiming(bool b=false)  { doTiming_ = b; }
+    void setFilter(bool b=true)   { filter_ = b; }
     void setNEvents(int n)        { if (n != -1)  nEvents_ = std::max(0, n); }
     void setNPatterns(int n)      { if (n != -1)  nPatterns_ = std::max(0, n); }
     void setVerbosity(int n)      { verbose_ = n; }
 
-
     // Getters
-    float getMinPt()        const { return minPt_; }
-    float getMaxPt()        const { return maxPt_; }
-    float getMinEta()       const { return minEta_; }
-    float getMaxEta()       const { return maxEta_; }
-    float getMinPhi()       const { return minPhi_; }
-    float getMaxPhi()       const { return maxPhi_; }
-
     int getNLayers()        const { return nLayers_; }
-    int getNSubLadders()    const { return nSubLadders_; }
-    int getNSubModules()    const { return nSubModules_; }
-    int getNFakeHits()      const { return nFakeHits_; }
-    int getNDCBits()        const { return nDCBits_; }
-
-    std::vector<int> getActiveLayers()   const { return activeLayers_; }
-    std::vector<int> getInactiveLayers() const { return inactiveLayers_; }
-    std::vector<int> getSectors()        const { return sectors_; }
-
 
     // Functions
-    void createDummy(TString out, int n);
-
     int readSectorFile(TString src);
 
     int readFile(TString src);
 
-    int readTree();
+    int readAndFilterTree(TString out_tmp);  // make a temporary tree
+
+    int makeTree(TString out_tmp);
 
     int writeTree(TString out);
 
@@ -122,26 +84,16 @@ class PatternGenerator {
     int run(TString src, TString out, TString layout);
 
 
+  public:
+    // Configurations
+    const PatternBankOption po;
+
   private:
-    // Settings
-    float minPt_;
-    float maxPt_;
-    float minEta_;  // not absolute eta
-    float maxEta_;  // not absolute eta
-    float minPhi_;  // from -pi to pi
-    float maxPhi_;  // from -pi to pi
+    // Configurations
     int nLayers_;
-    int nSubLadders_;  // 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024
-    int nSubModules_;  // 1, 2, 4, 8, 16, 32
-    int nFakeHits_;
-    int nDCBits_;
-    std::vector<int> activeLayers_;
-    std::vector<int> inactiveLayers_;
-    std::vector<int> sectors_;
 
     // Program options
-    bool doFilter_;
-    bool doTiming_;
+    bool filter_;
     int nEvents_;
     int nPatterns_;
     int verbose_;
@@ -156,7 +108,6 @@ class PatternGenerator {
 
     std::map<uint32_t, uint32_t> layerMap_;  // defines layer merging
     std::map<uint32_t, Pattern::vuint32_t> sectorMap_;
-
 };
 
 #endif

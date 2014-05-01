@@ -1,7 +1,7 @@
 <Flags CXXFLAGS="-O0 -g -DDEBUG -Wno-error=unused-but-set-variable -Wno-error=unused-variable"/>
 <use   name="root"/>
 <use   name="rootcore"/>
-<!--use   name="rootmath"/-->
+<use   name="rootrflx"/>
 <export>
    <lib name="1"/>
 </export>
