@@ -1,0 +1,6 @@
+<environment>
+  <bin   name="TestAMSimulation" file="TestAMSimulation.cpp">
+    <flags   TEST_RUNNER_ARGS=" /bin/bash SLHCL1TrackTriggerSimulations/AMSimulation/test runtests_amsim.sh"/>
+    <use   name="FWCore/Utilities"/>
+  </bin>
+</environment>

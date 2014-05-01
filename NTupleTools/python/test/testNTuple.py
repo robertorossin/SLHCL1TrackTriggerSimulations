@@ -29,6 +29,7 @@ class TestNTuple(unittest.TestCase):
         self.uvec6 = vector('unsigned int')()
         self.uvec7 = vector('unsigned int')()
         self.uvec8 = vector('unsigned int')()
+        self.uvec9 = vector('unsigned int')()
         self.bvec1 = vector('bool')()
         self.bvec2 = vector('bool')()
 
@@ -151,6 +152,7 @@ class TestNTuple(unittest.TestCase):
         tree.SetBranchAddress("TTClusters_iModLayer", self.uvec6)
         tree.SetBranchAddress("TTClusters_iModLadder", self.uvec7)
         tree.SetBranchAddress("TTClusters_iModModule", self.uvec8)
+        tree.SetBranchAddress("TTClusters_nhits", self.uvec9)
         tree.SetBranchAddress("TTClusters_barrel", self.bvec1)
         tree.SetBranchAddress("TTClusters_isGenuine", self.bvec2)
 
@@ -169,6 +171,7 @@ class TestNTuple(unittest.TestCase):
                 self.assertTrue(self.uvec6[j] in [5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22])
                 self.assertTrue(self.uvec7[j] < 100)
                 self.assertTrue(self.uvec8[j] < 200)
+                self.assertTrue(self.uvec9[j] >= 1)
 
                 # test associated tp
                 if self.bvec2[j]:
@@ -196,6 +199,7 @@ class TestNTuple(unittest.TestCase):
         tree.SetBranchAddress("TTStubs_iModLayer", self.uvec6)
         tree.SetBranchAddress("TTStubs_iModLadder", self.uvec7)
         tree.SetBranchAddress("TTStubs_iModModule", self.uvec8)
+        tree.SetBranchAddress("TTStubs_nhits", self.uvec9)
         tree.SetBranchAddress("TTStubs_barrel", self.bvec1)
         tree.SetBranchAddress("TTStubs_isGenuine", self.bvec2)
 
@@ -214,19 +218,20 @@ class TestNTuple(unittest.TestCase):
                 self.assertTrue(self.uvec6[j] in [5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22])
                 self.assertTrue(self.uvec7[j] < 100)
                 self.assertTrue(self.uvec8[j] < 200)
+                self.assertTrue(self.uvec9[j] >= 1)
 
                 # test associated clusters
                 geoId01 = getattr(tree, "TTStubs_geoId0")[j]
                 geoId02 = getattr(tree, "TTClusters_geoId")[getattr(tree, "TTStubs_clusId0")[j]]
                 geoId11 = getattr(tree, "TTStubs_geoId1")[j]
                 geoId12 = getattr(tree, "TTClusters_geoId")[getattr(tree, "TTStubs_clusId1")[j]]
-                rawId = getattr(tree, "TTStubs_rawId")[j]
-                rawId0 = getattr(tree, "TTClusters_rawId")[getattr(tree, "TTStubs_clusId0")[j]]
-                rawId1 = getattr(tree, "TTClusters_rawId")[getattr(tree, "TTStubs_clusId1")[j]]
+                stackId = getattr(tree, "TTStubs_stackId")[j]
+                stackId0 = getattr(tree, "TTClusters_stackId")[getattr(tree, "TTStubs_clusId0")[j]]
+                stackId1 = getattr(tree, "TTClusters_stackId")[getattr(tree, "TTStubs_clusId1")[j]]
                 self.assertEqual(geoId01, geoId02)
                 self.assertEqual(geoId11, geoId12)
-                self.assertEqual(rawId, rawId0)
-                self.assertEqual(rawId, rawId1)
+                self.assertEqual(stackId, stackId0)
+                self.assertEqual(stackId, stackId1)
 
                 # test associated tp
                 if self.bvec2[j]:

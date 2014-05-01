@@ -4,6 +4,8 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleCommon.h"
 
 
+// FIXME: add random number seed for particle gun events
+
 class NTupleGenEventInfo : public edm::EDProducer {
   public:
     explicit NTupleGenEventInfo(const edm::ParameterSet&);
