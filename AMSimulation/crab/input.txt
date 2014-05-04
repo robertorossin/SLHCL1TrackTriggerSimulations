@@ -1,0 +1,10 @@
+root://cmsxrootd-site.fnal.gov//store/user/l1upgrades/SLHC/GEN/620_SLHC10_ntuple/SingleMuMinus_OneOverPt_vz0_20140420/ntuple_1_1_CKS.root
+root://cmsxrootd-site.fnal.gov//store/user/l1upgrades/SLHC/GEN/620_SLHC10_ntuple/SingleMuMinus_OneOverPt_vz0_20140420/ntuple_2_1_6HY.root
+root://cmsxrootd-site.fnal.gov//store/user/l1upgrades/SLHC/GEN/620_SLHC10_ntuple/SingleMuMinus_OneOverPt_vz0_20140420/ntuple_3_1_txR.root
+root://cmsxrootd-site.fnal.gov//store/user/l1upgrades/SLHC/GEN/620_SLHC10_ntuple/SingleMuMinus_OneOverPt_vz0_20140420/ntuple_4_1_YQy.root
+root://cmsxrootd-site.fnal.gov//store/user/l1upgrades/SLHC/GEN/620_SLHC10_ntuple/SingleMuMinus_OneOverPt_vz0_20140420/ntuple_5_1_1EH.root
+root://cmsxrootd-site.fnal.gov//store/user/l1upgrades/SLHC/GEN/620_SLHC10_ntuple/SingleMuPlus_OneOverPt_vz0_20140420/ntuple_1_1_6KB.root
+root://cmsxrootd-site.fnal.gov//store/user/l1upgrades/SLHC/GEN/620_SLHC10_ntuple/SingleMuPlus_OneOverPt_vz0_20140420/ntuple_2_1_5U6.root
+root://cmsxrootd-site.fnal.gov//store/user/l1upgrades/SLHC/GEN/620_SLHC10_ntuple/SingleMuPlus_OneOverPt_vz0_20140420/ntuple_3_1_pX2.root
+root://cmsxrootd-site.fnal.gov//store/user/l1upgrades/SLHC/GEN/620_SLHC10_ntuple/SingleMuPlus_OneOverPt_vz0_20140420/ntuple_4_1_0C3.root
+root://cmsxrootd-site.fnal.gov//store/user/l1upgrades/SLHC/GEN/620_SLHC10_ntuple/SingleMuPlus_OneOverPt_vz0_20140420/ntuple_5_1_nxt.root
