@@ -65,7 +65,9 @@ TString Color(const TString& c) {
 }
 
 TString EndColor() {
+    static TString gClr_none         = "" ;
     static TString gClr_reset        = "\033[0m";     // reset
+    if (!g_useColor)           return gClr_none;
     return gClr_reset;
 }
 

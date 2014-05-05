@@ -56,6 +56,13 @@ docs/_build/
 AutoDict_vector*
 AutoDict_map*
 
+# Binary
+*.exe
+
+# CRAB
+crab.history
+crab_0_*
+
 # Other
 __init__.py
 *.log

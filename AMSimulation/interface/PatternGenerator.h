@@ -17,7 +17,6 @@ using namespace slhcl1tt;
 // FIXME: implement DC bit
 // FIXME: fake hits
 // FIXME: bank merging
-// FIXME: print configuration
 
 // SETTINGS: DC bits, superstrip size, etc
 // INPUT   : TTree with moduleId, hitId, sim info + sector file
@@ -25,14 +24,16 @@ using namespace slhcl1tt;
 
 class PatternGenerator {
   public:
-    typedef std::map<uint64_t, std::shared_ptr<bool> > HitIdBoolMap;
-    typedef std::map<Pattern::pattern8_t, std::shared_ptr<bool> > PatternIdBoolMap;
+    //typedef std::map<uint64_t, std::shared_ptr<bool> > HitIdBoolMap;
+    //typedef std::map<Pattern::pattern8_t, std::shared_ptr<bool> > PatternIdBoolMap;
+    typedef std::map<uint64_t, std::shared_ptr<uint16_t> > HitIdShortMap;
+    typedef std::map<Pattern::pattern8_t, std::shared_ptr<uint16_t> > PatternIdShortMap;
     typedef std::map<uint64_t, uint32_t> HitIdIndexMap;
     typedef std::map<Pattern::pattern8_t, uint32_t> PatternIdIndexMap;
 
     // Constructor
     PatternGenerator(PatternBankOption option)
-    : po(option), nLayers_(po.nLayers),
+    : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits),
       filter_(true),
       nEvents_(999999999), nPatterns_(999999999),
       verbose_(1) {
@@ -60,6 +61,7 @@ class PatternGenerator {
 
     // Setters
     void setNLayers(int n)        { nLayers_ = n; }
+    void setNDCBits(int n)        { nDCBits_ = n; }
 
     void setFilter(bool b=true)   { filter_ = b; }
     void setNEvents(int n)        { if (n != -1)  nEvents_ = std::max(0, n); }
@@ -68,8 +70,11 @@ class PatternGenerator {
 
     // Getters
     int getNLayers()        const { return nLayers_; }
+    int getNDCBits()        const { return nDCBits_; }
 
     // Functions
+    void uniquifyPatterns();
+
     int readSectorFile(TString src);
 
     int readFile(TString src);
@@ -91,6 +96,7 @@ class PatternGenerator {
   private:
     // Configurations
     int nLayers_;
+    int nDCBits_;
 
     // Program options
     bool filter_;
@@ -103,8 +109,8 @@ class PatternGenerator {
     std::vector<Pattern> allPatterns_;
     std::vector<Pattern> goodPatterns_;
 
-    HitIdBoolMap hitIdMap_;           // key: hitId, value: pointer to a boolean
-    PatternIdIndexMap patternIdMap_;  // key: patternId, value: index in allPatterns_
+    //HitIdBoolMap hitIdMap_;           // key: hitId, value: pointer to a boolean
+    HitIdShortMap hitIdMap_;          // key: hitId, value: pointer to a boolean
 
     std::map<uint32_t, uint32_t> layerMap_;  // defines layer merging
     std::map<uint32_t, Pattern::vuint32_t> sectorMap_;

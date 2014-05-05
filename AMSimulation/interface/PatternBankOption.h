@@ -2,6 +2,9 @@
 #define AMSimulation_PatternBankOption_h_
 
 #include <vector>
+#include <algorithm>
+#include <iostream>
+#include <iterator>
 
 namespace slhcl1tt {
 
@@ -23,6 +26,9 @@ struct PatternBankOption {
     std::vector<int> sectors;
 };
 
+std::ostream& operator<<(std::ostream& o, const PatternBankOption& p);
+
 }  // namespace slhcl1tt
 
 #endif
+

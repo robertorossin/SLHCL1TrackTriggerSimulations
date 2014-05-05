@@ -4,8 +4,8 @@
 static const unsigned MAX_NLAYERS = 10;
 
 void PatternMatcher::resetMap() {
-    for (HitIdBoolMap::const_iterator it=hitIdMap_.begin(); it!=hitIdMap_.end(); ++it)
-        *(it->second) = false;
+    for (HitIdShortMap::const_iterator it=hitIdMap_.begin(); it!=hitIdMap_.end(); ++it)
+        *(it->second) = 0;
 }
 
 
@@ -20,13 +20,15 @@ int PatternMatcher::readPatterns(TString src) {
             std::cout << Error() << "Unable to retrieve the TTree." << std::endl;
         }
 
-        int nLayers;
+        UInt_t nLayers;
+        UInt_t nDCBits;
         UInt_t hash;
         UInt_t frequency;
         ULong64_t pattern[MAX_NLAYERS];
-        UChar_t bit[MAX_NLAYERS];
+        UShort_t bit[MAX_NLAYERS];
 
-        ttree->SetBranchAddress("nLayers", &nLayers);
+        ttree->SetBranchAddress("nLayers", &nLayers);  // redundant
+        ttree->SetBranchAddress("nDCBits", &nDCBits);  // redundant
         ttree->SetBranchAddress("hash", &hash);
         ttree->SetBranchAddress("frequency", &frequency);
         ttree->SetBranchAddress("pattern", pattern);
@@ -35,18 +37,21 @@ int PatternMatcher::readPatterns(TString src) {
         Long64_t nentries = ttree->GetEntries();
         if (verbose_)  std::cout << Info() << "Reading " << nentries << " patterns." << std::endl;
 
+        // _____________________________________________________________________
+        // Loop over all patterns
         for (Long64_t ievt=0; ievt<nentries; ++ievt) {
             ttree->GetEntry(ievt);
-            if (nLayers != nLayers_) {
-                std::cout << Error() << "Conflict in nLayers setting: " << nLayers_ << std::endl;
+            if ((int) nLayers != nLayers_ || (int) nDCBits != nDCBits_) {
+                std::cout << Error() << "Conflict in nLayers setting: " << nLayers_ << " or nDCBits setting: " << nDCBits_ << std::endl;
                 return 1;
             }
 
-            Pattern patt(nLayers, hash);  // initialize a new pattern
-            for (int l=0; l<nLayers; ++l) {
-                patt.setHit(l, pattern[l], NULL);
-                patt.setBit(l, bit[l]);
+            Pattern patt(nLayers, nDCBits, hash);  // initialize a new pattern
+            for (unsigned l=0; l<nLayers; ++l) {
+                patt.setHitId(l, pattern[l]);
+                patt.setHitBit(l, bit[l]);
             }
+            patt.ready();
             patterns_.push_back(patt);
         }
 
@@ -67,28 +72,33 @@ int PatternMatcher::readPatterns(TString src) {
 // FIXME: use a minimal perfect hash table?
 int PatternMatcher::putPatterns() {
     unsigned nentries = patterns_.size();
-    if (nentries <= 0) {
+    if (nentries == 0) {
         std::cout << Error() << "Pattern bank has zero entry." << std::endl;
         return 1;
     }
 
+    // _________________________________________________________________________
+    // Loop over all patterns
     for (unsigned ievt=0; ievt<nentries; ++ievt) {
         Pattern& patt = patterns_.at(ievt);  // pass by reference
-        const Pattern::vuint64_t& hitIds = patt.getHitIds();
 
-        for (unsigned l=0; l<hitIds.size(); ++l) {
-            uint64_t hitId = hitIds.at(l);
-            if (!hitId)  // avoid zero
-                continue;
+        for (int l=0; l<nLayers_; ++l) {
+            uint64_t hitId = patt.getHitId(l);
+            if (hitId == 0)  continue;  // avoid zero
 
-            HitIdBoolMap::const_iterator found = hitIdMap_.find(hitId);
-            if (found == hitIdMap_.end()) {
-                std::shared_ptr<bool> abool(new bool(false));
-                hitIdMap_.insert(std::make_pair(hitId, abool) );
-                patt.setHit(l, hitId, abool.get());  // the address of the bool
+            //HitIdBoolMap::const_iterator found = hitIdMap_.find(hitId);
+            HitIdShortMap::const_iterator found = hitIdMap_.find(hitId);
+            if (found == hitIdMap_.end()) {  // if not exist, insert the hitId
+                //std::shared_ptr<bool> abool(new bool(false));
+                //hitIdMap_.insert(std::make_pair(hitId, abool) );
+                //patt.setHitAddress(l, abool.get());  // the address of the bool
+
+                std::shared_ptr<uint16_t> ashort(new uint16_t(false));
+                hitIdMap_.insert(std::make_pair(hitId, ashort) );
+                patt.setHitAddress(l, ashort.get());  // the address of the short int
 
             } else {
-                patt.setHit(l, hitId, found->second.get());  // the address of the bool
+                patt.setHitAddress(l, found->second.get());  // the address of the short int
             }
         }
         if (verbose_>2) {
@@ -98,6 +108,7 @@ int PatternMatcher::putPatterns() {
             std::cout << " freq: " << patt.frequency() << std::endl;
         }
     }
+
     if (verbose_>1)  std::cout << Debug() << "Identified " << hitIdMap_.size() << " possible 'hitId's." << std::endl;
     //if (verbose_>2) {
     //    unsigned idebug=0;
@@ -122,6 +133,7 @@ int PatternMatcher::readFile(TString src) {  // currently it's a carbon copy fro
         ifstream ifs(src);
         while (std::getline(ifs,line)) {
             TString tstring(line);
+            tstring.ReplaceAll(" ","");  // strip white space
             if (!tstring.BeginsWith("#") && tstring.EndsWith(".root")) {
                 if (verbose_)  std::cout << Info() << "Opening " << tstring << std::endl;
                 chain_->Add(tstring);
@@ -216,7 +228,8 @@ int PatternMatcher::readAndMakeTree(TString out_tmp) {
     ttree->Branch("TTStubs_modPassed" , &(*vb_modPassed));
     ttree->Branch("TTStubs_hitPasseds", &(*vb_hitPasseds));
 
-
+    // _________________________________________________________________________
+    // Loop over all events
     Long64_t nPassed = 0;
     for (Long64_t ievt=0; ievt<nEvents_; ++ievt) {
         chain_->GetEntry(ievt);
@@ -235,18 +248,46 @@ int PatternMatcher::readAndMakeTree(TString out_tmp) {
             continue;
         }
 
-        // Loop over all reconstructed stubs
+        ////////////////////////////////////////////////////////////////////////
+        // This block is used to reduce timing
+        bool keep = true;
+
+        // Build a list of goodLayers and goodLayerModules that are unique
+        // Work from the outermost stub
+        Pattern::vuint32_t goodLayers;  // stores mlayer, not layer
+        Pattern::vuint32_t goodLayerModules;
+        for (unsigned l=0; (l<nstubs) && keep; ++l) {
+            unsigned ll = (nstubs-1) - l;  // reverse iteration order
+            unsigned moduleId = vb_modId->at(ll);
+            uint32_t layer = Pattern::decodeLayer(moduleId);
+            uint32_t mlayer = layerMap_.at(layer);  // mapping of layer --> mlayer must exist
+
+            unsigned count = std::count(goodLayers.begin(), goodLayers.end(), mlayer);
+            if (!count) {
+                goodLayers.push_back(mlayer);
+                goodLayerModules.push_back(moduleId);
+            }
+        }
+
+        // Check again min # of layers
+        if ((int) goodLayers.size() < nLayers_) {
+            ttree->Fill();
+            continue;
+        }
+        ////////////////////////////////////////////////////////////////////////
+
+
+        // Loop over reconstructed stubs
         for (unsigned l=0; l<nstubs; ++l) {
             unsigned moduleId = vb_modId->at(l);
             unsigned ncols = vb_iModCols->at(l);
             unsigned nrows = vb_iModRows->at(l);
             unsigned nhits = vb_nhits->at(l);
             assert(nhits > 0);
-            int trkId = vb_trkId->at(l);
             int col = 0;
             int row = 0;
 
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << trkId << " # hits: " << nhits << std::endl;
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
 
             for (unsigned m=0; m<nhits; ++m) {
                 col = vb_hitCols->at(l).at(m);
@@ -255,22 +296,27 @@ int PatternMatcher::readAndMakeTree(TString out_tmp) {
                 // Set to lower resolution according to nSubLadders and nSubModules
                 col /= (ncols / std::min((int) ncols, po.nSubLadders));
                 row /= (nrows / std::min((int) nrows, po.nSubModules));
-
                 uint64_t hitId = Pattern::encodeHitId(moduleId, col, row);
-                HitIdBoolMap::iterator found = hitIdMap_.find(hitId);
+                uint16_t hitBit = 1 << 0;
+
+                // Use DCBits
+                Pattern::encodeDCBit(nDCBits_, hitId, hitBit);
+
+                HitIdShortMap::iterator found = hitIdMap_.find(hitId);
                 if (found == hitIdMap_.end()) {
                     // ignore it
 
                 } else {
-                    *(found->second) = true;
+                    *(found->second) |= hitBit;  // logical OR
                 }
-                if (verbose_>2)  std::cout << Debug() << "... ... ... hit: " << m << " hitId: " << hitId << " col: " << col << " row: " << row << " ncols: " << ncols << " nrows: " << nrows << " sim: " << (vb_hitTrkIds->at(l).at(m)==trkId) << std::endl;
+                if (verbose_>2)  std::cout << Debug() << "... ... ... hit: " << m << " hitId: " << hitId << " hitBit: " << hitBit << " col: " << col << " row: " << row << " ncols: " << ncols << " nrows: " << nrows << " trkId: " << vb_hitTrkIds->at(l).at(m) << std::endl;
                 if (verbose_>2)  std::cout << Debug() << "... ... ... hit: " << m << " " << ((found == hitIdMap_.end()) ? "NOT FOUND" : "FOUND") << std::endl;
             }
         }
 
 
-        // Loop over patterns
+        // _____________________________________________________________________
+        // Loop over patterns (the most time consuming part)
         if (patterns_.empty()) {
             std::cout << Error() << "Patterns are not yet loaded!" << std::endl;
             return 1;
@@ -280,31 +326,33 @@ int PatternMatcher::readAndMakeTree(TString out_tmp) {
         Pattern::vuint32_t goodRoads_hash;
         unsigned nPatterns = patterns_.size();
         for (unsigned i=0; i<nPatterns; ++i) {
-            Pattern& patt = patterns_.at(i);  // pass by reference
-            const Pattern::vuint64_t& hitIds = patt.getHitIds();
-            const std::vector<const bool*>& hitAddresses = patt.getHitAddresses();
-            assert(hitIds.size() == hitAddresses.size());
+            const Pattern& patt = patterns_.at(i);
+
+            Pattern::vuint64_t goodHitIds;  // not the finest granularity, but OK for our purpose
+            for (int l=0; l<nLayers_; ++l) {
+                //const bool* abool = patt.getHitAddress(l);
+                //if (abool && *abool) { // if the boolean is true
+                //    goodHitIds.push_back(hitIds.at(l));
+                //}
+                ////if (verbose_>2)  std::cout << Debug() << "... ... addr: " << l << " bool: " << (abool && *abool) << std::endl;
+                const uint16_t* ashort = patt.getHitAddress(l);
+                if (ashort && ((*ashort) & patt.getHitBit(l)) ) { // if the bit is matched
+                    goodHitIds.push_back(patt.getHitId(l));
+                }
+                if (verbose_>2)  std::cout << Debug() << "... ... addr: " << l << " short: " << ((*ashort) & patt.getHitBit(l)) << std::endl;
+            }
+
+            if ((int) goodHitIds.size() >= (nLayers_ - po.nMisses)) {  // FIXME: implement majority logic here
+                goodRoads.push_back(goodHitIds);
+                goodRoads_hash.push_back(patt.hash());
+            }
             if (verbose_>2) {
                 const Pattern::pattern8_t& pattId = patt.getPatternId();
                 std::cout << Debug() << "... patt: " << i << " ";
                 std::copy(pattId.begin(), pattId.end(), std::ostream_iterator<uint64_t>(std::cout, " "));
                 std::cout << std::endl;
+                std::cout << Debug() << "... patt: " << i << " # goodHitIds: " << goodHitIds.size() << " # goodRoads: " << goodRoads.size() << std::endl;
             }
-
-            Pattern::vuint64_t goodHitIds;  // not the finest granularity, but OK for our purpose
-            for (unsigned l=0; l<hitAddresses.size(); ++l) {
-                const bool* abool = hitAddresses.at(l);
-                if (abool && *abool) { // if the boolean is true
-                    goodHitIds.push_back(hitIds.at(l));
-                }
-                //if (verbose_>2)  std::cout << Debug() << "... ... addr: " << l << " bool: " << (abool && *abool) << std::endl;
-            }
-
-            if ((int) goodHitIds.size() >= (nLayers_-po.nMisses)) {  // FIXME: implement majority logic here
-                goodRoads.push_back(goodHitIds);
-                goodRoads_hash.push_back(patt.hash());
-            }
-            if (verbose_>2)  std::cout << Debug() << "... patt: " << i << " # goodHitIds: " << goodHitIds.size() << " # goodRoads: " << goodRoads.size() << std::endl;
         }
 
         // Remember to reset the map
@@ -312,7 +360,7 @@ int PatternMatcher::readAndMakeTree(TString out_tmp) {
 
         // Write
         if (!goodRoads.empty()) {
-            uint32_t hash = hashFileEvent(chain_->GetCurrentFile()->GetName(), v_event);
+            uint32_t hash = hashFileEvent("patternBank_tmp.root", v_event);  // FIXME: currently not working, will switch to use generator seed instead
             unsigned hash_count = std::count(goodRoads_hash.begin(), goodRoads_hash.end(), hash);
             *vb_trivial = (hash_count > 0);
             *vb_passed = true;
@@ -340,6 +388,10 @@ int PatternMatcher::readAndMakeTree(TString out_tmp) {
                 col /= (ncols / std::min((int) ncols, po.nSubLadders));
                 row /= (nrows / std::min((int) nrows, po.nSubModules));
                 uint64_t hitId = Pattern::encodeHitId(moduleId, col, row);
+                uint16_t hitBit = 1 << 0;
+
+                // Use DCBits
+                Pattern::encodeDCBit(nDCBits_, hitId, hitBit);
 
                 for (unsigned ll=0; ll<goodRoads.size(); ++ll) {
                     unsigned count = std::count(goodRoads.at(ll).begin(), goodRoads.at(ll).end(), hitId);
@@ -348,11 +400,11 @@ int PatternMatcher::readAndMakeTree(TString out_tmp) {
                         vb_modPassed->at(l) = true;
                         vb_hitPasseds->at(l).at(m) = true;
                         break;
+
                     } else {
                         // do nothing
                     }
                 }
-
             }
         }
 
@@ -368,6 +420,7 @@ int PatternMatcher::readAndMakeTree(TString out_tmp) {
 }
 
 // _____________________________________________________________________________
+// Merge input source and results
 int PatternMatcher::writeTree(TString out) {
     if (!out.EndsWith(".root")) {
         std::cout << Error() << "Output filename must be .root" << std::endl;
@@ -412,7 +465,13 @@ int PatternMatcher::writeTree(TString out) {
     // The clone should not delete any shared i/o buffers.
     ResetDeleteBranches(ttree);
 
+    ttree->Branch("TTStubs_trivial"   , &(vb_trivial));  // a trivial match happens when an event is matched by the pattern generated from itself
+    ttree->Branch("TTStubs_passed"    , &(vb_passed));
+    ttree->Branch("TTStubs_modPassed" , &(vb_modPassed));
+    ttree->Branch("TTStubs_hitPasseds", &(vb_hitPasseds));
 
+    // _________________________________________________________________________
+    // Loop over all events
     for (Long64_t ievt=0; ievt<nEvents_; ++ievt) {
         chain_->GetEntry(ievt);
         ttree_tmp->GetEntry(ievt);

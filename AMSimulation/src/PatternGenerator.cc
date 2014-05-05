@@ -3,6 +3,33 @@
 
 static const unsigned MAX_SECTOR = 6 * 8;
 
+void PatternGenerator::uniquifyPatterns() {
+    goodPatterns_.clear();
+
+    PatternIdIndexMap patternIdMap;  // key: patternId, value: index in goodPatterns_
+    for (unsigned i=0; i<allPatterns_.size(); ++i) {
+        const Pattern& patt = allPatterns_.at(i);
+        const Pattern::pattern8_t& pattId = patt.getPatternId();
+
+        PatternIdIndexMap::const_iterator found = patternIdMap.find(pattId);
+        if (found == patternIdMap.end()) {  // if not exist, insert the pattern
+            goodPatterns_.push_back(patt);
+            patternIdMap.insert(std::make_pair(pattId, goodPatterns_.size()-1) );
+
+        } else {  // if exist, increase the frequency, update DC bit
+            uint32_t index = found->second;
+            goodPatterns_.at(index).touch();
+
+            // Also update hit bit
+            for (int l=0; l<nLayers_; ++l) {
+                uint16_t hitBit = goodPatterns_.at(index).getHitBit(l);
+                hitBit |= patt.getHitBit(l);
+                goodPatterns_.at(index).setHitBit(l, hitBit);
+            }
+        }
+    }
+}
+
 
 // _____________________________________________________________________________
 // Read and parse the trigger sector csv file
@@ -62,6 +89,7 @@ int PatternGenerator::readFile(TString src) {
         ifstream ifs(src);
         while (std::getline(ifs,line)) {
             TString tstring(line);
+            tstring.ReplaceAll(" ","");  // strip white space
             if (!tstring.BeginsWith("#") && tstring.EndsWith(".root")) {
                 if (verbose_)  std::cout << Info() << "Opening " << tstring << std::endl;
                 chain_->Add(tstring);
@@ -147,6 +175,8 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
     ResetDeleteBranches(ttree);
 
 
+    // _________________________________________________________________________
+    // Loop over all events
     Long64_t nPassed = 0;
     for (Long64_t ievt=0; ievt<nEvents_; ++ievt) {
         chain_->GetEntry(ievt);
@@ -155,7 +185,7 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " [# patterns: " << allPatterns_.size() << "]" << std::endl;
 
         if (!nstubs) {  // skip if no stub
-            if (!filter_) {
+            if (!filter_) {  // keep all events regardless
                 ++nPassed;
                 ttree->Fill();
             }
@@ -224,7 +254,7 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
             assert(nhits > 0);
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
 
-            // Check sim info
+            // Check sim info of stub
             sim = (vb_trkId->at(l) == trkId);
             if (!sim && filter_)
                 keepstub = false;
@@ -234,11 +264,12 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
 
                 if (verbose_>2)  std::cout << Debug() << "... ... ... hit: " << m << " col: " << vb_hitCols->at(l).at(m) << " row: " << vb_hitRows->at(l).at(m) << " trkId: " << vb_hitTrkIds->at(l).at(m) << std::endl;
 
+                // Check sim info of hit
                 sim = (vb_hitTrkIds->at(l).at(m) == trkId);
                 if (!sim && filter_)
                     keephit = false;
 
-                if (keephit) {  // only need one hit
+                if (keephit) {  // Only need one hit
                     // Keep and move it to be the first element
                     vb_hitCols->at(l).at(0)    = vb_hitCols->at(l).at(m);
                     vb_hitRows->at(l).at(0)    = vb_hitRows->at(l).at(m);
@@ -246,10 +277,15 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
                     break;
                 }
             }
-            vb_hitCols->at(l)  .resize(1);  // only need one hit
+            // Only need one hit
+            vb_hitCols->at(l)  .resize(1);
             vb_hitRows->at(l)  .resize(1);
             vb_hitTrkIds->at(l).resize(1);
             vb_nhits->at(l)    = 1;
+
+            // Check sim info of hit
+            if (!sim && filter_)
+                keepstub = false;
 
             // Check module id
             unsigned count = std::count(goodLayerModules.begin(), goodLayerModules.end(), moduleId);
@@ -280,14 +316,10 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
         require = ((int) ngoodstubs >= nLayers_);
         if (!require && filter_)
             keep = false;
+        if (!keep)  //  do not keep any stub
+            ngoodstubs = 0;
 
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " keep? " << keep << std::endl;
-
-        if (keep) {
-            ++nPassed;
-        } else {  // do not keep any stub
-            ngoodstubs = 0;
-        }
 
         vb_iModCols ->resize(ngoodstubs);
         vb_iModRows ->resize(ngoodstubs);
@@ -301,11 +333,12 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
         vb_simPhi   ->resize(ngoodstubs);
         vb_trkId    ->resize(ngoodstubs);
 
+        ++nPassed;
         ttree->Fill();
     }
     if (verbose_)  std::cout << Info() << "Processed " << nEvents_ << " events, kept " << nPassed << " events." << std::endl;
 
-    //assert(ttree->GetEntries() == nEvents_);
+    assert(ttree->GetEntries() == nPassed);
     tfile->Write();
     delete ttree;
     delete tfile;
@@ -313,6 +346,7 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
 }
 
 // _____________________________________________________________________________
+// Make the patterns
 int PatternGenerator::makeTree(TString out_tmp) {
     if (!out_tmp.EndsWith(".root")) {
         std::cout << Error() << "Output filename must be .root" << std::endl;
@@ -370,13 +404,15 @@ int PatternGenerator::makeTree(TString out_tmp) {
     chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
     chain_->SetBranchAddress("event"            , &(v_event));
 
-
     allPatterns_.clear();
     if (nEvents_ >= (Long64_t) allPatterns_.max_size()) {
         std::cout << Error() << "Number of events is more than the max_size of a std::vector." << std::endl;
         return 1;
     }
 
+
+    // _________________________________________________________________________
+    // Loop over all events
     Long64_t nPassed = 0;
     for (Long64_t ievt=0; ievt<nEvents_; ++ievt) {
         chain_->GetEntry(ievt);
@@ -390,13 +426,13 @@ int PatternGenerator::makeTree(TString out_tmp) {
 
         // Loop over reconstructed stubs
         Pattern::vuint64_t goodHitIds;
+        Pattern::vuint16_t goodHitBits;
         for (unsigned l=0; l<nstubs; ++l) {
             unsigned moduleId = vb_modId->at(l);
             unsigned ncols = vb_iModCols->at(l);
             unsigned nrows = vb_iModRows->at(l);
             unsigned nhits = vb_nhits->at(l);
             assert(nhits == 1);
-            //int trkId = vb_trkId->at(l);
             int col = vb_hitCols->at(l).at(0);
             int row = vb_hitRows->at(l).at(0);
 
@@ -404,11 +440,16 @@ int PatternGenerator::makeTree(TString out_tmp) {
             col /= (ncols / std::min((int) ncols, po.nSubLadders));
             row /= (nrows / std::min((int) nrows, po.nSubModules));
             uint64_t hitId = Pattern::encodeHitId(moduleId, col, row);
+            uint16_t hitBit = 1 << 0;
+
+            // Use DCBits
+            Pattern::encodeDCBit(nDCBits_, hitId, hitBit);
 
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " #0 hitId: " << hitId << " col: " << col << " row: " << row << " trkId: " << vb_hitTrkIds->at(l).at(0) << std::endl;
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " #0 hitId: " << hitId << " hitBit: " << hitBit << " col: " << col << " row: " << row << " trkId: " << vb_hitTrkIds->at(l).at(0) << std::endl;
 
             goodHitIds.push_back(hitId);
+            goodHitBits.push_back(hitBit);
         }
         if (verbose_>2) {
             std::cout << Debug() << "... evt: " << ievt << " # goodHitIds: " << goodHitIds.size() << " {";
@@ -417,24 +458,36 @@ int PatternGenerator::makeTree(TString out_tmp) {
         }
 
 
+        // Initialize a pattern
+        uint32_t hash = hashFileEvent(chain_->GetCurrentFile()->GetName(), v_event);  // FIXME: currently not working, will switch to use generator seed instead
+        Pattern patt(nLayers_, nDCBits_, hash);
+
         // Only consider up to the first nLayers_
-        uint32_t hash = hashFileEvent(chain_->GetCurrentFile()->GetName(), v_event);  // FIXME: use generator seed instead
-        Pattern patt(nLayers_, hash);
         for (int l=0; l<nLayers_; ++l) {
-            if (l==(int) goodHitIds.size())  break;  // avoid problem when goodHitIds.size() < nLayers_
-            uint64_t hitId = goodHitIds.at(l);
+            if (l==(int) goodHitIds.size())  break;  // when filter_ is false, goodHitIds.size() can be less than nLayers_
+            patt.setHitId(l, goodHitIds.at(l));
+            patt.setHitBit(l, goodHitBits.at(l));
+        }
 
-            HitIdBoolMap::const_iterator found = hitIdMap_.find(hitId);
+        patt.ready();
+
+        for (int l=0; l<nLayers_; ++l) {
+            uint64_t hitId = patt.getHitId(l);
+            uint16_t hitBit = patt.getHitBit(l);
+            if (hitId == 0)  continue;  // avoid zero
+            assert(hitBit > 0);
+
+            //HitIdBoolMap::const_iterator found = hitIdMap_.find(hitId);
+            HitIdShortMap::const_iterator found = hitIdMap_.find(hitId);
             if (found == hitIdMap_.end()) {  // if not exist, insert the hitId
-                std::shared_ptr<bool> abool(new bool(false));
-                hitIdMap_.insert(std::make_pair(hitId, abool) );
-                patt.setHit(l, hitId, abool.get());  // the address of the bool
+                //std::shared_ptr<bool> abool(new bool(false));
+                //hitIdMap_.insert(std::make_pair(hitId, abool) );
 
-            } else {  // if exist, retrieve the hitId
-                patt.setHit(l, hitId, found->second.get());  // the address of the bool
+                std::shared_ptr<uint16_t> ashort(new uint16_t(false));
+                hitIdMap_.insert(std::make_pair(hitId, ashort) );
             }
 
-            if (verbose_>2)  std::cout << Debug() << "... ... bin: " << l << " hitId: " << hitId << " # hitIds: " << hitIdMap_.size() << std::endl;
+            if (verbose_>2)  std::cout << Debug() << "... ... bin: " << l << " hitId: " << hitId << " hitBit: " << hitBit << " # hitIds: " << hitIdMap_.size() << std::endl;
             if (verbose_>2)  std::cout << Debug() << "... ... bin: " << l << " lay: " << Pattern::decodeHitLayer(hitId) << " lad: " << Pattern::decodeHitLadder(hitId) << " mod: " << Pattern::decodeHitModule(hitId) << " col: " << Pattern::decodeHitSubLadder(hitId) << " row: " << Pattern::decodeHitSubModule(hitId) << std::endl;
         }
 
@@ -442,27 +495,18 @@ int PatternGenerator::makeTree(TString out_tmp) {
         allPatterns_.push_back(patt);  // save the patterns
     }
 
-    // Process the patterns with DC bits, sector customizations, etc...
-    goodPatterns_.clear();
-    for (unsigned ievt=0; ievt<allPatterns_.size(); ++ievt) {
-        Pattern& patt = allPatterns_.at(ievt);  // pass by reference
+    // Keep only unique patterns
+    uniquifyPatterns();  // do this after allPatterns_ is populated
+    for (unsigned i=0; i<goodPatterns_.size(); ++i) {
+        const Pattern& patt = goodPatterns_.at(i);
         const Pattern::pattern8_t& pattId = patt.getPatternId();
-
-        PatternIdIndexMap::const_iterator found = patternIdMap_.find(pattId);
-        if (found == patternIdMap_.end()) {  // if not exist, insert the pattern
-            goodPatterns_.push_back(patt);
-            patternIdMap_.insert(std::make_pair(pattId, goodPatterns_.size()-1) );
-
-        } else {  // if exist, increase the frequency
-            uint32_t index = found->second;
-            goodPatterns_.at(index).touch();
-        }
         if (verbose_>2) {
-            std::cout << Debug() << "... patt: " << ievt << " ";
+            std::cout << Debug() << "... patt: " << i << " ";
             std::copy(pattId.begin(), pattId.end(), std::ostream_iterator<uint64_t>(std::cout, " "));
             std::cout << " freq: " << patt.frequency() << std::endl;
         }
     }
+
     if (verbose_>1)  std::cout << Debug() << "Identified " << hitIdMap_.size() << " possible 'hitId's." << std::endl;
     if (verbose_)  std::cout << Info() << "Made " << goodPatterns_.size() << " final patterns, out of " << allPatterns_.size() << " inclusive, full-resolution patterns." << std::endl;
 
@@ -484,23 +528,27 @@ int PatternGenerator::writeTree(TString out) {
     TFile* tfile = TFile::Open(out, "RECREATE");
     TTree* ttree = new TTree("patternBank", "");
 
-    int nLayers = nLayers_;
+    uint32_t nLayers = nLayers_;
+    uint32_t nDCBits = nDCBits_;
     uint32_t hash;
     uint32_t frequency;
     uint64_t pattern[nLayers_];
-    uint8_t bit[nLayers_];
+    uint16_t bit[nLayers_];
 
-    ttree->Branch("nLayers", &nLayers, "nLayers/I");            // I for Int_t
+    ttree->Branch("nLayers", &nLayers, "nLayers/i");            // i for UInt_t
+    ttree->Branch("nDCBits", &nDCBits, "nDCBits/i");            // i for UInt_t
     ttree->Branch("hash", &hash, "hash/i");                     // i for UInt_t
     ttree->Branch("frequency", &frequency, "frequency/i");      // i for UInt_t
     ttree->Branch("pattern", pattern, "pattern[nLayers]/l");    // l for ULong64_t
-    ttree->Branch("bit", bit, "bit[nLayers]/b");                // b for UChar_t
+    ttree->Branch("bit", bit, "bit[nLayers]/s");                // s for UShort_t
 
+    // _________________________________________________________________________
+    // Loop over good patterns
     for (int ievt=0; ievt<nPatterns_; ++ievt) {
         if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7i", ievt) << std::endl;
-        const Pattern& patt = goodPatterns_.at(ievt);
 
-        for (int l=0; l<nLayers_; ++l) {
+        const Pattern& patt = goodPatterns_.at(ievt);
+        for (unsigned l=0; l<nLayers; ++l) {
             pattern[l] = patt.getHitId(l);
             bit[l] = patt.getHitBit(l);
         }
@@ -510,8 +558,16 @@ int PatternGenerator::writeTree(TString out) {
         ttree->Fill();
     }
     assert(ttree->GetEntries() == nPatterns_);
+
+    TTree* ttree2 = new TTree("sector", "");
+    std::map<uint32_t, Pattern::vuint32_t> * ptr_sectorMap_ = &sectorMap_;
+    ttree2->Branch("sectorMap", ptr_sectorMap_);
+    ttree2->Fill();
+    assert(ttree2->GetEntries() == 1);
+
     tfile->Write();
     delete ttree;
+    delete ttree2;
     delete tfile;
     return 0;
 }

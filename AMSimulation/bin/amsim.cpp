@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
         ("bank_nSubModules"   , po::value<int>(&bankOption.nSubModules)->default_value(1024), "Specify # of submodules (a.k.a. superstrips)")
         ("bank_nMisses"       , po::value<int>(&bankOption.nMisses)->default_value(0), "Specify # of allowed misses")
         ("bank_nFakeHits"     , po::value<int>(&bankOption.nFakeHits)->default_value(0), "Specify # of fake hits")
-        ("bank_nDCBits"       , po::value<int>(&bankOption.nDCBits)->default_value(1), "Specify # of DC bits")
+        ("bank_nDCBits"       , po::value<int>(&bankOption.nDCBits)->default_value(0), "Specify # of DC bits")
         ("bank_activeLayers"  , po::value<std::vector<int> >(&bankOption.activeLayers), "Specify active layers")
         ("bank_inactiveLayers", po::value<std::vector<int> >(&bankOption.inactiveLayers), "Specify inactive layers")
         ("bank_sectors"       , po::value<std::vector<int> >(&bankOption.sectors), "Specify sectors (a.k.a.) trigger towers")
@@ -141,6 +141,9 @@ int main(int argc, char **argv) {
     bankOption.nMisses     = std::min(std::max(0, bankOption.nMisses), 3);
     bankOption.nFakeHits   = std::min(std::max(0, bankOption.nFakeHits), 3);
     bankOption.nDCBits     = std::min(std::max(0, bankOption.nDCBits), 10);
+
+    std::cout << Color("magenta") << "Parsed pattern bank options:" << EndColor() << std::endl;
+    std::cout << bankOption << std::endl;
 
     // Calling main functions
     if (vm.count("generateBank")) {

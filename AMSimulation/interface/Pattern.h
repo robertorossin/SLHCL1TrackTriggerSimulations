@@ -15,25 +15,27 @@ namespace slhcl1tt {
 
 class Pattern {
   public:
-    typedef std::vector<uint8_t>    vuint8_t;
+    typedef std::vector<uint16_t>   vuint16_t;
     typedef std::vector<uint32_t>   vuint32_t;
     typedef std::vector<uint64_t>   vuint64_t;
-    typedef std::array<uint64_t, 8> pattern8_t;
+    typedef std::array<uint64_t,8>  pattern8_t;
 
     // Constructor and destructor
-    Pattern(int n, uint32_t h)
-    : nLayers_(n), hash_(h), frequency_(1),
+    Pattern(uint32_t n, uint32_t b, uint32_t h)
+    : nLayers_(n), nDCBits_(b), hash_(h), frequency_(1),
       patternId_(), emptyPatternId_() {
 
-        hitAddresses_.resize(n,0);
-        hitIds_.resize(n,0);
-        hitBits_.resize(n,0);
+        assert(nLayers_ <= 8);  // using 8-element array
+        assert(nDCBits_ <= 4);         // using 16-bit integer
+        hitAddresses_.resize(nLayers_,0);
+        hitIds_.resize(nLayers_,0);
+        hitBits_.resize(nLayers_,1);
     }
     ~Pattern() {}
 
     // Copy constructor
     Pattern(const Pattern& rhs)
-    : nLayers_(rhs.nLayers_), hash_(rhs.hash_), frequency_(rhs.frequency_),
+    : nLayers_(rhs.nLayers_), nDCBits_(rhs.nDCBits_), hash_(rhs.hash_), frequency_(rhs.frequency_),
       patternId_(rhs.patternId_), emptyPatternId_(rhs.emptyPatternId_) {
 
         hitAddresses_ = rhs.hitAddresses_;
@@ -57,10 +59,7 @@ class Pattern {
     }
 
     // Encode moduleId, hit into a hitId
-    static uint64_t encodeHitId(uint32_t moduleId, uint32_t col, uint32_t row) {
-        uint32_t lay = decodeLayer(moduleId);
-        uint32_t lad = decodeLadder(moduleId);
-        uint32_t mod = decodeModule(moduleId);
+    static uint64_t encodeHitId(uint32_t lay, uint32_t lad, uint32_t mod, uint32_t col, uint32_t row) {
         uint64_t id = 0;
         id |= uint64_t(lay & iLayerMask_    ) << iLayerStartBit_     |
               uint64_t(lad & iLadderMask_   ) << iLadderStartBit_    |
@@ -68,6 +67,13 @@ class Pattern {
               uint64_t(col & iSubLadderMask_) << iSubLadderStartBit_ |
               uint64_t(row & iSubModuleMask_) << iSubModuleStartBit_ ;
         return id;
+    }
+
+    static uint64_t encodeHitId(uint32_t moduleId, uint32_t col, uint32_t row) {
+        uint32_t lay = decodeLayer(moduleId);
+        uint32_t lad = decodeLadder(moduleId);
+        uint32_t mod = decodeModule(moduleId);
+        return encodeHitId(lay, lad, mod, col, row);
     }
 
     // Retrieve layer, ladder, module, subladder, submodule from a hitId
@@ -91,46 +97,60 @@ class Pattern {
         return uint64_t(hitId >> iSubModuleStartBit_) & iSubModuleMask_;
     }
 
+    static void encodeDCBit(uint32_t nDCBits, uint64_t& hitId, uint16_t& hitBit) {  // NOTE: pass by reference
+        if (nDCBits == 0)  return;  // don't do anything
+
+        uint32_t lay = decodeHitLayer(hitId);
+        uint32_t lad = decodeHitLadder(hitId);
+        uint32_t mod = decodeHitModule(hitId);
+        uint32_t col = decodeHitSubLadder(hitId);
+        uint32_t row = decodeHitSubModule(hitId);
+
+        // FIXME: only do the submodule, since there's only one DC bit
+        //uint32_t col_mod_n = col % (1 << nDCBits);
+        uint32_t row_mod_n = row % (1 << nDCBits);
+        //col /= (1 << nDCBits);
+        row /= (1 << nDCBits);
+
+        hitId = encodeHitId(lay, lad, mod, col, row);
+        hitBit = (1 << row_mod_n);
+        return;
+    }
+
 
     // Setters
-    void setHit(int l, uint64_t hit, const bool* addr) {
-        assert(l < nLayers_);
-        hitIds_.at(l) = hit;
-        hitAddresses_.at(l) = addr;
+    void setHitAddress(uint32_t l, const uint16_t* addr) { hitAddresses_.at(l) = addr; }
+
+    void setHitId(uint32_t l, uint64_t hit)              { hitIds_.at(l) = hit; }
+    void setHitId(uint32_t l, uint32_t moduleId, uint32_t col, uint32_t row) {
+        setHitId(l, encodeHitId(moduleId, col, row));
     }
 
-    void setHit(int l, uint32_t moduleId, uint32_t col, uint32_t row, const bool* addr) {
-        setHit(l, encodeHitId(moduleId, col, row), addr);
-    }
+    void setHitBit(uint32_t l, uint16_t bit)             { hitBits_.at(l) = bit; }
 
-    void setBit(int l, uint8_t bit) {
-        assert(l < nLayers_);
-        hitBits_.at(l) = bit;
-    }
+    void touch()                                         { ++frequency_; }
 
-    void touch() { ++frequency_; }
+    void resetPatternId()                                { patternId_ = emptyPatternId_; }
+
+    void ready();  // must be called to have correct patternId
 
 
     // Getters
-    const bool* getHitAddress(int l)           const { return hitAddresses_.at(l); }
-    uint64_t getHitId(int l)                   const { return hitIds_.at(l); }
-    uint8_t getHitBit(int l)                   const { return hitBits_.at(l); }
+    const uint16_t* getHitAddress(uint32_t l)      const { return hitAddresses_.at(l); }
+    uint64_t getHitId(uint32_t l)                  const { return hitIds_.at(l); }
+    uint16_t getHitBit(uint32_t l)                 const { return hitBits_.at(l); }
 
-    std::vector<const bool*> getHitAddresses() const { return hitAddresses_; }
-    vuint64_t getHitIds()                      const { return hitIds_; }
-    vuint8_t  getHitBits()                     const { return hitBits_; }
+    std::vector<const uint16_t*> getHitAddresses() const { return hitAddresses_; }
+    vuint64_t getHitIds()                          const { return hitIds_; }
+    vuint16_t getHitBits()                         const { return hitBits_; }
 
-    pattern8_t getPatternId() {
-        if (patternId_ == emptyPatternId_) {
-            vuint64_t hitIds_tmp = hitIds_;
-            hitIds_tmp.resize(8,0);  // pad with zeroes
-            std::copy(hitIds_tmp.begin(), hitIds_tmp.end(), patternId_.begin());
-        }
+    uint32_t hash()                                const { return hash_; }
+    uint32_t frequency()                           const { return frequency_; }
+
+    pattern8_t getPatternId()                      const {
+        assert(patternId_ != emptyPatternId_);
         return patternId_;
     }
-
-    uint32_t hash()       const { return hash_; }
-    uint32_t frequency()  const { return frequency_; }
 
 
     // Constants
@@ -152,18 +172,21 @@ class Pattern {
     static const uint32_t maxNLayers_         = 8;
 
     // This is for a different purpose than the above. To be fixed!
-    static const uint32_t nModuleIds_         = 230000;
-    static const uint32_t nSubModuleIds_      = 1024;
-    static const uint32_t nSubLadderIds_      = 32;
+    //static const uint32_t nModuleIds_         = 230000;
+    //static const uint32_t nSubModuleIds_      = 1024;
+    //static const uint32_t nSubLadderIds_      = 32;
 
   private:
-    int nLayers_;
-    uint32_t hash_;
+    void concatenate();
+
+    uint32_t nLayers_;  // immutable
+    uint32_t nDCBits_;  // immutable
+    uint32_t hash_;     // immutable
     uint32_t frequency_;
-    pattern8_t patternId_, emptyPatternId_;  // only for faster access
-    std::vector<const bool*> hitAddresses_;
+    pattern8_t patternId_, emptyPatternId_;  // concatenated hitIds
+    std::vector<const uint16_t*> hitAddresses_;
     vuint64_t hitIds_;
-    vuint8_t hitBits_;  // for DC bits. 0: L, 1: R, 2: LR, 3: UNUSED
+    vuint16_t hitBits_;  // for DC bits: 0 - 2^16 (=65536 max for nDCBits_=4)
 };
 
 // To sort a collection of patterns using frequency

@@ -22,26 +22,44 @@ using namespace slhcl1tt;
 
 class PatternMatcher {
   public:
-    typedef std::map<uint64_t, std::shared_ptr<bool> > HitIdBoolMap;
+    //typedef std::map<uint64_t, std::shared_ptr<bool> > HitIdBoolMap;
+    typedef std::map<uint64_t, std::shared_ptr<uint16_t> > HitIdShortMap;
 
     PatternMatcher(PatternBankOption option)
-    : po(option), nLayers_(po.nLayers),
+    : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits),
       nEvents_(999999999),
       verbose_(1) {
 
         chain_ = new TChain("ntupler/tree");
+
+        // Hardcoded layer information
+        if (nLayers_ <= 6) {
+            layerMap_ = std::map<uint32_t, uint32_t> {
+                {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
+                {11,11}, {12,10}, {13,9}, {14,8}, {15,7},
+                {18,11}, {19,10}, {20,9}, {21,8}, {22,7}
+            };
+        } else {  // otherwise it's not merged
+            layerMap_ = std::map<uint32_t, uint32_t> {
+                {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
+                {11,11}, {12,12}, {13,13}, {14,14}, {15,15},
+                {18,11}, {19,12}, {20,13}, {21,14}, {22,15}
+            };
+        };
     }
 
     ~PatternMatcher() {}
 
     // Setters
     void setNLayers(int n)        { nLayers_ = n; }
+    void setNDCBits(int n)        { nDCBits_ = n; }
 
     void setNEvents(int n)        { if (n != -1)  nEvents_ = std::max(0, n); }
     void setVerbosity(int n)      { verbose_ = n; }
 
     // Getters
     int getNLayers()        const { return nLayers_; }
+    int getNDCBits()        const { return nDCBits_; }
 
 
     // Functions
@@ -68,6 +86,7 @@ class PatternMatcher {
   private:
     // Configurations
     int nLayers_;
+    int nDCBits_;
 
     // Program options
     int nEvents_;
@@ -77,7 +96,11 @@ class PatternMatcher {
     TChain * chain_;
     std::vector<Pattern> patterns_;
 
-    HitIdBoolMap hitIdMap_;           // key: hitId, value: pointer to a boolean
+    //HitIdBoolMap hitIdMap_;           // key: hitId, value: pointer to a boolean
+    HitIdShortMap hitIdMap_;          // key: hitId, value: pointer to a short int
+
+    std::map<uint32_t, uint32_t> layerMap_;  // defines layer merging
+    std::map<uint32_t, Pattern::vuint32_t> sectorMap_;
 };
 
 #endif
