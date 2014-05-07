@@ -1,4 +1,4 @@
-RES="crab_0_140505_175839/res"
+RES="crab_0_140508_180531/res"
 OUT="/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results"
 FNAME="SingleMuPlusMinus_OneOverPt_vz0_20140420.root"
 
