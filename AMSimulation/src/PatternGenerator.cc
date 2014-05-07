@@ -482,7 +482,7 @@ int PatternGenerator::makeTree(TString out_tmp) {
                 //std::shared_ptr<bool> abool(new bool(false));
                 //hitIdMap_.insert(std::make_pair(hitId, abool) );
 
-                std::shared_ptr<uint16_t> ashort(new uint16_t(false));
+                std::shared_ptr<uint16_t> ashort(new uint16_t(0));
                 hitIdMap_.insert(std::make_pair(hitId, ashort) );
             }
 

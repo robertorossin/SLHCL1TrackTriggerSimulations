@@ -12,6 +12,8 @@ using namespace slhcl1tt;
 #include "TString.h"
 #include "TROOT.h"
 
+#include <unordered_map>
+
 
 // FIXME: missing settings in PatternGenerator
 // FIXME: majority logic
@@ -24,6 +26,9 @@ class PatternMatcher {
   public:
     //typedef std::map<uint64_t, std::shared_ptr<bool> > HitIdBoolMap;
     typedef std::map<uint64_t, std::shared_ptr<uint16_t> > HitIdShortMap;
+
+    typedef std::pair<uint16_t, uint32_t> uint16_32_pair;
+    typedef std::unordered_multimap<uint64_t, uint16_32_pair> HitIdUIntPairMap;
 
     PatternMatcher(PatternBankOption option)
     : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits),
@@ -68,10 +73,12 @@ class PatternMatcher {
     int readPatterns(TString src);
 
     int putPatterns();
+    int putPatternsFast();
 
     int readFile(TString src);
 
     int readAndMakeTree(TString out_tmp);  // make a temporary tree
+    int readAndMakeTreeFast(TString out_tmp);  // make a temporary tree
 
     int writeTree(TString out);
 
@@ -98,6 +105,7 @@ class PatternMatcher {
 
     //HitIdBoolMap hitIdMap_;           // key: hitId, value: pointer to a boolean
     HitIdShortMap hitIdMap_;          // key: hitId, value: pointer to a short int
+    HitIdUIntPairMap hitIdMapFast_;   // key: hitId, value: pair<hitBit,pattern number>
 
     std::map<uint32_t, uint32_t> layerMap_;  // defines layer merging
     std::map<uint32_t, Pattern::vuint32_t> triggerTowerMap_;
