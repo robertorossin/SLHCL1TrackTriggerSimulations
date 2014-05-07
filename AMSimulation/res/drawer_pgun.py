@@ -738,12 +738,12 @@ if sections["clusters"]:
 
     params = [ ("TTClusters_trkId", sBase03, ssBase3, "TTClusters_trkId", "") ]
     binning = ("Cluster simTrack track id", 50, 0, 200)
-    histos = book(params, binning); project(params, histos, logy=True); draw(params, histos)
+    histos = book(params, binning); project(params, histos); draw(params, histos, logy=True)
     save(imgdir, params[0][0])
 
     params = [ ("TTClusters_tpId", sBase03, ssBase3, "TTClusters_tpId", "") ]
     binning = ("Cluster trkParticle id", 50, 0, 200)
-    histos = book(params, binning); project(params, histos, logy=True); draw(params, histos)
+    histos = book(params, binning); project(params, histos); draw(params, histos, logy=True)
     save(imgdir, params[0][0])
 
     params = [ ("TTClusters_pdgId", sBase03, ssBase3, "TTClusters_pdgId", "") ]
@@ -948,12 +948,12 @@ if sections["stubs"]:
 
     params = [ ("TTStubs_trkId", sBase03, ssBase3, "TTStubs_trkId", "") ]
     binning = ("Stub simTrack track id", 50, 0, 200)
-    histos = book(params, binning); project(params, histos, logy=True); draw(params, histos)
+    histos = book(params, binning); project(params, histos); draw(params, histos, logy=True)
     save(imgdir, params[0][0])
 
     params = [ ("TTStubs_tpId", sBase03, ssBase3, "TTStubs_tpId", "") ]
     binning = ("Stub trkParticle id", 50, 0, 200)
-    histos = book(params, binning); project(params, histos, logy=True); draw(params, histos)
+    histos = book(params, binning); project(params, histos); draw(params, histos, logy=True)
     save(imgdir, params[0][0])
 
     params = [ ("TTStubs_pdgId", sBase03, ssBase3, "TTStubs_pdgId", "") ]

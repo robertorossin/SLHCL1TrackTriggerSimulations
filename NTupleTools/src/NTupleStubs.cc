@@ -127,6 +127,7 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >               (prefixClus_ + "iModPitchX"     + suffix_);
     produces<std::vector<float> >               (prefixClus_ + "iModPitchY"     + suffix_);
     produces<std::vector<bool> >                (prefixClus_ + "barrel"         + suffix_);
+    produces<std::vector<bool> >                (prefixClus_ + "psmodule"       + suffix_);
     produces<std::vector<unsigned> >            (prefixClus_ + "modId"          + suffix_);
     produces<std::vector<unsigned> >            (prefixClus_ + "geoId"          + suffix_);
     produces<std::vector<unsigned> >            (prefixClus_ + "stack"          + suffix_);
@@ -172,6 +173,7 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >               (prefixStub_ + "iModPitchX"     + suffix_);
     produces<std::vector<float> >               (prefixStub_ + "iModPitchY"     + suffix_);
     produces<std::vector<bool> >                (prefixStub_ + "barrel"         + suffix_);
+    produces<std::vector<bool> >                (prefixStub_ + "psmodule"       + suffix_);
     produces<std::vector<unsigned> >            (prefixStub_ + "modId"          + suffix_);
     produces<std::vector<unsigned> >            (prefixStub_ + "geoId0"         + suffix_);
     produces<std::vector<unsigned> >            (prefixStub_ + "geoId1"         + suffix_);
@@ -190,7 +192,6 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >               (prefixStub_ + "trigBend"       + suffix_);
     produces<std::vector<float> >               (prefixStub_ + "separation"     + suffix_);
     produces<std::vector<int> >                 (prefixStub_ + "detWindow"      + suffix_);
-    produces<std::vector<bool> >                (prefixStub_ + "psmodule"       + suffix_);
     produces<std::vector<bool> >                (prefixStub_ + "isGenuine"      + suffix_);
     produces<std::vector<bool> >                (prefixStub_ + "isUnknown"      + suffix_);
     produces<std::vector<bool> >                (prefixStub_ + "isCombinatoric" + suffix_);
@@ -360,6 +361,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> >              vc_iModPitchX       (new std::vector<float>());
     std::auto_ptr<std::vector<float> >              vc_iModPitchY       (new std::vector<float>());
     std::auto_ptr<std::vector<bool> >               vc_barrel           (new std::vector<bool>());
+    std::auto_ptr<std::vector<bool> >               vc_psmodule         (new std::vector<bool>());
     std::auto_ptr<std::vector<unsigned> >           vc_modId            (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> >           vc_geoId            (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> >           vc_stack            (new std::vector<unsigned>());
@@ -405,6 +407,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> >              vb_iModPitchX       (new std::vector<float>());
     std::auto_ptr<std::vector<float> >              vb_iModPitchY       (new std::vector<float>());
     std::auto_ptr<std::vector<bool> >               vb_barrel           (new std::vector<bool>());
+    std::auto_ptr<std::vector<bool> >               vb_psmodule         (new std::vector<bool>());
     std::auto_ptr<std::vector<unsigned> >           vb_modId            (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> >           vb_geoId0           (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> >           vb_geoId1           (new std::vector<unsigned>());
@@ -423,7 +426,6 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> >              vb_trigBend         (new std::vector<float>());
     std::auto_ptr<std::vector<float> >              vb_separation       (new std::vector<float>());
     std::auto_ptr<std::vector<int> >                vb_detWindow        (new std::vector<int>());
-    std::auto_ptr<std::vector<bool> >               vb_psmodule         (new std::vector<bool>());
     std::auto_ptr<std::vector<bool> >               vb_isGenuine        (new std::vector<bool>());
     std::auto_ptr<std::vector<bool> >               vb_isUnknown        (new std::vector<bool>());
     std::auto_ptr<std::vector<bool> >               vb_isCombinatoric   (new std::vector<bool>());
@@ -591,6 +593,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vc_iModPitchX->push_back(iModulePitchX);
                 vc_iModPitchY->push_back(iModulePitchY);
                 vc_barrel->push_back(isBarrel);
+                vc_psmodule->push_back(theStackedGeometry->isPSModule(detId));
                 vc_modId->push_back(moduleId);
                 vc_geoId->push_back(geoId.rawId());
                 vc_stack->push_back(stack);
@@ -768,6 +771,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vb_iModPitchX->push_back(iModulePitchX);
                 vb_iModPitchY->push_back(iModulePitchY);
                 vb_barrel->push_back(isBarrel);
+                vb_psmodule->push_back(theStackedGeometry->isPSModule(detId));
                 vb_modId->push_back(moduleId);
                 vb_geoId0->push_back(geoId0.rawId());
                 vb_geoId1->push_back(geoId1.rawId());
@@ -784,7 +788,6 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vb_trigBend->push_back(it->getTriggerBend());           // in full-strip units
                 vb_separation->push_back(separation);
                 vb_detWindow->push_back(theStackedGeometry->getDetUnitWindow(detId));
-                vb_psmodule->push_back(theStackedGeometry->isPSModule(detId));
 
                 /// Sim links for the hits
                 if (pixelDigiSimLinks.isValid()) {
@@ -952,6 +955,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vc_iModPitchX    , prefixClus_ + "iModPitchX"     + suffix_);
     iEvent.put(vc_iModPitchY    , prefixClus_ + "iModPitchY"     + suffix_);
     iEvent.put(vc_barrel        , prefixClus_ + "barrel"         + suffix_);
+    iEvent.put(vc_psmodule      , prefixClus_ + "psmodule"       + suffix_);
     iEvent.put(vc_modId         , prefixClus_ + "modId"          + suffix_);
     iEvent.put(vc_geoId         , prefixClus_ + "geoId"          + suffix_);
     iEvent.put(vc_stack         , prefixClus_ + "stack"          + suffix_);
@@ -997,6 +1001,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vb_iModPitchX    , prefixStub_ + "iModPitchX"     + suffix_);
     iEvent.put(vb_iModPitchY    , prefixStub_ + "iModPitchY"     + suffix_);
     iEvent.put(vb_barrel        , prefixStub_ + "barrel"         + suffix_);
+    iEvent.put(vb_psmodule      , prefixStub_ + "psmodule"       + suffix_);
     iEvent.put(vb_modId         , prefixStub_ + "modId"          + suffix_);
     iEvent.put(vb_geoId0        , prefixStub_ + "geoId0"         + suffix_);
     iEvent.put(vb_geoId1        , prefixStub_ + "geoId1"         + suffix_);
@@ -1015,7 +1020,6 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vb_trigBend      , prefixStub_ + "trigBend"       + suffix_);
     iEvent.put(vb_separation    , prefixStub_ + "separation"     + suffix_);
     iEvent.put(vb_detWindow     , prefixStub_ + "detWindow"      + suffix_);
-    iEvent.put(vb_psmodule      , prefixStub_ + "psmodule"       + suffix_);
     iEvent.put(vb_isGenuine     , prefixStub_ + "isGenuine"      + suffix_);
     iEvent.put(vb_isUnknown     , prefixStub_ + "isUnknown"      + suffix_);
     iEvent.put(vb_isCombinatoric, prefixStub_ + "isCombinatoric" + suffix_);
