@@ -23,7 +23,7 @@ struct PatternBankOption {
     int nDCBits;
     std::vector<int> activeLayers;
     std::vector<int> inactiveLayers;
-    std::vector<int> sectors;
+    std::vector<int> triggerTowers;
 };
 
 std::ostream& operator<<(std::ostream& o, const PatternBankOption& p);

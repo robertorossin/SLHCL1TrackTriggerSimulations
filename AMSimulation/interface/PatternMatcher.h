@@ -100,7 +100,7 @@ class PatternMatcher {
     HitIdShortMap hitIdMap_;          // key: hitId, value: pointer to a short int
 
     std::map<uint32_t, uint32_t> layerMap_;  // defines layer merging
-    std::map<uint32_t, Pattern::vuint32_t> sectorMap_;
+    std::map<uint32_t, Pattern::vuint32_t> triggerTowerMap_;
 };
 
 #endif

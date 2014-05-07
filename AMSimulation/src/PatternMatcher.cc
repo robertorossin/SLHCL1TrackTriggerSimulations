@@ -211,8 +211,7 @@ int PatternMatcher::readAndMakeTree(TString out_tmp) {
 
     // For writing
     TFile* tfile = TFile::Open(out_tmp, "RECREATE");
-    tfile->mkdir("ntupler");
-    tfile->cd("ntupler");
+    tfile->mkdir("ntupler")->cd();
 
     TTree *ttree = (TTree*) chain_->CloneTree(0); // Do no copy the data yet
     // The clone should not delete any shared i/o buffers.
@@ -458,8 +457,7 @@ int PatternMatcher::writeTree(TString out) {
 
     // For writing
     TFile* tfile = TFile::Open(out, "RECREATE");
-    tfile->mkdir("ntupler");
-    tfile->cd("ntupler");
+    tfile->mkdir("ntupler")->cd();
 
     TTree *ttree = (TTree*) chain_->CloneTree(0); // Do no copy the data yet
     // The clone should not delete any shared i/o buffers.

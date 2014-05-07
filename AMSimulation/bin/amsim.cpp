@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
         ("bank_nDCBits"       , po::value<int>(&bankOption.nDCBits)->default_value(0), "Specify # of DC bits")
         ("bank_activeLayers"  , po::value<std::vector<int> >(&bankOption.activeLayers), "Specify active layers")
         ("bank_inactiveLayers", po::value<std::vector<int> >(&bankOption.inactiveLayers), "Specify inactive layers")
-        ("bank_sectors"       , po::value<std::vector<int> >(&bankOption.sectors), "Specify sectors (a.k.a.) trigger towers")
+        ("bank_triggerTowers" , po::value<std::vector<int> >(&bankOption.triggerTowers), "Specify trigger towers (a.k.a. sectors)")
         ;
 
     // Hidden options, will be allowed both on command line and in config file,

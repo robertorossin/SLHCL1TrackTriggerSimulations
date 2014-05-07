@@ -13,13 +13,12 @@ using namespace slhcl1tt;
 #include "TRandom3.h"
 
 
-// FIXME: incorporate sector ID
-// FIXME: implement DC bit
+// FIXME: incorporate trigger tower sectorization
 // FIXME: fake hits
 // FIXME: bank merging
 
 // SETTINGS: DC bits, superstrip size, etc
-// INPUT   : TTree with moduleId, hitId, sim info + sector file
+// INPUT   : TTree with moduleId, hitId, sim info + trigger tower file
 // OUTPUT  : TTree with active moduleId, and patterns
 
 class PatternGenerator {
@@ -75,7 +74,7 @@ class PatternGenerator {
     // Functions
     void uniquifyPatterns();
 
-    int readSectorFile(TString src);
+    int readTriggerTowerFile(TString src);
 
     int readFile(TString src);
 
@@ -113,7 +112,7 @@ class PatternGenerator {
     HitIdShortMap hitIdMap_;          // key: hitId, value: pointer to a boolean
 
     std::map<uint32_t, uint32_t> layerMap_;  // defines layer merging
-    std::map<uint32_t, Pattern::vuint32_t> sectorMap_;
+    std::map<uint32_t, Pattern::vuint32_t> triggerTowerMap_;
 };
 
 #endif

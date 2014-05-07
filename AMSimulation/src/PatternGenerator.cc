@@ -1,7 +1,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternGenerator.h"
 
 
-static const unsigned MAX_SECTOR = 6 * 8;
+static const unsigned MAX_TRIGGERTOWER = 6 * 8;
 
 void PatternGenerator::uniquifyPatterns() {
     goodPatterns_.clear();
@@ -32,8 +32,8 @@ void PatternGenerator::uniquifyPatterns() {
 
 
 // _____________________________________________________________________________
-// Read and parse the trigger sector csv file
-int PatternGenerator::readSectorFile(TString src) {
+// Read and parse the trigger tower csv file
+int PatternGenerator::readTriggerTowerFile(TString src) {
     Pattern::vuint32_t values;
     if (src.EndsWith(".csv")) {
         if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
@@ -54,24 +54,24 @@ int PatternGenerator::readSectorFile(TString src) {
     }
 
     if (values.empty()) {
-        std::cout << Error() << "Failed to read the sector file: " << src << std::endl;
+        std::cout << Error() << "Failed to read the trigger tower file: " << src << std::endl;
         return 1;
     }
 
-    uint32_t sectorId = 0;
+    uint32_t triggerTowerId = 0;
     for (unsigned i=0; i<values.size(); ++i) {
         if (i != 0) {  // skip the first index
             if (values.at(i-1) <= 6 && values.at(i) <= 8) {  // eta_idx, phi_idx
-                sectorId = values.at(i-1) * 10 + values.at(i);
-                sectorMap_.insert(std::make_pair(sectorId, Pattern::vuint32_t()));
+                triggerTowerId = values.at(i-1) * 10 + values.at(i);
+                triggerTowerMap_.insert(std::make_pair(triggerTowerId, Pattern::vuint32_t()));
             } else if (values.at(i) > 10000) {
-                sectorMap_[sectorId].push_back(values.at(i));
+                triggerTowerMap_[triggerTowerId].push_back(values.at(i));
             }
         }
     }
 
-    if (sectorMap_.size() != MAX_SECTOR) {
-        std::cout << Error() << "Failed to get all sectors from the sector file: " << src << std::endl;
+    if (triggerTowerMap_.size() != MAX_TRIGGERTOWER) {
+        std::cout << Error() << "Failed to get all trigger towers from the trigger tower file: " << src << std::endl;
         return 1;
     }
     return 0;
@@ -167,8 +167,7 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
 
     // For writing
     TFile* tfile = TFile::Open(out_tmp, "RECREATE");
-    tfile->mkdir("ntupler");
-    tfile->cd("ntupler");
+    tfile->mkdir("ntupler")->cd();
 
     TTree *ttree = (TTree*) chain_->CloneTree(0); // Do no copy the data yet
     // The clone should not delete any shared i/o buffers.
@@ -559,9 +558,9 @@ int PatternGenerator::writeTree(TString out) {
     }
     assert(ttree->GetEntries() == nPatterns_);
 
-    TTree* ttree2 = new TTree("sector", "");
-    std::map<uint32_t, Pattern::vuint32_t> * ptr_sectorMap_ = &sectorMap_;
-    ttree2->Branch("sectorMap", ptr_sectorMap_);
+    TTree* ttree2 = new TTree("triggerTower", "");
+    std::map<uint32_t, Pattern::vuint32_t> * ptr_triggerTowerMap_ = &triggerTowerMap_;
+    ttree2->Branch("triggerTowerMap", ptr_triggerTowerMap_);
     ttree2->Fill();
     assert(ttree2->GetEntries() == 1);
 
@@ -578,7 +577,7 @@ int PatternGenerator::run(TString src, TString out, TString layout) {
     int exitcode = 0;
     Timing(1);
 
-    exitcode = readSectorFile(layout);
+    exitcode = readTriggerTowerFile(layout);
     if (exitcode)  return exitcode;
     Timing();
 

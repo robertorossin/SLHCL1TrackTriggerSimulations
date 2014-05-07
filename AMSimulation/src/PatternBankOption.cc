@@ -11,8 +11,8 @@ std::ostream& operator<<(std::ostream& o, const PatternBankOption& p) {
     o << "inactiveLayers: ";
     std::copy(p.inactiveLayers.begin(), p.inactiveLayers.end(), std::ostream_iterator<int>(o, " "));
     o << std::endl;
-    o << "sectors: ";
-    std::copy(p.sectors.begin(), p.sectors.end(), std::ostream_iterator<int>(o, " "));
+    o << "triggerTowers: ";
+    std::copy(p.triggerTowers.begin(), p.triggerTowers.end(), std::ostream_iterator<int>(o, " "));
     o << std::endl;
     return o;
 }
