@@ -68,7 +68,7 @@ sections["clusters"   ] = False
 sections["stubs"      ] = False
 sections["fixme"      ] = True
 
-imgdir = "figures_pgun/"
+imgdir = "figures_pgun_inclusive/"
 if not imgdir.endswith("/"):  imgdir += "/"
 if gSystem.AccessPathName(imgdir):
     gSystem.mkdir(imgdir)
