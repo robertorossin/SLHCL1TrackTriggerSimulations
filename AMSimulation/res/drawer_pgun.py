@@ -64,8 +64,9 @@ sections["trkParts"   ] = False
 sections["trkVertices"] = False
 sections["eventInfo"  ] = False
 sections["geometry"   ] = False
-sections["clusters"   ] = True
-sections["stubs"      ] = True
+sections["clusters"   ] = False
+sections["stubs"      ] = False
+sections["fixme"      ] = True
 
 imgdir = "figures_pgun/"
 if not imgdir.endswith("/"):  imgdir += "/"
@@ -197,13 +198,16 @@ def CMS_label():
     latex.SetTextFont(old[0]); latex.SetTextSize(old[1])
     return
 
-def draw(params, histos, ytitle="Events", logx=False, logy=False):
+def draw(params, histos, ytitle="Events", logx=False, logy=False, text=False):
     ymax = getMaximum(histos)
     histos[0].SetMaximum(ymax * 1.4)
     if not logy:  histos[0].SetMinimum(0.)
     histos[0].GetYaxis().SetTitle(ytitle)
     histos[0].Draw("hist")
     gPad.SetLogx(logx); gPad.SetLogy(logy)
+    if text:
+        histos[0].SetMarkerSize(2)
+        histos[0].Draw("hist text0")
     CMS_label()
     return
 
@@ -838,7 +842,7 @@ if sections["clusters"]:
 
     params = [ ("TTClusters_hitTrkIds", sBase03, ssBase3, "TTClusters_hitTrkIds", "") ]
     binning = ("Cluster hit simTrack track id (for each hit)", 50, 0, 200)
-    histos = book(params, binning); project(params, histos); draw(params, histos)
+    histos = book(params, binning); project(params, histos); draw(params, histos, logy=True)
     save(imgdir, params[0][0])
 
     params = [ ("TTClusters_barrel", sBase03, ssBase3, "TTClusters_barrel", "") ]
@@ -1048,7 +1052,7 @@ if sections["stubs"]:
 
     params = [ ("TTStubs_hitTrkIds", sBase03, ssBase3, "TTStubs_hitTrkIds", "") ]
     binning = ("Stub hit simTrack track id (for each hit)", 50, 0, 200)
-    histos = book(params, binning); project(params, histos); draw(params, histos)
+    histos = book(params, binning); project(params, histos); draw(params, histos, logy=True)
     save(imgdir, params[0][0])
 
     params = [ ("TTStubs_barrel", sBase03, ssBase3, "TTStubs_barrel", "") ]
@@ -1119,21 +1123,36 @@ if sections["stubs"]:
 
     params = [ ("TTStubs_trivial", sBase03, ssBase3, "TTStubs_trivial", "") ]
     binning = ("Stub trivial match", 4, 0, 4)
-    histos = book(params, binning); project(params, histos); draw(params, histos)
+    histos = book(params, binning); project(params, histos); draw(params, histos, text=True)
     save(imgdir, params[0][0])
 
     params = [ ("TTStubs_passed", sBase03, ssBase3, "TTStubs_passed", "") ]
     binning = ("Stub pattern match (by event)", 4, 0, 4)
-    histos = book(params, binning); project(params, histos); draw(params, histos)
+    histos = book(params, binning); project(params, histos); draw(params, histos, text=True)
     save(imgdir, params[0][0])
 
     params = [ ("TTStubs_modPassed", sBase03, ssBase3, "TTStubs_modPassed", "") ]
     binning = ("Stub pattern match (by module)", 4, 0, 4)
-    histos = book(params, binning); project(params, histos); draw(params, histos)
+    histos = book(params, binning); project(params, histos); draw(params, histos, text=True)
     save(imgdir, params[0][0])
 
     params = [ ("TTStubs_hitPasseds", sBase03, ssBase3, "TTStubs_hitPasseds", "") ]
     binning = ("Stub pattern match (by hit, for each hit)", 4, 0, 4)
-    histos = book(params, binning); project(params, histos); draw(params, histos)
+    histos = book(params, binning); project(params, histos); draw(params, histos, text=True)
     save(imgdir, params[0][0])
+
+
+# ______________________________________________________________________________
+if sections["fixme"]:
+    #params = [ ("TTClusters_hitTrkIds", sBase03, ssBase3, "TTClusters_hitTrkIds", "") ]
+    #binning = ("Cluster hit simTrack track id (for each hit)", 50, 0, 200)
+    #histos = book(params, binning); project(params, histos); draw(params, histos, logy=True)
+    #save(imgdir, params[0][0])
+
+    #params = [ ("TTStubs_hitTrkIds", sBase03, ssBase3, "TTStubs_hitTrkIds", "") ]
+    #binning = ("Stub hit simTrack track id (for each hit)", 50, 0, 200)
+    #histos = book(params, binning); project(params, histos); draw(params, histos, logy=True)
+    #save(imgdir, params[0][0])
+
+    pass
 
