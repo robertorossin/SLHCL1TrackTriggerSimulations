@@ -61,8 +61,8 @@ int main(int argc, char **argv) {
         // Specifically for a pattern bank
         ("bank_minPt"         , po::value<float>(&bankOption.minPt)->default_value(   2.0), "Specify min pt")
         ("bank_maxPt"         , po::value<float>(&bankOption.maxPt)->default_value(9999.0), "Specify max pt")
-        ("bank_minEta"        , po::value<float>(&bankOption.minEta)->default_value(-2.5), "Specify min eta (signed)")
-        ("bank_maxEta"        , po::value<float>(&bankOption.maxEta)->default_value( 2.5), "Specify max eta (signed)")
+        ("bank_minEta"        , po::value<float>(&bankOption.minEta)->default_value(-2.2), "Specify min eta (signed)")
+        ("bank_maxEta"        , po::value<float>(&bankOption.maxEta)->default_value( 2.2), "Specify max eta (signed)")
         ("bank_minPhi"        , po::value<float>(&bankOption.minPhi)->default_value(-M_PI), "Specify min phi (from -pi to pi)")
         ("bank_maxPhi"        , po::value<float>(&bankOption.maxPhi)->default_value( M_PI), "Specify max phi (from -pi to pi)")
         ("bank_nLayers"       , po::value<int>(&bankOption.nLayers)->default_value(6), "Specify # of layers")

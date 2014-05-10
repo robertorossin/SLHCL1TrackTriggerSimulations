@@ -55,4 +55,15 @@ inline float alphaT(float pt1, float px1, float py1, float pt2, float px2, float
   return (pt2 / TMath::Sqrt(sumpt*sumpt - (sumpx*sumpx+sumpy*sumpy) ));
 }
 
+//______________________________________________________________________________
 
+inline int looper_r(float r)
+{
+  if (r < 30)  return 1;
+  if (r < 45)  return 2;
+  if (r < 62)  return 3;
+  if (r < 82)  return 4;
+  if (r < 100) return 5;
+  if (r < 120) return 6;
+  return 7;
+}
