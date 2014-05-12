@@ -82,26 +82,30 @@ int PatternGenerator::readTriggerTowerFile(TString src) {
 int PatternGenerator::readFile(TString src) {
     if (src.EndsWith(".root")) {
         if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
-        chain_->Add(src);
+        if (chain_->Add(src) )  // 1 if successful, 0 otherwise
+            return 0;
+
+    //} else if (src.EndsWith(".txt")) {
+    //    std::string line;
+    //    ifstream ifs(src);
+    //    while (std::getline(ifs,line)) {
+    //        TString tstring(line);
+    //        tstring.ReplaceAll(" ","");  // strip white space
+    //        if (!tstring.BeginsWith("#") && tstring.EndsWith(".root")) {
+    //            if (verbose_)  std::cout << Info() << "Opening " << tstring << std::endl;
+    //            chain_->Add(tstring);
+    //        }
+    //    }
+    //    ifs.close();
 
     } else if (src.EndsWith(".txt")) {
-        std::string line;
-        ifstream ifs(src);
-        while (std::getline(ifs,line)) {
-            TString tstring(line);
-            tstring.ReplaceAll(" ","");  // strip white space
-            if (!tstring.BeginsWith("#") && tstring.EndsWith(".root")) {
-                if (verbose_)  std::cout << Info() << "Opening " << tstring << std::endl;
-                chain_->Add(tstring);
-            }
-        }
-        ifs.close();
-
-    } else {
-        std::cout << Error() << "Input source should be either a .root file or a .txt file." << std::endl;
-        return 1;
+        TFileCollection* fc = new TFileCollection("fileinfolist", "", src);
+        if (chain_->AddFileInfoList((TCollection*) fc->GetList()) )  // 1 if successful, 0 otherwise
+            return 0;
     }
-    return 0;
+
+    std::cout << Error() << "Input source should be either a .root file or a .txt file." << std::endl;
+    return 1;
 }
 
 // _____________________________________________________________________________
@@ -111,19 +115,25 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
         std::cout << Error() << "Output filename must be .root" << std::endl;
         return 1;
     }
-
     out_tmp.ReplaceAll(".root", "_tmp.root");
-    Long64_t nentries = chain_->GetEntries();
-    if (nentries <= 0) {
-        std::cout << Error() << "Input source has zero entry." << std::endl;
-        return 1;
-    }
 
-    if (nEvents_ > (int) nentries)
-        nEvents_ = nentries;
+    // Do not do GetEntries() as it conflicts with CloneTree() when reading from XROOTD
+    //Long64_t nentries = chain_->GetEntries();
+    //if (nentries <= 0) {
+    //    std::cout << Error() << "Input source has zero entry." << std::endl;
+    //    return 1;
+    //}
+    //
+    //if (nEvents_ > (int) nentries)
+    //    nEvents_ = nentries;
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events; recreating " << out_tmp << " after event filtering." << std::endl;
 
     // For reading
+    std::vector<float> *              vb_x                = 0;
+    std::vector<float> *              vb_y                = 0;
+    std::vector<float> *              vb_z                = 0;
+    std::vector<float> *              vb_r                = 0;
+    std::vector<float> *              vb_phi              = 0;
     std::vector<unsigned> *           vb_iModCols         = 0;
     std::vector<unsigned> *           vb_iModRows         = 0;
     std::vector<unsigned> *           vb_modId            = 0;
@@ -138,6 +148,11 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
     unsigned                          v_event             = 0;
 
     chain_->SetBranchStatus("*", 0);
+    chain_->SetBranchStatus("TTStubs_x"        , 1);
+    chain_->SetBranchStatus("TTStubs_y"        , 1);
+    chain_->SetBranchStatus("TTStubs_z"        , 1);
+    chain_->SetBranchStatus("TTStubs_r"        , 1);
+    chain_->SetBranchStatus("TTStubs_phi"      , 1);
     chain_->SetBranchStatus("TTStubs_iModCols" , 1);
     chain_->SetBranchStatus("TTStubs_iModRows" , 1);
     chain_->SetBranchStatus("TTStubs_modId"    , 1);
@@ -152,6 +167,11 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
     chain_->SetBranchStatus("event"            , 1);
 
     // Unfortunately, very different semantics for Branch(...) vs SetBranchAddress(...)
+    chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
+    chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
+    chain_->SetBranchAddress("TTStubs_z"        , &(vb_z));
+    chain_->SetBranchAddress("TTStubs_r"        , &(vb_r));
+    chain_->SetBranchAddress("TTStubs_phi"      , &(vb_phi));
     chain_->SetBranchAddress("TTStubs_iModCols" , &(vb_iModCols));
     chain_->SetBranchAddress("TTStubs_iModRows" , &(vb_iModRows));
     chain_->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
@@ -165,11 +185,19 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
     chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
     chain_->SetBranchAddress("event"            , &(v_event));
 
+    // Set up TTreeFormula for event selection
+    chain_->SetBranchStatus("genParts_pt"       , 1);
+    chain_->SetBranchStatus("genParts_eta"      , 1);
+    chain_->SetBranchStatus("genParts_phi"      , 1);
+    chain_->SetBranchStatus("genParts_pz"       , 1);
+    TTreeFormula* ttf_event = new TTreeFormula("ttf_event", eventSelect_, chain_);
+    //ttf_event->SetQuickLoad(1);
+
     // For writing
     TFile* tfile = TFile::Open(out_tmp, "RECREATE");
     tfile->mkdir("ntupler")->cd();
 
-    TTree *ttree = (TTree*) chain_->CloneTree(0); // Do no copy the data yet
+    TTree* ttree = (TTree*) chain_->CloneTree(0); // Do not copy the data yet
     // The clone should not delete any shared i/o buffers.
     ResetDeleteBranches(ttree);
 
@@ -177,8 +205,16 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
     // _________________________________________________________________________
     // Loop over all events
     Long64_t nPassed = 0;
+    int curTree = chain_->GetTreeNumber();
     for (Long64_t ievt=0; ievt<nEvents_; ++ievt) {
+        Long64_t local_entry = chain_->LoadTree(ievt);  // for TTreeFormula
+        if (local_entry < 0)  break;
+        if (chain_->GetTreeNumber() != curTree) {
+            curTree = chain_->GetTreeNumber();
+            ttf_event->UpdateFormulaLeaves();
+        }
         chain_->GetEntry(ievt);
+
         unsigned nstubs = vb_modId->size();
         if (verbose_>1 && ievt%1000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7lld", ievt, nPassed) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " [# patterns: " << allPatterns_.size() << "]" << std::endl;
@@ -193,6 +229,11 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
 
         bool keep = true;
 
+        // Check event selection
+        int ndata = ttf_event->GetNdata();
+        if (ndata && filter_)
+            keep = (ttf_event->EvalInstance() != 0);
+
         // Check min # of layers
         bool require = ((int) nstubs >= nLayers_);
         if (!require && filter_)
@@ -206,7 +247,8 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
         int trkId = vb_trkId->back();
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " simPt: " << simPt << " simEta: " << simEta << " simPhi: " << simPhi << " trkId: " << trkId << std::endl;
 
-        bool sim = (po.minPt  <= simPt  && simPt  <= po.maxPt  &&
+        bool sim = (trkId == 1 &&
+                    po.minPt  <= simPt  && simPt  <= po.maxPt  &&
                     po.minEta <= simEta && simEta <= po.maxEta &&
                     po.minPhi <= simPhi && simPhi <= po.maxPhi);
         if (!sim && filter_)
@@ -339,10 +381,23 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
 
     assert(ttree->GetEntries() == nPassed);
     tfile->Write();
+    delete ttf_event;
     delete ttree;
     delete tfile;
     return 0;
 }
+
+// Testing
+int PatternGenerator::readAndFilterTree2(TString out_tmp) {
+    Long64_t nentries = chain_->GetEntries();
+
+    for (Long64_t ievt=0; ievt<nentries; ++ievt) {
+        // do something
+    }
+
+    return 0;
+}
+
 
 // _____________________________________________________________________________
 // Make the patterns
@@ -362,6 +417,11 @@ int PatternGenerator::makeTree(TString out_tmp) {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events from " << out_tmp << std::endl;
 
     // For reading
+    std::vector<float> *              vb_x                = 0;
+    std::vector<float> *              vb_y                = 0;
+    std::vector<float> *              vb_z                = 0;
+    std::vector<float> *              vb_r                = 0;
+    std::vector<float> *              vb_phi              = 0;
     std::vector<unsigned> *           vb_iModCols         = 0;
     std::vector<unsigned> *           vb_iModRows         = 0;
     std::vector<unsigned> *           vb_modId            = 0;
@@ -376,6 +436,11 @@ int PatternGenerator::makeTree(TString out_tmp) {
     unsigned                          v_event             = 0;
 
     chain_->SetBranchStatus("*", 0);
+    chain_->SetBranchStatus("TTStubs_x"        , 1);
+    chain_->SetBranchStatus("TTStubs_y"        , 1);
+    chain_->SetBranchStatus("TTStubs_z"        , 1);
+    chain_->SetBranchStatus("TTStubs_r"        , 1);
+    chain_->SetBranchStatus("TTStubs_phi"      , 1);
     chain_->SetBranchStatus("TTStubs_iModCols" , 1);
     chain_->SetBranchStatus("TTStubs_iModRows" , 1);
     chain_->SetBranchStatus("TTStubs_modId"    , 1);
@@ -390,6 +455,11 @@ int PatternGenerator::makeTree(TString out_tmp) {
     chain_->SetBranchStatus("event"            , 1);
 
     // Unfortunately, very different semantics for Branch(...) vs SetBranchAddress(...)
+    chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
+    chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
+    chain_->SetBranchAddress("TTStubs_z"        , &(vb_z));
+    chain_->SetBranchAddress("TTStubs_r"        , &(vb_r));
+    chain_->SetBranchAddress("TTStubs_phi"      , &(vb_phi));
     chain_->SetBranchAddress("TTStubs_iModCols" , &(vb_iModCols));
     chain_->SetBranchAddress("TTStubs_iModRows" , &(vb_iModRows));
     chain_->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
@@ -586,6 +656,7 @@ int PatternGenerator::run(TString src, TString out, TString layout) {
     Timing();
 
     exitcode = readAndFilterTree(out);
+    //exitcode = readAndFilterTree2(out);
     if (exitcode)  return exitcode;
     Timing();
 

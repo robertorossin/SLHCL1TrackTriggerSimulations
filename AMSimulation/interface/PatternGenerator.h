@@ -7,10 +7,12 @@
 using namespace slhcl1tt;
 
 #include "TFile.h"
+#include "TFileCollection.h"
 #include "TChain.h"
 #include "TTree.h"
+#include "TTreePlayer.h"
+#include "TTreeFormula.h"
 #include "TString.h"
-#include "TRandom3.h"
 
 
 // FIXME: incorporate trigger tower sectorization
@@ -53,6 +55,8 @@ class PatternGenerator {
                 {18,11}, {19,12}, {20,13}, {21,14}, {22,15}
             };
         };
+
+        eventSelect_ = "genParts_pt[0]>2 && abs(genParts_eta[0])<2.2 && Sum$(TTStubs_trkId==1 && abs(atan2(TTStubs_r,TTStubs_z)-atan2(genParts_pt[0],genParts_pz[0]))<0.05 && abs(deltaPhi(atan2(TTStubs_y,TTStubs_x),genParts_phi[0]))<0.03)>=Sum$(TTStubs_trkId==1)-2";
     }
 
     ~PatternGenerator() {}
@@ -79,6 +83,7 @@ class PatternGenerator {
     int readFile(TString src);
 
     int readAndFilterTree(TString out_tmp);  // make a temporary tree
+    int readAndFilterTree2(TString out_tmp);  // make a temporary tree (testing)
 
     int makeTree(TString out_tmp);
 
@@ -102,6 +107,9 @@ class PatternGenerator {
     int nEvents_;
     int nPatterns_;
     int verbose_;
+
+    // Event selection
+    TString eventSelect_;
 
     // Containers
     TChain * chain_;

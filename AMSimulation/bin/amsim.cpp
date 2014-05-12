@@ -1,5 +1,5 @@
-#include "../interface/PatternGenerator.h"
-#include "../interface/PatternMatcher.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternGenerator.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternMatcher.h"
 
 #include "boost/program_options.hpp"
 #include <cstdlib>

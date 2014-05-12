@@ -13,7 +13,7 @@ class DrawerInit:
     def __init__(self):
         # ROOT
         gROOT.LoadMacro("tdrstyle.C")
-        gROOT.LoadMacro("Helper.h")
+        gROOT.LoadMacro("../interface/HelperMath.h")
         gROOT.LoadMacro("../src/AMSimulationLinkDef.h")
         gROOT.ProcessLine("setTDRStyle()")
 

@@ -168,26 +168,30 @@ int PatternMatcher::putPatternsFast() {
 int PatternMatcher::readFile(TString src) {  // currently it's a carbon copy from PatternGenerator
     if (src.EndsWith(".root")) {
         if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
-        chain_->Add(src);
+        if (chain_->Add(src) )  // 1 if successful, 0 otherwise
+            return 0;
+
+    //} else if (src.EndsWith(".txt")) {
+    //    std::string line;
+    //    ifstream ifs(src);
+    //    while (std::getline(ifs,line)) {
+    //        TString tstring(line);
+    //        tstring.ReplaceAll(" ","");  // strip white space
+    //        if (!tstring.BeginsWith("#") && tstring.EndsWith(".root")) {
+    //            if (verbose_)  std::cout << Info() << "Opening " << tstring << std::endl;
+    //            chain_->Add(tstring);
+    //        }
+    //    }
+    //    ifs.close();
 
     } else if (src.EndsWith(".txt")) {
-        std::string line;
-        ifstream ifs(src);
-        while (std::getline(ifs,line)) {
-            TString tstring(line);
-            tstring.ReplaceAll(" ","");  // strip white space
-            if (!tstring.BeginsWith("#") && tstring.EndsWith(".root")) {
-                if (verbose_)  std::cout << Info() << "Opening " << tstring << std::endl;
-                chain_->Add(tstring);
-            }
-        }
-        ifs.close();
-
-    } else {
-        std::cout << Error() << "Input source should be either a .root file or a .txt file." << std::endl;
-        return 1;
+        TFileCollection* fc = new TFileCollection("fileinfolist", "", src);
+        if (chain_->AddFileInfoList((TCollection*) fc->GetList()) )  // 1 if successful, 0 otherwise
+            return 0;
     }
-    return 0;
+
+    std::cout << Error() << "Input source should be either a .root file or a .txt file." << std::endl;
+    return 1;
 }
 
 // _____________________________________________________________________________
@@ -210,6 +214,11 @@ int PatternMatcher::readAndMakeTree(TString out_tmp) {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events; recreating " << out_tmp << " with pattern matching decisions." << std::endl;
 
     // For reading
+    std::vector<float> *              vb_x                = 0;
+    std::vector<float> *              vb_y                = 0;
+    std::vector<float> *              vb_z                = 0;
+    std::vector<float> *              vb_r                = 0;
+    std::vector<float> *              vb_phi              = 0;
     std::vector<unsigned> *           vb_iModCols         = 0;
     std::vector<unsigned> *           vb_iModRows         = 0;
     std::vector<unsigned> *           vb_modId            = 0;
@@ -224,6 +233,11 @@ int PatternMatcher::readAndMakeTree(TString out_tmp) {
     unsigned                          v_event             = 0;
 
     chain_->SetBranchStatus("*", 0);
+    chain_->SetBranchStatus("TTStubs_x"        , 1);
+    chain_->SetBranchStatus("TTStubs_y"        , 1);
+    chain_->SetBranchStatus("TTStubs_z"        , 1);
+    chain_->SetBranchStatus("TTStubs_r"        , 1);
+    chain_->SetBranchStatus("TTStubs_phi"      , 1);
     chain_->SetBranchStatus("TTStubs_iModCols" , 1);
     chain_->SetBranchStatus("TTStubs_iModRows" , 1);
     chain_->SetBranchStatus("TTStubs_modId"    , 1);
@@ -238,6 +252,11 @@ int PatternMatcher::readAndMakeTree(TString out_tmp) {
     chain_->SetBranchStatus("event"            , 1);
 
     // Unfortunately, very different semantics for Branch(...) vs SetBranchAddress(...)
+    chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
+    chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
+    chain_->SetBranchAddress("TTStubs_z"        , &(vb_z));
+    chain_->SetBranchAddress("TTStubs_r"        , &(vb_r));
+    chain_->SetBranchAddress("TTStubs_phi"      , &(vb_phi));
     chain_->SetBranchAddress("TTStubs_iModCols" , &(vb_iModCols));
     chain_->SetBranchAddress("TTStubs_iModRows" , &(vb_iModRows));
     chain_->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
@@ -255,7 +274,7 @@ int PatternMatcher::readAndMakeTree(TString out_tmp) {
     TFile* tfile = TFile::Open(out_tmp, "RECREATE");
     tfile->mkdir("ntupler")->cd();
 
-    TTree *ttree = (TTree*) chain_->CloneTree(0); // Do no copy the data yet
+    TTree* ttree = (TTree*) chain_->CloneTree(0); // Do not copy the data yet
     // The clone should not delete any shared i/o buffers.
     ResetDeleteBranches(ttree);
 
@@ -479,6 +498,11 @@ int PatternMatcher::readAndMakeTreeFast(TString out_tmp) {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events; recreating " << out_tmp << " with pattern matching decisions." << std::endl;
 
     // For reading
+    std::vector<float> *              vb_x                = 0;
+    std::vector<float> *              vb_y                = 0;
+    std::vector<float> *              vb_z                = 0;
+    std::vector<float> *              vb_r                = 0;
+    std::vector<float> *              vb_phi              = 0;
     std::vector<unsigned> *           vb_iModCols         = 0;
     std::vector<unsigned> *           vb_iModRows         = 0;
     std::vector<unsigned> *           vb_modId            = 0;
@@ -493,6 +517,11 @@ int PatternMatcher::readAndMakeTreeFast(TString out_tmp) {
     unsigned                          v_event             = 0;
 
     chain_->SetBranchStatus("*", 0);
+    chain_->SetBranchStatus("TTStubs_x"        , 1);
+    chain_->SetBranchStatus("TTStubs_y"        , 1);
+    chain_->SetBranchStatus("TTStubs_z"        , 1);
+    chain_->SetBranchStatus("TTStubs_r"        , 1);
+    chain_->SetBranchStatus("TTStubs_phi"      , 1);
     chain_->SetBranchStatus("TTStubs_iModCols" , 1);
     chain_->SetBranchStatus("TTStubs_iModRows" , 1);
     chain_->SetBranchStatus("TTStubs_modId"    , 1);
@@ -507,6 +536,11 @@ int PatternMatcher::readAndMakeTreeFast(TString out_tmp) {
     chain_->SetBranchStatus("event"            , 1);
 
     // Unfortunately, very different semantics for Branch(...) vs SetBranchAddress(...)
+    chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
+    chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
+    chain_->SetBranchAddress("TTStubs_z"        , &(vb_z));
+    chain_->SetBranchAddress("TTStubs_r"        , &(vb_r));
+    chain_->SetBranchAddress("TTStubs_phi"      , &(vb_phi));
     chain_->SetBranchAddress("TTStubs_iModCols" , &(vb_iModCols));
     chain_->SetBranchAddress("TTStubs_iModRows" , &(vb_iModRows));
     chain_->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
@@ -524,7 +558,7 @@ int PatternMatcher::readAndMakeTreeFast(TString out_tmp) {
     TFile* tfile = TFile::Open(out_tmp, "RECREATE");
     tfile->mkdir("ntupler")->cd();
 
-    TTree *ttree = (TTree*) chain_->CloneTree(0); // Do no copy the data yet
+    TTree* ttree = (TTree*) chain_->CloneTree(0); // Do not copy the data yet
     // The clone should not delete any shared i/o buffers.
     ResetDeleteBranches(ttree);
 
@@ -749,7 +783,7 @@ int PatternMatcher::writeTree(TString out) {
     TFile* tfile = TFile::Open(out, "RECREATE");
     tfile->mkdir("ntupler")->cd();
 
-    TTree *ttree = (TTree*) chain_->CloneTree(0); // Do no copy the data yet
+    TTree* ttree = (TTree*) chain_->CloneTree(0); // Do not copy the data yet
     // The clone should not delete any shared i/o buffers.
     ResetDeleteBranches(ttree);
 
