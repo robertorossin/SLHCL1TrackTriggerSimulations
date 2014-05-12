@@ -1,4 +1,4 @@
-<bin   name="amsim" file="amsim.cpp">
+<bin   name="amsim" file="amsim.cc">
   <use   name="SLHCL1TrackTriggerSimulations/AMSimulation"/>
   <use   name="boost_program_options"/>
 </bin>
