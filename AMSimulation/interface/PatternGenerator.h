@@ -3,6 +3,7 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Pattern.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HelperMath.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 using namespace slhcl1tt;
 
@@ -76,8 +77,6 @@ class PatternGenerator {
     int getNDCBits()        const { return nDCBits_; }
 
     // Functions
-    void uniquifyPatterns();
-
     int readTriggerTowerFile(TString src);
 
     int readFile(TString src);
@@ -91,6 +90,9 @@ class PatternGenerator {
 
     // Main driver
     int run(TString src, TString out, TString layout);
+
+  private:
+    void uniquifyPatterns();
 
 
   public:

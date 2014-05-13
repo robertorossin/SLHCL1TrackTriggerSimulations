@@ -201,8 +201,8 @@ int PatternMatcher::readAndMakeTree(TString out_tmp) {
         std::cout << Error() << "Output filename must be .root" << std::endl;
         return 1;
     }
-
     out_tmp.ReplaceAll(".root", "_tmp.root");
+
     Long64_t nentries = chain_->GetEntries();
     if (nentries <= 0) {
         std::cout << Error() << "Input source has zero entry." << std::endl;
@@ -330,12 +330,11 @@ int PatternMatcher::readAndMakeTree(TString out_tmp) {
         }
 
         // Check again min # of layers
-        if ((int) goodLayers.size() < nLayers_) {
+        if ((int) goodLayers.size() < nLayers_ - po.nMisses) {
             ttree->Fill();
             continue;
         }
         ////////////////////////////////////////////////////////////////////////
-
 
         // Loop over reconstructed stubs
         for (unsigned l=0; l<nstubs; ++l) {
@@ -614,7 +613,7 @@ int PatternMatcher::readAndMakeTreeFast(TString out_tmp) {
         }
 
         // Check again min # of layers
-        if ((int) goodLayers.size() < nLayers_) {
+        if ((int) goodLayers.size() < nLayers_ - po.nMisses) {
             ttree->Fill();
             continue;
         }
@@ -860,4 +859,3 @@ int PatternMatcher::run(TString src, TString out, TString bank) {
     chain_->Reset();
     return exitcode;
 }
-

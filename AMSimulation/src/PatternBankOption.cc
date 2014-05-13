@@ -2,19 +2,20 @@
 
 namespace slhcl1tt {
 
-std::ostream& operator<<(std::ostream& o, const PatternBankOption& p) {
-    o << "minPt: " << p.minPt << "  maxPt: " << p.maxPt << "  minEta: " << p.minEta << "  maxEta: " << p.maxEta << "  minPhi: " << p.minPhi << "  maxPhi: " << p.maxPhi << std::endl;
-    o << "nLayers: " << p.nLayers << "  nSubLadders: " << p.nSubLadders << "  nSubModules: " << p.nSubModules << "  nMisses: " << p.nMisses << "  nFakeHits: " << p.nFakeHits << "  nDCBits: " << p.nDCBits << std::endl;
+std::ostream& operator<<(std::ostream& o, const PatternBankOption& po) {
+    o << "minPt: " << po.minPt << "  maxPt: " << po.maxPt << "  minEta: " << po.minEta << "  maxEta: " << po.maxEta << "  minPhi: " << po.minPhi << "  maxPhi: " << po.maxPhi << std::endl;
+    o << "nLayers: " << po.nLayers << "  nSubLadders: " << po.nSubLadders << "  nSubModules: " << po.nSubModules << "  nMisses: " << po.nMisses << "  nFakeHits: " << po.nFakeHits << "  nDCBits: " << po.nDCBits << std::endl;
     o << "activeLayers: ";
-    std::copy(p.activeLayers.begin(), p.activeLayers.end(), std::ostream_iterator<int>(o, " "));
+    std::copy(po.activeLayers.begin(), po.activeLayers.end(), std::ostream_iterator<int>(o, " "));
     o << std::endl;
     o << "inactiveLayers: ";
-    std::copy(p.inactiveLayers.begin(), p.inactiveLayers.end(), std::ostream_iterator<int>(o, " "));
+    std::copy(po.inactiveLayers.begin(), po.inactiveLayers.end(), std::ostream_iterator<int>(o, " "));
     o << std::endl;
     o << "triggerTowers: ";
-    std::copy(p.triggerTowers.begin(), p.triggerTowers.end(), std::ostream_iterator<int>(o, " "));
+    std::copy(po.triggerTowers.begin(), po.triggerTowers.end(), std::ostream_iterator<int>(o, " "));
     o << std::endl;
     return o;
 }
 
 }  // namespace slhcl1tt
+

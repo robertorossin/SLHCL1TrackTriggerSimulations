@@ -26,7 +26,7 @@ struct PatternBankOption {
     std::vector<int> triggerTowers;
 };
 
-std::ostream& operator<<(std::ostream& o, const PatternBankOption& p);
+std::ostream& operator<<(std::ostream& o, const PatternBankOption& po);
 
 }  // namespace slhcl1tt
 

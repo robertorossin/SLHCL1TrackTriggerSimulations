@@ -3,6 +3,7 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Pattern.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HelperMath.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 using namespace slhcl1tt;
 
@@ -68,8 +69,6 @@ class PatternMatcher {
 
 
     // Functions
-    void resetMap();
-
     int readPatterns(TString src);
 
     int putPatterns();
@@ -84,6 +83,9 @@ class PatternMatcher {
 
     // Main driver
     int run(TString src, TString out, TString bank);
+
+  private:
+    void resetMap();
 
 
   public:

@@ -1,8 +1,6 @@
 #ifndef AMSimulation_Helper_h_
 #define AMSimulation_Helper_h_
 
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HelperMath.h"
-
 #include <algorithm>
 //#include <functional>
 #include <cstdint>

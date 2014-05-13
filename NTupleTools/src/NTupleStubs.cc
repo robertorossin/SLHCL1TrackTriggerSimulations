@@ -99,7 +99,7 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
   prefixPixelDigi_     (iConfig.getParameter<std::string>("prefixPixelDigi")),
   suffix_              (iConfig.getParameter<std::string>("suffix")) {
 
-    // FIXME: r is rho
+    // Remember r is rho in cylindrical coordinate system
     produces<std::vector<float> >               (prefixClus_ + "x"              + suffix_);
     produces<std::vector<float> >               (prefixClus_ + "y"              + suffix_);
     produces<std::vector<float> >               (prefixClus_ + "z"              + suffix_);

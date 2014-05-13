@@ -295,6 +295,13 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
             assert(nhits > 0);
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
 
+            // Check module id
+            unsigned count = std::count(goodLayerModules.begin(), goodLayerModules.end(), moduleId);
+            if (!count)  // do not keep even if filter_ is false
+                keepstub = false;
+            else  // keep and invalidate the next stub with identical moduleId
+                goodLayerModules.erase(std::remove(goodLayerModules.begin(), goodLayerModules.end(), moduleId), goodLayerModules.end());
+
             // Check sim info of stub
             sim = (vb_trkId->at(l) == trkId);
             if (!sim && filter_)
@@ -327,13 +334,6 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
             // Check sim info of hit
             if (!sim && filter_)
                 keepstub = false;
-
-            // Check module id
-            unsigned count = std::count(goodLayerModules.begin(), goodLayerModules.end(), moduleId);
-            if (!count)  // do not keep even if filter_ is false
-                keepstub = false;
-            else  // keep and invalidate the next stub with identical moduleId
-                goodLayerModules.erase(std::remove(goodLayerModules.begin(), goodLayerModules.end(), moduleId), goodLayerModules.end());
 
             if (keepstub) {
                 // Keep and move it to be the 'ngoodstubs' element
