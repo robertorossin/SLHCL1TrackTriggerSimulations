@@ -140,6 +140,9 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<std::vector<int> > >   (prefixClus_ + "hitChans"       + suffix_);
     produces<std::vector<std::vector<int> > >   (prefixClus_ + "hitTrkIds"      + suffix_);
     produces<std::vector<std::vector<float> > > (prefixClus_ + "hitFracs"       + suffix_);
+    produces<std::vector<std::vector<float> > > (prefixClus_ + "hitXs"          + suffix_);
+    produces<std::vector<std::vector<float> > > (prefixClus_ + "hitYs"          + suffix_);
+    produces<std::vector<std::vector<float> > > (prefixClus_ + "hitZs"          + suffix_);
     produces<std::vector<bool> >                (prefixClus_ + "isGenuine"      + suffix_);
     produces<std::vector<bool> >                (prefixClus_ + "isUnknown"      + suffix_);
     produces<std::vector<bool> >                (prefixClus_ + "isCombinatoric" + suffix_);
@@ -187,6 +190,9 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<std::vector<int> > >   (prefixStub_ + "hitChans"       + suffix_);
     produces<std::vector<std::vector<int> > >   (prefixStub_ + "hitTrkIds"      + suffix_);
     produces<std::vector<std::vector<float> > > (prefixStub_ + "hitFracs"       + suffix_);
+    produces<std::vector<std::vector<float> > > (prefixStub_ + "hitXs"          + suffix_);
+    produces<std::vector<std::vector<float> > > (prefixStub_ + "hitYs"          + suffix_);
+    produces<std::vector<std::vector<float> > > (prefixStub_ + "hitZs"          + suffix_);
     produces<std::vector<float> >               (prefixStub_ + "trigDist"       + suffix_);
     produces<std::vector<float> >               (prefixStub_ + "trigOffset"     + suffix_);
     produces<std::vector<float> >               (prefixStub_ + "trigPos"        + suffix_);
@@ -374,6 +380,9 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<std::vector<int> > >  vc_hitChans         (new std::vector<std::vector<int> >());
     std::auto_ptr<std::vector<std::vector<int> > >  vc_hitTrkIds        (new std::vector<std::vector<int> >());
     std::auto_ptr<std::vector<std::vector<float> >> vc_hitFracs         (new std::vector<std::vector<float> >());
+    std::auto_ptr<std::vector<std::vector<float> >> vc_hitXs            (new std::vector<std::vector<float> >());
+    std::auto_ptr<std::vector<std::vector<float> >> vc_hitYs            (new std::vector<std::vector<float> >());
+    std::auto_ptr<std::vector<std::vector<float> >> vc_hitZs            (new std::vector<std::vector<float> >());
     std::auto_ptr<std::vector<bool> >               vc_isGenuine        (new std::vector<bool>());
     std::auto_ptr<std::vector<bool> >               vc_isUnknown        (new std::vector<bool>());
     std::auto_ptr<std::vector<bool> >               vc_isCombinatoric   (new std::vector<bool>());
@@ -421,6 +430,9 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<std::vector<int> > >  vb_hitChans         (new std::vector<std::vector<int> >());
     std::auto_ptr<std::vector<std::vector<int> > >  vb_hitTrkIds        (new std::vector<std::vector<int> >());
     std::auto_ptr<std::vector<std::vector<float> >> vb_hitFracs         (new std::vector<std::vector<float> >());
+    std::auto_ptr<std::vector<std::vector<float> >> vb_hitXs            (new std::vector<std::vector<float> >());
+    std::auto_ptr<std::vector<std::vector<float> >> vb_hitYs            (new std::vector<std::vector<float> >());
+    std::auto_ptr<std::vector<std::vector<float> >> vb_hitZs            (new std::vector<std::vector<float> >());
     std::auto_ptr<std::vector<float> >              vb_trigDist         (new std::vector<float>());
     std::auto_ptr<std::vector<float> >              vb_trigOffset       (new std::vector<float>());
     std::auto_ptr<std::vector<float> >              vb_trigPos          (new std::vector<float>());
@@ -550,11 +562,21 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 std::vector<int> hitChans;
                 std::vector<int> hitTrkIds;
                 std::vector<float> hitFracs;
+                std::vector<float> hitXs;
+                std::vector<float> hitYs;
+                std::vector<float> hitZs;
                 for (unsigned ii = 0; ii < hits.size(); ++ii) {
                     hitADCs.push_back(hits.at(ii)->adc());
                     hitChans.push_back(hits.at(ii)->channel() );
-                    hitTrkIds.push_back(-1);
-                    hitFracs.push_back(0.);
+                    hitTrkIds.push_back(-1);  // to be updated when sim links are found
+                    hitFracs.push_back(0.);   // to be updated when sim links are found
+
+                    // Don't save local position as it's nothing more but (row+0.5, col+0.5)
+                    //const LocalPoint& hitLocalPosition = theStackedGeometry->findHitLocalPosition(&(*it), ii);
+                    const GlobalPoint& hitPosition = theStackedGeometry->findHitGlobalPosition(&(*it), ii);
+                    hitXs.push_back(hitPosition.x());
+                    hitYs.push_back(hitPosition.y());
+                    hitZs.push_back(hitPosition.z());
                 }
 
                 const MeasurementPoint& localcoord = it->findAverageLocalCoordinates();
@@ -604,6 +626,9 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vc_hitRows->push_back(hitRows);
                 vc_hitADCs->push_back(hitADCs);
                 vc_hitChans->push_back(hitChans);
+                vc_hitXs->push_back(hitXs);
+                vc_hitYs->push_back(hitYs);
+                vc_hitZs->push_back(hitZs);
 
                 /// Sim links for the hits
                 if (pixelDigiSimLinks.isValid()) {
@@ -731,11 +756,21 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 std::vector<int> hitChans;
                 std::vector<int> hitTrkIds;
                 std::vector<float> hitFracs;
+                std::vector<float> hitXs;
+                std::vector<float> hitYs;
+                std::vector<float> hitZs;
                 for (unsigned ii = 0; ii < hits.size(); ++ii) {
                     hitADCs.push_back(hits.at(ii)->adc());
                     hitChans.push_back(hits.at(ii)->channel() );
-                    hitTrkIds.push_back(-1);
-                    hitFracs.push_back(0.);
+                    hitTrkIds.push_back(-1);  // to be updated when sim links are found
+                    hitFracs.push_back(0.);   // to be updated when sim links are found
+
+                    // Don't save local position as it's nothing more but (row+0.5, col+0.5)
+                    //const LocalPoint& hitLocalPosition = theStackedGeometry->findHitLocalPosition(&(*clusterRef), ii);
+                    const GlobalPoint& hitPosition = theStackedGeometry->findHitGlobalPosition(&(*clusterRef), ii);
+                    hitXs.push_back(hitPosition.x());
+                    hitYs.push_back(hitPosition.y());
+                    hitZs.push_back(hitPosition.z());
                 }
 
                 // Global position and rough pt
@@ -783,6 +818,10 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vb_hitRows->push_back(hitRows);
                 vb_hitADCs->push_back(hitADCs);
                 vb_hitChans->push_back(hitChans);
+                vb_hitXs->push_back(hitXs);
+                vb_hitYs->push_back(hitYs);
+                vb_hitZs->push_back(hitZs);
+
                 vb_trigDist->push_back(it->getTriggerDisplacement());   // in full-strip units
                 vb_trigOffset->push_back(it->getTriggerOffset());       // in full-strip units
                 vb_trigPos->push_back(it->getTriggerPosition());        // in full-strip units
@@ -968,6 +1007,9 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vc_hitChans      , prefixClus_ + "hitChans"       + suffix_);
     iEvent.put(vc_hitTrkIds     , prefixClus_ + "hitTrkIds"      + suffix_);
     iEvent.put(vc_hitFracs      , prefixClus_ + "hitFracs"       + suffix_);
+    iEvent.put(vc_hitXs         , prefixClus_ + "hitXs"          + suffix_);
+    iEvent.put(vc_hitYs         , prefixClus_ + "hitYs"          + suffix_);
+    iEvent.put(vc_hitZs         , prefixClus_ + "hitZs"          + suffix_);
     iEvent.put(vc_isGenuine     , prefixClus_ + "isGenuine"      + suffix_);
     iEvent.put(vc_isUnknown     , prefixClus_ + "isUnknown"      + suffix_);
     iEvent.put(vc_isCombinatoric, prefixClus_ + "isCombinatoric" + suffix_);
@@ -1015,6 +1057,9 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vb_hitChans      , prefixStub_ + "hitChans"       + suffix_);
     iEvent.put(vb_hitTrkIds     , prefixStub_ + "hitTrkIds"      + suffix_);
     iEvent.put(vb_hitFracs      , prefixStub_ + "hitFracs"       + suffix_);
+    iEvent.put(vb_hitXs         , prefixStub_ + "hitXs"          + suffix_);
+    iEvent.put(vb_hitYs         , prefixStub_ + "hitYs"          + suffix_);
+    iEvent.put(vb_hitZs         , prefixStub_ + "hitZs"          + suffix_);
     iEvent.put(vb_trigDist      , prefixStub_ + "trigDist"       + suffix_);
     iEvent.put(vb_trigOffset    , prefixStub_ + "trigOffset"     + suffix_);
     iEvent.put(vb_trigPos       , prefixStub_ + "trigPos"        + suffix_);
