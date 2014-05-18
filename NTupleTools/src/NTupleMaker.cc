@@ -46,7 +46,6 @@ NTupleMaker::NTupleMaker(const edm::ParameterSet& iConfig) : pset(iConfig) {
     leafmap[edm::TypeID(typeid(Long64_t)).friendlyClassName()] = LONG64_T;
     leafmap[edm::TypeID(typeid(ULong64_t)).friendlyClassName()] = ULONG64_T;
 
-    leafmap[edm::TypeID(typeid(std::vector<Bool_t>)).friendlyClassName()] = BOOL_V;
     leafmap[edm::TypeID(typeid(std::vector<Char_t>)).friendlyClassName()] = CHAR_V;
     leafmap[edm::TypeID(typeid(std::vector<UChar_t>)).friendlyClassName()] = UCHAR_V;
     leafmap[edm::TypeID(typeid(std::vector<Short_t>)).friendlyClassName()] = SHORT_V;
@@ -59,7 +58,6 @@ NTupleMaker::NTupleMaker(const edm::ParameterSet& iConfig) : pset(iConfig) {
     leafmap[edm::TypeID(typeid(std::vector<ULong64_t>)).friendlyClassName()] = ULONG64_V;
     leafmap[edm::TypeID(typeid(std::vector<Bool_t>)).friendlyClassName()] = BOOL_V;
 
-    leafmap[edm::TypeID(typeid(std::vector<std::vector<Bool_t> >)).friendlyClassName()] = BOOL_VV;
     leafmap[edm::TypeID(typeid(std::vector<std::vector<Char_t> >)).friendlyClassName()] = CHAR_VV;
     leafmap[edm::TypeID(typeid(std::vector<std::vector<UChar_t> >)).friendlyClassName()] = UCHAR_VV;
     leafmap[edm::TypeID(typeid(std::vector<std::vector<Short_t> >)).friendlyClassName()] = SHORT_VV;
@@ -95,7 +93,7 @@ void NTupleMaker::beginJob() {
                 branchNames.insert(selection->productInstanceName() );
             }
 
-            // Determine the leave type
+            // Determine the leaf type
             std::map<std::string, LeafType>::iterator found = leafmap.find(selection->friendlyClassName() );
             switch (found->second) {
                 case CHAR_T    : connectors.push_back(new TypedBranchConnector<Char_t>    (selection, "B", tree) ); break;
@@ -135,7 +133,7 @@ void NTupleMaker::beginJob() {
                 case BOOL_VV   : connectors.push_back(new TypedBranchConnector<std::vector<std::vector<Bool_t> > >    (selection, "", tree) ); break;
 
                 default       : throw edm::Exception(edm::errors::Configuration)
-                                    << "Error in NTupleMaker: Cannot handle leaves of friendlyClassName: "
+                                    << "Error in NTupleMaker: Cannot handle leaf of friendlyClassName: "
                                     << selection->friendlyClassName() << std::endl;
             }
         }
