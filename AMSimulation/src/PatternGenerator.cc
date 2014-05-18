@@ -1,40 +1,14 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternGenerator.h"
 
 
-static const unsigned MAX_TRIGGERTOWER = 6 * 8;
-
-void PatternGenerator::uniquifyPatterns() {
-    goodPatterns_.clear();
-
-    PatternIdIndexMap patternIdMap;  // key: patternId, value: index in goodPatterns_
-    for (unsigned i=0; i<allPatterns_.size(); ++i) {
-        const Pattern& patt = allPatterns_.at(i);
-        const Pattern::pattern8_t& pattId = patt.getPatternId();
-
-        PatternIdIndexMap::const_iterator found = patternIdMap.find(pattId);
-        if (found == patternIdMap.end()) {  // if not exist, insert the pattern
-            goodPatterns_.push_back(patt);
-            patternIdMap.insert(std::make_pair(pattId, goodPatterns_.size()-1) );
-
-        } else {  // if exist, increase the frequency, update DC bit
-            uint32_t index = found->second;
-            goodPatterns_.at(index).touch();
-
-            // Also update hit bit
-            for (int l=0; l<nLayers_; ++l) {
-                uint16_t hitBit = goodPatterns_.at(index).getHitBit(l);
-                hitBit |= patt.getHitBit(l);
-                goodPatterns_.at(index).setHitBit(l, hitBit);
-            }
-        }
-    }
-}
+static const unsigned MAX_NLAYERS = 8;
+static const unsigned MAX_NTOWERS = 6 * 8;
 
 
 // _____________________________________________________________________________
 // Read and parse the trigger tower csv file
 int PatternGenerator::readTriggerTowerFile(TString src) {
-    Pattern::vuint32_t values;
+    std::vector<unsigned> values;
     if (src.EndsWith(".csv")) {
         if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
 
@@ -58,24 +32,25 @@ int PatternGenerator::readTriggerTowerFile(TString src) {
         return 1;
     }
 
-    uint32_t triggerTowerId = 0;
+    unsigned triggerTowerId = 0;
     for (unsigned i=0; i<values.size(); ++i) {
         if (i != 0) {  // skip the first index
             if (values.at(i-1) <= 6 && values.at(i) <= 8) {  // eta_idx, phi_idx
                 triggerTowerId = values.at(i-1) * 10 + values.at(i);
-                triggerTowerMap_.insert(std::make_pair(triggerTowerId, Pattern::vuint32_t()));
+                triggerTowerMap_.insert(std::make_pair(triggerTowerId, std::vector<unsigned>()));
             } else if (values.at(i) > 10000) {
                 triggerTowerMap_[triggerTowerId].push_back(values.at(i));
             }
         }
     }
 
-    if (triggerTowerMap_.size() != MAX_TRIGGERTOWER) {
+    if (triggerTowerMap_.size() != MAX_NTOWERS) {
         std::cout << Error() << "Failed to get all trigger towers from the trigger tower file: " << src << std::endl;
         return 1;
     }
     return 0;
 }
+
 
 // _____________________________________________________________________________
 // Read the input ntuples
@@ -84,19 +59,6 @@ int PatternGenerator::readFile(TString src) {
         if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
         if (chain_->Add(src) )  // 1 if successful, 0 otherwise
             return 0;
-
-    //} else if (src.EndsWith(".txt")) {
-    //    std::string line;
-    //    ifstream ifs(src);
-    //    while (std::getline(ifs,line)) {
-    //        TString tstring(line);
-    //        tstring.ReplaceAll(" ","");  // strip white space
-    //        if (!tstring.BeginsWith("#") && tstring.EndsWith(".root")) {
-    //            if (verbose_)  std::cout << Info() << "Opening " << tstring << std::endl;
-    //            chain_->Add(tstring);
-    //        }
-    //    }
-    //    ifs.close();
 
     } else if (src.EndsWith(".txt")) {
         TFileCollection* fc = new TFileCollection("fileinfolist", "", src);
@@ -108,9 +70,11 @@ int PatternGenerator::readFile(TString src) {
     return 1;
 }
 
+
 // _____________________________________________________________________________
-// Select one stub per layer, one hit per stub
-int PatternGenerator::readAndFilterTree(TString out_tmp) {
+// Select one stub per layer, one hit per stub.
+// It is not supposed to throw away any event yet.
+int PatternGenerator::filterHits(TString out_tmp) {
     if (!out_tmp.EndsWith(".root")) {
         std::cout << Error() << "Output filename must be .root" << std::endl;
         return 1;
@@ -166,7 +130,6 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
     chain_->SetBranchStatus("TTStubs_trkId"    , 1);
     chain_->SetBranchStatus("event"            , 1);
 
-    // Unfortunately, very different semantics for Branch(...) vs SetBranchAddress(...)
     chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
     chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
     chain_->SetBranchAddress("TTStubs_z"        , &(vb_z));
@@ -207,9 +170,9 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
     Long64_t nPassed = 0;
     int curTree = chain_->GetTreeNumber();
     for (Long64_t ievt=0; ievt<nEvents_; ++ievt) {
-        Long64_t local_entry = chain_->LoadTree(ievt);  // for TTreeFormula
+        Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
-        if (chain_->GetTreeNumber() != curTree) {
+        if (chain_->GetTreeNumber() != curTree) {  // for TTreeFormula
             curTree = chain_->GetTreeNumber();
             ttf_event->UpdateFormulaLeaves();
         }
@@ -220,10 +183,8 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " [# patterns: " << allPatterns_.size() << "]" << std::endl;
 
         if (!nstubs) {  // skip if no stub
-            if (!filter_) {  // keep all events regardless
-                ++nPassed;
-                ttree->Fill();
-            }
+            ++nPassed;
+            ttree->Fill();
             continue;
         }
 
@@ -256,27 +217,27 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
 
         // Build a list of goodLayers and goodLayerModules that are unique
         // Work from the outermost stub
-        Pattern::vuint32_t goodLayers;  // stores mlayer, not layer
-        Pattern::vuint32_t goodLayerModules;
+        std::vector<id_type> goodLayers;  // NOTE: stores mlayer, not layer
+        std::vector<id_type> goodLayerModules;
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
             unsigned ll = (nstubs-1) - l;  // reverse iteration order
             unsigned moduleId = vb_modId->at(ll);
-            uint32_t layer = Pattern::decodeLayer(moduleId);
-            uint32_t mlayer = layerMap_.at(layer);  // mapping of layer --> mlayer must exist
+            id_type layer = decodeLayer(moduleId);
+            id_type mlayer = layerMap_.at(layer);  // mapping of layer --> mlayer must exist
 
             unsigned count = std::count(goodLayers.begin(), goodLayers.end(), mlayer);
-            if (!count) {
+            if (!count) {  // no module with mlayer
                 goodLayers.push_back(mlayer);
                 goodLayerModules.push_back(moduleId);
             }
         }
         if (verbose_>2) {
-            std::cout << Debug() << "... evt: " << ievt << " goodLayers: ";
-            std::copy(goodLayers.begin(), goodLayers.end(), std::ostream_iterator<uint32_t>(std::cout, " "));
-            std::cout << std::endl;
-            std::cout << Debug() << "... evt: " << ievt << " goodLayerModules: ";
-            std::copy(goodLayerModules.begin(), goodLayerModules.end(), std::ostream_iterator<uint32_t>(std::cout, " "));
-            std::cout << std::endl;
+            std::cout << Debug() << "... evt: " << ievt << " # goodLayers: " << goodLayers.size() << " {";
+            std::copy(goodLayers.begin(), goodLayers.end(), std::ostream_iterator<id_type>(std::cout, " "));
+            std::cout << "}" << std::endl;
+            std::cout << Debug() << "... evt: " << ievt << " # goodLayerModules: " << goodLayerModules.size() << " {";
+            std::copy(goodLayerModules.begin(), goodLayerModules.end(), std::ostream_iterator<id_type>(std::cout, " "));
+            std::cout << "}" << std::endl;
         }
 
         // Check again min # of layers
@@ -317,12 +278,12 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
                 if (!sim && filter_)
                     keephit = false;
 
-                if (keephit) {  // Only need one hit
+                if (keephit) {
                     // Keep and move it to be the first element
                     vb_hitCols->at(l).at(0)    = vb_hitCols->at(l).at(m);
                     vb_hitRows->at(l).at(0)    = vb_hitRows->at(l).at(m);
                     vb_hitTrkIds->at(l).at(0)  = vb_hitTrkIds->at(l).at(m);
-                    break;
+                    break;  // Only need one hit
                 }
             }
             // Only need one hit
@@ -384,16 +345,10 @@ int PatternGenerator::readAndFilterTree(TString out_tmp) {
     delete ttf_event;
     delete ttree;
     delete tfile;
-    return 0;
-}
 
-// Testing
-int PatternGenerator::readAndFilterTree2(TString out_tmp) {
-    Long64_t nentries = chain_->GetEntries();
-
-    for (Long64_t ievt=0; ievt<nentries; ++ievt) {
-        // do something
-    }
+    if (verbose_)  std::cout << Info() << "Replacing input source." << std::endl;
+    chain_->Reset();
+    chain_->Add(out_tmp);
 
     return 0;
 }
@@ -401,20 +356,13 @@ int PatternGenerator::readAndFilterTree2(TString out_tmp) {
 
 // _____________________________________________________________________________
 // Make the patterns
-int PatternGenerator::makeTree(TString out_tmp) {
-    if (!out_tmp.EndsWith(".root")) {
-        std::cout << Error() << "Output filename must be .root" << std::endl;
-        return 1;
-    }
-
-    out_tmp.ReplaceAll(".root", "_tmp.root");
-    chain_->Add(out_tmp);
+int PatternGenerator::makePatterns() {
     Long64_t nentries = chain_->GetEntries();
     assert(nentries > 0);
 
     if (nEvents_ > (int) nentries)
         nEvents_ = nentries;
-    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events from " << out_tmp << std::endl;
+    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
 
     // For reading
     std::vector<float> *              vb_x                = 0;
@@ -454,7 +402,6 @@ int PatternGenerator::makeTree(TString out_tmp) {
     chain_->SetBranchStatus("TTStubs_trkId"    , 1);
     chain_->SetBranchStatus("event"            , 1);
 
-    // Unfortunately, very different semantics for Branch(...) vs SetBranchAddress(...)
     chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
     chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
     chain_->SetBranchAddress("TTStubs_z"        , &(vb_z));
@@ -494,8 +441,7 @@ int PatternGenerator::makeTree(TString out_tmp) {
         }
 
         // Loop over reconstructed stubs
-        Pattern::vuint64_t goodHitIds;
-        Pattern::vuint16_t goodHitBits;
+        std::vector<TTSuperstrip> goodSuperstrips;
         for (unsigned l=0; l<nstubs; ++l) {
             unsigned moduleId = vb_modId->at(l);
             unsigned ncols = vb_iModCols->at(l);
@@ -508,128 +454,103 @@ int PatternGenerator::makeTree(TString out_tmp) {
             // Set to lower resolution according to nSubLadders and nSubModules
             col /= (ncols / std::min((int) ncols, po.nSubLadders));
             row /= (nrows / std::min((int) nrows, po.nSubModules));
-            uint64_t hitId = Pattern::encodeHitId(moduleId, col, row);
-            uint16_t hitBit = 1 << 0;
+            addr_type ssId = encodeSuperstripId(moduleId, col, row);
+            bit_type ssBit = 1 << 0;
 
-            // Use DCBits
-            Pattern::encodeDCBit(nDCBits_, hitId, hitBit);
+            // Use DCBit
+            encodeDCBit(nDCBits_, ssId, ssBit);
+
+            // Create a superstrip
+            TTSuperstrip ss(ssId, ssBit);
+            goodSuperstrips.push_back(ss);
 
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " #0 hitId: " << hitId << " hitBit: " << hitBit << " col: " << col << " row: " << row << " trkId: " << vb_hitTrkIds->at(l).at(0) << std::endl;
-
-            goodHitIds.push_back(hitId);
-            goodHitBits.push_back(hitBit);
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " ssId: " << ssId << " ssBit: " << ssBit << " col: " << col << " row: " << row << " trkId: " << vb_hitTrkIds->at(l).at(0) << std::endl;
         }
         if (verbose_>2) {
-            std::cout << Debug() << "... evt: " << ievt << " # goodHitIds: " << goodHitIds.size() << " {";
-            std::copy(goodHitIds.begin(), goodHitIds.end(), std::ostream_iterator<uint64_t>(std::cout, " "));
+            std::cout << Debug() << "... evt: " << ievt << " # goodSuperstrips: " << goodSuperstrips.size() << " {";
+            std::copy(goodSuperstrips.begin(), goodSuperstrips.end(), std::ostream_iterator<TTSuperstrip>(std::cout, " "));
             std::cout << "}" << std::endl;
         }
 
 
-        // Initialize a pattern
-        uint32_t hash = hashFileEvent(chain_->GetCurrentFile()->GetName(), v_event);  // FIXME: currently not working, will switch to use generator seed instead
-        Pattern patt(nLayers_, nDCBits_, hash);
-
-        // Only consider up to the first nLayers_
-        for (int l=0; l<nLayers_; ++l) {
-            if (l==(int) goodHitIds.size())  break;  // when filter_ is false, goodHitIds.size() can be less than nLayers_
-            patt.setHitId(l, goodHitIds.at(l));
-            patt.setHitBit(l, goodHitBits.at(l));
-        }
-
-        patt.ready();
-
-        for (int l=0; l<nLayers_; ++l) {
-            uint64_t hitId = patt.getHitId(l);
-            uint16_t hitBit = patt.getHitBit(l);
-            if (hitId == 0)  continue;  // avoid zero
-            assert(hitBit > 0);
-
-            //HitIdBoolMap::const_iterator found = hitIdMap_.find(hitId);
-            HitIdShortMap::const_iterator found = hitIdMap_.find(hitId);
-            if (found == hitIdMap_.end()) {  // if not exist, insert the hitId
-                //std::shared_ptr<bool> abool(new bool(false));
-                //hitIdMap_.insert(std::make_pair(hitId, abool) );
-
-                std::shared_ptr<uint16_t> ashort(new uint16_t(0));
-                hitIdMap_.insert(std::make_pair(hitId, ashort) );
-            }
-
-            if (verbose_>2)  std::cout << Debug() << "... ... bin: " << l << " hitId: " << hitId << " hitBit: " << hitBit << " # hitIds: " << hitIdMap_.size() << std::endl;
-            if (verbose_>2)  std::cout << Debug() << "... ... bin: " << l << " lay: " << Pattern::decodeHitLayer(hitId) << " lad: " << Pattern::decodeHitLadder(hitId) << " mod: " << Pattern::decodeHitModule(hitId) << " col: " << Pattern::decodeHitSubLadder(hitId) << " row: " << Pattern::decodeHitSubModule(hitId) << std::endl;
-        }
+        // Create a pattern
+        unsigned hash = hashThisEvent(v_event, vb_simPhi->back());  // FIXME: will switch to use generator seed instead
+        goodSuperstrips.resize(nLayers_);
+        TTPattern patt(hash, goodSuperstrips);
+        allPatterns_.push_back(patt);  // save the pattern
 
         ++nPassed;
-        allPatterns_.push_back(patt);  // save the patterns
     }
 
     // Keep only unique patterns
     uniquifyPatterns();  // do this after allPatterns_ is populated
     for (unsigned i=0; i<goodPatterns_.size(); ++i) {
-        const Pattern& patt = goodPatterns_.at(i);
-        const Pattern::pattern8_t& pattId = patt.getPatternId();
+        const TTPattern& patt = goodPatterns_.at(i);
         if (verbose_>2) {
-            std::cout << Debug() << "... patt: " << i << " ";
-            std::copy(pattId.begin(), pattId.end(), std::ostream_iterator<uint64_t>(std::cout, " "));
-            std::cout << " freq: " << patt.frequency() << std::endl;
+            std::cout << Debug() << "... patt: " << i << " " << patt << std::endl;
         }
     }
 
-    if (verbose_>1)  std::cout << Debug() << "Identified " << hitIdMap_.size() << " possible 'hitId's." << std::endl;
     if (verbose_)  std::cout << Info() << "Made " << goodPatterns_.size() << " final patterns, out of " << allPatterns_.size() << " inclusive, full-resolution patterns." << std::endl;
 
     std::sort(goodPatterns_.begin(), goodPatterns_.end(), sortByFrequency);
     return 0;
 }
 
+
 // _____________________________________________________________________________
 // Output patterns into a TTree
-int PatternGenerator::writeTree(TString out) {
+int PatternGenerator::writePatterns(TString out) {
     if (!out.EndsWith(".root")) {
         std::cout << Error() << "Output filename must be .root" << std::endl;
         return 1;
     }
 
-    if (nPatterns_ > (int) goodPatterns_.size())
-        nPatterns_ = goodPatterns_.size();
-    if (verbose_)  std::cout << Info() << "Recreating " << out << " with " << nPatterns_ << " patterns." << std::endl;
+    if (maxPatterns_ > (int) goodPatterns_.size())
+        maxPatterns_ = goodPatterns_.size();
+    if (verbose_)  std::cout << Info() << "Recreating " << out << " with " << maxPatterns_ << " patterns." << std::endl;
     TFile* tfile = TFile::Open(out, "RECREATE");
     TTree* ttree = new TTree("patternBank", "");
 
-    uint32_t nLayers = nLayers_;
-    uint32_t nDCBits = nDCBits_;
-    uint32_t hash;
-    uint32_t frequency;
-    uint64_t pattern[nLayers_];
-    uint16_t bit[nLayers_];
+    typedef unsigned short unsigned16;
+    //typedef unsigned long long unsigned64;
+    typedef ULong64_t unsigned64;
+    std::auto_ptr<unsigned>                   hash            (new unsigned(0));
+    std::auto_ptr<unsigned>                   frequency       (new unsigned(0));
+    std::auto_ptr<std::vector<unsigned64> >   superstripIds   (new std::vector<unsigned64>());
+    std::auto_ptr<std::vector<unsigned16> >   superstripBits  (new std::vector<unsigned16>());
 
-    ttree->Branch("nLayers", &nLayers, "nLayers/i");            // i for UInt_t
-    ttree->Branch("nDCBits", &nDCBits, "nDCBits/i");            // i for UInt_t
-    ttree->Branch("hash", &hash, "hash/i");                     // i for UInt_t
-    ttree->Branch("frequency", &frequency, "frequency/i");      // i for UInt_t
-    ttree->Branch("pattern", pattern, "pattern[nLayers]/l");    // l for ULong64_t
-    ttree->Branch("bit", bit, "bit[nLayers]/s");                // s for UShort_t
+    ttree->Branch("hash"            , &(*hash));
+    ttree->Branch("frequency"       , &(*frequency));
+    ttree->Branch("superstripIds"   , &(*superstripIds));
+    ttree->Branch("superstripBits"  , &(*superstripBits));
 
     // _________________________________________________________________________
     // Loop over good patterns
-    for (int ievt=0; ievt<nPatterns_; ++ievt) {
+    for (int ievt=0; ievt<maxPatterns_; ++ievt) {
         if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7i", ievt) << std::endl;
 
-        const Pattern& patt = goodPatterns_.at(ievt);
-        for (unsigned l=0; l<nLayers; ++l) {
-            pattern[l] = patt.getHitId(l);
-            bit[l] = patt.getHitBit(l);
+        const TTPattern& patt = goodPatterns_.at(ievt);
+        *hash = patt.hash();
+        *frequency = patt.frequency();
+
+        superstripIds->clear();
+        superstripBits->clear();
+        const std::vector<TTSuperstrip> superstrips = patt.getSuperstrips();
+        for (unsigned i=0; i<superstrips.size(); ++i) {
+            const TTSuperstrip& superstrip = superstrips.at(i);
+            superstripIds->push_back(superstrip.id());
+            superstripBits->push_back(superstrip.bit());
         }
-        hash = patt.hash();
-        frequency = patt.frequency();
 
         ttree->Fill();
     }
-    assert(ttree->GetEntries() == nPatterns_);
+    assert(ttree->GetEntries() == maxPatterns_);
 
+    // Also save the triggerTower
     TTree* ttree2 = new TTree("triggerTower", "");
-    std::map<uint32_t, Pattern::vuint32_t> * ptr_triggerTowerMap_ = &triggerTowerMap_;
+    std::map<unsigned, std::vector<unsigned> > * ptr_triggerTowerMap_ = &triggerTowerMap_;
     ttree2->Branch("triggerTowerMap", ptr_triggerTowerMap_);
     ttree2->Fill();
     assert(ttree2->GetEntries() == 1);
@@ -641,9 +562,59 @@ int PatternGenerator::writeTree(TString out) {
     return 0;
 }
 
+
+// _____________________________________________________________________________
+// Private functions
+
+// Make a map to merge layers in barrel and in endcap
+void PatternGenerator::makeLayerMap() {
+    // Hardcoded layer information
+    if (nLayers_ <= 6) {
+        layerMap_ = std::map<id_type, id_type> {
+            {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
+            {11,11}, {12,10}, {13,9}, {14,8}, {15,7},
+            {18,11}, {19,10}, {20,9}, {21,8}, {22,7}
+        };
+    } else {  // otherwise it's not merged
+        layerMap_ = std::map<id_type, id_type> {
+            {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
+            {11,11}, {12,12}, {13,13}, {14,14}, {15,15},
+            {18,11}, {19,12}, {20,13}, {21,14}, {22,15}
+        };
+    };
+}
+
+// Make unique patterns from 'allPatterns_' and put them into 'goodPatterns_'
+void PatternGenerator::uniquifyPatterns() {
+    assert(!allPatterns_.empty());
+    goodPatterns_.clear();
+
+    std::map<pattern_type, unsigned> patternIdMap;  // key: patternId, value: index in goodPatterns_
+    for (unsigned i=0; i<allPatterns_.size(); ++i) {
+        const TTPattern& patt = allPatterns_.at(i);
+        const pattern_type& pattId = patt.id();
+
+        auto found = patternIdMap.find(pattId);
+        if (found == patternIdMap.end()) {  // if not exist, insert the pattern
+            goodPatterns_.push_back(patt);
+            patternIdMap.insert(std::make_pair(pattId, goodPatterns_.size()-1) );
+
+        } else {
+            // If exist, merge them
+            // merge(...) will update the DC bit and increase the frequency
+            unsigned index = found->second;
+            goodPatterns_.at(index).merge(patt);
+        }
+    }
+    //allPatterns_.clear();
+}
+
+
 // _____________________________________________________________________________
 // Main driver
-int PatternGenerator::run(TString src, TString out, TString layout) {
+int PatternGenerator::run(TString out, TString src, TString layout) {
+    gROOT->ProcessLine("#include <vector>");  // how is it not loaded?
+
     int exitcode = 0;
     Timing(1);
 
@@ -655,18 +626,15 @@ int PatternGenerator::run(TString src, TString out, TString layout) {
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = readAndFilterTree(out);
-    //exitcode = readAndFilterTree2(out);
+    exitcode = filterHits(out);
     if (exitcode)  return exitcode;
     Timing();
 
-    if (verbose_)  std::cout << Info() << "Closing input source." << std::endl;
-    chain_->Reset();
-    exitcode = makeTree(out);
+    exitcode = makePatterns();
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = writeTree(out);
+    exitcode = writePatterns(out);
     if (exitcode)  return exitcode;
     Timing();
 

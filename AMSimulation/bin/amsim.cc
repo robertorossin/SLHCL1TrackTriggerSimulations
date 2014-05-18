@@ -22,6 +22,7 @@ int getPowerOfTwo(int n) {
 }
 
 
+// _____________________________________________________________________________
 int main(int argc, char **argv) {
 
     // Declare a group of options that will be allowed only on command line
@@ -42,8 +43,8 @@ int main(int argc, char **argv) {
 
     // Declare a group of options that will be allowed both on command line
     // and in config file
-    std::string input, output, layout, bank;
-    int maxEvents, maxPatterns;
+    std::string input, output, layout, bankfile;
+    int maxEvents, maxPatterns, maxRoads, maxHits;
     bool nofilter;
     PatternBankOption bankOption;
     po::options_description config("Configuration");
@@ -51,12 +52,16 @@ int main(int argc, char **argv) {
         ("input,i"      , po::value<std::string>(&input)->required(), "Specify input files")
         ("output,o"     , po::value<std::string>(&output)->required(), "Specify output file")
         ("maxEvents,n"  , po::value<int>(&maxEvents)->default_value(-1), "Specfiy max number of events")
-        ("maxPatterns,m", po::value<int>(&maxPatterns)->default_value(-1), "Specfiy max number of patterns")
+        ("maxPatterns"  , po::value<int>(&maxPatterns)->default_value(-1), "Specfiy max number of patterns")
+        ("maxRoads"     , po::value<int>(&maxRoads)->default_value(-1), "Specfiy max number of roads per event")
+        ("maxHits"      , po::value<int>(&maxHits)->default_value(-1), "Specfiy max number of hits per road")
 
         // Only for bank generation
         ("layout,L"     , po::value<std::string>(&layout), "Specify layout file")
-        ("bank,B"       , po::value<std::string>(&bank), "Specify pattern bank file")
         ("no-filter"    , po::bool_switch(&nofilter)->default_value(false), "Do not apply filtering")
+
+        // Only for pattern matching
+        ("bank,B"       , po::value<std::string>(&bankfile), "Specify pattern bank file")
 
         // Specifically for a pattern bank
         ("bank_minPt"         , po::value<float>(&bankOption.minPt)->default_value(   2.0), "Specify min pt")
@@ -140,21 +145,22 @@ int main(int argc, char **argv) {
     bankOption.nSubModules = std::min(std::max(1, bankOption.nSubModules), 1024);
     bankOption.nMisses     = std::min(std::max(0, bankOption.nMisses), 3);
     bankOption.nFakeHits   = std::min(std::max(0, bankOption.nFakeHits), 3);
-    bankOption.nDCBits     = std::min(std::max(0, bankOption.nDCBits), 10);
+    bankOption.nDCBits     = std::min(std::max(0, bankOption.nDCBits), 4);
 
-    std::cout << Color("magenta") << "Parsed pattern bank options:" << EndColor() << std::endl;
-    std::cout << bankOption << std::endl;
-
+    // _________________________________________________________________________
     // Calling main functions
     if (vm.count("generateBank")) {
+        std::cout << Color("magenta") << "Parsed pattern bank options:" << EndColor() << std::endl;
+        std::cout << bankOption << std::endl;
+
         std::cout << Color("magenta") << "Start generating pattern bank..." << EndColor() << std::endl;
 
         PatternGenerator generator(bankOption);
         generator.setFilter(!nofilter);
         generator.setNEvents(maxEvents);
-        generator.setNPatterns(maxPatterns);
+        generator.setMaxPatterns(maxPatterns);
         generator.setVerbosity(verbose);
-        int exitcode = generator.run(input, output, layout);
+        int exitcode = generator.run(output, input, layout);
         if (exitcode) {
             std::cerr << "An error occurred during pattern bank generation. Exiting." << std::endl;
             return exitcode;
@@ -169,12 +175,17 @@ int main(int argc, char **argv) {
         std::cout << "NOT IMPLEMENTED" << std::endl;
 
     } else if (vm.count("patternRecognition")) {
+        std::cout << Color("magenta") << "Parsed pattern bank options:" << EndColor() << std::endl;
+        std::cout << bankOption << std::endl;
+
         std::cout << Color("magenta") << "Start running pattern recognition..." << EndColor() << std::endl;
 
         PatternMatcher matcher(bankOption);
         matcher.setNEvents(maxEvents);
+        matcher.setMaxRoads(maxRoads);
+        matcher.setMaxHits(maxHits);
         matcher.setVerbosity(verbose);
-        int exitcode = matcher.run(input, output, bank);
+        int exitcode = matcher.run(output, input, bankfile);
         if (exitcode) {
             std::cerr << "An error occurred during pattern recognition. Exiting." << std::endl;
             return exitcode;

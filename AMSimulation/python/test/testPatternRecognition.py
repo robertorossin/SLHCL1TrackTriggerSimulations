@@ -1,36 +1,43 @@
 import unittest
 import sys
-from ROOT import TFile, TTree, gROOT, vector
+from ROOT import TFile, TTree, gROOT, gSystem, vector
 
 
 class TestAMSim(unittest.TestCase):
     """Test the pattern recognition results using PatternMatcher"""
 
-    infile = "results.root"
+    infile = "roads.root"
 
     def setUp(self):
         gROOT.SetBatch(True)
+        gROOT.SetMacroPath(gSystem.Getenv("CMSSW_BASE")+"/src/SLHCL1TrackTriggerSimulations/AMSimulation")
+        gROOT.LoadMacro("python/test/loader.h+")
         self.tfile = TFile.Open(self.infile)
         self.ttree = self.tfile.Get("ntupler/tree")
         self.nevents = self.ttree.GetEntries()
-        self.tfile_tmp = TFile.Open(self.infile.replace(".root","_tmp.root"))
-        self.ttree_tmp = self.tfile_tmp.Get("ntupler/tree")
-        self.nevents_tmp = self.ttree_tmp.GetEntries()
 
     def tearDown(self):
         pass
 
     def test_nevents(self):
         self.assertEqual(self.nevents, 100)
-        self.assertEqual(self.nevents_tmp, 100)
 
-    def test_npassed(self):
-        tree = self.ttree_tmp
+    def test_nroads(self):
+        tree = self.ttree
         n = 0
         for ievt in tree:
-            if ievt.TTStubs_passed:
+            for iroad in ievt.AMTTRoads_hitXs:
                 n += 1
-        self.assertEqual(n, 63)  # 63 events have >=6 good stubs
+        self.assertEqual(n, 63)
+
+    def test_nhits(self):
+        tree = self.ttree
+        n = 0
+        for ievt in tree:
+            for iroad in ievt.AMTTRoads_hitXs:
+                for ihit in iroad:
+                    n += 1
+        self.assertEqual(n, 379)
 
 
 if __name__ == "__main__":

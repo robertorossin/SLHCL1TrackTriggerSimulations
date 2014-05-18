@@ -32,7 +32,7 @@ TString Warning();
 TString Info();
 TString Debug();
 
-std::size_t hashFileEvent(TString src, unsigned evt);
+std::size_t hashThisEvent(unsigned evt, float phi);
 
 }  // namespace slhcl1tt
 
