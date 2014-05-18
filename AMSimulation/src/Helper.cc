@@ -106,14 +106,13 @@ TString Debug() {
     return Color("gray") + "DEBUG" + Color("reset") + "  : ";
 }
 
-std::size_t hashFileEvent(TString src, unsigned evt) {
-    TString s1 = src.ReplaceAll(".root","");
-    s1 = (s1(s1.Sizeof()-8,s1.Sizeof()) + Form("%08u", evt));
+
+std::size_t hashThisEvent(unsigned evt, float phi) {
+    TString s1 = Form("%.8f%08u", phi, evt);
     return s1.Hash();
 }
 
 }  // namespace slhcl1tt
-
 
 void ResetDeleteBranches (TTree* tree) {
     TObjArray* branches = tree->GetListOfBranches();
