@@ -1,6 +1,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternGenerator.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternMatcher.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitter.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/NTupleMaker.h"
 
 #include "boost/program_options.hpp"
 #include <cstdlib>
@@ -38,6 +39,7 @@ int main(int argc, char **argv) {
         ("analyzeBank,A"       , "Analyze associative memory pattern bank")
         ("patternRecognition,R", "Run associative memory pattern recognition")
         ("trackFitting,F"      , "Perform track fitting")
+        ("write,W"             , "Write full ntuple")
         ("verbose,v"           , po::value<int>(&verbose)->default_value(1), "Verbosity level (-1 = very quiet; 0 = quiet, 1 = verbose, 2+ = debug)")
         ("no-color"            , "Turn off colored text")
         ("timing"              , "Show timing information")
@@ -45,7 +47,7 @@ int main(int argc, char **argv) {
 
     // Declare a group of options that will be allowed both on command line
     // and in config file
-    std::string input, output, layout, bankfile;
+    std::string input, output, layout, bankfile, roadfile, trackfile;
     int maxEvents, maxPatterns, maxRoads, maxHits, maxTracks;
     bool nofilter;
     PatternBankOption bankOption;
@@ -66,6 +68,10 @@ int main(int argc, char **argv) {
 
         // Only for pattern matching
         ("bank,B"       , po::value<std::string>(&bankfile), "Specify pattern bank file")
+
+        // Only for writing full ntuple
+        ("roads"        , po::value<std::string>(&roadfile), "Specify file containing the roads")
+        ("tracks"       , po::value<std::string>(&trackfile), "Specify file containing the tracks")
 
         // Specifically for a pattern bank
         ("bank_minPt"         , po::value<float>(&bankOption.minPt)->default_value(   2.0), "Specify min pt")
@@ -140,8 +146,9 @@ int main(int argc, char **argv) {
           vm.count("mergeBank")          ||
           vm.count("analyzeBank")        ||
           vm.count("patternRecognition") ||
-          vm.count("trackFitting")       )) {
-        std::cout << "Must select one of '-G', '-M', '-A', '-R' or '-F'" << std::endl;
+          vm.count("trackFitting")       ||
+          vm.count("write")              ) ) {
+        std::cout << "Must select one of '-G', '-M', '-A', '-R', '-F' or 'W'" << std::endl;
         std::cout << visible << std::endl;
         return 1;
     }
@@ -163,6 +170,7 @@ int main(int argc, char **argv) {
     bankOption.nMisses     = std::min(std::max(0, bankOption.nMisses), 3);
     bankOption.nFakeHits   = std::min(std::max(0, bankOption.nFakeHits), 3);
     bankOption.nDCBits     = std::min(std::max(0, bankOption.nDCBits), 4);
+
 
     // _________________________________________________________________________
     // Calling main functions
@@ -228,6 +236,20 @@ int main(int argc, char **argv) {
 
         std::cout << "Track fitting " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
 
+    } else if (vm.count("write")) {
+
+        std::cout << Color("magenta") << "Start writing full ntuple..." << EndColor() << std::endl;
+
+        NTupleMaker writer;
+        writer.setNEvents(maxEvents);
+        writer.setVerbosity(verbose);
+        int exitcode = writer.run(output, input, roadfile, trackfile);
+        if (exitcode) {
+            std::cerr << "An error occurred during writing full ntuple. Exiting." << std::endl;
+            return exitcode;
+        }
+
+        std::cout << "Writing full ntuple " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
     }
 
     return EXIT_SUCCESS;
