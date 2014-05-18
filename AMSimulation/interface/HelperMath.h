@@ -8,6 +8,8 @@
 #endif
 
 
+// All these functions are designed to be call-able by TTree
+// As such, they are not namespaced
 inline double quadsum(double a, double b) {
     return std::sqrt(a*a + b*b);
 }
