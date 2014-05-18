@@ -1,5 +1,6 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternGenerator.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternMatcher.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitter.h"
 
 #include "boost/program_options.hpp"
 #include <cstdlib>
@@ -36,6 +37,7 @@ int main(int argc, char **argv) {
         ("mergeBank,M"         , "Merge associative memory pattern bank")
         ("analyzeBank,A"       , "Analyze associative memory pattern bank")
         ("patternRecognition,R", "Run associative memory pattern recognition")
+        ("trackFitting,F"      , "Perform track fitting")
         ("verbose,v"           , po::value<int>(&verbose)->default_value(1), "Verbosity level (-1 = very quiet; 0 = quiet, 1 = verbose, 2+ = debug)")
         ("no-color"            , "Turn off colored text")
         ("timing"              , "Show timing information")
@@ -44,9 +46,10 @@ int main(int argc, char **argv) {
     // Declare a group of options that will be allowed both on command line
     // and in config file
     std::string input, output, layout, bankfile;
-    int maxEvents, maxPatterns, maxRoads, maxHits;
+    int maxEvents, maxPatterns, maxRoads, maxHits, maxTracks;
     bool nofilter;
     PatternBankOption bankOption;
+    TrackFitterOption fitOption;
     po::options_description config("Configuration");
     config.add_options()
         ("input,i"      , po::value<std::string>(&input)->required(), "Specify input files")
@@ -55,6 +58,7 @@ int main(int argc, char **argv) {
         ("maxPatterns"  , po::value<int>(&maxPatterns)->default_value(-1), "Specfiy max number of patterns")
         ("maxRoads"     , po::value<int>(&maxRoads)->default_value(-1), "Specfiy max number of roads per event")
         ("maxHits"      , po::value<int>(&maxHits)->default_value(-1), "Specfiy max number of hits per road")
+        ("maxTracks"    , po::value<int>(&maxTracks)->default_value(-1), "Specfiy max number of tracks per event")
 
         // Only for bank generation
         ("layout,L"     , po::value<std::string>(&layout), "Specify layout file")
@@ -79,6 +83,15 @@ int main(int argc, char **argv) {
         ("bank_activeLayers"  , po::value<std::vector<int> >(&bankOption.activeLayers), "Specify active layers")
         ("bank_inactiveLayers", po::value<std::vector<int> >(&bankOption.inactiveLayers), "Specify inactive layers")
         ("bank_triggerTowers" , po::value<std::vector<int> >(&bankOption.triggerTowers), "Specify trigger towers (a.k.a. sectors)")
+        ("fit_pqType"         , po::value<int>(&fitOption.pqType)->default_value(0), "Specify choice of variables for p,q")
+        ("fit_pbins"          , po::value<int>(&fitOption.pbins)->default_value(100), "Specify # of bins for p")
+        ("fit_qbins"          , po::value<int>(&fitOption.qbins)->default_value(100), "Specify # of bins for q")
+        ("fit_pmin"           , po::value<float>(&fitOption.pmin)->default_value(-1), "Specify min value for p")
+        ("fit_qmin"           , po::value<float>(&fitOption.qmin)->default_value(-1), "Specify min value for q")
+        ("fit_pmax"           , po::value<float>(&fitOption.pmax)->default_value(1), "Specify max value for p")
+        ("fit_qmax"           , po::value<float>(&fitOption.qmax)->default_value(1), "Specify max value for q")
+        ("fit_sigma"          , po::value<float>(&fitOption.sigma)->default_value(3), "Specify resolution for the distance parameter")
+        ("fit_minWeight"      , po::value<float>(&fitOption.minWeight)->default_value(0.1), "Specify minimum weight to create a track")
         ;
 
     // Hidden options, will be allowed both on command line and in config file,
@@ -119,12 +132,16 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // Options found in both PatternBankOption and TrackFitterOption
+    fitOption.nLayers = bankOption.nLayers;
+
     // At least one option needs to be called
-    if (!(vm.count("generateBank") ||
-          vm.count("mergeBank")    ||
-          vm.count("analyzeBank")  ||
-          vm.count("patternRecognition") )) {
-        std::cout << "Must select one of '-G', '-M', '-A' or '-R'" << std::endl;
+    if (!(vm.count("generateBank")       ||
+          vm.count("mergeBank")          ||
+          vm.count("analyzeBank")        ||
+          vm.count("patternRecognition") ||
+          vm.count("trackFitting")       )) {
+        std::cout << "Must select one of '-G', '-M', '-A', '-R' or '-F'" << std::endl;
         std::cout << visible << std::endl;
         return 1;
     }
@@ -192,6 +209,25 @@ int main(int argc, char **argv) {
         }
 
         std::cout << "Pattern recognition " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
+
+    } else if (vm.count("trackFitting")) {
+        std::cout << Color("magenta") << "Parsed track fitting options:" << EndColor() << std::endl;
+        std::cout << fitOption << std::endl;
+
+        std::cout << Color("magenta") << "Start running track fitting..." << EndColor() << std::endl;
+
+        TrackFitter fitter(fitOption);
+        fitter.setNEvents(maxEvents);
+        fitter.setMaxTracks(maxTracks);
+        fitter.setVerbosity(verbose);
+        int exitcode = fitter.run(output, input);
+        if (exitcode) {
+            std::cerr << "An error occurred during track fitting. Exiting." << std::endl;
+            return exitcode;
+        }
+
+        std::cout << "Track fitting " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
+
     }
 
     return EXIT_SUCCESS;
