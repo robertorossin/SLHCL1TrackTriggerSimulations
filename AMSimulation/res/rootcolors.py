@@ -16,6 +16,7 @@ kSpring     = 820   #33FF00
 kYellow     = 400   #FFFF00
 kOrange     = 800   #FFCC00
 
+#TColor.InitializeColors()
 kRed2       = TColor.GetColor("#C02020")
 kGreen2     = TColor.GetColor("#20C020")
 kBlue2      = TColor.GetColor("#2020C0")
@@ -78,3 +79,9 @@ sGreen      = TColor.GetColor("#859900")
 
 ssBase3     = TColor.GetColor("#E3EAFD")
 ssBase4     = TColor.GetColor("#FCF8E3")
+
+# Very nice color palette stolen from tkgeometry
+# https://code.google.com/p/tkgeometry/source/browse/trunk/src/Palette.cc
+palette      = map(lambda x: TColor.GetColor(x), ("#004586","#FF420E","#FFD320","#579D1C","#7E0021","#83CAFF","#314004","#AECF00","#4B1F6F","#FF950E","#C5000B","#0084D1"))
+lightpalette = map(lambda x: TColor.GetColor(x), ("#79B7F2","#F29379","#FFEDA6","#B1F279","#F27999","#C2DEF2","#D4F279","#DFF279","#C791F2","#F2BD79","#F27980","#AAD7F2"))
+
