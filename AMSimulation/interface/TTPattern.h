@@ -5,7 +5,7 @@
 
 #include <cassert>
 #include <algorithm>
-#include <iostream>
+#include <iosfwd>
 #include <vector>
 
 
@@ -111,27 +111,11 @@ inline bool sortByFrequency(const TTPattern& lhs, const TTPattern& rhs) {
 
 // _____________________________________________________________________________
 // Output streams
-inline std::ostream& operator<<(std::ostream& o, const pattern_type& pattId) {
-    for (pattern_type::const_iterator it=pattId.begin(); it!=pattId.end(); ++it) {
-        o << *it << " ";
-    }
-    return o;
-}
+std::ostream& operator<<(std::ostream& o, const pattern_type& pattId);
 
-inline std::ostream& operator<<(std::ostream& o, const TTPattern& patt) {
-    o << "id: " << patt.id() << "  frequency: " << patt.frequency() << " ";
-    return o;
-}
+std::ostream& operator<<(std::ostream& o, const TTPattern& patt);
 
-inline std::ostream& operator<<(std::ostream& o, const TTRoad& road) {
-    o << "pattId: " << road.patternId() << "  hits: ";
-    std::vector<TTHit> hits = road.getHits();
-    for (std::vector<TTHit>::const_iterator it=hits.begin(); it!=hits.end(); ++it) {
-        o << *it << " ";
-    }
-    o << " ";
-    return o;
-}
+std::ostream& operator<<(std::ostream& o, const TTRoad& road);
 
 }  // namespace slhcl1tt
 

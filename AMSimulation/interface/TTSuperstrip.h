@@ -4,8 +4,8 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HelperPattern.h"
 
 #include <cmath>
+#include <iosfwd>
 #include <vector>
-#include <iostream>
 
 
 namespace slhcl1tt {
@@ -115,16 +115,9 @@ class TTHit {
 
 // _____________________________________________________________________________
 // Output streams
-inline std::ostream& operator<<(std::ostream& o, const TTSuperstrip& ss) {
-    o << "id: " << ss.id() << "  bit: " << ss.bit() << " ";
-    return o;
-}
+std::ostream& operator<<(std::ostream& o, const TTSuperstrip& ss);
 
-inline std::ostream& operator<<(std::ostream& o, const TTHit& hit) {
-    o << "ssId: " << hit.superstripId() << "  x: " << hit.x() << "  y: " << hit.y() << "  z: " << hit.z()
-      << "  signed pt: " << hit.charge() * hit.pt() << " ";
-    return o;
-}
+std::ostream& operator<<(std::ostream& o, const TTHit& hit);
 
 }  // namespace slhcl1tt
 

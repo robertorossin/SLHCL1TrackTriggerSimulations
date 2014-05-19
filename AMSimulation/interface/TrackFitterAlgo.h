@@ -1,10 +1,8 @@
 #ifndef AMSimulation_TrackFitterAlgo_h_
 #define AMSimulation_TrackFitterAlgo_h_
 
-#include <cassert>
-#include <algorithm>
 #include <cmath>
-#include <iostream>
+#include <iosfwd>
 #include <vector>
 
 // FIXME: 'two-step' approach is not yet implemented
@@ -145,10 +143,6 @@ inline bool sortByWeight(const Cell_pq& lhs, const Cell_pq& rhs) {
 }
 
 // _____________________________________________________________________________
-inline std::ostream& operator<<(std::ostream& o, const TrackParam& p) {
-    o << "pt: " << p.pt << "  phi: " << p.phi << "  eta: " << p.eta << "  dz: " << p.dz << "  d0: " << p.d0 << "  chi2: " << p.chi2;
-    return o;
-}
-
+std::ostream& operator<<(std::ostream& o, const TrackParam& p);
 
 #endif

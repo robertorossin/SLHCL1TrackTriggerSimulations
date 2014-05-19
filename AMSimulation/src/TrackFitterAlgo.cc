@@ -1,4 +1,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgo.h"
+#include <cassert>
+#include <algorithm>
+#include <iostream>
 
 #ifndef ROOT_Math_GenVector_eta
 #include "Math/GenVector/eta.h"
@@ -209,6 +212,11 @@ float RetinaTrackFitterAlgo<CoordType>::getResponsePol(float gamma_temp, float b
     return R_ij;
 }
 
+
+std::ostream& operator<<(std::ostream& o, const TrackParam& p) {
+    o << "pt: " << p.pt << "  phi: " << p.phi << "  eta: " << p.eta << "  dz: " << p.dz << "  d0: " << p.d0 << "  chi2: " << p.chi2;
+    return o;
+}
 
 // Explicit instantiations
 template class RetinaTrackFitterAlgo<ZR>;
