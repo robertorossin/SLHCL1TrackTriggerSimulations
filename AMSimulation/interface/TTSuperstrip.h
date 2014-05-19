@@ -116,13 +116,13 @@ class TTHit {
 // _____________________________________________________________________________
 // Output streams
 inline std::ostream& operator<<(std::ostream& o, const TTSuperstrip& ss) {
-    o << "id: " << ss.id() << "  bit: " << ss.bit() << std::endl;
+    o << "id: " << ss.id() << "  bit: " << ss.bit() << " ";
     return o;
 }
 
 inline std::ostream& operator<<(std::ostream& o, const TTHit& hit) {
     o << "ssId: " << hit.superstripId() << "  x: " << hit.x() << "  y: " << hit.y() << "  z: " << hit.z()
-      << "  signed pt: " << hit.charge() * hit.pt() << std::endl;
+      << "  signed pt: " << hit.charge() * hit.pt() << " ";
     return o;
 }
 

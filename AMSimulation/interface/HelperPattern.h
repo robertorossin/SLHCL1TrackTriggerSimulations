@@ -3,7 +3,7 @@
 
 //#include <cstdint>
 //#include <array>
-#include <stdint.h>
+#include <stdint.h>  // consistent with DataFormats/DetId/interface/DetId.h
 #include <tr1/array>
 
 namespace slhcl1tt {
@@ -45,6 +45,8 @@ inline id_type decodeModule(id_type moduleId) {
 }
 
 // Encode moduleId, superstrip location into a superstripId
+// SubLadder = column = _segment_
+// SubModule = row = _superstrip_
 inline addr_type encodeSuperstripId(id_type lay, id_type lad, id_type mod, id_type col, id_type row) {
     addr_type id = 0;
     id |= addr_type(lay & iLayerMask_    ) << iLayerStartBit_     |

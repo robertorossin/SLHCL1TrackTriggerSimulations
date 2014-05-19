@@ -68,6 +68,9 @@ class TTPattern {
 };
 
 
+// TTRoad is just a data holder. In actuality, a road should be a word, 
+// and its relevant data is retrieved using a lookup table. In software, 
+// we simply skip this lookup.
 class TTRoad {
   public:
     // Constructors
@@ -116,7 +119,7 @@ inline std::ostream& operator<<(std::ostream& o, const pattern_type& pattId) {
 }
 
 inline std::ostream& operator<<(std::ostream& o, const TTPattern& patt) {
-    o << "id: " << patt.id() << "  frequency: " << patt.frequency() << std::endl;
+    o << "id: " << patt.id() << "  frequency: " << patt.frequency() << " ";
     return o;
 }
 
@@ -126,7 +129,7 @@ inline std::ostream& operator<<(std::ostream& o, const TTRoad& road) {
     for (std::vector<TTHit>::const_iterator it=hits.begin(); it!=hits.end(); ++it) {
         o << *it << " ";
     }
-    o << std::endl;
+    o << " ";
     return o;
 }
 

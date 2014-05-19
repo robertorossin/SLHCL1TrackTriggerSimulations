@@ -134,6 +134,10 @@ class RetinaTrackFitterAlgo : TrackFitterAlgoBase {
     std::vector<CoordType> hits_;
 };
 
+// Specialized for ZR
+template <>
+std::vector<TrackParam> RetinaTrackFitterAlgo<ZR>::getParams();
+
 
 // _____________________________________________________________________________
 inline bool sortByWeight(const Cell_pq& lhs, const Cell_pq& rhs) {

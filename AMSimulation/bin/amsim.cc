@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
         ("patternRecognition,R", "Run associative memory pattern recognition")
         ("trackFitting,F"      , "Perform track fitting")
         ("write,W"             , "Write full ntuple")
-        ("verbose,v"           , po::value<int>(&verbose)->default_value(1), "Verbosity level (-1 = very quiet; 0 = quiet, 1 = verbose, 2+ = debug)")
+        ("verbosity,v"         , po::value<int>(&verbose)->default_value(1), "Verbosity level (-1 = very quiet; 0 = quiet, 1 = verbose, 2+ = debug)")
         ("no-color"            , "Turn off colored text")
         ("timing"              , "Show timing information")
         ;
@@ -170,6 +170,20 @@ int main(int argc, char **argv) {
     bankOption.nMisses     = std::min(std::max(0, bankOption.nMisses), 3);
     bankOption.nFakeHits   = std::min(std::max(0, bankOption.nFakeHits), 3);
     bankOption.nDCBits     = std::min(std::max(0, bankOption.nDCBits), 4);
+
+    // Protection against conflict in nSubModules vs. nDCBits
+    if (bankOption.nSubModules == 1 && bankOption.nDCBits > 0) {
+        std::cout << Warning() << "Requested # of submodules: 1, # of DC bits: " << bankOption.nDCBits << " --> " << 0 << std::endl;
+        bankOption.nDCBits = 0;
+    }
+    if (bankOption.nSubModules == 2 && bankOption.nDCBits > 1) {
+        std::cout << Warning() << "Requested # of submodules: 2, # of DC bits: " << bankOption.nDCBits << " --> " << 1 << std::endl;
+        bankOption.nDCBits = 1;
+    }
+    if (bankOption.nSubModules == 4 && bankOption.nDCBits > 2) {
+        std::cout << Warning() << "Requested # of submodules: 4, # of DC bits: " << bankOption.nDCBits << " --> " << 2 << std::endl;
+        bankOption.nDCBits = 2;
+    }
 
 
     // _________________________________________________________________________

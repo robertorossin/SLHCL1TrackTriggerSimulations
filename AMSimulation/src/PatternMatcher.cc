@@ -39,10 +39,10 @@ int PatternMatcher::readPatterns(TString src) {
         for (Long64_t ievt=0; ievt<nentries; ++ievt) {
             ttree->GetEntry(ievt);
             assert(superstripIds->size() == superstripBits->size());
-            int nSuperstrips = superstripIds->size();
+            unsigned nsuperstrips = superstripIds->size();
 
             std::vector<TTSuperstrip> superstrips;
-            for (int i=0; i<nSuperstrips; ++i) {
+            for (unsigned i=0; i<nsuperstrips; ++i) {
                 TTSuperstrip ss(superstripIds->at(i), superstripBits->at(i));
                 superstrips.push_back(ss);
             }
@@ -301,7 +301,7 @@ int PatternMatcher::makeRoads() {
                         }
                     }
                 }
-                if (verbose_>2)  std::cout << Debug() << "... ... ... hit: " << m << " ssId: " << ssId << " ssBit: " << ssBit << " col: " << col << " row: " << row << " ncols: " << ncols << " nrows: " << nrows << " trkId: " << vb_hitTrkIds->at(l).at(m) << std::endl;
+                if (verbose_>2)  std::cout << Debug() << "... ... ... hit: " << m << " ssId: " << ssId << " ssBit: " << ssBit << " col: " << col << " row: " << row << " trkId: " << vb_hitTrkIds->at(l).at(m) << std::endl;
             }
         }
 
