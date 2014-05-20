@@ -305,12 +305,14 @@ int PatternMatcher::makeRoads() {
             }
         }
 
+        std::vector<TTRoad> roadsInThisEvent;
         if (! foundPatternMap.empty()) {
-            std::vector<TTRoad> roadsInThisEvent;
             for (auto it: foundPatternMap) {
-                if ((int) it.second.size() >= (nLayers_ - po.nMisses)) {
+                pattern_type pattId = patterns_.at(it.first).id();
+                int nFakeSuperstrips = std::count(pattId.begin(), pattId.end(), encodeFakeSuperstripId());
+
+                if ((int) it.second.size() >= (nLayers_ - nFakeSuperstrips - po.nMisses)) {
                     unsigned hash = hashThisEvent(v_event, vb_simPhi->back());  // FIXME: will switch to use generator seed instead
-                    pattern_type pattId = patterns_.at(it.first).id();
                     const std::vector<TTHit>& hits = it.second;
 
                     TTRoad road(hash, pattId, hits);
@@ -318,9 +320,9 @@ int PatternMatcher::makeRoads() {
                 }
             }
 
-            allRoads_.push_back(roadsInThisEvent);
             ++nPassed;
         }
+        allRoads_.push_back(roadsInThisEvent);
     }
 
     if (verbose_)  std::cout << Info() << "Processed " << nEvents_ << " events, triggered on " << nPassed << " events." << std::endl;

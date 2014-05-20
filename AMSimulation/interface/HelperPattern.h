@@ -85,6 +85,13 @@ inline id_type decodeSuperstripSubModule(addr_type superstripId) {
     return addr_type(superstripId >> iSubModuleStartBit_) & iSubModuleMask_;
 }
 
+inline id_type decodeSuperstripAndEncodeModuleId(addr_type superstripId) {
+    id_type lay = decodeSuperstripLayer(superstripId);
+    id_type lad = decodeSuperstripLadder(superstripId);
+    id_type mod = decodeSuperstripModule(superstripId);
+    return (10000*lay + 100*lad + mod);
+}
+
 inline void encodeDCBit(id_type nDCBits, addr_type& superstripId, bit_type& superstripBit) {  // NOTE: pass by reference
     if (nDCBits == 0)  return;  // don't do anything
 
@@ -103,6 +110,21 @@ inline void encodeDCBit(id_type nDCBits, addr_type& superstripId, bit_type& supe
     superstripId = encodeSuperstripId(lay, lad, mod, col, row);
     superstripBit = (1 << row_mod_n);
     return;
+}
+
+inline addr_type encodeFakeSuperstripId() {
+    // An impossible value
+    addr_type id = 0;
+    id |= addr_type(0   & iLayerMask_    ) << iLayerStartBit_     |
+          addr_type(127 & iLadderMask_   ) << iLadderStartBit_    |
+          addr_type(127 & iModuleMask_   ) << iModuleStartBit_    |
+          addr_type(0   & iSubLadderMask_) << iSubLadderStartBit_ |
+          addr_type(0   & iSubModuleMask_) << iSubModuleStartBit_ ;
+    return id;
+}
+
+inline bool isFakeSuperstripId(addr_type id) {
+    return id == encodeFakeSuperstripId();
 }
 
 }  // namespace slhcl1tt

@@ -32,6 +32,7 @@ int PatternGenerator::readTriggerTowerFile(TString src) {
         return 1;
     }
 
+    triggerTowerMap_.clear();
     unsigned triggerTowerId = 0;
     for (unsigned i=0; i<values.size(); ++i) {
         if (i != 0) {  // skip the first index
@@ -39,7 +40,7 @@ int PatternGenerator::readTriggerTowerFile(TString src) {
                 triggerTowerId = values.at(i-1) * 10 + values.at(i);
                 triggerTowerMap_.insert(std::make_pair(triggerTowerId, std::vector<unsigned>()));
             } else if (values.at(i) > 10000) {
-                triggerTowerMap_[triggerTowerId].push_back(values.at(i));
+                triggerTowerMap_.at(triggerTowerId).push_back(values.at(i));
             }
         }
     }
@@ -47,6 +48,21 @@ int PatternGenerator::readTriggerTowerFile(TString src) {
     if (triggerTowerMap_.size() != MAX_NTOWERS) {
         std::cout << Error() << "Failed to get all trigger towers from the trigger tower file: " << src << std::endl;
         return 1;
+    }
+
+    // Prepare the reversed trigger tower map
+    triggerTowerMapReversed_.clear();
+    for (auto it: triggerTowerMap_) {  // loop over trigger tower map
+        for (auto it2: it.second) {  // loop over the moduleIds in the tower
+            auto found = triggerTowerMapReversed_.find(it2);
+            if (found == triggerTowerMapReversed_.end()) {  // if moduleId is not yet in the reversed map
+                std::vector<unsigned> triggerTowerIds;
+                triggerTowerIds.push_back(it.first);  // push back the towerId
+                triggerTowerMapReversed_.insert(std::make_pair(it2, triggerTowerIds));
+            } else {
+                found->second.push_back(it.first);  // push back the towerId
+            }
+        }
     }
     return 0;
 }
@@ -196,7 +212,7 @@ int PatternGenerator::filterHits(TString out_tmp) {
             keep = (ttf_event->EvalInstance() != 0);
 
         // Check min # of layers
-        bool require = ((int) nstubs >= nLayers_);
+        bool require = ((int) nstubs >= (nLayers_ - nFakeSuperstrips_));
         if (!require && filter_)
             keep = false;
 
@@ -241,7 +257,7 @@ int PatternGenerator::filterHits(TString out_tmp) {
         }
 
         // Check again min # of layers
-        require = ((int) goodLayers.size() >= nLayers_);
+        require = ((int) goodLayers.size() >= (nLayers_ - nFakeSuperstrips_));
         if (!require && filter_)
             keep = false;
 
@@ -315,7 +331,12 @@ int PatternGenerator::filterHits(TString out_tmp) {
         }
 
         // Check again min # of layers
-        require = ((int) ngoodstubs >= nLayers_);
+        require = ((int) ngoodstubs >= (nLayers_ - nFakeSuperstrips_));
+
+        // Only use fake superstrips if |eta| is within 0.8-1.2 (hardcoded)
+        if (!(0.8<std::abs(simEta) && std::abs(simEta)<1.2))
+            require = ((int) ngoodstubs >= nLayers_);
+
         if (!require && filter_)
             keep = false;
         if (!keep)  //  do not keep any stub
@@ -460,6 +481,15 @@ int PatternGenerator::makePatterns() {
             // Use DCBit
             encodeDCBit(nDCBits_, ssId, ssBit);
 
+            // However, if there is a valid hit, but moduleId does not exist in
+            // any trigger tower (due to cables, connections, or just too forward),
+            // we also add fake superstrips
+            // FIXME: In this case, # of fake superstrips can be more than one
+            if (triggerTowerMapReversed_.find(moduleId) == triggerTowerMapReversed_.end()) {
+                ssId = encodeFakeSuperstripId();
+                ssBit = 1 << 0;
+            }
+
             // Create a superstrip
             TTSuperstrip ss(ssId, ssBit);
             goodSuperstrips.push_back(ss);
@@ -467,12 +497,21 @@ int PatternGenerator::makePatterns() {
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " ssId: " << ssId << " ssBit: " << ssBit << " col: " << col << " row: " << row << " trkId: " << vb_hitTrkIds->at(l).at(0) << std::endl;
         }
+
+        // Make a fake superstrip and append at the end of goodSuperstrips
+        if (nFakeSuperstrips_ == 1) {
+            addr_type ssId = encodeFakeSuperstripId();
+            bit_type ssBit = 1 << 0;
+
+            TTSuperstrip ss(ssId, ssBit);
+            goodSuperstrips.push_back(ss);
+        }
+
         if (verbose_>2) {
             std::cout << Debug() << "... evt: " << ievt << " # goodSuperstrips: " << goodSuperstrips.size() << " {";
             std::copy(goodSuperstrips.begin(), goodSuperstrips.end(), std::ostream_iterator<TTSuperstrip>(std::cout, " "));
             std::cout << "}" << std::endl;
         }
-
 
         // Create a pattern
         unsigned hash = hashThisEvent(v_event, vb_simPhi->back());  // FIXME: will switch to use generator seed instead
@@ -485,9 +524,19 @@ int PatternGenerator::makePatterns() {
 
     // Keep only unique patterns
     uniquifyPatterns();  // do this after allPatterns_ is populated
-    for (unsigned i=0; i<goodPatterns_.size(); ++i) {
-        const TTPattern& patt = goodPatterns_.at(i);
-        if (verbose_>2) {
+
+    // Erase patterns not fully contained in a sector
+    //for (std::vector<TTPattern>::iterator it=goodPatterns_.begin(); it!=goodPatterns_.end(); ) {
+    //    if (isFullyContainedInSector(*it)) {
+    //        ++it;
+    //    } else {
+    //        it = goodPatterns_.erase(it);
+    //    }
+    //}
+
+    if (verbose_>2) {
+        for (unsigned i=0; i<goodPatterns_.size(); ++i) {
+            const TTPattern& patt = goodPatterns_.at(i);
             std::cout << Debug() << "... patt: " << i << " " << patt << std::endl;
         }
     }
@@ -552,6 +601,8 @@ int PatternGenerator::writePatterns(TString out) {
     TTree* ttree2 = new TTree("triggerTower", "");
     std::map<unsigned, std::vector<unsigned> > * ptr_triggerTowerMap_ = &triggerTowerMap_;
     ttree2->Branch("triggerTowerMap", ptr_triggerTowerMap_);
+    std::map<unsigned, std::vector<unsigned> > * ptr_triggerTowerMapReversed_ = &triggerTowerMapReversed_;
+    ttree2->Branch("triggerTowerMapReversed", ptr_triggerTowerMapReversed_);
     ttree2->Fill();
     assert(ttree2->GetEntries() == 1);
 
@@ -607,6 +658,37 @@ void PatternGenerator::uniquifyPatterns() {
         }
     }
     //allPatterns_.clear();
+}
+
+// Remove patterns not fully contained in a sector
+bool PatternGenerator::isFullyContainedInSector(const TTPattern& patt) {
+    std::map<unsigned, unsigned> triggerTowerIdCounts;
+    unsigned moduleIdCount = 0;
+    for(auto it: patt.id()) {  // loop over superstripIds in a pattern
+        id_type moduleId = decodeSuperstripAndEncodeModuleId(it);  // retrieve the moduleId
+        auto found = triggerTowerMapReversed_.find(moduleId);
+        if (found == triggerTowerMapReversed_.end()) {  // if moduleId not in the map
+            // do nothing
+        } else {
+            for (auto it2: found->second) {  // loop over towerIds containing the module
+                auto found2 = triggerTowerIdCounts.find(it2);
+                if (found2 == triggerTowerIdCounts.end()) {  // if not yet found, insert 1
+                    triggerTowerIdCounts.insert(std::make_pair(it2, 1));
+                } else {  // if found, just increment the counter
+                    found2->second += 1;
+                }
+            }
+            moduleIdCount += 1;
+        }
+    }
+
+    // Loop over the counters in the map
+    for (auto it: triggerTowerIdCounts) {
+        if ((int) it.second == (int) moduleIdCount) {
+            return true;
+        }
+    }
+    return false;
 }
 
 

@@ -16,10 +16,6 @@ using namespace slhcl1tt;
 #include "TString.h"
 
 
-// FIXME: incorporate trigger tower sectorization
-// FIXME: fake Superstrips
-// FIXME: bank merging
-
 // SETTINGS: DC bits, superstrip size, etc
 // INPUT   : TTree with moduleId, hitId, sim info + trigger tower file
 // OUTPUT  : Pattern bank
@@ -28,9 +24,13 @@ class PatternGenerator {
   public:
     // Constructor
     PatternGenerator(PatternBankOption option)
-    : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits),
+    : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits), nFakeSuperstrips_(po.nFakeSuperstrips),
       filter_(true),
       nEvents_(999999999), maxPatterns_(999999999), verbose_(1) {
+
+        assert(nLayers_ <= 8);
+        assert(nDCBits_ <= 4);
+        assert(nFakeSuperstrips_ <= 1);
 
         chain_ = new TChain("ntupler/tree");
 
@@ -44,17 +44,19 @@ class PatternGenerator {
 
 
     // Setters
-    void setNLayers(int n)        { nLayers_ = n; }
-    void setNDCBits(int n)        { nDCBits_ = n; }
+    //void setNLayers(int n)          { nLayers_ = n; }
+    //void setNDCBits(int n)          { nDCBits_ = n; }
+    //void setNFakeSuperstrips(int n) { nFakeSuperstrips_ = n; }
 
-    void setFilter(bool b=true)   { filter_ = b; }
-    void setNEvents(int n)        { if (n != -1)  nEvents_ = std::max(0, n); }
-    void setMaxPatterns(int n)    { if (n != -1)  maxPatterns_ = std::max(0, n); }
-    void setVerbosity(int n)      { verbose_ = n; }
+    void setFilter(bool b=true)     { filter_ = b; }
+    void setNEvents(int n)          { if (n != -1)  nEvents_ = std::max(0, n); }
+    void setMaxPatterns(int n)      { if (n != -1)  maxPatterns_ = std::max(0, n); }
+    void setVerbosity(int n)        { verbose_ = n; }
 
     // Getters
-    int getNLayers()        const { return nLayers_; }
-    int getNDCBits()        const { return nDCBits_; }
+    int getNLayers()          const { return nLayers_; }
+    int getNDCBits()          const { return nDCBits_; }
+    int getNFakeSuperstrips() const { return nFakeSuperstrips_; }
 
     // Functions
     int readTriggerTowerFile(TString src);
@@ -75,6 +77,8 @@ class PatternGenerator {
 
     void uniquifyPatterns();
 
+    bool isFullyContainedInSector(const TTPattern& patt);
+
 
   public:
     // Configurations
@@ -82,8 +86,9 @@ class PatternGenerator {
 
   private:
     // Configurations
-    int nLayers_;
-    int nDCBits_;
+    const int nLayers_;
+    const int nDCBits_;
+    const int nFakeSuperstrips_;
 
     // Program options
     bool filter_;
@@ -100,7 +105,9 @@ class PatternGenerator {
     std::vector<TTPattern> goodPatterns_;
 
     std::map<unsigned, unsigned> layerMap_;  // defines layer merging
-    std::map<unsigned, std::vector<unsigned> > triggerTowerMap_;
+
+    std::map<unsigned, std::vector<unsigned> > triggerTowerMap_;  // key: towerId, value: moduleIds in the tower
+    std::map<unsigned, std::vector<unsigned> > triggerTowerMapReversed_;  // key: moduleId, value: towerIds containing the module
 };
 
 #endif

@@ -31,13 +31,15 @@ class TrackFitter {
       nEvents_(999999999), maxTracks_(999999999),
       verbose_(1) {
 
+        assert(nLayers_ <= 8);
+
         chain_ = new TChain("ntupler/tree");
     }
 
     ~TrackFitter() {}
 
     // Setters
-    void setNLayers(int n)        { nLayers_ = n; }
+    //void setNLayers(int n)        { nLayers_ = n; }
 
     void setNEvents(int n)        { if (n != -1)  nEvents_ = std::max(0, n); }
     void setMaxTracks(int n)      { if (n != -1)  maxTracks_ = std::max(0, n); }
@@ -63,10 +65,10 @@ class TrackFitter {
 
   private:
     // Configurations
-    int nLayers_;
-    TString prefixRoad_;
-    TString prefixTrack_;
-    TString suffix_;
+    const int nLayers_;
+    const TString prefixRoad_;
+    const TString prefixTrack_;
+    const TString suffix_;
 
     // Program options
     int nEvents_;
