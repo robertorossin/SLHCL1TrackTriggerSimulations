@@ -1,11 +1,6 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternMatcher.h"
 
 
-static const unsigned MAX_NLAYERS = 8;
-static const unsigned MAX_NROADS  = 1000;
-static const unsigned MAX_NHITS   = 1000;
-
-
 // _____________________________________________________________________________
 // Read from the pattern bank
 int PatternMatcher::readPatterns(TString src) {
@@ -311,7 +306,7 @@ int PatternMatcher::makeRoads() {
                 pattern_type pattId = patterns_.at(it.first).id();
                 int nFakeSuperstrips = std::count(pattId.begin(), pattId.end(), encodeFakeSuperstripId());
 
-                if ((int) it.second.size() >= (nLayers_ - nFakeSuperstrips - po.nMisses)) {
+                if ((int) it.second.size() >= (nLayers_ - nFakeSuperstrips - po.nMisses)) {  // if number of hits more than the requirement
                     unsigned hash = hashThisEvent(v_event, vb_simPhi->back());  // FIXME: will switch to use generator seed instead
                     const std::vector<TTHit>& hits = it.second;
 
@@ -320,7 +315,8 @@ int PatternMatcher::makeRoads() {
                 }
             }
 
-            ++nPassed;
+            if (! roadsInThisEvent.empty())
+                ++nPassed;
         }
         allRoads_.push_back(roadsInThisEvent);
     }
@@ -442,6 +438,7 @@ int PatternMatcher::writeRoads(TString out) {
         }
 
         ttree->Fill();
+        assert(vr_hash->size() == allRoads_.at(ievt).size());
     }
     assert(ttree->GetEntries() == (int) allRoads_.size());
 

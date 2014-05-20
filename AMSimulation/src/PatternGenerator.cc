@@ -1,7 +1,5 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternGenerator.h"
 
-
-static const unsigned MAX_NLAYERS = 8;
 static const unsigned MAX_NTOWERS = 6 * 8;
 
 
@@ -485,7 +483,7 @@ int PatternGenerator::makePatterns() {
             // any trigger tower (due to cables, connections, or just too forward),
             // we also add fake superstrips
             // FIXME: In this case, # of fake superstrips can be more than one
-            if (triggerTowerMapReversed_.find(moduleId) == triggerTowerMapReversed_.end()) {
+            if (po.requireTriggerTower && triggerTowerMapReversed_.find(moduleId) == triggerTowerMapReversed_.end()) {
                 ssId = encodeFakeSuperstripId();
                 ssBit = 1 << 0;
             }
@@ -525,14 +523,14 @@ int PatternGenerator::makePatterns() {
     // Keep only unique patterns
     uniquifyPatterns();  // do this after allPatterns_ is populated
 
-    // Erase patterns not fully contained in a sector
-    //for (std::vector<TTPattern>::iterator it=goodPatterns_.begin(); it!=goodPatterns_.end(); ) {
-    //    if (isFullyContainedInSector(*it)) {
-    //        ++it;
-    //    } else {
-    //        it = goodPatterns_.erase(it);
-    //    }
-    //}
+    // Erase patterns not fully contained in a trigger tower
+    for (std::vector<TTPattern>::iterator it=goodPatterns_.begin(); (it!=goodPatterns_.end()) && po.requireTriggerTower; ) {
+        if (isFullyContainedInTriggerTower(*it)) {
+            ++it;
+        } else {
+            it = goodPatterns_.erase(it);
+        }
+    }
 
     if (verbose_>2) {
         for (unsigned i=0; i<goodPatterns_.size(); ++i) {
@@ -660,8 +658,8 @@ void PatternGenerator::uniquifyPatterns() {
     //allPatterns_.clear();
 }
 
-// Remove patterns not fully contained in a sector
-bool PatternGenerator::isFullyContainedInSector(const TTPattern& patt) {
+// Remove patterns not fully contained in a trigger tower
+bool PatternGenerator::isFullyContainedInTriggerTower(const TTPattern& patt) {
     std::map<unsigned, unsigned> triggerTowerIdCounts;
     unsigned moduleIdCount = 0;
     for(auto it: patt.id()) {  // loop over superstripIds in a pattern
@@ -680,6 +678,7 @@ bool PatternGenerator::isFullyContainedInSector(const TTPattern& patt) {
             }
             moduleIdCount += 1;
         }
+        //std::cout << "moduleId: " << moduleId << " " << moduleIdCount << " " << found->second.front() << std::endl;
     }
 
     // Loop over the counters in the map

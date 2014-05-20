@@ -77,7 +77,7 @@ class PatternGenerator {
 
     void uniquifyPatterns();
 
-    bool isFullyContainedInSector(const TTPattern& patt);
+    bool isFullyContainedInTriggerTower(const TTPattern& patt);
 
 
   public:

@@ -18,13 +18,15 @@ if [ "$i" = "" ]; then
 fi
 
 n="$MaxEvents" 
-if [ "$n" = "" ]; then
-  n="$2"
-fi
+#if [ "$n" = "" ]; then
+#  n="$2"
+#fi
 if [ "$n" = "" ]; then
   echo "Error: missing number of events"
   exit 2;
 fi
+
+args=("${@:2}")
 
 # Rename
 if ls input_*.txt > /dev/null 2>&1; then
@@ -40,9 +42,10 @@ sed -i "$i"'q;d' input.txt
 echo "Running on input.txt:"
 cat input.txt
 echo "  max events: $n"
+echo "  arguments: ${args[@]}"
 
-./amsim.exe -R -i input.txt -o roads.root -B patternBank.root --bank_nDCBits 0 -n "$n" --no-color >& amsimR.log
-./amsim.exe -F -i roads.root -o tracks.root -n "$n" --no-color >& amsimF.log
-./amsim.exe -W -i input.txt -o results.root --roads roads.root --tracks tracks.root -n "$n" --no-color >& amsimW.log
+./amsim.exe -R -i input.txt -o roads.root -B patternBank.root --bank_nDCBits 0 -n "$n" "${args[@]}" --no-color >& amsimR.log
+./amsim.exe -F -i roads.root -o tracks.root -n "$n" "${args[@]}" --no-color >& amsimF.log
+./amsim.exe -W -i input.txt -o results.root --roads roads.root --tracks tracks.root -n "$n" "${args[@]}" --no-color >& amsimW.log
 cat amsimR.log amsimF.log amsimW.log
 
