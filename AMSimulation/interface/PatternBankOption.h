@@ -17,7 +17,7 @@ struct PatternBankOption {
     int nSubLadders;  // 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024
     int nSubModules;  // 1, 2, 4, 8, 16, 32
     int nMisses;
-    int nFakeHits;
+    int nFakeSuperstrips;
     int nDCBits;
     std::vector<int> activeLayers;
     std::vector<int> inactiveLayers;

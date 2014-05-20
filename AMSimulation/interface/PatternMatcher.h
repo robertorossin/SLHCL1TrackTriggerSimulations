@@ -15,8 +15,6 @@ using namespace slhcl1tt;
 #include "TString.h"
 
 
-// FIXME: missing settings in PatternGenerator
-
 // SETTINGS: majority logic, merged layers, etc
 // INPUT   : TTree with moduleId, hitId, sim info + pattern bank
 // OUTPUT  : Roads
@@ -31,6 +29,9 @@ class PatternMatcher {
       prefixRoad_("AMTTRoads_"), suffix_(""),
       nEvents_(999999999), maxRoads_(999999999), maxHits_(999999999), verbose_(1) {
 
+        assert(nLayers_ <= 8);
+        assert(nDCBits_ <= 4);
+
         chain_ = new TChain("ntupler/tree");
 
         makeLayerMap();
@@ -40,8 +41,8 @@ class PatternMatcher {
     ~PatternMatcher() {}
 
     // Setters
-    void setNLayers(int n)        { nLayers_ = n; }
-    void setNDCBits(int n)        { nDCBits_ = n; }
+    //void setNLayers(int n)        { nLayers_ = n; }
+    //void setNDCBits(int n)        { nDCBits_ = n; }
 
     void setNEvents(int n)        { if (n != -1)  nEvents_ = std::max(0, n); }
     void setMaxRoads(int n)       { if (n != -1)  maxRoads_ = std::max(0, n); }
@@ -76,10 +77,10 @@ class PatternMatcher {
 
   private:
     // Configurations
-    int nLayers_;
-    int nDCBits_;
-    TString prefixRoad_;
-    TString suffix_;
+    const int nLayers_;
+    const int nDCBits_;
+    const TString prefixRoad_;
+    const TString suffix_;
 
     // Program options
     int nEvents_;
