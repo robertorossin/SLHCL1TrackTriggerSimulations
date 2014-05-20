@@ -4,9 +4,9 @@ from ROOT import TFile, TTree, gROOT, gSystem, vector
 
 
 class TestAMSim(unittest.TestCase):
-    """Test the track fitting results using TrackFitter"""
+    """Test the output written by NTupleMaker"""
 
-    infile = "tracks.root"
+    infile = "results.root"
 
     def setUp(self):
         gROOT.SetBatch(True)
@@ -21,9 +21,6 @@ class TestAMSim(unittest.TestCase):
 
     def test_nevents(self):
         self.assertEqual(self.nevents, 100)
-
-    def test_ntracks(self):
-        pass
 
 
 if __name__ == "__main__":

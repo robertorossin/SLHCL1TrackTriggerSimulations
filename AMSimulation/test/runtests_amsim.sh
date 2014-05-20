@@ -8,11 +8,15 @@ function die { echo $1: status $2 ;  exit $2; }
 PYTHONTEST=${CMSSW_BASE}/src/SLHCL1TrackTriggerSimulations/AMSimulation/python/test
 
 (amsim --help) || die 'Failure getting help message' $?
-(amsim -G -i test_ntuple.txt -o patternBank.root -L src/SLHCL1TrackTriggerSimulations/AMSimulation/data/trigger_sector_map2.csv -n 100 --no-filter --bank_nDCBits 0) || die 'Failure during pattern bank generation' $?
+(amsim -G -i test_ntuple.txt -o patternBank.root -L src/SLHCL1TrackTriggerSimulations/AMSimulation/data/trigger_sector_map.csv -n 100 --no-filter --bank_nDCBits 0) || die 'Failure during pattern bank generation' $?
 (python ${PYTHONTEST}/testGenerateBank.py ${LOCAL_TOP_DIR}/patternBank.root) || die 'Failure using testGenerateBank.py' $?
 
 (amsim -R -i test_ntuple.txt -o roads.root -B patternBank.root -n 100 --bank_nDCBits 0) || die 'Failure during pattern recognition' $?
 (python ${PYTHONTEST}/testPatternRecognition.py ${LOCAL_TOP_DIR}/roads.root) || die 'Failure using testPatternRecognition.py' $?
 
 (amsim -F -i roads.root -o tracks.root -n 100) || die 'Failure during track fitting' $?
-#(python ${PYTHONTEST}/testTrackFitting.py ${LOCAL_TOP_DIR}/tracks.root) || die 'Failure using testTrackFitting.py' $?
+(python ${PYTHONTEST}/testTrackFitting.py ${LOCAL_TOP_DIR}/tracks.root) || die 'Failure using testTrackFitting.py' $?
+
+(amsim -W -i test_ntuple.txt -o results.root --roads roads.root --tracks tracks.root -n 100) || die 'Failure during ntuple writing' $?
+(python ${PYTHONTEST}/testWriting.py ${LOCAL_TOP_DIR}/results.root) || die 'Failure using testWriting.py' $?
+

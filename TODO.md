@@ -7,3 +7,4 @@ SLHCL1TrackTriggerSimulations
 - [ ] 18-bit word size
 - [ ] Sector customization
 - [ ] Implement track fitting
+- [ ] Check random number generator seed
