@@ -39,11 +39,6 @@ line = TLine()
 line.SetLineColor(kGray+2)
 line.SetLineStyle(2)
 
-# Very nice color palette stolen from tkgeometry
-# https://code.google.com/p/tkgeometry/source/browse/trunk/src/Palette.cc
-palette      = map(lambda x: TColor.GetColor(x), ("#004586","#FF420E","#FFD320","#579D1C","#7E0021","#83CAFF","#314004","#AECF00","#4B1F6F","#FF950E","#C5000B","#0084D1"))
-lightpalette = map(lambda x: TColor.GetColor(x), ("#79B7F2","#F29379","#FFEDA6","#B1F279","#F27999","#C2DEF2","#D4F279","#DFF279","#C791F2","#F2BD79","#F27980","#AAD7F2"))
-
 # ______________________________________________________________________________
 # Configurations
 
@@ -54,15 +49,34 @@ sections["simVertices"] = False
 sections["trkParts"   ] = False
 sections["trkVertices"] = False
 sections["eventInfo"  ] = False
-sections["geometry"   ] = False
-sections["clusters"   ] = True
+sections["clusters"   ] = False
 sections["stubs"      ] = False
+sections["filtering"  ] = True
 sections["fixme"      ] = False
 
 drawerInit = DrawerInit()
 chain = TChain("ntupler/tree", "")
 infiles = [
-    "root://cmsxrootd-site.fnal.gov//store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140420.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_10_1_M5c.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_11_1_hSJ.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_12_1_c6j.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_13_1_5qi.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_14_1_uho.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_15_1_YVP.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_16_1_6Sy.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_17_1_qkx.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_18_1_HXB.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_19_1_3pI.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_20_1_Luk.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_1_1_ZCg.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_2_1_cqn.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_3_1_ZtL.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_4_1_TsL.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_5_1_uSw.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_6_1_LuW.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_7_1_nAO.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_8_1_L4a.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_9_1_rHD.root",
     ]
 if sections["clusters"] or sections["stubs"]:
     infiles = [f.replace(".root","_cut.root") for f in infiles]
@@ -129,12 +143,20 @@ class HistView(_HistViewBase):
             self.h.SetBinError(0, 0)
             self.h.SetEntries(self.h.GetEntries() - 2)  # SetBinContent() automatically increases # entries by one
 
+class HistViewProf(_HistViewBase):
+    def __init__(self, p):
+        super(HistViewProf, self).__init__(p)
+        self.h = TH2F("hp1_%i" % randint(0,65535), "; %s; %s" % (p.xtitle, p.ytitle), p.nbinsx, p.xlow, p.xup, p.ylow, p.yup)
+        self.randname = self.h.GetName()
+        self.style(p)
+
 class HistView2D(_HistViewBase):
     def __init__(self, p):
-        super(HistView, self).__init__(p)
+        super(HistView2D, self).__init__(p)
         self.h = TH2F("h2_%i" % randint(0,65535), "; %s; %s" % (p.xtitle, p.ytitle), p.nbinsx, p.xlow, p.xup, p.nbinsy, p.ylow, p.yup)
         self.randname = self.h.GetName()
         self.style(p)
+        self.h.SetStats(0)
 
 
 # ______________________________________________________________________________
@@ -154,11 +176,42 @@ def struct(*args):
         )
     return p
 
+def struct2D(*args):
+    p = Param(name=args[0],
+        var=args[1],
+        cut=args[2],
+        xtitle=args[3],
+        nbinsx=args[4],
+        xlow=args[5],
+        xup=args[6],
+        ytitle=args[7],
+        nbinsy=args[8],
+        ylow=args[9],
+        yup=args[10],
+        linecolor=args[11], markercolor=args[11],
+        fillcolor=args[12]
+        )
+    return p
+
 # Book
 def book(params):
     histos = []
     for i, p in enumerate(params):
         hv = HistView(p)
+        histos.append(hv)
+    return histos
+
+def bookProf(params):
+    histos = []
+    for i, p in enumerate(params):
+        hv = HistViewProf(p)
+        histos.append(hv)
+    return histos
+
+def book2D(params):
+    histos = []
+    for i, p in enumerate(params):
+        hv = HistView2D(p)
         histos.append(hv)
     return histos
 
@@ -169,6 +222,16 @@ def project(histos, normalize=-1, drawOverflow=True, drawUnderflow=True):
         if normalize > 0:  h.Scale(normalize / h.GetSumOfWeights())
         if drawOverflow :  h.fixOverflow()
         if drawUnderflow:  h.fixUnderflow()
+    return
+
+def projectProf(histos):
+    for i, h in enumerate(histos):
+        tree.Project(h.randname, h.var, h.cut, "prof goff")
+    return
+
+def project2D(histos):
+    for i, h in enumerate(histos):
+        tree.Project(h.randname, h.var, h.cut, "goff")
     return
 
 # Draw
@@ -182,6 +245,25 @@ def draw(histos, ytitle="Events", logx=False, logy=False, text=False):
     if text:
         h.SetMarkerSize(2)
         h.Draw("hist text0")
+    CMS_label()
+    return
+
+def draws(histos, ytitle="Events", logx=False, logy=False):
+    h = histos[0].h
+    ymax = max([hv.h.GetMaximum() for hv in histos])
+    if not logy:  h.SetMinimum(0.)
+    h.GetYaxis().SetTitle(ytitle)
+    h.Draw("hist")
+    gPad.SetLogx(logx); gPad.SetLogy(logy)
+    for hv in histos[1:]:
+        hv.h.Draw("same hist")
+    CMS_label()
+    return
+
+def draw2D(histos, logx=False, logy=False):
+    h = histos[0].h
+    h.Draw("col")
+    gPad.SetLogx(logx); gPad.SetLogy(logy)
     CMS_label()
     return
 
@@ -279,6 +361,7 @@ if sections["genParts"]:
     p0 = struct("genParts_status", "genParts_status", cut,
         "muon gen status", 4, 0, 4, col, fcol)
     histos = doit([p0], imgdir)
+
 
 # ______________________________________________________________________________
 # simTracks
@@ -500,6 +583,7 @@ if sections["trkParts"]:
     #histos = book_scat(params, binning, ybinnings); project_scat(params, histos); ret=draw_scat(params, histos[0])
     #save(imgdir, params[0][0])
 
+
 # ______________________________________________________________________________
 if sections["trkVertices"]:
     def doit(x,imgdir=None):
@@ -592,10 +676,6 @@ if sections["eventInfo"]:
         "generator seed", 50, 0, 100000, col, fcol)
     histos = doit([p0], imgdir)
 
-
-# ______________________________________________________________________________
-if sections["geometry"]:
-    pass
 
 # ______________________________________________________________________________
 if sections["clusters"]:
@@ -1012,6 +1092,130 @@ if sections["stubs"]:
     p0 = struct("TTStubs_hitPasseds", "TTStubs_hitPasseds", cut,
         "Stub pattern match (by hit, for each hit)", 4, 0, 4, col, fcol)
     histos = book([p0]); project(histos); draw(histos, text=True); save(imgdir, p0.name)
+
+
+# ______________________________________________________________________________
+if sections["filtering"]:
+
+    eventSelect_ = "(genParts_pt[0]>2 && abs(genParts_eta[0])<2.2 && Sum$(TTStubs_trkId==1 && abs(atan2(TTStubs_r,TTStubs_z)-atan2(genParts_pt[0],genParts_pz[0]))<0.05 && abs(deltaPhi(atan2(TTStubs_y,TTStubs_x),genParts_phi[0]))<0.03)>=Sum$(TTStubs_trkId==1)-2)";
+
+    col = sBase03
+
+    fcol0 = ssBase4
+    fcol0_sel = sMagenta
+    fcol1 = ssBase6
+    fcol1_sel = sGreen
+
+    cut0 = "(TTStubs_trkId==1 && genParts_pt[0]>2 && abs(genParts_eta[0])<1.0)"
+    cut1 = "(TTStubs_trkId==1 && genParts_pt[0]>2 && abs(genParts_eta[0])<2.2 && abs(genParts_eta[0])>1.0)"
+    lab0 = " {|#eta|<1.0}"
+    lab1 = " {1.0<|#eta|<2.2}"
+
+    var = "atan2(TTStubs_r,TTStubs_z)-atan2(genParts_pt[0],genParts_pz[0])"
+    p0 = struct("filtering_deltaTheta_etabin0", var, cut0,
+        "#Delta#theta(stub,gen muon)"+lab0, 40, -0.8, 0.8, col, fcol0)
+    p1 = struct("filtering_deltaTheta_etabin0_sel", var, "*".join([cut0, eventSelect_]),
+        "#Delta#theta(stub,gen muon)"+lab0, 40, -0.8, 0.8, col, fcol0_sel)
+    histos = book([p0,p1]); project(histos); draws(histos, logy=True); save(imgdir, p0.name)
+
+    p0 = struct("filtering_deltaTheta_etabin1", var, cut1,
+        "#Delta#theta(stub,gen muon)"+lab1, 40, -0.8, 0.8, col, fcol1)
+    p1 = struct("filtering_deltaTheta_etabin1_sel", var, "*".join([cut1, eventSelect_]),
+        "#Delta#theta(stub,gen muon)"+lab1, 40, -0.8, 0.8, col, fcol1_sel)
+    histos = book([p0,p1]); project(histos); draws(histos, logy=True); save(imgdir, p0.name)
+
+    var = "deltaPhi(atan2(TTStubs_y,TTStubs_x),genParts_phi[0])"
+    p0 = struct("filtering_deltaPhi_etabin0", var, cut0,
+        "#Delta#phi(stub,gen muon)"+lab0, 40, -0.8, 0.8, col, fcol0)
+    p1 = struct("filtering_deltaPhi_etabin0_sel", var, "*".join([cut0, eventSelect_]),
+        "#Delta#phi(stub,gen muon)"+lab0, 40, -0.8, 0.8, col, fcol0_sel)
+    histos = book([p0,p1]); project(histos); draws(histos, logy=True); save(imgdir, p0.name)
+
+    p0 = struct("filtering_deltaPhi_etabin1", var, cut1,
+        "#Delta#phi(stub,gen muon)"+lab1, 40, -0.8, 0.8, col, fcol1)
+    p1 = struct("filtering_deltaPhi_etabin1_sel", var, "*".join([cut1, eventSelect_]),
+        "#Delta#phi(stub,gen muon)"+lab1, 40, -0.8, 0.8, col, fcol1_sel)
+    histos = book([p0,p1]); project(histos); draws(histos, logy=True); save(imgdir, p0.name)
+
+    cut0 = "(genParts_pt[0]>2 && abs(genParts_eta[0])<1.0)"
+    cut1 = "(genParts_pt[0]>2 && abs(genParts_eta[0])<2.2 && abs(genParts_eta[0])>1.0)"
+    lab0 = " {|#eta|<1.0}"
+    lab1 = " {1.0<|#eta|<2.2}"
+
+    var = "Sum$(TTStubs_trkId==1)"
+    p0 = struct("filtering_nstubs_etabin0", var, cut0,
+        "# stubs"+lab0, 25, 0, 25, col, fcol0)
+    p1 = struct("filtering_nstubs_etabin0_sel", var, "*".join([cut0, eventSelect_]),
+        "# stubs"+lab0, 25, 0, 25, col, fcol0_sel)
+    histos = book([p0,p1]); project(histos); draws(histos, logy=True); save(imgdir, p0.name)
+
+    p0 = struct("filtering_nstubs_etabin1", var, cut1,
+        "# stubs"+lab1, 25, 0, 25, col, fcol1)
+    p1 = struct("filtering_nstubs_etabin1_sel", var, "*".join([cut1, eventSelect_]),
+        "# stubs"+lab1, 25, 0, 25, col, fcol1_sel)
+    histos = book([p0,p1]); project(histos); draws(histos, logy=True); save(imgdir, p0.name)
+
+    var_tmp = "(Sum$(TTStubs_trkId==1 && TTStubs_iModLayer==%i)>0)"
+    var = "+".join([(var_tmp % i) for i in (5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22)])
+    p0 = struct("filtering_nlayers_etabin0", var, cut0,
+        "# layers with stubs"+lab0, 25, 0, 25, col, fcol0)
+    p1 = struct("filtering_nlayers_etabin0_sel", var, "*".join([cut0, eventSelect_]),
+        "# layers with stubs"+lab0, 25, 0, 25, col, fcol0_sel)
+    histos = book([p0,p1]); project(histos); draws(histos, logy=True); save(imgdir, p0.name)
+
+    p0 = struct("filtering_nlayers_etabin1", var, cut1,
+        "# layers with stubs"+lab1, 25, 0, 25, col, fcol1)
+    p1 = struct("filtering_nlayers_etabin1_sel", var, "*".join([cut1, eventSelect_]),
+        "# layers with stubs"+lab1, 25, 0, 25, col, fcol1_sel)
+    histos = book([p0,p1]); project(histos); draws(histos, logy=True); save(imgdir, p0.name)
+
+    var = "trkParts_ntkhits[0]"
+    p0 = struct("filtering_tp_ntkhits_etabin0", var, cut0,
+        "trkParticle # hits"+lab0, 50, 0, 50, col, fcol0)
+    p1 = struct("filtering_tp_ntkhits_etabin0_sel", var, "*".join([cut0, eventSelect_]),
+        "trkParticle # hits"+lab0, 50, 0, 50, col, fcol0_sel)
+    histos = book([p0,p1]); project(histos); draws(histos, logy=True); save(imgdir, p0.name)
+
+    p0 = struct("filtering_tp_ntkhits_etabin1", var, cut1,
+        "trkParticle # hits"+lab1, 50, 0, 50, col, fcol1)
+    p1 = struct("filtering_tp_ntkhits_etabin1_sel", var, "*".join([cut1, eventSelect_]),
+        "trkParticle # hits"+lab1, 50, 0, 50, col, fcol1_sel)
+    histos = book([p0,p1]); project(histos); draws(histos, logy=True); save(imgdir, p0.name)
+
+    var = "trkParts_ntklayers[0]"
+    p0 = struct("filtering_tp_ntklayers_etabin0", var, cut0,
+        "trkParticle # layers"+lab0, 50, 0, 50, col, fcol0)
+    p1 = struct("filtering_tp_ntklayers_etabin0_sel", var, "*".join([cut0, eventSelect_]),
+        "trkParticle # layers"+lab0, 50, 0, 50, col, fcol0_sel)
+    histos = book([p0,p1]); project(histos); draws(histos, logy=True); save(imgdir, p0.name)
+
+    p0 = struct("filtering_tp_ntklayers_etabin1", var, cut1,
+        "trkParticle # layers"+lab1, 50, 0, 50, col, fcol1)
+    p1 = struct("filtering_tp_ntklayers_etabin1_sel", var, "*".join([cut1, eventSelect_]),
+        "trkParticle # layers"+lab1, 50, 0, 50, col, fcol1_sel)
+    histos = book([p0,p1]); project(histos); draws(histos, logy=True); save(imgdir, p0.name)
+
+    # __________________________________________________________________________
+    # Scatter
+    var = "Sum$(TTStubs_trkId==1):trkParts_ntkhits[0]"
+    p0 = struct2D("filtering_scat_nhits_etabin0", var, cut0,
+        "trkParticle # hits"+lab0, 50, 0, 50, "# stubs", 25, 0, 25, col, fcol0)
+    histos = book2D([p0]); project2D(histos); draw2D(histos); save(imgdir, p0.name)
+
+    p0 = struct2D("filtering_scat_nhits_etabin1", var, cut1,
+        "trkParticle # hits"+lab1, 50, 0, 50, "# stubs", 25, 0, 25, col, fcol1)
+    histos = book2D([p0]); project2D(histos); draw2D(histos); save(imgdir, p0.name)
+
+    var_tmp = "(Sum$(TTStubs_trkId==1 && TTStubs_iModLayer==%i)>0)"
+    var = "+".join([(var_tmp % i) for i in (5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22)])
+    var = var + ":trkParts_ntklayers[0]"
+    p0 = struct2D("filtering_scat_nlayers_etabin0", var, cut0,
+        "trkParticle # layers"+lab0, 50, 0, 50, "# layers with stubs", 25, 0, 25, col, fcol0)
+    histos = book2D([p0]); project2D(histos); draw2D(histos); save(imgdir, p0.name)
+
+    p0 = struct2D("filtering_scat_nlayers_etabin1", var, cut1,
+        "trkParticle # layers"+lab1, 50, 0, 50, "# layers with stubs", 25, 0, 25, col, fcol1)
+    histos = book2D([p0]); project2D(histos); draw2D(histos); save(imgdir, p0.name)
 
 
 # ______________________________________________________________________________
