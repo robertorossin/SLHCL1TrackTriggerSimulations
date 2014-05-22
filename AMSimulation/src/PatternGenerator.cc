@@ -1,5 +1,9 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternGenerator.h"
 
+#ifndef ROOT_Math_GenVector_eta
+#include "Math/GenVector/eta.h"
+#endif
+
 static const unsigned MAX_NTOWERS = 6 * 8;
 
 
@@ -228,51 +232,187 @@ int PatternGenerator::filterHits(TString out_tmp) {
 
         // Check sim info
         // Take the sim-matched particle info from the outermost stub
+        const int good_trkId = 1;
         float simPt = vb_simPt->back();
         float simEta = vb_simEta->back();
         float simPhi = vb_simPhi->back();
-        int trkId = vb_trkId->back();
-        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " simPt: " << simPt << " simEta: " << simEta << " simPhi: " << simPhi << " trkId: " << trkId << std::endl;
+        for (unsigned l=0; (l<nstubs) && keep; ++l) {
+            unsigned ll = (nstubs-1) - l;  // reverse iteration order
+            int trkId = vb_trkId->at(ll);
+            if (trkId == good_trkId) {
+                simPt = vb_simPt->at(ll);
+                simEta = vb_simEta->at(ll);
+                simPhi = vb_simPhi->at(ll);
+                break;
+            }
+        }
+        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " simPt: " << simPt << " simEta: " << simEta << " simPhi: " << simPhi << std::endl;
 
-        bool sim = (trkId == 1 &&
-                    po.minPt  <= simPt  && simPt  <= po.maxPt  &&
+        bool sim = (po.minPt  <= simPt  && simPt  <= po.maxPt  &&
                     po.minEta <= simEta && simEta <= po.maxEta &&
                     po.minPhi <= simPhi && simPhi <= po.maxPhi);
         if (!sim && filter_)
             keep = false;
 
-        // Build a list of goodLayers and goodLayerModules that are unique
-        // Work from the outermost stub
-        std::vector<id_type> goodLayers;  // NOTE: stores mlayer, not layer
-        std::vector<id_type> goodLayerModules;
+        // _____________________________________________________________________
+        // Build a list of goodLayers that is unique
+        std::vector<id_type> goodLayers;  // the contents will be modified later on, beware!
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
-            unsigned ll = (nstubs-1) - l;  // reverse iteration order
-            unsigned moduleId = vb_modId->at(ll);
+            unsigned moduleId = vb_modId->at(l);
             id_type layer = decodeLayer(moduleId);
-            id_type mlayer = layerMap_.at(layer);  // mapping of layer --> mlayer must exist
-
-            unsigned count = std::count(goodLayers.begin(), goodLayers.end(), mlayer);
-            if (!count) {  // no module with mlayer
-                goodLayers.push_back(mlayer);
-                goodLayerModules.push_back(moduleId);
+            int trkId = vb_trkId->at(l);
+            if (trkId == good_trkId) {
+                goodLayers.push_back(layer);
             }
         }
+        std::sort(goodLayers.begin(), goodLayers.end());
+        goodLayers.erase(std::unique(goodLayers.begin(), goodLayers.end()), goodLayers.end() );
+
+        // Build a list of goodLayerModules -- for each goodLayer, find one goodLayerModule
+        // A goodLayerModule is the one that minimizes the difference in deltaR(module,simTrack)
+        std::vector<id_type> goodLayerModules(goodLayers.size(), 0);
+        std::vector<float> minDR_for_goodLayerModules(goodLayers.size(), 999.);
+        for (unsigned gl=0; (gl<goodLayers.size()) && keep; ++gl) {
+            for (unsigned l=0; (l<nstubs) && keep; ++l) {
+                unsigned moduleId = vb_modId->at(l);
+                id_type layer = decodeLayer(moduleId);
+                if (layer != goodLayers.at(gl))  continue;
+
+                int trkId = vb_trkId->at(l);
+                if (trkId == good_trkId) {
+                    float stub_eta = ROOT::Math::Impl::Eta_FromRhoZ(vb_r->at(l), vb_z->at(l));
+                    float stub_phi = std::atan2(vb_y->at(l), vb_x->at(l));
+                    float dR = deltaR(simEta, simPhi, stub_eta, stub_phi);
+                    if (minDR_for_goodLayerModules.at(gl) > dR) {
+                        minDR_for_goodLayerModules.at(gl) = dR;
+                        goodLayerModules.at(gl) = moduleId;
+                    }
+                }
+            }
+        }  // end loop over goodLayers
+
+        // Now repeat building the list of goodLayerModules, but at strip level
+        std::vector<int> goodLayerCols(goodLayers.size(), 0);
+        std::vector<int> goodLayerRows(goodLayers.size(), 0);
+        std::vector<float> minDEta_for_goodLayerCols(goodLayers.size(), 999.);
+        std::vector<float> minDPhi_for_goodLayerRows(goodLayers.size(), 999.);
+        for (unsigned gl=0; (gl<goodLayers.size()) && keep; ++gl) {
+            for (unsigned l=0; (l<nstubs) && keep; ++l) {
+                bool keepstub = true;
+                unsigned moduleId = vb_modId->at(l);
+                unsigned nhits = vb_nhits->at(l);
+                if (moduleId != goodLayerModules.at(gl))  continue;
+
+                // First, for dEta
+                int trkId = vb_trkId->at(l);
+                for (unsigned m=0; (m<nhits) && keepstub; ++m) {
+                    int col = vb_hitCols->at(l).at(m);
+                    //int row = vb_hitRows->at(l).at(m);
+                    //int trkId = vb_hitTrkIds->at(l).at(m);
+                    if (trkId == good_trkId) {
+                        float hit_x = vb_hitXs->at(l).at(m);
+                        float hit_y = vb_hitYs->at(l).at(m);
+                        float hit_z = vb_hitZs->at(l).at(m);
+                        float hit_rho = std::sqrt(hit_x*hit_x + hit_y*hit_y);
+                        float hit_eta = ROOT::Math::Impl::Eta_FromRhoZ(hit_rho, hit_z);
+                        float dEta = std::abs(simEta - hit_eta);
+                        if (minDEta_for_goodLayerCols.at(gl) > dEta) {
+                            minDEta_for_goodLayerCols.at(gl) = dEta;
+                            goodLayerCols.at(gl) = col;
+                        }
+                    }
+                }
+
+                // Second, for dPhi
+                for (unsigned m=0; (m<nhits) && keepstub; ++m) {
+                    int col = vb_hitCols->at(l).at(m);
+                    if (col != goodLayerCols.at(gl))  continue;
+
+                    int row = vb_hitRows->at(l).at(m);
+                    //int trkId = vb_hitTrkIds->at(l).at(m);
+                    if (trkId == good_trkId) {
+                        float hit_x = vb_hitXs->at(l).at(m);
+                        float hit_y = vb_hitYs->at(l).at(m);
+                        float hit_phi = std::atan2(hit_y, hit_x);
+                        float dPhi = std::abs(deltaPhi(simPhi, hit_phi));
+                        if (minDPhi_for_goodLayerRows.at(gl) > dPhi) {
+                            minDPhi_for_goodLayerRows.at(gl) = dPhi;
+                            goodLayerRows.at(gl) = row;
+                        }
+                    }
+                }
+            }  // end loop over stubs
+        }  // end loop over goodLayers
+
         if (verbose_>2) {
-            std::cout << Debug() << "... evt: " << ievt << " # goodLayers: " << goodLayers.size() << " {";
-            std::copy(goodLayers.begin(), goodLayers.end(), std::ostream_iterator<id_type>(std::cout, " "));
-            std::cout << "}" << std::endl;
-            std::cout << Debug() << "... evt: " << ievt << " # goodLayerModules: " << goodLayerModules.size() << " {";
-            std::copy(goodLayerModules.begin(), goodLayerModules.end(), std::ostream_iterator<id_type>(std::cout, " "));
-            std::cout << "}" << std::endl;
+            std::cout << Debug() << "... evt: " << ievt << " # goodLayers: " << goodLayers.size() << std::endl;
+            for (unsigned gl=0; (gl<goodLayers.size()) && keep; ++gl) {
+                std::cout << Debug() << "... ... layer: " << goodLayers.at(gl) << " moduleId: " << goodLayerModules.at(gl) << " minDR: " << minDR_for_goodLayerModules.at(gl) << " col: " << goodLayerCols.at(gl) << " row: " << goodLayerRows.at(gl) << " minDEta: " << minDEta_for_goodLayerCols.at(gl) << " minDPhi: " << minDPhi_for_goodLayerRows.at(gl) << std::endl;
+            }
         }
 
+        // Decide the merging of layers -- goodLayers will use mlayer instead of layer after this!
+        // Remember goodLayers is already sorted from smaller to larger value
+        for (unsigned gl=0; (gl<goodLayers.size()) && keep; ++gl) {
+            id_type layer = goodLayers.at(gl);
+            id_type mlayer = layerMap_.at(layer);  // mapping of layer --> mlayer must exist
+            goodLayers.at(gl) = mlayer;  // replace layer with mlayer
+            auto found = std::find(goodLayers.begin(), goodLayers.end(), mlayer);  // only search up to index gl-1
+            if (found == goodLayers.end()) {
+                std::cout << Error() << "'mlayer' should always be found in goodLayers!" << std::endl;
+
+            } else {  // there exist two different layers with the same mlayer
+                const unsigned gl_found = found - goodLayers.begin();  // first occurence
+                if (gl_found == gl) {
+                    continue;  // do nothing
+                } else {  // if this is not the first occurence
+                    if (minDR_for_goodLayerModules.at(gl) < 0.1) {
+                        // take this occurence since it's further away, thereby providing larger lever arm
+                        goodLayerModules.at(gl_found)           = goodLayerModules.at(gl);
+                        minDR_for_goodLayerModules.at(gl_found) = minDR_for_goodLayerModules.at(gl);
+                        goodLayerCols.at(gl_found)              = goodLayerCols.at(gl);
+                        goodLayerRows.at(gl_found)              = goodLayerRows.at(gl);
+                        minDEta_for_goodLayerCols.at(gl_found)  = minDEta_for_goodLayerCols.at(gl);
+                        minDPhi_for_goodLayerRows.at(gl_found)  = minDPhi_for_goodLayerRows.at(gl);
+                    }
+                    // Remove these occurences
+                    goodLayers.at(gl)                 = 999999;
+                    goodLayerModules.at(gl)           = 999999;
+                    minDR_for_goodLayerModules.at(gl) = 999.;
+                    goodLayerCols.at(gl)              = 999999;
+                    goodLayerRows.at(gl)              = 999999;
+                    minDEta_for_goodLayerCols.at(gl)  = 999.;
+                    minDPhi_for_goodLayerRows.at(gl)  = 999.;
+                }
+            }
+        }  // end loop over goodLayers
+
+        // Erase the 999's
+        goodLayers.erase(std::remove(goodLayers.begin(), goodLayers.end(), 999999), goodLayers.end() );
+        goodLayerModules.erase(std::remove(goodLayerModules.begin(), goodLayerModules.end(), 999999), goodLayerModules.end() );
+        minDR_for_goodLayerModules.erase(std::remove(minDR_for_goodLayerModules.begin(), minDR_for_goodLayerModules.end(), 999.), minDR_for_goodLayerModules.end() );
+        goodLayerCols.erase(std::remove(goodLayerCols.begin(), goodLayerCols.end(), 999999), goodLayerCols.end() );
+        goodLayerRows.erase(std::remove(goodLayerRows.begin(), goodLayerRows.end(), 999999), goodLayerRows.end() );
+        minDEta_for_goodLayerCols.erase(std::remove(minDEta_for_goodLayerCols.begin(), minDEta_for_goodLayerCols.end(), 999.), minDEta_for_goodLayerCols.end() );
+        minDPhi_for_goodLayerRows.erase(std::remove(minDPhi_for_goodLayerRows.begin(), minDPhi_for_goodLayerRows.end(), 999.), minDPhi_for_goodLayerRows.end() );
+
+        if (verbose_>2) {
+            std::cout << Debug() << "... evt: " << ievt << " after filtering: " << goodLayerModules.size() << " " << minDR_for_goodLayerModules.size() << " " << goodLayerCols.size() << " " << goodLayerRows.size() << " " << minDEta_for_goodLayerCols.size() << " " << minDPhi_for_goodLayerRows.size() << std::endl;
+        }
+
+        {  // Sanity check
+            unsigned ngoodlayers = goodLayers.size();
+            assert(ngoodlayers == goodLayerModules.size() && ngoodlayers == minDR_for_goodLayerModules.size() &&
+                   ngoodlayers == goodLayerCols.size() && ngoodlayers == goodLayerRows.size() && ngoodlayers == minDEta_for_goodLayerCols.size() && ngoodlayers == minDPhi_for_goodLayerRows.size());
+        }
+
+        // _____________________________________________________________________
         // Check again min # of layers
         require = ((int) goodLayers.size() >= (nLayers_ - nFakeSuperstrips_));
         if (!require && filter_)
             keep = false;
 
-        // Find layers with at least one sim-matched hit
-        // If more than one sim-matched hit in a layer, take only the first hit
+        // Now make keep-or-ignore decisions
         unsigned ngoodstubs = 0;
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
             bool keepstub = true;
@@ -282,26 +422,40 @@ int PatternGenerator::filterHits(TString out_tmp) {
             assert(nhits > 0);
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
 
-            // Check module id
-            unsigned count = std::count(goodLayerModules.begin(), goodLayerModules.end(), moduleId);
-            if (!count)  // do not keep even if filter_ is false
-                keepstub = false;
-            else  // keep and invalidate the next stub with identical moduleId
-                goodLayerModules.erase(std::remove(goodLayerModules.begin(), goodLayerModules.end(), moduleId), goodLayerModules.end());
-
             // Check sim info of stub
-            sim = (vb_trkId->at(l) == trkId);
+            // This is redundant now
+            sim = (vb_trkId->at(l) == good_trkId);
             if (!sim && filter_)
+                keepstub = false;
+
+            // Check module id
+            id_type layer = decodeLayer(moduleId);
+            id_type mlayer = layerMap_.at(layer);
+            const unsigned gl_found = std::find(goodLayers.begin(), goodLayers.end(), mlayer) - goodLayers.begin();
+            unsigned count = std::count(goodLayers.begin(), goodLayers.end(), mlayer);
+            if (sim) {
+                assert(count == 1);
+                count = (goodLayerModules.at(gl_found) == moduleId);
+            }
+            if (!count)  // do not keep even if filter_ is false
                 keepstub = false;
 
             for (unsigned m=0; (m<nhits) && keepstub; ++m) {
                 bool keephit = true;
 
-                if (verbose_>2)  std::cout << Debug() << "... ... ... hit: " << m << " col: " << vb_hitCols->at(l).at(m) << " row: " << vb_hitRows->at(l).at(m) << " trkId: " << vb_hitTrkIds->at(l).at(m) << std::endl;
+                int col = vb_hitCols->at(l).at(m);
+                int row = vb_hitRows->at(l).at(m);
+                if (verbose_>2)  std::cout << Debug() << "... ... ... hit: " << m << " col: " << col << " row: " << row << " trkId: " << vb_hitTrkIds->at(l).at(m) << std::endl;
 
                 // Check sim info of hit
-                sim = (vb_hitTrkIds->at(l).at(m) == trkId);
+                // This is redundant now
+                sim = (vb_hitTrkIds->at(l).at(m) == good_trkId);
                 if (!sim && filter_)
+                    keephit = false;
+
+                // Check row and col
+                count = (goodLayerCols.at(gl_found) == col) && (goodLayerRows.at(gl_found) == row);
+                if (!count)  // do not keep even if filter_ is false
                     keephit = false;
 
                 if (keephit) {
@@ -309,6 +463,9 @@ int PatternGenerator::filterHits(TString out_tmp) {
                     vb_hitCols->at(l).at(0)    = vb_hitCols->at(l).at(m);
                     vb_hitRows->at(l).at(0)    = vb_hitRows->at(l).at(m);
                     vb_hitTrkIds->at(l).at(0)  = vb_hitTrkIds->at(l).at(m);
+                    vb_hitXs->at(l).at(0)      = vb_hitXs->at(l).at(m);
+                    vb_hitYs->at(l).at(0)      = vb_hitYs->at(l).at(m);
+                    vb_hitZs->at(l).at(0)      = vb_hitZs->at(l).at(m);
                     break;  // Only need one hit
                 }
             }
@@ -316,14 +473,27 @@ int PatternGenerator::filterHits(TString out_tmp) {
             vb_hitCols->at(l)  .resize(1);
             vb_hitRows->at(l)  .resize(1);
             vb_hitTrkIds->at(l).resize(1);
+            vb_hitXs->at(l)    .resize(1);
+            vb_hitYs->at(l)    .resize(1);
+            vb_hitZs->at(l)    .resize(1);
             vb_nhits->at(l)    = 1;
 
+            if (!count)  // do not keep even if filter_ is false
+                keepstub = false;
+
             // Check sim info of hit
+            // This is redundant now
             if (!sim && filter_)
                 keepstub = false;
 
             if (keepstub) {
                 // Keep and move it to be the 'ngoodstubs' element
+                vb_x->at(ngoodstubs)          = vb_x->at(l);
+                vb_y->at(ngoodstubs)          = vb_y->at(l);
+                vb_z->at(ngoodstubs)          = vb_z->at(l);
+                vb_r->at(ngoodstubs)          = vb_r->at(l);
+                vb_phi->at(ngoodstubs)        = vb_phi->at(l);
+                vb_roughPt->at(ngoodstubs)    = vb_roughPt->at(l);
                 vb_iModCols->at(ngoodstubs)   = vb_iModCols->at(l);
                 vb_iModRows->at(ngoodstubs)   = vb_iModRows->at(l);
                 vb_modId->at(ngoodstubs)      = vb_modId->at(l);
@@ -331,11 +501,20 @@ int PatternGenerator::filterHits(TString out_tmp) {
                 vb_hitCols->at(ngoodstubs)    = vb_hitCols->at(l);
                 vb_hitRows->at(ngoodstubs)    = vb_hitRows->at(l);
                 vb_hitTrkIds->at(ngoodstubs)  = vb_hitTrkIds->at(l);
+                vb_hitXs->at(ngoodstubs)      = vb_hitXs->at(l);
+                vb_hitYs->at(ngoodstubs)      = vb_hitYs->at(l);
+                vb_hitZs->at(ngoodstubs)      = vb_hitZs->at(l);
                 vb_simPt->at(ngoodstubs)      = vb_simPt->at(l);
                 vb_simEta->at(ngoodstubs)     = vb_simEta->at(l);
                 vb_simPhi->at(ngoodstubs)     = vb_simPhi->at(l);
                 vb_trkId->at(ngoodstubs)      = vb_trkId->at(l);
                 ++ngoodstubs;
+
+                // No need any stub in this 'mlayer' anymore
+                //goodLayers.at(gl_found)       = 999999;
+                goodLayerModules.at(gl_found) = 999999;
+                goodLayerRows.at(gl_found)    = 999999;
+                goodLayerCols.at(gl_found)    = 999999;
             }
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " keep? " << keepstub << std::endl;
         }
@@ -354,6 +533,12 @@ int PatternGenerator::filterHits(TString out_tmp) {
 
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " keep? " << keep << std::endl;
 
+        vb_x        ->resize(ngoodstubs);
+        vb_y        ->resize(ngoodstubs);
+        vb_z        ->resize(ngoodstubs);
+        vb_r        ->resize(ngoodstubs);
+        vb_phi      ->resize(ngoodstubs);
+        vb_roughPt  ->resize(ngoodstubs);
         vb_iModCols ->resize(ngoodstubs);
         vb_iModRows ->resize(ngoodstubs);
         vb_modId    ->resize(ngoodstubs);
@@ -361,6 +546,9 @@ int PatternGenerator::filterHits(TString out_tmp) {
         vb_hitCols  ->resize(ngoodstubs);
         vb_hitRows  ->resize(ngoodstubs);
         vb_hitTrkIds->resize(ngoodstubs);
+        vb_hitXs    ->resize(ngoodstubs);
+        vb_hitYs    ->resize(ngoodstubs);
+        vb_hitZs    ->resize(ngoodstubs);
         vb_simPt    ->resize(ngoodstubs);
         vb_simEta   ->resize(ngoodstubs);
         vb_simPhi   ->resize(ngoodstubs);
