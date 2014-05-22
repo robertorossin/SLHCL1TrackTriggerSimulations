@@ -118,24 +118,27 @@ int PatternMatcher::makeRoads() {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
 
     // For reading
-    std::vector<float> *              vb_x                = 0;
-    std::vector<float> *              vb_y                = 0;
-    std::vector<float> *              vb_z                = 0;
-    std::vector<float> *              vb_r                = 0;
-    std::vector<float> *              vb_phi              = 0;
-    std::vector<float> *              vb_roughPt          = 0;
-    std::vector<unsigned> *           vb_iModCols         = 0;
-    std::vector<unsigned> *           vb_iModRows         = 0;
-    std::vector<unsigned> *           vb_modId            = 0;
-    std::vector<unsigned> *           vb_nhits            = 0;
-    std::vector<std::vector<int> > *  vb_hitCols          = 0;
-    std::vector<std::vector<int> > *  vb_hitRows          = 0;
-    std::vector<std::vector<int> > *  vb_hitTrkIds        = 0;
-    std::vector<float> *              vb_simPt            = 0;
-    std::vector<float> *              vb_simEta           = 0;
-    std::vector<float> *              vb_simPhi           = 0;
-    std::vector<int> *                vb_trkId            = 0;
-    unsigned                          v_event             = 0;
+    std::vector<float> *                vb_x              = 0;
+    std::vector<float> *                vb_y              = 0;
+    std::vector<float> *                vb_z              = 0;
+    std::vector<float> *                vb_r              = 0;
+    std::vector<float> *                vb_phi            = 0;
+    std::vector<float> *                vb_roughPt        = 0;
+    std::vector<unsigned> *             vb_iModCols       = 0;
+    std::vector<unsigned> *             vb_iModRows       = 0;
+    std::vector<unsigned> *             vb_modId          = 0;
+    std::vector<unsigned> *             vb_nhits          = 0;
+    std::vector<std::vector<int> > *    vb_hitCols        = 0;
+    std::vector<std::vector<int> > *    vb_hitRows        = 0;
+    std::vector<std::vector<int> > *    vb_hitTrkIds      = 0;
+    std::vector<std::vector<float> > *  vb_hitXs          = 0;
+    std::vector<std::vector<float> > *  vb_hitYs          = 0;
+    std::vector<std::vector<float> > *  vb_hitZs          = 0;
+    std::vector<float> *                vb_simPt          = 0;
+    std::vector<float> *                vb_simEta         = 0;
+    std::vector<float> *                vb_simPhi         = 0;
+    std::vector<int> *                  vb_trkId          = 0;
+    unsigned                            v_event           = 0;
 
     chain_->SetBranchStatus("*", 0);
     chain_->SetBranchStatus("TTStubs_x"        , 1);
@@ -151,6 +154,9 @@ int PatternMatcher::makeRoads() {
     chain_->SetBranchStatus("TTStubs_hitCols"  , 1);
     chain_->SetBranchStatus("TTStubs_hitRows"  , 1);
     chain_->SetBranchStatus("TTStubs_hitTrkIds", 1);
+    chain_->SetBranchStatus("TTStubs_hitXs"    , 1);
+    chain_->SetBranchStatus("TTStubs_hitYs"    , 1);
+    chain_->SetBranchStatus("TTStubs_hitZs"    , 1);
     chain_->SetBranchStatus("TTStubs_simPt"    , 1);
     chain_->SetBranchStatus("TTStubs_simEta"   , 1);
     chain_->SetBranchStatus("TTStubs_simPhi"   , 1);
@@ -170,24 +176,14 @@ int PatternMatcher::makeRoads() {
     chain_->SetBranchAddress("TTStubs_hitCols"  , &(vb_hitCols));
     chain_->SetBranchAddress("TTStubs_hitRows"  , &(vb_hitRows));
     chain_->SetBranchAddress("TTStubs_hitTrkIds", &(vb_hitTrkIds));
+    chain_->SetBranchAddress("TTStubs_hitXs"    , &(vb_hitXs));
+    chain_->SetBranchAddress("TTStubs_hitYs"    , &(vb_hitYs));
+    chain_->SetBranchAddress("TTStubs_hitZs"    , &(vb_hitZs));
     chain_->SetBranchAddress("TTStubs_simPt"    , &(vb_simPt));
     chain_->SetBranchAddress("TTStubs_simEta"   , &(vb_simEta));
     chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
     chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
     chain_->SetBranchAddress("event"            , &(v_event));
-
-    // For reading: hit positions
-    //std::vector<std::vector<float> > *  vb_hitXs          = 0;
-    //std::vector<std::vector<float> > *  vb_hitYs          = 0;
-    //std::vector<std::vector<float> > *  vb_hitZs          = 0;
-    //
-    //chain_->SetBranchStatus("TTStubs_hitXs"    , 1);
-    //chain_->SetBranchStatus("TTStubs_hitYs"    , 1);
-    //chain_->SetBranchStatus("TTStubs_hitZs"    , 1);
-    //
-    //chain_->SetBranchAddress("TTStubs_hitXs"    , &(vb_hitXs));
-    //chain_->SetBranchAddress("TTStubs_hitYs"    , &(vb_hitYs));
-    //chain_->SetBranchAddress("TTStubs_hitZs"    , &(vb_hitZs));
 
 
     // _________________________________________________________________________
