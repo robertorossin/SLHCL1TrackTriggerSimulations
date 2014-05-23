@@ -45,27 +45,50 @@ sections["coverage2"] = True
 drawerInit = DrawerInit()
 chain = TChain("ntupler/tree", "")
 infiles = [
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_10_1_M5c.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_11_1_hSJ.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_12_1_c6j.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_13_1_5qi.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_14_1_uho.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_15_1_YVP.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_16_1_6Sy.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_17_1_qkx.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_18_1_HXB.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_19_1_3pI.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_20_1_Luk.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_1_1_ZCg.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_2_1_cqn.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_3_1_ZtL.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_4_1_TsL.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_5_1_uSw.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_6_1_LuW.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_7_1_nAO.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_8_1_L4a.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_9_1_rHD.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_10_1_20p.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_11_1_A3c.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_12_1_upT.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_13_1_eSt.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_14_1_6MI.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_15_1_f0k.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_16_1_z6q.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_17_1_8BO.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_18_1_zHQ.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_19_1_FlR.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_20_1_WKb.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_1_1_XY0.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_2_1_Gjj.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_3_1_tpR.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_4_1_tTQ.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_5_1_cYV.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_6_1_gAu.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_7_1_KMc.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_8_1_lrx.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_9_1_VTj.root",
     ]
+
+infiles_miss1 = [
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_10_1_6jI.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_11_1_jWb.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_12_1_JqE.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_13_1_BC5.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_14_1_VyW.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_15_1_60E.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_16_1_XTV.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_17_1_qAL.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_18_1_FwJ.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_19_1_SSP.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_20_1_r4J.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_1_1_krB.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_2_1_qWx.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_3_1_z2S.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_4_1_Ex0.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_5_1_ZLc.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_6_1_4FB.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_7_1_mIk.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_8_1_KP5.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_miss1_20140519/results_9_1_qmg.root",
+]
 
 for f in infiles:
     chain.Add(f)
@@ -97,7 +120,8 @@ if sections["coverage1"]:
     tree.Project("hP1", "(@AMTTRoads_hash.size()!=0 && Alt$(AMTTRoads_hash[0],-1)>0):genParts_pt[0]", "abs(genParts_eta[0])<2.2", "prof")
     tree.Project("hP2", "(@AMTTRoads_hash.size()!=0 && Alt$(AMTTRoads_hash[0],-1)>0):genParts_pt[0]", "abs(genParts_eta[0])<3.5", "prof")
 
-    hP0.SetMaximum(0.6)
+    hP0.SetMaximum(1.05)
+    hP0.SetMinimum(0)
     hP0.SetMarkerColor(kRed)
     hP1.SetMarkerColor(kBlue)
     hP2.SetMarkerColor(kGreen)
@@ -127,7 +151,8 @@ if sections["coverage2"]:
     tree.Project("hP1", "(@AMTTRoads_hash.size()!=0 && Alt$(AMTTRoads_hash[0],-1)>0):genParts_eta[0]", "genParts_pt[0]>5", "prof")
     tree.Project("hP2", "(@AMTTRoads_hash.size()!=0 && Alt$(AMTTRoads_hash[0],-1)>0):genParts_eta[0]", "genParts_pt[0]>20", "prof")
 
-    hP0.SetMaximum(0.6)
+    hP0.SetMaximum(1.05)
+    hP0.SetMinimum(0)
     hP0.SetMarkerColor(kRed)
     hP1.SetMarkerColor(kBlue)
     hP2.SetMarkerColor(kGreen)

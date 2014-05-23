@@ -51,32 +51,33 @@ sections["trkVertices"] = False
 sections["eventInfo"  ] = False
 sections["clusters"   ] = False
 sections["stubs"      ] = False
-sections["filtering"  ] = True
-sections["fixme"      ] = False
+sections["filtering"  ] = False
+sections["filtering2" ] = False
+sections["fixme"      ] = True
 
 drawerInit = DrawerInit()
 chain = TChain("ntupler/tree", "")
 infiles = [
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_10_1_M5c.root",
-"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_11_1_hSJ.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_12_1_c6j.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_13_1_5qi.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_14_1_uho.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_15_1_YVP.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_16_1_6Sy.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_17_1_qkx.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_18_1_HXB.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_19_1_3pI.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_20_1_Luk.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_1_1_ZCg.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_2_1_cqn.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_3_1_ZtL.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_4_1_TsL.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_5_1_uSw.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_6_1_LuW.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_7_1_nAO.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_8_1_L4a.root",
-#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_9_1_rHD.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_10_1_20p.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_11_1_A3c.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_12_1_upT.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_13_1_eSt.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_14_1_6MI.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_15_1_f0k.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_16_1_z6q.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_17_1_8BO.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_18_1_zHQ.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_19_1_FlR.root",
+"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_20_1_WKb.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_1_1_XY0.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_2_1_Gjj.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_3_1_tpR.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_4_1_tTQ.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_5_1_cYV.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_6_1_gAu.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_7_1_KMc.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_8_1_lrx.root",
+#"/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/SingleMuPlusMinus_OneOverPt_vz0_20140519/results_9_1_VTj.root",
     ]
 if sections["clusters"] or sections["stubs"]:
     infiles = [f.replace(".root","_cut.root") for f in infiles]
@@ -1219,6 +1220,31 @@ if sections["filtering"]:
 
 
 # ______________________________________________________________________________
-if sections["fixme"]:
+if sections["filtering2"]:
     pass
 
+
+# ______________________________________________________________________________
+if sections["fixme"]:
+    cut = "TTStubs_trkId==1"
+    col = sBase03
+
+    fcol = ssBase3
+    p0 = struct("TTStubs_size", "TTStubs_size", "",
+        "# stubs", 30, 0, 30, col, fcol)
+    histos = book([p0]); project(histos); draws(histos, logy=True); save(imgdir, p0.name+"_logy")
+
+    fcol = ssBase4
+    p0 = struct("TTStubs_size", "Sum$(%s)" % cut, "",
+        "# stubs {simTrack id==1}", 30, 0, 30, col, fcol)
+    histos = book([p0]); project(histos); draws(histos, logy=True); save(imgdir, p0.name+"_id1_logy")
+
+    fcol = ssBase4
+    p0 = struct("TTStubs_size", "Sum$(%s)" % cut, "",
+        "# stubs {# simTracks==1}", 30, 0, 30, col, fcol)
+    histos = book([p0]); project(histos); draws(histos, logy=True); save(imgdir, p0.name+"_ns1_logy")
+
+    fcol = ssBase3
+    p0 = struct("TTStubs_pdgId", "TTStubs_pdgId", "",
+        "Stub PDG id", 50, -25, 25, col, fcol)
+    histos = book([p0]); project(histos); draws(histos, logy=True); save(imgdir, p0.name+"_logy")
