@@ -445,22 +445,31 @@ int PatternMatcher::writeRoads(TString out) {
 
 // Make a map to merge layers in barrel and in endcap
 void PatternMatcher::makeLayerMap() {
+    if (nLayers_ <= 5) {
+        std::cout << Warning() << "Does not really support nLayers = " << nLayers_ << ". Setting for nLayers = 6 is used." << std::endl;
+    }
+
     // Hardcoded layer information
     if (nLayers_ <= 6) {
+        layerMap_ = std::map<id_type, id_type> {
+            {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
+            {11,10}, {12,9}, {13,8}, {14,7}, {15,6},
+            {18,10}, {19,9}, {20,8}, {21,7}, {22,6}
+        };
+    } else if (nLayers_ == 7) {
         layerMap_ = std::map<id_type, id_type> {
             {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
             {11,11}, {12,10}, {13,9}, {14,8}, {15,7},
             {18,11}, {19,10}, {20,9}, {21,8}, {22,7}
         };
-    } else {  // otherwise it's not merged
+    } else {  // >= 8
         layerMap_ = std::map<id_type, id_type> {
             {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
-            {11,11}, {12,12}, {13,13}, {14,14}, {15,15},
-            {18,11}, {19,12}, {20,13}, {21,14}, {22,15}
+            {11,11}, {12,12}, {13,10}, {14,9}, {15,8},
+            {18,11}, {19,12}, {20,10}, {21,9}, {22,8}
         };
-    };
+    }
 }
-
 
 // _____________________________________________________________________________
 // Main driver
