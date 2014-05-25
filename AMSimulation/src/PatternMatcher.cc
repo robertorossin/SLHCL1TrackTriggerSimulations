@@ -27,6 +27,8 @@ int PatternMatcher::readPatterns(TString src) {
         ttree->SetBranchAddress("superstripBits", &superstripBits);
 
         Long64_t nentries = ttree->GetEntries();
+        if (nentries > maxPatterns_)
+            nentries = maxPatterns_;
         if (verbose_)  std::cout << Info() << "Reading " << nentries << " patterns." << std::endl;
 
         // _____________________________________________________________________

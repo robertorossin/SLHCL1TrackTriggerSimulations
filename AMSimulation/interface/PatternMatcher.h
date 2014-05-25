@@ -27,7 +27,7 @@ class PatternMatcher {
     PatternMatcher(PatternBankOption option)
     : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits),
       prefixRoad_("AMTTRoads_"), suffix_(""),
-      nEvents_(999999999), maxRoads_(999999999), maxHits_(999999999), verbose_(1) {
+      nEvents_(999999999), maxPatterns_(999999999), maxRoads_(999999999), maxHits_(999999999), verbose_(1) {
 
         assert(3 <= nLayers_ && nLayers_ <= 8);
         assert(0 <= nDCBits_ && nDCBits_ <= 4);
@@ -41,17 +41,18 @@ class PatternMatcher {
     ~PatternMatcher() {}
 
     // Setters
-    //void setNLayers(int n)        { nLayers_ = n; }
-    //void setNDCBits(int n)        { nDCBits_ = n; }
+    //void setNLayers(int n)          { nLayers_ = n; }
+    //void setNDCBits(int n)          { nDCBits_ = n; }
 
-    void setNEvents(int n)        { if (n != -1)  nEvents_ = std::max(0, n); }
-    void setMaxRoads(int n)       { if (n != -1)  maxRoads_ = std::max(0, n); }
-    void setMaxHits(int n)        { if (n != -1)  maxHits_ = std::max(0, n); }
-    void setVerbosity(int n)      { verbose_ = n; }
+    void setNEvents(int n)          { if (n != -1)  nEvents_ = std::max(0, n); }
+    void setMaxPatterns(int n)      { if (n != -1)  maxPatterns_ = std::max(0, n); }
+    void setMaxRoads(int n)         { if (n != -1)  maxRoads_ = std::max(0, n); }
+    void setMaxHits(int n)          { if (n != -1)  maxHits_ = std::max(0, n); }
+    void setVerbosity(int n)        { verbose_ = n; }
 
     // Getters
-    int getNLayers()        const { return nLayers_; }
-    int getNDCBits()        const { return nDCBits_; }
+    int getNLayers()          const { return nLayers_; }
+    int getNDCBits()          const { return nDCBits_; }
 
     // Functions
     int readPatterns(TString src);
@@ -84,6 +85,7 @@ class PatternMatcher {
 
     // Program options
     int nEvents_;
+    int maxPatterns_;  // maximum number of patterns
     int maxRoads_;  // max number of roads per event
     int maxHits_;   // max number of hits per road
     int verbose_;
