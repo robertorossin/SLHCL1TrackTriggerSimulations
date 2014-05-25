@@ -100,138 +100,140 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
   suffix_              (iConfig.getParameter<std::string>("suffix")) {
 
     // Remember r is rho in cylindrical coordinate system
-    produces<std::vector<float> >               (prefixClus_ + "x"              + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "y"              + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "z"              + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "r"              + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "phi"            + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "localx"         + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "localy"         + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "localz"         + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "coordx"         + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "coordy"         + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "coordz"         + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "surfx"          + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "surfy"          + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "surfz"          + suffix_);
-    produces<std::vector<unsigned> >            (prefixClus_ + "stackId"        + suffix_);
-    produces<std::vector<unsigned> >            (prefixClus_ + "iLayer"         + suffix_);
-    produces<std::vector<unsigned> >            (prefixClus_ + "iRing"          + suffix_);
-    produces<std::vector<unsigned> >            (prefixClus_ + "iSide"          + suffix_);
-    produces<std::vector<unsigned> >            (prefixClus_ + "iPhi"           + suffix_);
-    produces<std::vector<unsigned> >            (prefixClus_ + "iZ"             + suffix_);
-    produces<std::vector<unsigned> >            (prefixClus_ + "iModLayer"      + suffix_);
-    produces<std::vector<unsigned> >            (prefixClus_ + "iModLadder"     + suffix_);
-    produces<std::vector<unsigned> >            (prefixClus_ + "iModModule"     + suffix_);
-    produces<std::vector<unsigned> >            (prefixClus_ + "iModCols"       + suffix_);
-    produces<std::vector<unsigned> >            (prefixClus_ + "iModRows"       + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "iModPitchX"     + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "iModPitchY"     + suffix_);
-    produces<std::vector<bool> >                (prefixClus_ + "barrel"         + suffix_);
-    produces<std::vector<bool> >                (prefixClus_ + "psmodule"       + suffix_);
-    produces<std::vector<unsigned> >            (prefixClus_ + "modId"          + suffix_);
-    produces<std::vector<unsigned> >            (prefixClus_ + "geoId"          + suffix_);
-    produces<std::vector<unsigned> >            (prefixClus_ + "stack"          + suffix_);
-    produces<std::vector<unsigned> >            (prefixClus_ + "width"          + suffix_);
-    produces<std::vector<unsigned> >            (prefixClus_ + "nhits"          + suffix_);
-    produces<std::vector<std::vector<int> > >   (prefixClus_ + "hitCols"        + suffix_);
-    produces<std::vector<std::vector<int> > >   (prefixClus_ + "hitRows"        + suffix_);
-    produces<std::vector<std::vector<int> > >   (prefixClus_ + "hitADCs"        + suffix_);
-    produces<std::vector<std::vector<int> > >   (prefixClus_ + "hitChans"       + suffix_);
-    produces<std::vector<std::vector<int> > >   (prefixClus_ + "hitTrkIds"      + suffix_);
-    produces<std::vector<std::vector<float> > > (prefixClus_ + "hitFracs"       + suffix_);
-    produces<std::vector<std::vector<float> > > (prefixClus_ + "hitXs"          + suffix_);
-    produces<std::vector<std::vector<float> > > (prefixClus_ + "hitYs"          + suffix_);
-    produces<std::vector<std::vector<float> > > (prefixClus_ + "hitZs"          + suffix_);
-    produces<std::vector<bool> >                (prefixClus_ + "isGenuine"      + suffix_);
-    produces<std::vector<bool> >                (prefixClus_ + "isUnknown"      + suffix_);
-    produces<std::vector<bool> >                (prefixClus_ + "isCombinatoric" + suffix_);
-    produces<std::vector<int> >                 (prefixClus_ + "tpId"           + suffix_);
-    produces<std::vector<int> >                 (prefixClus_ + "trkId"          + suffix_);
-    produces<std::vector<int> >                 (prefixClus_ + "pdgId"          + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "simPt"          + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "simEta"         + suffix_);
-    produces<std::vector<float> >               (prefixClus_ + "simPhi"         + suffix_);
-    produces<unsigned>                          (prefixClus_ + "size"           + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "x"              + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "y"              + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "z"              + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "r"              + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "phi"            + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "localx"         + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "localy"         + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "coordx"         + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "coordy"         + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "surfx"          + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "surfy"          + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "surfz"          + suffix_);
+    produces<std::vector<unsigned> >                (prefixClus_ + "stackId"        + suffix_);
+    produces<std::vector<unsigned> >                (prefixClus_ + "iLayer"         + suffix_);
+    produces<std::vector<unsigned> >                (prefixClus_ + "iRing"          + suffix_);
+    produces<std::vector<unsigned> >                (prefixClus_ + "iSide"          + suffix_);
+    produces<std::vector<unsigned> >                (prefixClus_ + "iPhi"           + suffix_);
+    produces<std::vector<unsigned> >                (prefixClus_ + "iZ"             + suffix_);
+    produces<std::vector<unsigned> >                (prefixClus_ + "iModLayer"      + suffix_);
+    produces<std::vector<unsigned> >                (prefixClus_ + "iModLadder"     + suffix_);
+    produces<std::vector<unsigned> >                (prefixClus_ + "iModModule"     + suffix_);
+    produces<std::vector<unsigned> >                (prefixClus_ + "iModCols"       + suffix_);
+    produces<std::vector<unsigned> >                (prefixClus_ + "iModRows"       + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "iModPitchX"     + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "iModPitchY"     + suffix_);
+    produces<std::vector<bool> >                    (prefixClus_ + "barrel"         + suffix_);
+    produces<std::vector<bool> >                    (prefixClus_ + "psmodule"       + suffix_);
+    produces<std::vector<unsigned> >                (prefixClus_ + "modId"          + suffix_);
+    produces<std::vector<unsigned> >                (prefixClus_ + "geoId"          + suffix_);
+    produces<std::vector<unsigned> >                (prefixClus_ + "stack"          + suffix_);
+    produces<std::vector<unsigned> >                (prefixClus_ + "width"          + suffix_);
+    produces<std::vector<unsigned> >                (prefixClus_ + "nhits"          + suffix_);
+    produces<std::vector<std::vector<int> > >       (prefixClus_ + "hitCols"        + suffix_);
+    produces<std::vector<std::vector<int> > >       (prefixClus_ + "hitRows"        + suffix_);
+    produces<std::vector<std::vector<int> > >       (prefixClus_ + "hitADCs"        + suffix_);
+    produces<std::vector<std::vector<int> > >       (prefixClus_ + "hitChans"       + suffix_);
+    produces<std::vector<std::vector<int> > >       (prefixClus_ + "hitTrkIds"      + suffix_);
+    produces<std::vector<std::vector<unsigned> > >  (prefixClus_ + "hitEvtIds"      + suffix_);
+    produces<std::vector<std::vector<float> > >     (prefixClus_ + "hitFracs"       + suffix_);
+    produces<std::vector<std::vector<float> > >     (prefixClus_ + "hitXs"          + suffix_);
+    produces<std::vector<std::vector<float> > >     (prefixClus_ + "hitYs"          + suffix_);
+    produces<std::vector<std::vector<float> > >     (prefixClus_ + "hitZs"          + suffix_);
+    produces<std::vector<bool> >                    (prefixClus_ + "isGenuine"      + suffix_);
+    produces<std::vector<bool> >                    (prefixClus_ + "isUnknown"      + suffix_);
+    produces<std::vector<bool> >                    (prefixClus_ + "isCombinatoric" + suffix_);
+    produces<std::vector<int> >                     (prefixClus_ + "tpId"           + suffix_);
+    produces<std::vector<int> >                     (prefixClus_ + "trkId"          + suffix_);
+    produces<std::vector<int> >                     (prefixClus_ + "pdgId"          + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "simPt"          + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "simEta"         + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "simPhi"         + suffix_);
+    produces<unsigned>                              (prefixClus_ + "size"           + suffix_);
 
-    produces<std::vector<float> >               (prefixStub_ + "x"              + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "y"              + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "z"              + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "r"              + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "phi"            + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "dirx"           + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "diry"           + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "dirz"           + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "roughPt"        + suffix_);
-    produces<std::vector<unsigned> >            (prefixStub_ + "stackId"        + suffix_);
-    produces<std::vector<unsigned> >            (prefixStub_ + "iLayer"         + suffix_);
-    produces<std::vector<unsigned> >            (prefixStub_ + "iRing"          + suffix_);
-    produces<std::vector<unsigned> >            (prefixStub_ + "iSide"          + suffix_);
-    produces<std::vector<unsigned> >            (prefixStub_ + "iPhi"           + suffix_);
-    produces<std::vector<unsigned> >            (prefixStub_ + "iZ"             + suffix_);
-    produces<std::vector<unsigned> >            (prefixStub_ + "iModLayer"      + suffix_);
-    produces<std::vector<unsigned> >            (prefixStub_ + "iModLadder"     + suffix_);
-    produces<std::vector<unsigned> >            (prefixStub_ + "iModModule"     + suffix_);
-    produces<std::vector<unsigned> >            (prefixStub_ + "iModCols"       + suffix_);
-    produces<std::vector<unsigned> >            (prefixStub_ + "iModRows"       + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "iModPitchX"     + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "iModPitchY"     + suffix_);
-    produces<std::vector<bool> >                (prefixStub_ + "barrel"         + suffix_);
-    produces<std::vector<bool> >                (prefixStub_ + "psmodule"       + suffix_);
-    produces<std::vector<unsigned> >            (prefixStub_ + "modId"          + suffix_);
-    produces<std::vector<unsigned> >            (prefixStub_ + "geoId0"         + suffix_);
-    produces<std::vector<unsigned> >            (prefixStub_ + "geoId1"         + suffix_);
-    produces<std::vector<unsigned> >            (prefixStub_ + "clusId0"        + suffix_);
-    produces<std::vector<unsigned> >            (prefixStub_ + "clusId1"        + suffix_);
-    produces<std::vector<unsigned> >            (prefixStub_ + "nhits"          + suffix_);
-    produces<std::vector<std::vector<int> > >   (prefixStub_ + "hitCols"        + suffix_);
-    produces<std::vector<std::vector<int> > >   (prefixStub_ + "hitRows"        + suffix_);
-    produces<std::vector<std::vector<int> > >   (prefixStub_ + "hitADCs"        + suffix_);
-    produces<std::vector<std::vector<int> > >   (prefixStub_ + "hitChans"       + suffix_);
-    produces<std::vector<std::vector<int> > >   (prefixStub_ + "hitTrkIds"      + suffix_);
-    produces<std::vector<std::vector<float> > > (prefixStub_ + "hitFracs"       + suffix_);
-    produces<std::vector<std::vector<float> > > (prefixStub_ + "hitXs"          + suffix_);
-    produces<std::vector<std::vector<float> > > (prefixStub_ + "hitYs"          + suffix_);
-    produces<std::vector<std::vector<float> > > (prefixStub_ + "hitZs"          + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "trigDist"       + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "trigOffset"     + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "trigPos"        + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "trigBend"       + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "separation"     + suffix_);
-    produces<std::vector<int> >                 (prefixStub_ + "detWindow"      + suffix_);
-    produces<std::vector<bool> >                (prefixStub_ + "isGenuine"      + suffix_);
-    produces<std::vector<bool> >                (prefixStub_ + "isUnknown"      + suffix_);
-    produces<std::vector<bool> >                (prefixStub_ + "isCombinatoric" + suffix_);
-    produces<std::vector<int> >                 (prefixStub_ + "tpId"           + suffix_);
-    produces<std::vector<int> >                 (prefixStub_ + "trkId"          + suffix_);
-    produces<std::vector<int> >                 (prefixStub_ + "pdgId"          + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "simPt"          + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "simEta"         + suffix_);
-    produces<std::vector<float> >               (prefixStub_ + "simPhi"         + suffix_);
-    produces<unsigned>                          (prefixStub_ + "size"           + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "x"              + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "y"              + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "z"              + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "r"              + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "phi"            + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "coordx"         + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "coordy"         + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "dirx"           + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "diry"           + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "dirz"           + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "roughPt"        + suffix_);
+    produces<std::vector<unsigned> >                (prefixStub_ + "stackId"        + suffix_);
+    produces<std::vector<unsigned> >                (prefixStub_ + "iLayer"         + suffix_);
+    produces<std::vector<unsigned> >                (prefixStub_ + "iRing"          + suffix_);
+    produces<std::vector<unsigned> >                (prefixStub_ + "iSide"          + suffix_);
+    produces<std::vector<unsigned> >                (prefixStub_ + "iPhi"           + suffix_);
+    produces<std::vector<unsigned> >                (prefixStub_ + "iZ"             + suffix_);
+    produces<std::vector<unsigned> >                (prefixStub_ + "iModLayer"      + suffix_);
+    produces<std::vector<unsigned> >                (prefixStub_ + "iModLadder"     + suffix_);
+    produces<std::vector<unsigned> >                (prefixStub_ + "iModModule"     + suffix_);
+    produces<std::vector<unsigned> >                (prefixStub_ + "iModCols"       + suffix_);
+    produces<std::vector<unsigned> >                (prefixStub_ + "iModRows"       + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "iModPitchX"     + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "iModPitchY"     + suffix_);
+    produces<std::vector<bool> >                    (prefixStub_ + "barrel"         + suffix_);
+    produces<std::vector<bool> >                    (prefixStub_ + "psmodule"       + suffix_);
+    produces<std::vector<unsigned> >                (prefixStub_ + "modId"          + suffix_);
+    produces<std::vector<unsigned> >                (prefixStub_ + "geoId0"         + suffix_);
+    produces<std::vector<unsigned> >                (prefixStub_ + "geoId1"         + suffix_);
+    produces<std::vector<unsigned> >                (prefixStub_ + "clusId0"        + suffix_);
+    produces<std::vector<unsigned> >                (prefixStub_ + "clusId1"        + suffix_);
+    produces<std::vector<unsigned> >                (prefixStub_ + "nhits"          + suffix_);
+    produces<std::vector<std::vector<int> > >       (prefixStub_ + "hitCols"        + suffix_);
+    produces<std::vector<std::vector<int> > >       (prefixStub_ + "hitRows"        + suffix_);
+    produces<std::vector<std::vector<int> > >       (prefixStub_ + "hitADCs"        + suffix_);
+    produces<std::vector<std::vector<int> > >       (prefixStub_ + "hitChans"       + suffix_);
+    produces<std::vector<std::vector<int> > >       (prefixStub_ + "hitTrkIds"      + suffix_);
+    produces<std::vector<std::vector<unsigned> > >  (prefixStub_ + "hitEvtIds"      + suffix_);
+    produces<std::vector<std::vector<float> > >     (prefixStub_ + "hitFracs"       + suffix_);
+    produces<std::vector<std::vector<float> > >     (prefixStub_ + "hitXs"          + suffix_);
+    produces<std::vector<std::vector<float> > >     (prefixStub_ + "hitYs"          + suffix_);
+    produces<std::vector<std::vector<float> > >     (prefixStub_ + "hitZs"          + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "trigDist"       + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "trigOffset"     + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "trigPos"        + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "trigBend"       + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "separation"     + suffix_);
+    produces<std::vector<int> >                     (prefixStub_ + "detWindow"      + suffix_);
+    produces<std::vector<bool> >                    (prefixStub_ + "isGenuine"      + suffix_);
+    produces<std::vector<bool> >                    (prefixStub_ + "isUnknown"      + suffix_);
+    produces<std::vector<bool> >                    (prefixStub_ + "isCombinatoric" + suffix_);
+    produces<std::vector<int> >                     (prefixStub_ + "tpId"           + suffix_);
+    produces<std::vector<int> >                     (prefixStub_ + "trkId"          + suffix_);
+    produces<std::vector<int> >                     (prefixStub_ + "pdgId"          + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "simPt"          + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "simEta"         + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "simPhi"         + suffix_);
+    produces<unsigned>                              (prefixStub_ + "size"           + suffix_);
 
-    produces<std::vector<float> >              (prefixTrack_ + "px"             + suffix_);
-    produces<std::vector<float> >              (prefixTrack_ + "py"             + suffix_);
-    produces<std::vector<float> >              (prefixTrack_ + "pz"             + suffix_);
-    produces<std::vector<float> >              (prefixTrack_ + "pt"             + suffix_);
-    produces<std::vector<float> >              (prefixTrack_ + "eta"            + suffix_);
-    produces<std::vector<float> >              (prefixTrack_ + "phi"            + suffix_);
-    produces<std::vector<float> >              (prefixTrack_ + "vx"             + suffix_);
-    produces<std::vector<float> >              (prefixTrack_ + "vy"             + suffix_);
-    produces<std::vector<float> >              (prefixTrack_ + "vz"             + suffix_);
-    produces<std::vector<float> >              (prefixTrack_ + "rinv"           + suffix_);
-    produces<std::vector<float> >              (prefixTrack_ + "chi2"           + suffix_);
-    produces<std::vector<float> >              (prefixTrack_ + "ptconsistency"  + suffix_);
-    produces<std::vector<unsigned> >           (prefixTrack_ + "nstubs"         + suffix_);
-    produces<std::vector<bool> >               (prefixTrack_ + "isGenuine"      + suffix_);
-    produces<std::vector<bool> >               (prefixTrack_ + "isUnknown"      + suffix_);
-    produces<std::vector<bool> >               (prefixTrack_ + "isCombinatoric" + suffix_);
-    produces<std::vector<int> >                (prefixTrack_ + "tpId"           + suffix_);
-    produces<std::vector<int> >                (prefixTrack_ + "pdgId"          + suffix_);
-    produces<std::vector<float> >              (prefixTrack_ + "simPt"          + suffix_);
-    produces<std::vector<float> >              (prefixTrack_ + "simEta"         + suffix_);
-    produces<std::vector<float> >              (prefixTrack_ + "simPhi"         + suffix_);
-    produces<unsigned>                         (prefixTrack_ + "size"           + suffix_);
+    produces<std::vector<float> >                   (prefixTrack_ + "px"             + suffix_);
+    produces<std::vector<float> >                   (prefixTrack_ + "py"             + suffix_);
+    produces<std::vector<float> >                   (prefixTrack_ + "pz"             + suffix_);
+    produces<std::vector<float> >                   (prefixTrack_ + "pt"             + suffix_);
+    produces<std::vector<float> >                   (prefixTrack_ + "eta"            + suffix_);
+    produces<std::vector<float> >                   (prefixTrack_ + "phi"            + suffix_);
+    produces<std::vector<float> >                   (prefixTrack_ + "vx"             + suffix_);
+    produces<std::vector<float> >                   (prefixTrack_ + "vy"             + suffix_);
+    produces<std::vector<float> >                   (prefixTrack_ + "vz"             + suffix_);
+    produces<std::vector<float> >                   (prefixTrack_ + "rinv"           + suffix_);
+    produces<std::vector<float> >                   (prefixTrack_ + "chi2"           + suffix_);
+    produces<std::vector<float> >                   (prefixTrack_ + "ptconsistency"  + suffix_);
+    produces<std::vector<unsigned> >                (prefixTrack_ + "nstubs"         + suffix_);
+    produces<std::vector<bool> >                    (prefixTrack_ + "isGenuine"      + suffix_);
+    produces<std::vector<bool> >                    (prefixTrack_ + "isUnknown"      + suffix_);
+    produces<std::vector<bool> >                    (prefixTrack_ + "isCombinatoric" + suffix_);
+    produces<std::vector<int> >                     (prefixTrack_ + "tpId"           + suffix_);
+    produces<std::vector<int> >                     (prefixTrack_ + "pdgId"          + suffix_);
+    produces<std::vector<float> >                   (prefixTrack_ + "simPt"          + suffix_);
+    produces<std::vector<float> >                   (prefixTrack_ + "simEta"         + suffix_);
+    produces<std::vector<float> >                   (prefixTrack_ + "simPhi"         + suffix_);
+    produces<unsigned>                              (prefixTrack_ + "size"           + suffix_);
 }
 
 void NTupleStubs::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup) {
@@ -340,138 +342,140 @@ void NTupleStubs::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup) 
 
 void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
-    std::auto_ptr<std::vector<float> >              vc_x                (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vc_y                (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vc_z                (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vc_r                (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vc_phi              (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vc_localx           (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vc_localy           (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vc_localz           (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vc_coordx           (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vc_coordy           (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vc_coordz           (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vc_surfx            (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vc_surfy            (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vc_surfz            (new std::vector<float>());
-    std::auto_ptr<std::vector<unsigned> >           vc_stackId          (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vc_iLayer           (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vc_iRing            (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vc_iSide            (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vc_iPhi             (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vc_iZ               (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vc_iModLayer        (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vc_iModLadder       (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vc_iModModule       (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vc_iModCols         (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vc_iModRows         (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<float> >              vc_iModPitchX       (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vc_iModPitchY       (new std::vector<float>());
-    std::auto_ptr<std::vector<bool> >               vc_barrel           (new std::vector<bool>());
-    std::auto_ptr<std::vector<bool> >               vc_psmodule         (new std::vector<bool>());
-    std::auto_ptr<std::vector<unsigned> >           vc_modId            (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vc_geoId            (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vc_stack            (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vc_width            (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vc_nhits            (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<std::vector<int> > >  vc_hitCols          (new std::vector<std::vector<int> >());
-    std::auto_ptr<std::vector<std::vector<int> > >  vc_hitRows          (new std::vector<std::vector<int> >());
-    std::auto_ptr<std::vector<std::vector<int> > >  vc_hitADCs          (new std::vector<std::vector<int> >());
-    std::auto_ptr<std::vector<std::vector<int> > >  vc_hitChans         (new std::vector<std::vector<int> >());
-    std::auto_ptr<std::vector<std::vector<int> > >  vc_hitTrkIds        (new std::vector<std::vector<int> >());
-    std::auto_ptr<std::vector<std::vector<float> >> vc_hitFracs         (new std::vector<std::vector<float> >());
-    std::auto_ptr<std::vector<std::vector<float> >> vc_hitXs            (new std::vector<std::vector<float> >());
-    std::auto_ptr<std::vector<std::vector<float> >> vc_hitYs            (new std::vector<std::vector<float> >());
-    std::auto_ptr<std::vector<std::vector<float> >> vc_hitZs            (new std::vector<std::vector<float> >());
-    std::auto_ptr<std::vector<bool> >               vc_isGenuine        (new std::vector<bool>());
-    std::auto_ptr<std::vector<bool> >               vc_isUnknown        (new std::vector<bool>());
-    std::auto_ptr<std::vector<bool> >               vc_isCombinatoric   (new std::vector<bool>());
-    std::auto_ptr<std::vector<int> >                vc_tpId             (new std::vector<int>());
-    std::auto_ptr<std::vector<int> >                vc_trkId            (new std::vector<int>());
-    std::auto_ptr<std::vector<int> >                vc_pdgId            (new std::vector<int>());
-    std::auto_ptr<std::vector<float> >              vc_simPt            (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vc_simEta           (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vc_simPhi           (new std::vector<float>());
-    std::auto_ptr<unsigned>                         vc_size             (new unsigned(0));
+    std::auto_ptr<std::vector<float> >                  vc_x                (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vc_y                (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vc_z                (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vc_r                (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vc_phi              (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vc_localx           (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vc_localy           (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vc_coordx           (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vc_coordy           (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vc_surfx            (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vc_surfy            (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vc_surfz            (new std::vector<float>());
+    std::auto_ptr<std::vector<unsigned> >               vc_stackId          (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vc_iLayer           (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vc_iRing            (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vc_iSide            (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vc_iPhi             (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vc_iZ               (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vc_iModLayer        (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vc_iModLadder       (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vc_iModModule       (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vc_iModCols         (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vc_iModRows         (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<float> >                  vc_iModPitchX       (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vc_iModPitchY       (new std::vector<float>());
+    std::auto_ptr<std::vector<bool> >                   vc_barrel           (new std::vector<bool>());
+    std::auto_ptr<std::vector<bool> >                   vc_psmodule         (new std::vector<bool>());
+    std::auto_ptr<std::vector<unsigned> >               vc_modId            (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vc_geoId            (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vc_stack            (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vc_width            (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vc_nhits            (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<std::vector<int> > >      vc_hitCols          (new std::vector<std::vector<int> >());
+    std::auto_ptr<std::vector<std::vector<int> > >      vc_hitRows          (new std::vector<std::vector<int> >());
+    std::auto_ptr<std::vector<std::vector<int> > >      vc_hitADCs          (new std::vector<std::vector<int> >());
+    std::auto_ptr<std::vector<std::vector<int> > >      vc_hitChans         (new std::vector<std::vector<int> >());
+    std::auto_ptr<std::vector<std::vector<int> > >      vc_hitTrkIds        (new std::vector<std::vector<int> >());
+    std::auto_ptr<std::vector<std::vector<unsigned> > > vc_hitEvtIds        (new std::vector<std::vector<unsigned> >());
+    std::auto_ptr<std::vector<std::vector<float> > >    vc_hitFracs         (new std::vector<std::vector<float> >());
+    std::auto_ptr<std::vector<std::vector<float> > >    vc_hitXs            (new std::vector<std::vector<float> >());
+    std::auto_ptr<std::vector<std::vector<float> > >    vc_hitYs            (new std::vector<std::vector<float> >());
+    std::auto_ptr<std::vector<std::vector<float> > >    vc_hitZs            (new std::vector<std::vector<float> >());
+    std::auto_ptr<std::vector<bool> >                   vc_isGenuine        (new std::vector<bool>());
+    std::auto_ptr<std::vector<bool> >                   vc_isUnknown        (new std::vector<bool>());
+    std::auto_ptr<std::vector<bool> >                   vc_isCombinatoric   (new std::vector<bool>());
+    std::auto_ptr<std::vector<int> >                    vc_tpId             (new std::vector<int>());
+    std::auto_ptr<std::vector<int> >                    vc_trkId            (new std::vector<int>());
+    std::auto_ptr<std::vector<int> >                    vc_pdgId            (new std::vector<int>());
+    std::auto_ptr<std::vector<float> >                  vc_simPt            (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vc_simEta           (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vc_simPhi           (new std::vector<float>());
+    std::auto_ptr<unsigned>                             vc_size             (new unsigned(0));
 
-    std::auto_ptr<std::vector<float> >              vb_x                (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vb_y                (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vb_z                (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vb_r                (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vb_phi              (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vb_dirx             (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vb_diry             (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vb_dirz             (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vb_roughPt          (new std::vector<float>());
-    std::auto_ptr<std::vector<unsigned> >           vb_stackId          (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_iLayer           (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_iRing            (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_iSide            (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_iPhi             (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_iZ               (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_iModLayer        (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_iModLadder       (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_iModModule       (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_iModCols         (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_iModRows         (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<float> >              vb_iModPitchX       (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vb_iModPitchY       (new std::vector<float>());
-    std::auto_ptr<std::vector<bool> >               vb_barrel           (new std::vector<bool>());
-    std::auto_ptr<std::vector<bool> >               vb_psmodule         (new std::vector<bool>());
-    std::auto_ptr<std::vector<unsigned> >           vb_modId            (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_geoId0           (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_geoId1           (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_clusId0          (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_clusId1          (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >           vb_nhits            (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<std::vector<int> > >  vb_hitCols          (new std::vector<std::vector<int> >());
-    std::auto_ptr<std::vector<std::vector<int> > >  vb_hitRows          (new std::vector<std::vector<int> >());
-    std::auto_ptr<std::vector<std::vector<int> > >  vb_hitADCs          (new std::vector<std::vector<int> >());
-    std::auto_ptr<std::vector<std::vector<int> > >  vb_hitChans         (new std::vector<std::vector<int> >());
-    std::auto_ptr<std::vector<std::vector<int> > >  vb_hitTrkIds        (new std::vector<std::vector<int> >());
-    std::auto_ptr<std::vector<std::vector<float> >> vb_hitFracs         (new std::vector<std::vector<float> >());
-    std::auto_ptr<std::vector<std::vector<float> >> vb_hitXs            (new std::vector<std::vector<float> >());
-    std::auto_ptr<std::vector<std::vector<float> >> vb_hitYs            (new std::vector<std::vector<float> >());
-    std::auto_ptr<std::vector<std::vector<float> >> vb_hitZs            (new std::vector<std::vector<float> >());
-    std::auto_ptr<std::vector<float> >              vb_trigDist         (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vb_trigOffset       (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vb_trigPos          (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vb_trigBend         (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vb_separation       (new std::vector<float>());
-    std::auto_ptr<std::vector<int> >                vb_detWindow        (new std::vector<int>());
-    std::auto_ptr<std::vector<bool> >               vb_isGenuine        (new std::vector<bool>());
-    std::auto_ptr<std::vector<bool> >               vb_isUnknown        (new std::vector<bool>());
-    std::auto_ptr<std::vector<bool> >               vb_isCombinatoric   (new std::vector<bool>());
-    std::auto_ptr<std::vector<int> >                vb_tpId             (new std::vector<int>());
-    std::auto_ptr<std::vector<int> >                vb_trkId            (new std::vector<int>());
-    std::auto_ptr<std::vector<int> >                vb_pdgId            (new std::vector<int>());
-    std::auto_ptr<std::vector<float> >              vb_simPt            (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vb_simEta           (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vb_simPhi           (new std::vector<float>());
-    std::auto_ptr<unsigned>                         vb_size             (new unsigned(0));
+    std::auto_ptr<std::vector<float> >                  vb_x                (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_y                (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_z                (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_r                (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_phi              (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_coordx           (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_coordy           (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_dirx             (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_diry             (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_dirz             (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_roughPt          (new std::vector<float>());
+    std::auto_ptr<std::vector<unsigned> >               vb_stackId          (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vb_iLayer           (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vb_iRing            (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vb_iSide            (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vb_iPhi             (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vb_iZ               (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vb_iModLayer        (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vb_iModLadder       (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vb_iModModule       (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vb_iModCols         (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vb_iModRows         (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<float> >                  vb_iModPitchX       (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_iModPitchY       (new std::vector<float>());
+    std::auto_ptr<std::vector<bool> >                   vb_barrel           (new std::vector<bool>());
+    std::auto_ptr<std::vector<bool> >                   vb_psmodule         (new std::vector<bool>());
+    std::auto_ptr<std::vector<unsigned> >               vb_modId            (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vb_geoId0           (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vb_geoId1           (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vb_clusId0          (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vb_clusId1          (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vb_nhits            (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<std::vector<int> > >      vb_hitCols          (new std::vector<std::vector<int> >());
+    std::auto_ptr<std::vector<std::vector<int> > >      vb_hitRows          (new std::vector<std::vector<int> >());
+    std::auto_ptr<std::vector<std::vector<int> > >      vb_hitADCs          (new std::vector<std::vector<int> >());
+    std::auto_ptr<std::vector<std::vector<int> > >      vb_hitChans         (new std::vector<std::vector<int> >());
+    std::auto_ptr<std::vector<std::vector<int> > >      vb_hitTrkIds        (new std::vector<std::vector<int> >());
+    std::auto_ptr<std::vector<std::vector<unsigned> > > vb_hitEvtIds        (new std::vector<std::vector<unsigned> >());
+    std::auto_ptr<std::vector<std::vector<float> > >    vb_hitFracs         (new std::vector<std::vector<float> >());
+    std::auto_ptr<std::vector<std::vector<float> > >    vb_hitXs            (new std::vector<std::vector<float> >());
+    std::auto_ptr<std::vector<std::vector<float> > >    vb_hitYs            (new std::vector<std::vector<float> >());
+    std::auto_ptr<std::vector<std::vector<float> > >    vb_hitZs            (new std::vector<std::vector<float> >());
+    std::auto_ptr<std::vector<float> >                  vb_trigDist         (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_trigOffset       (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_trigPos          (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_trigBend         (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_separation       (new std::vector<float>());
+    std::auto_ptr<std::vector<int> >                    vb_detWindow        (new std::vector<int>());
+    std::auto_ptr<std::vector<bool> >                   vb_isGenuine        (new std::vector<bool>());
+    std::auto_ptr<std::vector<bool> >                   vb_isUnknown        (new std::vector<bool>());
+    std::auto_ptr<std::vector<bool> >                   vb_isCombinatoric   (new std::vector<bool>());
+    std::auto_ptr<std::vector<int> >                    vb_tpId             (new std::vector<int>());
+    std::auto_ptr<std::vector<int> >                    vb_trkId            (new std::vector<int>());
+    std::auto_ptr<std::vector<int> >                    vb_pdgId            (new std::vector<int>());
+    std::auto_ptr<std::vector<float> >                  vb_simPt            (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_simEta           (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_simPhi           (new std::vector<float>());
+    std::auto_ptr<unsigned>                             vb_size             (new unsigned(0));
 
-    std::auto_ptr<std::vector<float> >              vt_px               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_py               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_pz               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_pt               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_eta              (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_phi              (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_vx               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_vy               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_vz               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_rinv             (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_chi2             (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_ptconsistency    (new std::vector<float>());
-    std::auto_ptr<std::vector<unsigned> >           vt_nstubs           (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<bool> >               vt_isGenuine        (new std::vector<bool>());
-    std::auto_ptr<std::vector<bool> >               vt_isUnknown        (new std::vector<bool>());
-    std::auto_ptr<std::vector<bool> >               vt_isCombinatoric   (new std::vector<bool>());
-    std::auto_ptr<std::vector<int> >                vt_tpId             (new std::vector<int>());
-    std::auto_ptr<std::vector<int> >                vt_pdgId            (new std::vector<int>());
-    std::auto_ptr<std::vector<float> >              vt_simPt            (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_simEta           (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_simPhi           (new std::vector<float>());
-    std::auto_ptr<unsigned>                         vt_size             (new unsigned(0));
+    std::auto_ptr<std::vector<float> >                  vt_px               (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vt_py               (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vt_pz               (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vt_pt               (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vt_eta              (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vt_phi              (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vt_vx               (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vt_vy               (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vt_vz               (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vt_rinv             (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vt_chi2             (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vt_ptconsistency    (new std::vector<float>());
+    std::auto_ptr<std::vector<unsigned> >               vt_nstubs           (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<bool> >                   vt_isGenuine        (new std::vector<bool>());
+    std::auto_ptr<std::vector<bool> >                   vt_isUnknown        (new std::vector<bool>());
+    std::auto_ptr<std::vector<bool> >                   vt_isCombinatoric   (new std::vector<bool>());
+    std::auto_ptr<std::vector<int> >                    vt_tpId             (new std::vector<int>());
+    std::auto_ptr<std::vector<int> >                    vt_pdgId            (new std::vector<int>());
+    std::auto_ptr<std::vector<float> >                  vt_simPt            (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vt_simEta           (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vt_simPhi           (new std::vector<float>());
+    std::auto_ptr<unsigned>                             vt_size             (new unsigned(0));
 
     //__________________________________________________________________________
     /// Get all the handles!
@@ -561,6 +565,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 std::vector<int> hitADCs;  // should be unsigned, but use int for uniformity
                 std::vector<int> hitChans;
                 std::vector<int> hitTrkIds;
+                std::vector<unsigned> hitEvtIds;
                 std::vector<float> hitFracs;
                 std::vector<float> hitXs;
                 std::vector<float> hitYs;
@@ -568,8 +573,9 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 for (unsigned ii = 0; ii < hits.size(); ++ii) {
                     hitADCs.push_back(hits.at(ii)->adc());
                     hitChans.push_back(hits.at(ii)->channel() );
-                    hitTrkIds.push_back(-1);  // to be updated when sim links are found
-                    hitFracs.push_back(0.);   // to be updated when sim links are found
+                    hitTrkIds.push_back(-1);      // to be updated when sim links are found
+                    hitEvtIds.push_back(999999);  // to be updated when sim links are found
+                    hitFracs.push_back(0.);       // to be updated when sim links are found
 
                     // Don't save local position as it's nothing more but (row+0.5, col+0.5)
                     //const LocalPoint& hitLocalPosition = theStackedGeometry->findHitLocalPosition(&(*it), ii);
@@ -595,10 +601,8 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vc_phi->push_back(position.phi());
                 vc_localx->push_back(localposition.x());
                 vc_localy->push_back(localposition.y());
-                vc_localz->push_back(localposition.z());
-                vc_coordx->push_back(localcoord.x());
-                vc_coordy->push_back(localcoord.y());
-                //vc_coordz->push_back(localcoord.z());
+                vc_coordx->push_back(localcoord.x());           // sviret/HL_LHC: CLUS_strip
+                vc_coordy->push_back(localcoord.y());           // sviret/HL_LHC: CLUS_seg
                 vc_surfx->push_back(surfposition.x());
                 vc_surfy->push_back(surfposition.y());
                 vc_surfz->push_back(surfposition.z());
@@ -611,7 +615,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vc_iModLayer->push_back(iModuleLayer);          // sviret/HL_LHC: CLUS_layer
                 vc_iModLadder->push_back(iModuleLadder);        // sviret/HL_LHC: CLUS_ladder
                 vc_iModModule->push_back(iModuleModule);        // sviret/HL_LHC: CLUS_module
-                vc_iModCols->push_back(iModuleCols);
+                vc_iModCols->push_back(iModuleCols);            // sviret/HL_LHC: CLUS_PS
                 vc_iModRows->push_back(iModuleRows);            // sviret/HL_LHC: CLUS_nrows
                 vc_iModPitchX->push_back(iModulePitchX);
                 vc_iModPitchY->push_back(iModulePitchY);
@@ -620,7 +624,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vc_modId->push_back(moduleId);
                 vc_geoId->push_back(geoId.rawId());
                 vc_stack->push_back(stack);
-                vc_width->push_back(width);
+                vc_width->push_back(width);                     // sviret/HL_LHC: CLUS_nstrips
                 vc_nhits->push_back(hits.size());
                 vc_hitCols->push_back(hitCols);
                 vc_hitRows->push_back(hitRows);
@@ -637,12 +641,14 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                         for (edm::DetSet<PixelDigiSimLink>::const_iterator itsim = simlink.data.begin(); itsim != simlink.data.end(); ++itsim) {
                             if (hitChans.at(ii) == (int) itsim->channel()) {
                                 hitTrkIds.at(ii) = itsim->SimTrackId();
+                                hitEvtIds.at(ii) = itsim->eventId().rawId();
                                 hitFracs.at(ii) = itsim->fraction();
                             }
                         }
                     }
                 }
                 vc_hitTrkIds->push_back(hitTrkIds);
+                vc_hitEvtIds->push_back(hitEvtIds);
                 vc_hitFracs->push_back(hitFracs);
 
                 /// Make the reference to retrieve from MC matching
@@ -755,6 +761,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 std::vector<int> hitADCs;  // should be unsigned, but use int for uniformity
                 std::vector<int> hitChans;
                 std::vector<int> hitTrkIds;
+                std::vector<unsigned> hitEvtIds;
                 std::vector<float> hitFracs;
                 std::vector<float> hitXs;
                 std::vector<float> hitYs;
@@ -762,8 +769,9 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 for (unsigned ii = 0; ii < hits.size(); ++ii) {
                     hitADCs.push_back(hits.at(ii)->adc());
                     hitChans.push_back(hits.at(ii)->channel() );
-                    hitTrkIds.push_back(-1);  // to be updated when sim links are found
-                    hitFracs.push_back(0.);   // to be updated when sim links are found
+                    hitTrkIds.push_back(-1);      // to be updated when sim links are found
+                    hitEvtIds.push_back(999999);  // to be updated when sim links are found
+                    hitFracs.push_back(0.);       // to be updated when sim links are found
 
                     // Don't save local position as it's nothing more but (row+0.5, col+0.5)
                     //const LocalPoint& hitLocalPosition = theStackedGeometry->findHitLocalPosition(&(*clusterRef), ii);
@@ -782,6 +790,8 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 const Surface::PositionType& surfposition1 = theStackedGeometry->idToDet(detId, 1)->position();
                 double separation = isBarrel ? fabs(surfposition0.perp() - surfposition1.perp()) : fabs(surfposition0.z() - surfposition1.z());
 
+                const MeasurementPoint& localcoord = clusterRef->findAverageLocalCoordinates();
+
                 edm::LogInfo("NTupleStubs") << "stackId: " << stackId << " iLayer: " << iLayer << " iRing: " << iRing << " iSide: " << iSide << " iPhi: " << iPhi << " iZ: " << iZ << " isBarrel: " << isBarrel << " roughPt: " << roughPt << " position: " << position << " direction: " << direction << " geoId0: " << geoId0.rawId() << " geoId1: " << geoId1.rawId() << " clusId0: " << clusId0 << " clusId1: " << clusId1 << " moduleId: " << moduleId;
 
                 vb_x->push_back(position.x());                  // sviret/HL_LHC: STUB_x
@@ -789,6 +799,8 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vb_z->push_back(position.z());                  // sviret/HL_LHC: STUB_z
                 vb_r->push_back(position.perp());
                 vb_phi->push_back(position.phi());
+                vb_coordx->push_back(localcoord.x());           // sviret/HL_LHC: STUB_strip
+                vb_coordy->push_back(localcoord.y());           // sviret/HL_LHC: STUB_seg
                 vb_dirx->push_back(direction.x());
                 vb_diry->push_back(direction.y());
                 vb_dirz->push_back(direction.z());
@@ -814,7 +826,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vb_clusId0->push_back(clusId0);                 // sviret/HL_LHC: STUB_clust1
                 vb_clusId1->push_back(clusId1);                 // sviret/HL_LHC: STUB_clust2
                 vb_nhits->push_back(hits.size());
-                vb_hitCols->push_back(hitCols);
+                vb_hitCols->push_back(hitCols);                 // sviret/HL_LHC: STUB_pix
                 vb_hitRows->push_back(hitRows);
                 vb_hitADCs->push_back(hitADCs);
                 vb_hitChans->push_back(hitChans);
@@ -822,10 +834,10 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vb_hitYs->push_back(hitYs);
                 vb_hitZs->push_back(hitZs);
 
-                vb_trigDist->push_back(it->getTriggerDisplacement());   // in full-strip units
-                vb_trigOffset->push_back(it->getTriggerOffset());       // in full-strip units
-                vb_trigPos->push_back(it->getTriggerPosition());        // in full-strip units
-                vb_trigBend->push_back(it->getTriggerBend());           // in full-strip units
+                vb_trigDist->push_back(it->getTriggerDisplacement());   // (in full-strip units)
+                vb_trigOffset->push_back(it->getTriggerOffset());       // sviret/HL_LHC: STUB_cor    (in full-strip units)
+                vb_trigPos->push_back(it->getTriggerPosition());        // (in full-strip units)
+                vb_trigBend->push_back(it->getTriggerBend());           // sviret/HL_LHC: STUB_deltas (in full-strip units)
                 vb_separation->push_back(separation);
                 vb_detWindow->push_back(theStackedGeometry->getDetUnitWindow(detId));
 
@@ -836,12 +848,14 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                         for (edm::DetSet<PixelDigiSimLink>::const_iterator itsim = simlink.data.begin(); itsim != simlink.data.end(); ++itsim) {
                             if (hitChans.at(ii) == (int) itsim->channel()) {
                                 hitTrkIds.at(ii) = itsim->SimTrackId();
+                                hitEvtIds.at(ii) = itsim->eventId().rawId();
                                 hitFracs.at(ii) = itsim->fraction();
                             }
                         }
                     }
                 }
                 vb_hitTrkIds->push_back(hitTrkIds);
+                vb_hitEvtIds->push_back(hitEvtIds);
                 vb_hitFracs->push_back(hitFracs);
 
                 /// Make the reference to retrieve from MC matching
@@ -974,10 +988,8 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vc_phi           , prefixClus_ + "phi"            + suffix_);
     iEvent.put(vc_localx        , prefixClus_ + "localx"         + suffix_);
     iEvent.put(vc_localy        , prefixClus_ + "localy"         + suffix_);
-    iEvent.put(vc_localz        , prefixClus_ + "localz"         + suffix_);
     iEvent.put(vc_coordx        , prefixClus_ + "coordx"         + suffix_);
     iEvent.put(vc_coordy        , prefixClus_ + "coordy"         + suffix_);
-    iEvent.put(vc_coordz        , prefixClus_ + "coordz"         + suffix_);
     iEvent.put(vc_surfx         , prefixClus_ + "surfx"          + suffix_);
     iEvent.put(vc_surfy         , prefixClus_ + "surfy"          + suffix_);
     iEvent.put(vc_surfz         , prefixClus_ + "surfz"          + suffix_);
@@ -1006,6 +1018,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vc_hitADCs       , prefixClus_ + "hitADCs"        + suffix_);
     iEvent.put(vc_hitChans      , prefixClus_ + "hitChans"       + suffix_);
     iEvent.put(vc_hitTrkIds     , prefixClus_ + "hitTrkIds"      + suffix_);
+    iEvent.put(vc_hitEvtIds     , prefixClus_ + "hitEvtIds"      + suffix_);
     iEvent.put(vc_hitFracs      , prefixClus_ + "hitFracs"       + suffix_);
     iEvent.put(vc_hitXs         , prefixClus_ + "hitXs"          + suffix_);
     iEvent.put(vc_hitYs         , prefixClus_ + "hitYs"          + suffix_);
@@ -1026,6 +1039,8 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vb_z             , prefixStub_ + "z"              + suffix_);
     iEvent.put(vb_r             , prefixStub_ + "r"              + suffix_);
     iEvent.put(vb_phi           , prefixStub_ + "phi"            + suffix_);
+    iEvent.put(vb_coordx        , prefixStub_ + "coordx"         + suffix_);
+    iEvent.put(vb_coordy        , prefixStub_ + "coordy"         + suffix_);
     iEvent.put(vb_dirx          , prefixStub_ + "dirx"           + suffix_);
     iEvent.put(vb_diry          , prefixStub_ + "diry"           + suffix_);
     iEvent.put(vb_dirz          , prefixStub_ + "dirz"           + suffix_);
@@ -1056,6 +1071,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vb_hitADCs       , prefixStub_ + "hitADCs"        + suffix_);
     iEvent.put(vb_hitChans      , prefixStub_ + "hitChans"       + suffix_);
     iEvent.put(vb_hitTrkIds     , prefixStub_ + "hitTrkIds"      + suffix_);
+    iEvent.put(vb_hitEvtIds     , prefixStub_ + "hitEvtIds"      + suffix_);
     iEvent.put(vb_hitFracs      , prefixStub_ + "hitFracs"       + suffix_);
     iEvent.put(vb_hitXs         , prefixStub_ + "hitXs"          + suffix_);
     iEvent.put(vb_hitYs         , prefixStub_ + "hitYs"          + suffix_);
