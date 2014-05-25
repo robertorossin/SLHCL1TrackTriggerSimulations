@@ -20,7 +20,7 @@ process.maxEvents = cms.untracked.PSet(
 
 process.geominfo = cms.EDAnalyzer("AnalyzerPatternGeomInfo",
     #bank = cms.string('patternBank.root'),
-    bank = cms.string('patternBank_6M.root'),
+    bank = cms.string('patternBank_ss32_22M.root'),
     verbosity = cms.int32(0),
 )
 

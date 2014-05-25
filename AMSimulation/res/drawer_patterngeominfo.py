@@ -1,21 +1,10 @@
 #!/usr/bin/env python
 
-from ROOT import TH1F, TH2F, TFile, TColor, TCanvas, TLatex, gROOT, gStyle, gSystem, gPad
+from rootdrawing import *
 from array import array
-
-# For init
-class DrawerInit:
-    def __init__(self):
-        # ROOT
-        gROOT.LoadMacro("tdrstyle.C")
-        gROOT.ProcessLine("setTDRStyle()")
-        #gStyle.SetOptStat(0)
 
 # ______________________________________________________________________________
 # Globals
-latex = TLatex()
-latex.SetNDC()
-latex.SetTextFont(42)
 latex.SetTextSize(0.06)
 
 # ______________________________________________________________________________
@@ -27,8 +16,8 @@ sections["XY"] = True
 sections["UV"] = False  # FIXME
 
 drawerInit = DrawerInit()
-fname = "patternGeomInfo_Extended2023TTI_fib30.root"
-nentries = 30
+fname = "patternGeomInfo_Extended2023TTI_fib35.root"
+nentries = 35
 
 tfile = TFile.Open(fname)
 tfiledir = tfile.Get("geominfo")
