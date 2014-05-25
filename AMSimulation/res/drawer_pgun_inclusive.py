@@ -38,11 +38,6 @@ line = TLine()
 line.SetLineColor(kGray+2)
 line.SetLineStyle(2)
 
-# Very nice color palette stolen from tkgeometry
-# https://code.google.com/p/tkgeometry/source/browse/trunk/src/Palette.cc
-palette      = map(lambda x: TColor.GetColor(x), ("#004586","#FF420E","#579D1C","#FFD320","#7E0021","#83CAFF","#314004","#AECF00","#4B1F6F","#FF950E","#C5000B","#0084D1"))
-lightpalette = map(lambda x: TColor.GetColor(x), ("#79B7F2","#F29379","#B1F279","#FFEDA6","#F27999","#C2DEF2","#D4F279","#DFF279","#C791F2","#F2BD79","#F27980","#AAD7F2"))
-
 # ______________________________________________________________________________
 # Configurations
 

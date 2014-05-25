@@ -29,8 +29,8 @@ class PatternMatcher {
       prefixRoad_("AMTTRoads_"), suffix_(""),
       nEvents_(999999999), maxRoads_(999999999), maxHits_(999999999), verbose_(1) {
 
-        assert(nLayers_ <= 8);
-        assert(nDCBits_ <= 4);
+        assert(3 <= nLayers_ && nLayers_ <= 8);
+        assert(0 <= nDCBits_ && nDCBits_ <= 4);
 
         chain_ = new TChain("ntupler/tree");
 

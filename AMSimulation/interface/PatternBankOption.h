@@ -19,6 +19,7 @@ struct PatternBankOption {
     int nMisses;
     int nFakeSuperstrips;
     int nDCBits;
+    bool requireTriggerTower;
     std::vector<int> activeLayers;
     std::vector<int> inactiveLayers;
     std::vector<int> triggerTowers;

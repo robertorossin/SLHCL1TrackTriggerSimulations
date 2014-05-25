@@ -1,11 +1,6 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternMatcher.h"
 
 
-static const unsigned MAX_NLAYERS = 8;
-static const unsigned MAX_NROADS  = 1000;
-static const unsigned MAX_NHITS   = 1000;
-
-
 // _____________________________________________________________________________
 // Read from the pattern bank
 int PatternMatcher::readPatterns(TString src) {
@@ -123,24 +118,27 @@ int PatternMatcher::makeRoads() {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
 
     // For reading
-    std::vector<float> *              vb_x                = 0;
-    std::vector<float> *              vb_y                = 0;
-    std::vector<float> *              vb_z                = 0;
-    std::vector<float> *              vb_r                = 0;
-    std::vector<float> *              vb_phi              = 0;
-    std::vector<float> *              vb_roughPt          = 0;
-    std::vector<unsigned> *           vb_iModCols         = 0;
-    std::vector<unsigned> *           vb_iModRows         = 0;
-    std::vector<unsigned> *           vb_modId            = 0;
-    std::vector<unsigned> *           vb_nhits            = 0;
-    std::vector<std::vector<int> > *  vb_hitCols          = 0;
-    std::vector<std::vector<int> > *  vb_hitRows          = 0;
-    std::vector<std::vector<int> > *  vb_hitTrkIds        = 0;
-    std::vector<float> *              vb_simPt            = 0;
-    std::vector<float> *              vb_simEta           = 0;
-    std::vector<float> *              vb_simPhi           = 0;
-    std::vector<int> *                vb_trkId            = 0;
-    unsigned                          v_event             = 0;
+    std::vector<float> *                vb_x              = 0;
+    std::vector<float> *                vb_y              = 0;
+    std::vector<float> *                vb_z              = 0;
+    std::vector<float> *                vb_r              = 0;
+    std::vector<float> *                vb_phi            = 0;
+    std::vector<float> *                vb_roughPt        = 0;
+    std::vector<unsigned> *             vb_iModCols       = 0;
+    std::vector<unsigned> *             vb_iModRows       = 0;
+    std::vector<unsigned> *             vb_modId          = 0;
+    std::vector<unsigned> *             vb_nhits          = 0;
+    std::vector<std::vector<int> > *    vb_hitCols        = 0;
+    std::vector<std::vector<int> > *    vb_hitRows        = 0;
+    std::vector<std::vector<int> > *    vb_hitTrkIds      = 0;
+    std::vector<std::vector<float> > *  vb_hitXs          = 0;
+    std::vector<std::vector<float> > *  vb_hitYs          = 0;
+    std::vector<std::vector<float> > *  vb_hitZs          = 0;
+    std::vector<float> *                vb_simPt          = 0;
+    std::vector<float> *                vb_simEta         = 0;
+    std::vector<float> *                vb_simPhi         = 0;
+    std::vector<int> *                  vb_trkId          = 0;
+    unsigned                            v_event           = 0;
 
     chain_->SetBranchStatus("*", 0);
     chain_->SetBranchStatus("TTStubs_x"        , 1);
@@ -156,6 +154,9 @@ int PatternMatcher::makeRoads() {
     chain_->SetBranchStatus("TTStubs_hitCols"  , 1);
     chain_->SetBranchStatus("TTStubs_hitRows"  , 1);
     chain_->SetBranchStatus("TTStubs_hitTrkIds", 1);
+    chain_->SetBranchStatus("TTStubs_hitXs"    , 1);
+    chain_->SetBranchStatus("TTStubs_hitYs"    , 1);
+    chain_->SetBranchStatus("TTStubs_hitZs"    , 1);
     chain_->SetBranchStatus("TTStubs_simPt"    , 1);
     chain_->SetBranchStatus("TTStubs_simEta"   , 1);
     chain_->SetBranchStatus("TTStubs_simPhi"   , 1);
@@ -175,24 +176,14 @@ int PatternMatcher::makeRoads() {
     chain_->SetBranchAddress("TTStubs_hitCols"  , &(vb_hitCols));
     chain_->SetBranchAddress("TTStubs_hitRows"  , &(vb_hitRows));
     chain_->SetBranchAddress("TTStubs_hitTrkIds", &(vb_hitTrkIds));
+    chain_->SetBranchAddress("TTStubs_hitXs"    , &(vb_hitXs));
+    chain_->SetBranchAddress("TTStubs_hitYs"    , &(vb_hitYs));
+    chain_->SetBranchAddress("TTStubs_hitZs"    , &(vb_hitZs));
     chain_->SetBranchAddress("TTStubs_simPt"    , &(vb_simPt));
     chain_->SetBranchAddress("TTStubs_simEta"   , &(vb_simEta));
     chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
     chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
     chain_->SetBranchAddress("event"            , &(v_event));
-
-    // For reading: hit positions
-    //std::vector<std::vector<float> > *  vb_hitXs          = 0;
-    //std::vector<std::vector<float> > *  vb_hitYs          = 0;
-    //std::vector<std::vector<float> > *  vb_hitZs          = 0;
-    //
-    //chain_->SetBranchStatus("TTStubs_hitXs"    , 1);
-    //chain_->SetBranchStatus("TTStubs_hitYs"    , 1);
-    //chain_->SetBranchStatus("TTStubs_hitZs"    , 1);
-    //
-    //chain_->SetBranchAddress("TTStubs_hitXs"    , &(vb_hitXs));
-    //chain_->SetBranchAddress("TTStubs_hitYs"    , &(vb_hitYs));
-    //chain_->SetBranchAddress("TTStubs_hitZs"    , &(vb_hitZs));
 
 
     // _________________________________________________________________________
@@ -212,34 +203,6 @@ int PatternMatcher::makeRoads() {
             allRoads_.push_back(std::vector<TTRoad>());
             continue;
         }
-
-        ////////////////////////////////////////////////////////////////////////
-        // This block is used to reduce timing
-        bool keep = true;
-
-        // Build a list of goodLayers and goodLayerModules that are unique
-        // Work from the outermost stub
-        std::vector<id_type> goodLayers;  // stores mlayer, not layer
-        std::vector<id_type> goodLayerModules;
-        for (unsigned l=0; (l<nstubs) && keep; ++l) {
-            unsigned ll = (nstubs-1) - l;  // reverse iteration order
-            unsigned moduleId = vb_modId->at(ll);
-            id_type layer = decodeLayer(moduleId);
-            id_type mlayer = layerMap_.at(layer);  // mapping of layer --> mlayer must exist
-
-            unsigned count = std::count(goodLayers.begin(), goodLayers.end(), mlayer);
-            if (!count) {
-                goodLayers.push_back(mlayer);
-                goodLayerModules.push_back(moduleId);
-            }
-        }
-
-        // Check again min # of layers
-        if ((int) goodLayers.size() < nLayers_ - po.nMisses) {
-            allRoads_.push_back(std::vector<TTRoad>());
-            continue;
-        }
-        ////////////////////////////////////////////////////////////////////////
 
         if (patterns_.empty() || ssIdMapFast_.empty()) {
             std::cout << Error() << "Patterns are not yet loaded!" << std::endl;
@@ -311,7 +274,7 @@ int PatternMatcher::makeRoads() {
                 pattern_type pattId = patterns_.at(it.first).id();
                 int nFakeSuperstrips = std::count(pattId.begin(), pattId.end(), encodeFakeSuperstripId());
 
-                if ((int) it.second.size() >= (nLayers_ - nFakeSuperstrips - po.nMisses)) {
+                if ((int) it.second.size() >= (nLayers_ - nFakeSuperstrips - po.nMisses)) {  // if number of hits more than the requirement
                     unsigned hash = hashThisEvent(v_event, vb_simPhi->back());  // FIXME: will switch to use generator seed instead
                     const std::vector<TTHit>& hits = it.second;
 
@@ -320,7 +283,8 @@ int PatternMatcher::makeRoads() {
                 }
             }
 
-            ++nPassed;
+            if (! roadsInThisEvent.empty())
+                ++nPassed;
         }
         allRoads_.push_back(roadsInThisEvent);
     }
@@ -442,6 +406,7 @@ int PatternMatcher::writeRoads(TString out) {
         }
 
         ttree->Fill();
+        assert(vr_hash->size() == allRoads_.at(ievt).size());
     }
     assert(ttree->GetEntries() == (int) allRoads_.size());
 
@@ -457,22 +422,31 @@ int PatternMatcher::writeRoads(TString out) {
 
 // Make a map to merge layers in barrel and in endcap
 void PatternMatcher::makeLayerMap() {
+    if (nLayers_ <= 5) {
+        std::cout << Warning() << "Does not really support nLayers = " << nLayers_ << ". Setting for nLayers = 6 is used." << std::endl;
+    }
+
     // Hardcoded layer information
     if (nLayers_ <= 6) {
+        layerMap_ = std::map<id_type, id_type> {
+            {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
+            {11,10}, {12,9}, {13,8}, {14,7}, {15,6},
+            {18,10}, {19,9}, {20,8}, {21,7}, {22,6}
+        };
+    } else if (nLayers_ == 7) {
         layerMap_ = std::map<id_type, id_type> {
             {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
             {11,11}, {12,10}, {13,9}, {14,8}, {15,7},
             {18,11}, {19,10}, {20,9}, {21,8}, {22,7}
         };
-    } else {  // otherwise it's not merged
+    } else {  // >= 8
         layerMap_ = std::map<id_type, id_type> {
             {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
-            {11,11}, {12,12}, {13,13}, {14,14}, {15,15},
-            {18,11}, {19,12}, {20,13}, {21,14}, {22,15}
+            {11,11}, {12,12}, {13,10}, {14,9}, {15,8},
+            {18,11}, {19,12}, {20,10}, {21,9}, {22,8}
         };
-    };
+    }
 }
-
 
 // _____________________________________________________________________________
 // Main driver

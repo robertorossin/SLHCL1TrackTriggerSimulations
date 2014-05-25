@@ -79,6 +79,8 @@ sGreen      = TColor.GetColor("#859900")
 
 ssBase3     = TColor.GetColor("#E3EAFD")
 ssBase4     = TColor.GetColor("#FCF8E3")
+ssBase5     = TColor.GetColor("#FDE3F8")
+ssBase6     = TColor.GetColor("#EAFDE3")
 
 # Very nice color palette stolen from tkgeometry
 # https://code.google.com/p/tkgeometry/source/browse/trunk/src/Palette.cc

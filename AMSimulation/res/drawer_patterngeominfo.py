@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from ROOT import TH1F, TH2F, TFile, TColor, TCanvas, gROOT, gStyle, gSystem, gPad
+from ROOT import TH1F, TH2F, TFile, TColor, TCanvas, TLatex, gROOT, gStyle, gSystem, gPad
 from array import array
 
 # For init
@@ -12,6 +12,13 @@ class DrawerInit:
         #gStyle.SetOptStat(0)
 
 # ______________________________________________________________________________
+# Globals
+latex = TLatex()
+latex.SetNDC()
+latex.SetTextFont(42)
+latex.SetTextSize(0.06)
+
+# ______________________________________________________________________________
 # Configurations
 
 sections = {}
@@ -20,8 +27,8 @@ sections["XY"] = True
 sections["UV"] = False  # FIXME
 
 drawerInit = DrawerInit()
-fname = "patternGeomInfo_Extended2023TTI.root"
-nentries = 99
+fname = "patternGeomInfo_Extended2023TTI_fib30.root"
+nentries = 30
 
 tfile = TFile.Open(fname)
 tfiledir = tfile.Get("geominfo")
@@ -147,6 +154,16 @@ def makeBWPalette(scale=1.0, ncontours=50):
     npoints = len(s)
     TColor.CreateGradientColorTable(npoints, s, r, g, b, ncontours)
 
+def fib(x):
+    if x <= 0:
+        return 0
+    if x == 1:
+        return 1
+    if x == 2:  # need this, otherwise '1' occurs twice
+        return 2
+    return fib(x-1) + fib(x-2)
+
+
 # ______________________________________________________________________________
 # Layout
 
@@ -156,7 +173,7 @@ getGeomCanvas()
 from rootcolors import *
 getGeomHist()
 
-makeBWPalette(0.5)
+makeBWPalette(0.6)
 
 markerstyle = 22
 markersize = 1.5
@@ -167,7 +184,7 @@ useTklayout = True
 # ZR
 if sections["ZR"]:
     h_old = None
-    h_sum = None
+    latex_old = None
 
     for i in xrange(nentries):
         if i==0 and not useTklayout:
@@ -181,32 +198,31 @@ if sections["ZR"]:
             img000.Draw()
 
         if h_old:
-            h_sum.Add(h_old)
             h_old.Reset()
+            h_sum.Reset()
+            latex_old.Delete()
 
-        if h_sum:
-            h_sum.Draw("same col")
+        h_sum = tfiledir.Get("hPXA_sum_ZR_%i" % fib(i))
+        h_sum.Draw("same col")
 
-        h = tfiledir.Get("hPXA_ZR_%i" % i)
+        h = tfiledir.Get("hPXA_ind_ZR_%i" % fib(i))
         h.SetMarkerStyle(markerstyle)
         h.SetMarkerSize(markersize)
         h.Draw("same")
+        latex_old = latex.DrawLatex(0.72, 0.5, "n = %i" % fib(i))
 
         h_old = h
-        if not h_sum:
-            h_sum = h_old.Clone("h_sum")
-            h_sum.Reset()
 
-        gPad.Print(imgdir+"ZRview_patt%i.png" % i)
+        gPad.Print(imgdir+"ZRview_patt%i.png" % fib(i))
 
 
 # ______________________________________________________________________________
 # XY
 if sections["XY"]:
     h_old = None
-    h_sum = None
     h_oldEC = None
-    h_sumEC = None
+    latex_old = None
+    latex_oldEC = None
 
     for i in xrange(nentries):
         if i==0 and not useTklayout:
@@ -225,42 +241,40 @@ if sections["XY"]:
             c2 = img002
 
         if h_old:
-            h_sum.Add(h_old)
             h_old.Reset()
-
-            h_sumEC.Add(h_oldEC)
             h_oldEC.Reset()
-
-        if h_sum:
-            c1.cd()
-            h_sum.Draw("same col")
-            c2.cd()
-            h_sumEC.Draw("same col")
+            h_sum.Reset()
+            h_sumEC.Reset()
+            latex_old.Delete()
+            latex_oldEC.Delete()
 
         c1.cd()
-        h = tfiledir.Get("hPXB_XY_%i" % i)
+        h_sum = tfiledir.Get("hPXB_sum_XY_%i" % fib(i))
+        h_sum.Draw("same col")
+        c2.cd()
+        h_sumEC = tfiledir.Get("hPXF_sum_XY_%i" % fib(i))
+        h_sumEC.Draw("same col")
+
+        c1.cd()
+        h = tfiledir.Get("hPXB_ind_XY_%i" % fib(i))
         h.SetMarkerStyle(markerstyle)
         h.SetMarkerSize(markersize)
         h.Draw("same")
+        latex_old = latex.DrawLatex(0.7, 0.91, "n = %i" % fib(i))
 
         c2.cd()
-        hEC = tfiledir.Get("hPXF_XY_%i" % i)
+        hEC = tfiledir.Get("hPXF_ind_XY_%i" % fib(i))
         hEC.SetMarkerStyle(markerstyle)
         hEC.SetMarkerSize(markersize)
         hEC.Draw("same")
+        latex_oldEC = latex.DrawLatex(0.7, 0.91, "n = %i" % fib(i))
 
         h_old = h
         h_oldEC = hEC
-        if not h_sum:
-            h_sum = h_old.Clone("h_sum")
-            h_sum.Reset()
-
-            h_sumEC = h_oldEC.Clone("h_sumEC")
-            h_sumEC.Reset()
 
         c1.cd()
-        gPad.Print(imgdir+"XYview_patt%i.png" % i)
+        gPad.Print(imgdir+"XYview_patt%i.png" % fib(i))
 
         c2.cd()
-        gPad.Print(imgdir+"XYviewEC_patt%i.png" % i)
+        gPad.Print(imgdir+"XYviewEC_patt%i.png" % fib(i))
 

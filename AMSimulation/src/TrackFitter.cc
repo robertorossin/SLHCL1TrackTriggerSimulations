@@ -87,10 +87,10 @@ int TrackFitter::makeTracks() {
             std::copy(addresses.begin(), addresses.end(), patternId.begin());
 
             unsigned nhits = vr_hitXs->at(i).size();
-            if (nhits<=3) {
-                std::cout << Error() << "Too few hits in a road: " << nhits << std::endl;
-                return 1;
-            }
+            //if (nhits<3) {
+            //    std::cout << Error() << "Too few hits in a road: " << nhits << std::endl;
+            //    return 1;
+            //}
 
             std::vector<TTHit> hits;
             std::vector<ZR> hitsViewZR;

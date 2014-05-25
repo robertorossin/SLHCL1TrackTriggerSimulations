@@ -27,6 +27,18 @@
 #include "TH2F.h"
 
 
+// Fibonacci recursion
+Long64_t fib(Long64_t x) {
+    if (x <= 0)
+        return 0;
+    if (x == 1)
+        return 1;
+    if (x == 2)  // need this, otherwise '1' occurs twice
+        return 2;
+    return fib(x-1) + fib(x-2);
+}
+
+
 class AnalyzerPatternGeomInfo : public edm::EDAnalyzer {
   public:
     /// Constructor/destructor
@@ -71,11 +83,16 @@ class AnalyzerPatternGeomInfo : public edm::EDAnalyzer {
     TH2F* hPXF_PS_UV;
     TH2F* hPXF_2S_UV;
 
-    std::vector<TH2F*> vecPXA_ZR;
-    std::vector<TH2F*> vecPXB_XY;
-    std::vector<TH2F*> vecPXF_XY;
-    std::vector<TH2F*> vecPXB_UV;
-    std::vector<TH2F*> vecPXF_UV;
+    std::vector<TH2F*> vecPXA_ind_ZR;
+    std::vector<TH2F*> vecPXA_sum_ZR;
+    std::vector<TH2F*> vecPXB_ind_XY;
+    std::vector<TH2F*> vecPXB_sum_XY;
+    std::vector<TH2F*> vecPXF_ind_XY;
+    std::vector<TH2F*> vecPXF_sum_XY;
+    std::vector<TH2F*> vecPXB_ind_UV;
+    std::vector<TH2F*> vecPXB_sum_UV;
+    std::vector<TH2F*> vecPXF_ind_UV;
+    std::vector<TH2F*> vecPXF_sum_UV;
 
     /// Configurations
     std::string bankfile_;
@@ -90,6 +107,7 @@ AnalyzerPatternGeomInfo::AnalyzerPatternGeomInfo(const edm::ParameterSet& iConfi
 AnalyzerPatternGeomInfo::~AnalyzerPatternGeomInfo() {}
 
 
+// Here we make the layout of the detector
 void AnalyzerPatternGeomInfo::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup) {
     /// Geometry setup
     /// Set pointers to Geometry
@@ -287,6 +305,7 @@ void AnalyzerPatternGeomInfo::beginRun(const edm::Run& iRun, const edm::EventSet
 void AnalyzerPatternGeomInfo::endRun(const edm::Run& iRun, const edm::EventSetup& iSetup) {}
 
 
+// Here we read the patterns and setup histograms
 void AnalyzerPatternGeomInfo::beginJob() {
     /// Read superstrip id
     TFile* tfile = TFile::Open(bankfile_.c_str());
@@ -339,7 +358,6 @@ void AnalyzerPatternGeomInfo::beginJob() {
     double viewportMinV = -880.;
     double viewportMaxV =  880.;
 
-
     hPXB_PS_ZR = fs->make<TH2F>("hPXB_PS_ZR", "; z [mm]; signed r [mm]", nbinsZ, viewportMinZ, viewportMaxZ, nbinsR, viewportMinR, viewportMaxR);
     hPXB_PS_ZR->Sumw2();
     hPXB_2S_ZR = fs->make<TH2F>("hPXB_2S_ZR", "; z [mm]; signed r [mm]", nbinsZ, viewportMinZ, viewportMaxZ, nbinsR, viewportMinR, viewportMaxR);
@@ -367,31 +385,65 @@ void AnalyzerPatternGeomInfo::beginJob() {
     hPXF_2S_UV = fs->make<TH2F>("hPXF_2S_UV", "; u [2e5/mm]; v [2e5/mm]", nbinsU, viewportMinU, viewportMaxU, nbinsV, viewportMinV, viewportMaxV);
     hPXF_2S_UV->Sumw2();
 
+    Long64_t fib_x = 0;
+    Long64_t fib_ret = fib(fib_x);
     for (Long64_t ievt=0; ievt<nentries; ++ievt) {
-        histoName.str("");  histoName << "hPXA_ZR_" << ievt;
-        histoTitle.str(""); histoTitle << "; z [mm]; signed r [mm]";
-        vecPXA_ZR.push_back( fs->make<TH2F>(histoName.str().c_str(), histoTitle.str().c_str(), nbinsZ, viewportMinZ, viewportMaxZ, nbinsR, viewportMinR, viewportMaxR) );
-        vecPXA_ZR.back()->Sumw2();
 
-        histoName.str("");  histoName << "hPXB_XY_" << ievt;
-        histoTitle.str(""); histoTitle << "; x [mm]; y [mm]";
-        vecPXB_XY.push_back( fs->make<TH2F>(histoName.str().c_str(), histoTitle.str().c_str(), nbinsX, viewportMinX, viewportMaxX, nbinsY, viewportMinY, viewportMaxY) );
-        vecPXB_XY.back()->Sumw2();
+        if (ievt == fib_ret) {
+            histoName.str("");  histoName << "hPXA_ind_ZR_" << ievt;
+            histoTitle.str(""); histoTitle << "; z [mm]; signed r [mm]";
+            vecPXA_ind_ZR.push_back( fs->make<TH2F>(histoName.str().c_str(), histoTitle.str().c_str(), nbinsZ, viewportMinZ, viewportMaxZ, nbinsR, viewportMinR, viewportMaxR) );
+            vecPXA_ind_ZR.back()->Sumw2();
 
-        histoName.str("");  histoName << "hPXF_XY_" << ievt;
-        histoTitle.str(""); histoTitle << "; x [mm]; y [mm]";
-        vecPXF_XY.push_back( fs->make<TH2F>(histoName.str().c_str(), histoTitle.str().c_str(), nbinsX, viewportMinX, viewportMaxX, nbinsY, viewportMinY, viewportMaxY) );
-        vecPXF_XY.back()->Sumw2();
+            histoName.str("");  histoName << "hPXA_sum_ZR_" << ievt;
+            histoTitle.str(""); histoTitle << "; z [mm]; signed r [mm]";
+            vecPXA_sum_ZR.push_back( fs->make<TH2F>(histoName.str().c_str(), histoTitle.str().c_str(), nbinsZ, viewportMinZ, viewportMaxZ, nbinsR, viewportMinR, viewportMaxR) );
+            vecPXA_sum_ZR.back()->Sumw2();
 
-        histoName.str("");  histoName << "hPXB_UV_" << ievt;
-        histoTitle.str(""); histoTitle << "; u [1/mm]; v [1/mm]";
-        vecPXB_UV.push_back( fs->make<TH2F>(histoName.str().c_str(), histoTitle.str().c_str(), nbinsU, viewportMinU, viewportMaxU, nbinsV, viewportMinV, viewportMaxV) );
-        vecPXB_UV.back()->Sumw2();
+            histoName.str("");  histoName << "hPXB_ind_XY_" << ievt;
+            histoTitle.str(""); histoTitle << "; x [mm]; y [mm]";
+            vecPXB_ind_XY.push_back( fs->make<TH2F>(histoName.str().c_str(), histoTitle.str().c_str(), nbinsX, viewportMinX, viewportMaxX, nbinsY, viewportMinY, viewportMaxY) );
+            vecPXB_ind_XY.back()->Sumw2();
 
-        histoName.str("");  histoName << "hPXF_UV_" << ievt;
-        histoTitle.str(""); histoTitle << "; u [1/mm]; v [1/mm]";
-        vecPXF_UV.push_back( fs->make<TH2F>(histoName.str().c_str(), histoTitle.str().c_str(), nbinsU, viewportMinU, viewportMaxU, nbinsV, viewportMinV, viewportMaxV) );
-        vecPXF_UV.back()->Sumw2();
+            histoName.str("");  histoName << "hPXB_sum_XY_" << ievt;
+            histoTitle.str(""); histoTitle << "; x [mm]; y [mm]";
+            vecPXB_sum_XY.push_back( fs->make<TH2F>(histoName.str().c_str(), histoTitle.str().c_str(), nbinsX, viewportMinX, viewportMaxX, nbinsY, viewportMinY, viewportMaxY) );
+            vecPXB_sum_XY.back()->Sumw2();
+
+            histoName.str("");  histoName << "hPXF_ind_XY_" << ievt;
+            histoTitle.str(""); histoTitle << "; x [mm]; y [mm]";
+            vecPXF_ind_XY.push_back( fs->make<TH2F>(histoName.str().c_str(), histoTitle.str().c_str(), nbinsX, viewportMinX, viewportMaxX, nbinsY, viewportMinY, viewportMaxY) );
+            vecPXF_ind_XY.back()->Sumw2();
+
+            histoName.str("");  histoName << "hPXF_sum_XY_" << ievt;
+            histoTitle.str(""); histoTitle << "; x [mm]; y [mm]";
+            vecPXF_sum_XY.push_back( fs->make<TH2F>(histoName.str().c_str(), histoTitle.str().c_str(), nbinsX, viewportMinX, viewportMaxX, nbinsY, viewportMinY, viewportMaxY) );
+            vecPXF_sum_XY.back()->Sumw2();
+
+            histoName.str("");  histoName << "hPXB_ind_UV_" << ievt;
+            histoTitle.str(""); histoTitle << "; u [1/mm]; v [1/mm]";
+            vecPXB_ind_UV.push_back( fs->make<TH2F>(histoName.str().c_str(), histoTitle.str().c_str(), nbinsU, viewportMinU, viewportMaxU, nbinsV, viewportMinV, viewportMaxV) );
+            vecPXB_ind_UV.back()->Sumw2();
+
+            histoName.str("");  histoName << "hPXB_sum_UV_" << ievt;
+            histoTitle.str(""); histoTitle << "; u [1/mm]; v [1/mm]";
+            vecPXB_sum_UV.push_back( fs->make<TH2F>(histoName.str().c_str(), histoTitle.str().c_str(), nbinsU, viewportMinU, viewportMaxU, nbinsV, viewportMinV, viewportMaxV) );
+            vecPXB_sum_UV.back()->Sumw2();
+
+            histoName.str("");  histoName << "hPXF_ind_UV_" << ievt;
+            histoTitle.str(""); histoTitle << "; u [1/mm]; v [1/mm]";
+            vecPXF_ind_UV.push_back( fs->make<TH2F>(histoName.str().c_str(), histoTitle.str().c_str(), nbinsU, viewportMinU, viewportMaxU, nbinsV, viewportMinV, viewportMaxV) );
+            vecPXF_ind_UV.back()->Sumw2();
+
+            histoName.str("");  histoName << "hPXF_sum_UV_" << ievt;
+            histoTitle.str(""); histoTitle << "; u [1/mm]; v [1/mm]";
+            vecPXF_sum_UV.push_back( fs->make<TH2F>(histoName.str().c_str(), histoTitle.str().c_str(), nbinsU, viewportMinU, viewportMaxU, nbinsV, viewportMinV, viewportMaxV) );
+            vecPXF_sum_UV.back()->Sumw2();
+
+            // Increment
+            fib_x += 1;
+            fib_ret = fib(fib_x);
+        }
     }
 }
 
@@ -407,23 +459,26 @@ void AnalyzerPatternGeomInfo::analyze(const edm::Event& iEvent, const edm::Event
             std::cout << i.first << " " << i.second << std::endl;
     }
 
-    unsigned nentries = superstripIds.size();
-    for (unsigned ievt=0; ievt<nentries; ++ievt) {
+    Long64_t nentries = superstripIds.size();
+
+    Long64_t fib_x = 0;
+    Long64_t fib_ret = fib(fib_x);
+    for (Long64_t ievt=0; ievt<nentries; ++ievt) {
         unsigned nsuperstrips = superstripIds.at(ievt).size();
 
         for (unsigned i=0; i<nsuperstrips; ++i) {
             uint64_t superstripId = superstripIds.at(ievt).at(i);
             if (superstripId == 0)  continue;
 
-            // FIXME: Need to check for fake superstrip
-
-            // FIXME: Always check whether the decoding is correct!
+            // Always check whether the decoding is correct!
             uint32_t lay = (superstripId >> 29) & 0x1F;
             uint32_t lad = (superstripId >> 22) & 0x7F;
             uint32_t mod = (superstripId >> 15) & 0x7F;
             uint32_t col = (superstripId >> 10) & 0x1F;
             uint32_t row = (superstripId >> 0 ) & 0x3FF;
             uint32_t moduleId = 10000*lay + 100*lad + mod;
+
+            if (lad == 127 && mod == 127)  continue;  // fake superstrip
 
             if (verbose_ > 0) {
                 std::cout << "ievt: " << ievt << " superstripId: " << superstripId << "  moduleId: " << moduleId << " col: "  << col << " row: " << row << std::endl;
@@ -447,20 +502,59 @@ void AnalyzerPatternGeomInfo::analyze(const edm::Event& iEvent, const edm::Event
             GlobalPoint gp = detUnit0->surface().toGlobal(detUnit0->topology().localPosition(mp) );
             double signed_r = gp.y() >= 0 ? gp.perp() : -gp.perp();
 
-            vecPXA_ZR.at(ievt)->Fill(gp.z()*10., signed_r*10.);
+            // Individual event display
+            if (ievt == fib_ret) {
+                vecPXA_ind_ZR.at(fib_x)->Fill(gp.z()*10., signed_r*10.);
+
+                if (stackDetId.isBarrel()) {
+                    vecPXB_ind_XY.at(fib_x)->Fill(gp.x()*10., gp.y()*10.);
+                    vecPXB_ind_UV.at(fib_x)->Fill(2e5*gp.x()/gp.perp2(), 2e5*gp.y()/gp.perp2());
+                }
+
+                if (stackDetId.isEndcap()) {
+                    vecPXF_ind_XY.at(fib_x)->Fill(gp.x()*10., gp.y()*10.);
+                    vecPXF_ind_UV.at(fib_x)->Fill(2e5*gp.x()/gp.perp2(), 2e5*gp.y()/gp.perp2());
+                }
+            }
+
+            // Sum event display
+            vecPXA_sum_ZR.at(fib_x)->Fill(gp.z()*10., signed_r*10.);
 
             if (stackDetId.isBarrel()) {
-                vecPXB_XY.at(ievt)->Fill(gp.x()*10., gp.y()*10.);
-                vecPXB_UV.at(ievt)->Fill(2e5*gp.x()/gp.perp2(), 2e5*gp.y()/gp.perp2());
+                vecPXB_sum_XY.at(fib_x)->Fill(gp.x()*10., gp.y()*10.);
+                vecPXB_sum_UV.at(fib_x)->Fill(2e5*gp.x()/gp.perp2(), 2e5*gp.y()/gp.perp2());
             }
 
             if (stackDetId.isEndcap()) {
-                vecPXF_XY.at(ievt)->Fill(gp.x()*10., gp.y()*10.);
-                vecPXF_UV.at(ievt)->Fill(2e5*gp.x()/gp.perp2(), 2e5*gp.y()/gp.perp2());
+                vecPXF_sum_XY.at(fib_x)->Fill(gp.x()*10., gp.y()*10.);
+                vecPXF_sum_UV.at(fib_x)->Fill(2e5*gp.x()/gp.perp2(), 2e5*gp.y()/gp.perp2());
             }
         }
-    }
 
+        if (ievt == fib_ret) {
+            if (ievt != 0) {
+                vecPXA_sum_ZR.at(fib_x)->Add(vecPXA_sum_ZR.at(fib_x-1));
+
+                vecPXB_sum_XY.at(fib_x)->Add(vecPXB_sum_XY.at(fib_x-1));
+                vecPXB_sum_UV.at(fib_x)->Add(vecPXB_sum_UV.at(fib_x-1));
+
+                vecPXF_sum_XY.at(fib_x)->Add(vecPXF_sum_XY.at(fib_x-1));
+                vecPXF_sum_UV.at(fib_x)->Add(vecPXF_sum_UV.at(fib_x-1));
+
+                if (verbose_ > 1) {
+                    std::cout << "ievt: " << ievt << " fib_x: " << fib_x << " integral ind: " << vecPXA_ind_ZR.at(fib_x)->Integral() << " sum: " << vecPXA_sum_ZR.at(fib_x)->Integral() << std::endl;
+                }
+            }
+
+            // Increment
+            fib_x += 1;
+            fib_ret = fib(fib_x);
+        }
+        if (fib_x == (Long64_t) vecPXF_sum_UV.size()) {
+            // truncate the following events
+            break;
+        }
+    }
 }
 
 // DEFINE THIS AS A PLUG-IN

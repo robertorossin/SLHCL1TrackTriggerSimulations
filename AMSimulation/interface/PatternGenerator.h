@@ -28,13 +28,14 @@ class PatternGenerator {
       filter_(true),
       nEvents_(999999999), maxPatterns_(999999999), verbose_(1) {
 
-        assert(nLayers_ <= 8);
-        assert(nDCBits_ <= 4);
-        assert(nFakeSuperstrips_ <= 1);
+        assert(3 <= nLayers_ && nLayers_ <= 8);
+        assert(0 <= nDCBits_ && nDCBits_ <= 4);
+        assert(0 <= nFakeSuperstrips_ && nFakeSuperstrips_ <= 3);
 
         chain_ = new TChain("ntupler/tree");
 
-        eventSelect_ = "genParts_pt[0]>2 && abs(genParts_eta[0])<2.2 && Sum$(TTStubs_trkId==1 && abs(atan2(TTStubs_r,TTStubs_z)-atan2(genParts_pt[0],genParts_pz[0]))<0.05 && abs(deltaPhi(atan2(TTStubs_y,TTStubs_x),genParts_phi[0]))<0.03)>=Sum$(TTStubs_trkId==1)-2";
+        //eventSelect_ = "(genParts_pt[0]>2 && abs(genParts_eta[0])<2.2 && Sum$(TTStubs_trkId==1 && abs(atan2(TTStubs_r,TTStubs_z)-atan2(genParts_pt[0],genParts_pz[0]))<0.05 && abs(deltaPhi(atan2(TTStubs_y,TTStubs_x),genParts_phi[0]))<0.03)>=Sum$(TTStubs_trkId==1)-2)";
+        eventSelect_ = "(1)";  // always on
 
         makeLayerMap();
     }
@@ -77,7 +78,7 @@ class PatternGenerator {
 
     void uniquifyPatterns();
 
-    bool isFullyContainedInSector(const TTPattern& patt);
+    bool isFullyContainedInTriggerTower(const TTPattern& patt);
 
 
   public:
