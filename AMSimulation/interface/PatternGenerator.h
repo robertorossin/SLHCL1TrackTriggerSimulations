@@ -28,9 +28,9 @@ class PatternGenerator {
       filter_(true),
       nEvents_(999999999), maxPatterns_(999999999), verbose_(1) {
 
-        assert(nLayers_ <= 8);
-        assert(nDCBits_ <= 4);
-        assert(nFakeSuperstrips_ <= 1);
+        assert(3 <= nLayers_ && nLayers_ <= 8);
+        assert(0 <= nDCBits_ && nDCBits_ <= 4);
+        assert(0 <= nFakeSuperstrips_ && nFakeSuperstrips_ <= 3);
 
         chain_ = new TChain("ntupler/tree");
 

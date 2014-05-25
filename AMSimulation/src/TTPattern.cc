@@ -31,12 +31,12 @@ std::ostream& operator<<(std::ostream& o, const pattern_type& pattId) {
 }
 
 std::ostream& operator<<(std::ostream& o, const TTPattern& patt) {
-    o << "id: " << patt.id() << "  frequency: " << patt.frequency() << " ";
+    o << "id: " << patt.id() << " frequency: " << patt.frequency() << " ";
     return o;
 }
 
 std::ostream& operator<<(std::ostream& o, const TTRoad& road) {
-    o << "pattId: " << road.patternId() << "  hits: ";
+    o << "pattId: " << road.patternId() << " hits: ";
     std::vector<TTHit> hits = road.getHits();
     for (std::vector<TTHit>::const_iterator it=hits.begin(); it!=hits.end(); ++it) {
         o << *it << " ";

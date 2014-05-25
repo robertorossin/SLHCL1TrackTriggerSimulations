@@ -31,7 +31,7 @@ class TrackFitter {
       nEvents_(999999999), maxTracks_(999999999),
       verbose_(1) {
 
-        assert(nLayers_ <= 8);
+        assert(3 <= nLayers_ && nLayers_ <= 8);
 
         chain_ = new TChain("ntupler/tree");
     }

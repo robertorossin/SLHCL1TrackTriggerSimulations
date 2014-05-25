@@ -167,11 +167,11 @@ int main(int argc, char **argv) {
     // Restrict the interger ranges
     bankOption.nSubLadders      = getPowerOfTwo(bankOption.nSubLadders);
     bankOption.nSubModules      = getPowerOfTwo(bankOption.nSubModules);
-    bankOption.nLayers          = std::min(std::max(1, bankOption.nLayers), 8);
+    bankOption.nLayers          = std::min(std::max(3, bankOption.nLayers), 8);
     bankOption.nSubLadders      = std::min(std::max(1, bankOption.nSubLadders), 32);
     bankOption.nSubModules      = std::min(std::max(1, bankOption.nSubModules), 1024);
     bankOption.nMisses          = std::min(std::max(0, bankOption.nMisses), 3);
-    bankOption.nFakeSuperstrips = std::min(std::max(0, bankOption.nFakeSuperstrips), 1);
+    bankOption.nFakeSuperstrips = std::min(std::max(0, bankOption.nFakeSuperstrips), 3);
     bankOption.nDCBits          = std::min(std::max(0, bankOption.nDCBits), 4);
 
     // Protection against conflict in nSubModules vs. nDCBits

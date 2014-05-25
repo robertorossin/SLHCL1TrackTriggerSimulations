@@ -53,6 +53,11 @@ class TTPattern {
         assert(patternId_ != emptyPatternId);
         return patternId_;
     }
+    //unsigned nFakeSuperstrips()                   const {
+    //    pattern_type emptyPatternId;
+    //    assert(patternId_ != emptyPatternId);
+    //    return std::count(patternId_.begin(), patternId_.end(), encodeFakeSuperstripId());
+    //}
 
     // Functions
     void merge(const TTPattern& rhs);

@@ -204,29 +204,6 @@ int PatternMatcher::makeRoads() {
             continue;
         }
 
-        ////////////////////////////////////////////////////////////////////////
-        // This block is used to reduce timing -- commented out for now as I'm not sure how to deal with fake superstrips
-        //bool keep = true;
-        //
-        //// Build a list of goodLayers that is unique
-        //std::vector<id_type> goodLayers;  // stores mlayer, not layer!
-        //for (unsigned l=0; (l<nstubs) && keep; ++l) {
-        //    unsigned moduleId = vb_modId->at(l);
-        //    id_type layer = decodeLayer(moduleId);
-        //    id_type mlayer = layerMap_.at(layer);
-        //    goodLayers.push_back(mlayer);
-        //}
-        //std::sort(goodLayers.begin(), goodLayers.end());
-        //goodLayers.erase(std::unique(goodLayers.begin(), goodLayers.end()), goodLayers.end() );
-        //
-        //// Check again min # of layers
-        //// Add '-2' to account for possible fake superstrips in the pattern
-        //if ((int) goodLayers.size() < nLayers_ - po.nMisses - 2) {
-        //    allRoads_.push_back(std::vector<TTRoad>());
-        //    continue;
-        //}
-        ////////////////////////////////////////////////////////////////////////
-
         if (patterns_.empty() || ssIdMapFast_.empty()) {
             std::cout << Error() << "Patterns are not yet loaded!" << std::endl;
             return 1;

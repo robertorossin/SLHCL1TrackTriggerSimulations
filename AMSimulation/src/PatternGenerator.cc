@@ -5,6 +5,7 @@
 #endif
 
 static const unsigned MAX_NTOWERS = 6 * 8;
+static const unsigned MIN_NLAYERS = 3;
 
 
 // _____________________________________________________________________________
@@ -210,7 +211,7 @@ int PatternGenerator::filterHits(TString out_tmp) {
 
         unsigned nstubs = vb_modId->size();
         if (verbose_>1 && ievt%1000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7lld", ievt, nPassed) << std::endl;
-        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " [# patterns: " << allPatterns_.size() << "]" << std::endl;
+        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " [# passed: " << nPassed << "]" << std::endl;
 
         if (!nstubs) {  // skip if no stub
             ++nPassed;
@@ -226,7 +227,7 @@ int PatternGenerator::filterHits(TString out_tmp) {
             keep = (ttf_event->EvalInstance() != 0);
 
         // Check min # of layers
-        bool require = ((int) nstubs >= (nLayers_ - nFakeSuperstrips_));
+        bool require = (nstubs >= MIN_NLAYERS);
         if (!require && filter_)
             keep = false;
 
@@ -246,7 +247,6 @@ int PatternGenerator::filterHits(TString out_tmp) {
                 break;
             }
         }
-        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " simPt: " << simPt << " simEta: " << simEta << " simPhi: " << simPhi << std::endl;
 
         bool sim = (po.minPt  <= simPt  && simPt  <= po.maxPt  &&
                     po.minEta <= simEta && simEta <= po.maxEta &&
@@ -254,13 +254,15 @@ int PatternGenerator::filterHits(TString out_tmp) {
         if (!sim && filter_)
             keep = false;
 
+        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " simPt: " << simPt << " simEta: " << simEta << " simPhi: " << simPhi << " keep? " << keep << std::endl;
+
         // _____________________________________________________________________
         // Build a list of goodLayers that is unique
         std::vector<id_type> goodLayers;  // the contents will be modified later on, beware!
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
             unsigned moduleId = vb_modId->at(l);
             id_type layer = decodeLayer(moduleId);
-            int trkId = vb_trkId->at(l);
+            int trkId = vb_trkId->at(l);  // check sim info
             if (trkId == good_trkId) {
                 goodLayers.push_back(layer);
             }
@@ -396,11 +398,13 @@ int PatternGenerator::filterHits(TString out_tmp) {
         minDEta_for_goodLayerCols.erase(std::remove(minDEta_for_goodLayerCols.begin(), minDEta_for_goodLayerCols.end(), 999.), minDEta_for_goodLayerCols.end() );
         minDPhi_for_goodLayerRows.erase(std::remove(minDPhi_for_goodLayerRows.begin(), minDPhi_for_goodLayerRows.end(), 999.), minDPhi_for_goodLayerRows.end() );
 
-        if (verbose_>2) {
-            std::cout << Debug() << "... evt: " << ievt << " after filtering: " << goodLayerModules.size() << " " << minDR_for_goodLayerModules.size() << " " << goodLayerCols.size() << " " << goodLayerRows.size() << " " << minDEta_for_goodLayerCols.size() << " " << minDPhi_for_goodLayerRows.size() << std::endl;
-        }
+        {   // Sanity check
+            if (verbose_>2) {
+                std::cout << Debug() << "... evt: " << ievt << " layers after merging: ";
+                std::copy(goodLayers.begin(), goodLayers.end(), std::ostream_iterator<id_type>(std::cout, " "));
+                std::cout << " check sizes: " << goodLayerModules.size() << " " << minDR_for_goodLayerModules.size() << " " << goodLayerCols.size() << " " << goodLayerRows.size() << " " << minDEta_for_goodLayerCols.size() << " " << minDPhi_for_goodLayerRows.size() << std::endl;
+            }
 
-        {  // Sanity check
             unsigned ngoodlayers = goodLayers.size();
             assert(ngoodlayers == goodLayerModules.size() && ngoodlayers == minDR_for_goodLayerModules.size() &&
                    ngoodlayers == goodLayerCols.size() && ngoodlayers == goodLayerRows.size() && ngoodlayers == minDEta_for_goodLayerCols.size() && ngoodlayers == minDPhi_for_goodLayerRows.size());
@@ -408,7 +412,7 @@ int PatternGenerator::filterHits(TString out_tmp) {
 
         // _____________________________________________________________________
         // Check again min # of layers
-        require = ((int) goodLayers.size() >= (nLayers_ - nFakeSuperstrips_));
+        require = (goodLayers.size() >= MIN_NLAYERS);
         if (!require && filter_)
             keep = false;
 
@@ -520,11 +524,7 @@ int PatternGenerator::filterHits(TString out_tmp) {
         }
 
         // Check again min # of layers
-        require = ((int) ngoodstubs >= (nLayers_ - nFakeSuperstrips_));
-
-        // Only use fake superstrips if |eta| is within 0.8-1.2 (hardcoded)
-        if (!(0.8<std::abs(simEta) && std::abs(simEta)<1.2))
-            require = ((int) ngoodstubs >= nLayers_);
+        require = (ngoodstubs >= MIN_NLAYERS);
 
         if (!require && filter_)
             keep = false;
@@ -675,6 +675,12 @@ int PatternGenerator::makePatterns() {
         std::vector<TTSuperstrip> goodSuperstrips;
         for (unsigned l=0; l<nstubs; ++l) {
             unsigned moduleId = vb_modId->at(l);
+            // If there is a valid hit, but moduleId does not exist in any
+            // trigger tower (due to cables, connections, or just too forward),
+            // we drop them
+            if (po.requireTriggerTower && triggerTowerMapReversed_.find(moduleId) == triggerTowerMapReversed_.end())
+                continue;
+
             unsigned ncols = vb_iModCols->at(l);
             unsigned nrows = vb_iModRows->at(l);
             unsigned nhits = vb_nhits->at(l);
@@ -691,15 +697,6 @@ int PatternGenerator::makePatterns() {
             // Use DCBit
             encodeDCBit(nDCBits_, ssId, ssBit);
 
-            // However, if there is a valid hit, but moduleId does not exist in
-            // any trigger tower (due to cables, connections, or just too forward),
-            // we also add fake superstrips
-            // FIXME: In this case, # of fake superstrips can be more than one
-            if (po.requireTriggerTower && triggerTowerMapReversed_.find(moduleId) == triggerTowerMapReversed_.end()) {
-                ssId = encodeFakeSuperstripId();
-                ssBit = 1 << 0;
-            }
-
             // Create a superstrip
             TTSuperstrip ss(ssId, ssBit);
             goodSuperstrips.push_back(ss);
@@ -708,25 +705,62 @@ int PatternGenerator::makePatterns() {
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " ssId: " << ssId << " ssBit: " << ssBit << " col: " << col << " row: " << row << " trkId: " << vb_hitTrkIds->at(l).at(0) << std::endl;
         }
 
-        // Make a fake superstrip and append at the end of goodSuperstrips
-        if (nFakeSuperstrips_ == 1) {
-            addr_type ssId = encodeFakeSuperstripId();
-            bit_type ssBit = 1 << 0;
+        // Fake superstrip mechanism is carried out here
 
-            TTSuperstrip ss(ssId, ssBit);
-            goodSuperstrips.push_back(ss);
+        // This map uses the fact that the keys in a C++ map are sorted
+        std::map<unsigned, unsigned> mlayerToSuperstripMap;  // key: mlayer, value: index of superstrip in goodSuperstrips
+        for (unsigned i=0; i<goodSuperstrips.size(); ++i) {
+            addr_type ssId = goodSuperstrips.at(i).id();
+            id_type layer = decodeSuperstripLayer(ssId);
+            id_type mlayer = layerMap_.at(layer);
+            if (mlayerToSuperstripMap.find(mlayer) == mlayerToSuperstripMap.end()) {  // not found
+                mlayerToSuperstripMap.insert(std::make_pair(mlayer, i));
+            } else {
+                std::cout << Error() << "There is supposed to be one unique superstrip per layer at this stage" << std::endl;
+            }
+        }
+
+        // Now find mlayer that is lacking a superstrip
+        int nFakeSuperstripsInThisPattern = 0;
+        for (std::map<unsigned, unsigned>::const_iterator it=layerMap_.begin(); it!=layerMap_.end(); ++it) {
+            id_type mlayer = it->second;
+            if (mlayerToSuperstripMap.find(mlayer) == mlayerToSuperstripMap.end()) {
+                mlayerToSuperstripMap[it->second] = goodSuperstrips.size();
+                nFakeSuperstripsInThisPattern += 1;
+            }
+        }
+
+        // Insert fake superstrips
+        std::vector<TTSuperstrip> goodAndFakeSuperstrips;
+        for (std::map<unsigned, unsigned>::const_iterator it=mlayerToSuperstripMap.begin(); it!=mlayerToSuperstripMap.end(); ++it) {
+            if (it->second == goodSuperstrips.size()) {  // create a fake superstrip
+                addr_type ssId = encodeFakeSuperstripId();
+                bit_type ssBit = 1 << 0;
+                TTSuperstrip ss(ssId, ssBit);
+                goodAndFakeSuperstrips.push_back(ss);
+
+            } else {
+                const TTSuperstrip& ss = goodSuperstrips.at(it->second);
+                goodAndFakeSuperstrips.push_back(ss);
+            }
         }
 
         if (verbose_>2) {
-            std::cout << Debug() << "... evt: " << ievt << " # goodSuperstrips: " << goodSuperstrips.size() << " {";
-            std::copy(goodSuperstrips.begin(), goodSuperstrips.end(), std::ostream_iterator<TTSuperstrip>(std::cout, " "));
+            std::cout << Debug() << "... evt: " << ievt << " # goodAndFakeSuperstrips: " << goodAndFakeSuperstrips.size() << " {";
+            std::copy(goodAndFakeSuperstrips.begin(), goodAndFakeSuperstrips.end(), std::ostream_iterator<TTSuperstrip>(std::cout, " "));
             std::cout << "}" << std::endl;
         }
 
+        // Check the required number of layers and fake superstrips
+        if (nFakeSuperstripsInThisPattern > nFakeSuperstrips_)
+            nFakeSuperstripsInThisPattern = nFakeSuperstrips_;
+        bool require = ((int) goodSuperstrips.size() + nFakeSuperstripsInThisPattern >= nLayers_);
+        if (!require && filter_)
+            continue;
+
         // Create a pattern
         unsigned hash = hashThisEvent(v_event, vb_simPhi->back());  // FIXME: will switch to use generator seed instead
-        goodSuperstrips.resize(nLayers_);
-        TTPattern patt(hash, goodSuperstrips);
+        TTPattern patt(hash, goodAndFakeSuperstrips);
         allPatterns_.push_back(patt);  // save the pattern
 
         ++nPassed;
