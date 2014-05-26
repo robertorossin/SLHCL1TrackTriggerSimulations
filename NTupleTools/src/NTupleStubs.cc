@@ -15,8 +15,6 @@
 #include "SimTracker/TrackTriggerAssociation/interface/TTClusterAssociationMap.h"
 #include "SimTracker/TrackTriggerAssociation/interface/TTStubAssociationMap.h"
 #include "SimTracker/TrackTriggerAssociation/interface/TTTrackAssociationMap.h"
-//#include "SimDataFormats/TrackingHit/interface/PSimHitContainer.h"
-//#include "SimDataFormats/TrackingHit/interface/PSimHit.h"
 #include "SimDataFormats/TrackerDigiSimLink/interface/PixelDigiSimLink.h"
 
 
@@ -234,6 +232,26 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >                   (prefixTrack_ + "simEta"         + suffix_);
     produces<std::vector<float> >                   (prefixTrack_ + "simPhi"         + suffix_);
     produces<unsigned>                              (prefixTrack_ + "size"           + suffix_);
+
+    produces<std::vector<float> >                   (prefixDigi_ + "x"              + suffix_);
+    produces<std::vector<float> >                   (prefixDigi_ + "y"              + suffix_);
+    produces<std::vector<float> >                   (prefixDigi_ + "z"              + suffix_);
+    produces<std::vector<float> >                   (prefixDigi_ + "r"              + suffix_);
+    produces<std::vector<float> >                   (prefixDigi_ + "phi"            + suffix_);
+    produces<std::vector<bool> >                    (prefixDigi_ + "barrel"         + suffix_);
+    produces<std::vector<bool> >                    (prefixDigi_ + "psmodule"       + suffix_);
+    produces<std::vector<unsigned> >                (prefixDigi_ + "modId"          + suffix_);
+    produces<std::vector<unsigned> >                (prefixDigi_ + "geoId"          + suffix_);
+    produces<std::vector<unsigned> >                (prefixDigi_ + "clusId"         + suffix_);
+    produces<std::vector<unsigned> >                (prefixDigi_ + "stubId"         + suffix_);
+    produces<std::vector<int> >                     (prefixDigi_ + "col"            + suffix_);
+    produces<std::vector<int> >                     (prefixDigi_ + "row"            + suffix_);
+    produces<std::vector<int> >                     (prefixDigi_ + "adc"            + suffix_);
+    produces<std::vector<int> >                     (prefixDigi_ + "chan"           + suffix_);
+    produces<std::vector<int> >                     (prefixDigi_ + "trkId"          + suffix_);
+    produces<std::vector<unsigned> >                (prefixDigi_ + "evtId"          + suffix_);
+    produces<std::vector<float> >                   (prefixDigi_ + "frac"           + suffix_);
+    produces<unsigned>                              (prefixDigi_ + "size"           + suffix_);
 }
 
 void NTupleStubs::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup) {
@@ -476,6 +494,26 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> >                  vt_simEta           (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  vt_simPhi           (new std::vector<float>());
     std::auto_ptr<unsigned>                             vt_size             (new unsigned(0));
+
+    std::auto_ptr<std::vector<float> >                  vd_x                (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vd_y                (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vd_z                (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vd_r                (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vd_phi              (new std::vector<float>());
+    std::auto_ptr<std::vector<bool> >                   vd_barrel           (new std::vector<bool>());
+    std::auto_ptr<std::vector<bool> >                   vd_psmodule         (new std::vector<bool>());
+    std::auto_ptr<std::vector<unsigned> >               vd_modId            (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vd_geoId            (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vd_clusId           (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> >               vd_stubId           (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<int> >                    vd_col              (new std::vector<int>());
+    std::auto_ptr<std::vector<int> >                    vd_row              (new std::vector<int>());
+    std::auto_ptr<std::vector<int> >                    vd_adc              (new std::vector<int>());
+    std::auto_ptr<std::vector<int> >                    vd_chan             (new std::vector<int>());
+    std::auto_ptr<std::vector<int> >                    vd_trkId            (new std::vector<int>());
+    std::auto_ptr<std::vector<unsigned> >               vd_evtId            (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<float> >                  vd_frac             (new std::vector<float>());
+    std::auto_ptr<unsigned>                             vd_size             (new unsigned(0));
 
     //__________________________________________________________________________
     /// Get all the handles!
@@ -954,38 +992,107 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     }
 
 
-    /// SimPixelDigis -- skipped for now
-    /// Add position, modId, clusId, stubId and sim info?
-    //if (pixelDigis.isValid() && pixelDigiSimLinks.isValid()) {
-    //    edm::LogInfo("NTupleSimPixelDigis") << "Size: " << pixelDigis->size();
-    //
-    //    typedef edm::DetSetVector<PixelDigi>::const_iterator const_dsv_iterator;
-    //    typedef edm::DetSet      <PixelDigi>::const_iterator const_ds_iterator;
-    //    unsigned n = 0;
-    //    for (const_dsv_iterator itv = pixelDigis->begin(); itv != pixelDigis->end(); ++itv) {
-    //        uint32_t rawId = itv->detId();
-    //        const DetId detId(rawId);
-    //        DetId::Detector det = detId.det();  // Tracker=1,Muon=2,Ecal=3,Hcal=4,Calo=5,Forward=6
-    //        int subdetId = detId.subdetId();  // PXB=1,PXF=2,...
-    //        if (subdetId != PixelSubdetector::PixelBarrel && subdetId != PixelSubdetector::PixelEndcap)
-    //            continue;
-    //
-    //        edm::LogInfo("NTupleSimPixelDigis") << "rawId: " << detId.rawId() << " det: " << det << " subdetId: " << subdetId << " size: " << itv->size();
-    //
-    //        for (const_ds_iterator it = itv->begin(); it != itv->end(); ++it) {
-    //            int row = it->row();
-    //            int col = it->column();
-    //            int channel = it->channel();
-    //            unsigned short adc = it->adc();
-    //            edm::LogInfo("NTupleSimPixelDigis") << "row: " << row << " col: " << col << " channel: " << channel << " adc: " << adc;
-    //        }
-    //
-    //        n++;
-    //    }
-    //
-    //} else {
-    //    edm::LogError("NTupleSimPixelDigis") << "Cannot get the product: " << inputTagPixelDigi_;
-    //}
+    /// SimPixelDigis
+    if (pixelDigis.isValid() && pixelDigiSimLinks.isValid()) {
+        edm::LogInfo("NTupleSimPixelDigis") << "Size: " << pixelDigis->size();
+
+        typedef edm::DetSetVector<PixelDigi>::const_iterator const_dsv_iterator;
+        typedef edm::DetSet      <PixelDigi>::const_iterator const_ds_iterator;
+        typedef edm::DetSet      <PixelDigiSimLink>::const_iterator const_dslink_iterator;
+
+        unsigned n = 0;
+        for (const_dsv_iterator itv = pixelDigis->begin(); itv != pixelDigis->end(); ++itv) {
+            uint32_t rawId = itv->detId();
+            const DetId geoId(rawId);
+            DetId::Detector det = geoId.det();  // Tracker=1,Muon=2,Ecal=3,Hcal=4,Calo=5,Forward=6
+            int subdetId = geoId.subdetId();  // PXB=1,PXF=2,...
+            bool isBarrel = (subdetId == (int) PixelSubdetector::PixelBarrel);
+            bool isEndcap = (subdetId == (int) PixelSubdetector::PixelEndcap);
+            if (!isBarrel && !isEndcap)
+                continue;  // only tracker
+
+            const PixelGeomDetUnit* geomDetUnit = dynamic_cast<const PixelGeomDetUnit*>(theGeometry->idToDet(geoId));
+            const PixelTopology* topology = dynamic_cast<const PixelTopology*>(&(geomDetUnit->specificTopology()) );
+            //int ncolumns = topology->ncolumns();
+            //int nrows = topology->nrows();
+            //float pitchX = topology->pitch().first;
+            //float pitchY = topology->pitch().second;
+
+            // This cut is as used in Geometry/TrackerGeometryBuilder/src/StackedTrackerGeometryBuilder.cc
+            if (geomDetUnit->position().perp()<20.)
+                continue;  // only outer tracker
+
+            //unsigned iModuleLayer = getModuleLayer(geoId);
+            //unsigned iModuleLadder = getModuleLadder(geoId);
+            //unsigned iModuleModule = getModuleModule(geoId);
+            unsigned moduleId = getModuleId(geoId);
+            edm::LogInfo("NTupleSimPixelDigis") << "rawId: " << geoId.rawId() << " det: " << det << " subdetId: " << subdetId << " modId: " << moduleId << " size: " << itv->size();
+
+            for (const_ds_iterator it = itv->begin(); it != itv->end(); ++it) {
+                int row = it->row();
+                int col = it->column();
+                int channel = it->channel();
+                unsigned short adc = it->adc();
+                edm::LogInfo("NTupleSimPixelDigis") << "row: " << row << " col: " << col << " channel: " << channel << " adc: " << adc;
+
+                MeasurementPoint mp((float) row + 0.5, (float) col + 0.5);
+                const GlobalPoint& position = geomDetUnit->surface().toGlobal(topology->localPosition(mp));
+
+                // Find simlink
+                int trkId = -1;
+                unsigned evtId = 999999;
+                float frac = 0.;
+                if (pixelDigiSimLinks->find(geoId) != pixelDigiSimLinks->end()) {
+                    const edm::DetSet<PixelDigiSimLink>& simlink = (*pixelDigiSimLinks)[geoId];
+                    for (const_dslink_iterator itsim = simlink.data.begin(); itsim != simlink.data.end(); ++itsim) {
+                        if (channel == (int) itsim->channel()) {
+                            trkId = itsim->SimTrackId();
+                            evtId = itsim->eventId().rawId();
+                            frac = itsim->fraction();
+                            break;
+                        }
+                    }
+                }
+
+                // Find clusId, stubId
+                unsigned clusId = findById(*vc_geoId, geoId.rawId(), false);
+                if (clusId == vc_geoId->size())
+                    clusId = 999999;
+                unsigned stubId = findById(*vb_geoId0, geoId.rawId(), false);
+                if (stubId == vb_geoId0->size()) {
+                    stubId = findById(*vb_geoId1, geoId.rawId(), false);
+                    if (stubId == vb_geoId1->size()) {
+                        stubId = 999999;
+                    }
+                }
+
+                vd_x->push_back(position.x());
+                vd_y->push_back(position.y());
+                vd_z->push_back(position.z());
+                vd_r->push_back(position.perp());
+                vd_phi->push_back(position.phi());
+                vd_barrel->push_back(isBarrel);
+                //vd_psmodule->push_back(isPSModule);
+                vd_modId->push_back(moduleId);
+                vd_geoId->push_back(geoId.rawId());
+                vd_clusId->push_back(clusId);
+                vd_stubId->push_back(stubId);
+                vd_col->push_back(col);
+                vd_row->push_back(row);
+                vd_adc->push_back(adc);
+                vd_chan->push_back(channel);
+                vd_trkId->push_back(trkId);
+                vd_evtId->push_back(evtId);
+                vd_frac->push_back(frac);
+
+                n++;
+            }
+        }
+        *vd_size = vd_x->size();
+
+    } else {
+        edm::LogError("NTupleSimPixelDigis") << "Cannot get the product: " << inputTagDigi_;
+    }
 
 
     //__________________________________________________________________________
@@ -1123,4 +1230,24 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vt_simEta        , prefixTrack_ + "simEta"         + suffix_);
     iEvent.put(vt_simPhi        , prefixTrack_ + "simPhi"         + suffix_);
     iEvent.put(vt_size          , prefixTrack_ + "size"           + suffix_);
+
+    iEvent.put(vd_x             , prefixDigi_ + "x"              + suffix_);
+    iEvent.put(vd_y             , prefixDigi_ + "y"              + suffix_);
+    iEvent.put(vd_z             , prefixDigi_ + "z"              + suffix_);
+    iEvent.put(vd_r             , prefixDigi_ + "r"              + suffix_);
+    iEvent.put(vd_phi           , prefixDigi_ + "phi"            + suffix_);
+    iEvent.put(vd_barrel        , prefixDigi_ + "barrel"         + suffix_);
+    iEvent.put(vd_psmodule      , prefixDigi_ + "psmodule"       + suffix_);
+    iEvent.put(vd_modId         , prefixDigi_ + "modId"          + suffix_);
+    iEvent.put(vd_geoId         , prefixDigi_ + "geoId"          + suffix_);
+    iEvent.put(vd_clusId        , prefixDigi_ + "clusId"         + suffix_);
+    iEvent.put(vd_stubId        , prefixDigi_ + "stubId"         + suffix_);
+    iEvent.put(vd_col           , prefixDigi_ + "col"            + suffix_);
+    iEvent.put(vd_row           , prefixDigi_ + "row"            + suffix_);
+    iEvent.put(vd_adc           , prefixDigi_ + "adc"            + suffix_);
+    iEvent.put(vd_chan          , prefixDigi_ + "chan"           + suffix_);
+    iEvent.put(vd_trkId         , prefixDigi_ + "trkId"          + suffix_);
+    iEvent.put(vd_evtId         , prefixDigi_ + "evtId"          + suffix_);
+    iEvent.put(vd_frac          , prefixDigi_ + "frac"           + suffix_);
+    iEvent.put(vd_size          , prefixDigi_ + "size"           + suffix_);
 }
