@@ -13,7 +13,8 @@ class DrawerInit:
         gROOT.ProcessLine("setTDRStyle()")
 
         gStyle.SetEndErrorSize(2)
-        gStyle.SetLabelSize(0.04, "Y")
+        gStyle.SetTitleOffset(1.1, "Y")
+        #gStyle.SetLabelSize(0.04, "Y")
 
         gStyle.SetOptStat(111110)
         gStyle.SetStatX(0.94)
@@ -144,10 +145,12 @@ def book(params):
         histos.append(hv)
     return histos
 
-def bookProf(params):
+def bookProf(params, option="s"):
     histos = []
     for i, p in enumerate(params):
         hv = HistViewProf(p)
+        if "s" in option:
+            hv.h.SetErrorOption("s")
         histos.append(hv)
     return histos
 
@@ -179,7 +182,10 @@ def project2D(tree, histos):
 
 # Draw
 def draw(histos, ytitle="Events", logx=False, logy=False, text=False):
-    h = histos[0].h
+    if isinstance(histos[0], HistView):
+        h = histos[0].h
+    else:
+        h = histos[0]
     h.SetMaximum(h.GetMaximum() * 1.4)
     if not logy:  h.SetMinimum(0.)
     h.GetYaxis().SetTitle(ytitle)
@@ -192,21 +198,46 @@ def draw(histos, ytitle="Events", logx=False, logy=False, text=False):
     return
 
 def draws(histos, ytitle="Events", logx=False, logy=False):
-    h = histos[0].h
-    ymax = max([hv.h.GetMaximum() for hv in histos])
+    if isinstance(histos[0], HistView):
+        h = histos[0].h
+        ymax = max([hv.h.GetMaximum() for hv in histos])
+    else:
+        h = histos[0]
+        ymax = max([h.GetMaximum() for h in histos])
     if not logy:  h.SetMinimum(0.)
     h.GetYaxis().SetTitle(ytitle)
     h.Draw("hist")
     gPad.SetLogx(logx); gPad.SetLogy(logy)
-    for hv in histos[1:]:
-        hv.h.Draw("same hist")
+    if isinstance(histos[0], HistView):
+        for hv in histos[1:]:
+            hv.h.Draw("same hist")
+    else:
+        for h in histos[1:]:
+            h.Draw("same hist")
     CMS_label()
     return
 
-def draw2D(histos, logx=False, logy=False):
-    h = histos[0].h
-    h.Draw("col")
-    gPad.SetLogx(logx); gPad.SetLogy(logy)
+def draw2D(histos, logx=False, logy=False, logz=False, palette=True, stats=True):
+    if isinstance(histos[0], HistView2D):
+        h = histos[0].h
+    else:
+        h = histos[0]
+    if not stats:
+        h.SetStats(0)
+    h.Draw("colz")
+    gPad.SetLogx(logx); gPad.SetLogy(logy); gPad.SetLogz(logz)
+    gPad.SetRightMargin(0.10)
+    gPad.Modified(); gPad.Update()
+    if palette:
+        xy = (0.91, 0.13, 0.95, 0.95)
+        paletteObj = h.FindObject("palette")
+        paletteObj.SetX1NDC(xy[0]); paletteObj.SetY1NDC(xy[1]); paletteObj.SetX2NDC(xy[2]); paletteObj.SetY2NDC(xy[3])
+        paletteObj.SetTitleSize(0.024); paletteObj.SetLabelSize(0.024)
+    if stats:
+        xy = (0.64, 0.70, 0.88, 0.93)
+        statsObj = h.FindObject("stats")
+        statsObj.SetX1NDC(xy[0]); statsObj.SetY1NDC(xy[1]); statsObj.SetX2NDC(xy[2]); statsObj.SetY2NDC(xy[3])
+    gPad.Modified(); gPad.Update()
     CMS_label()
     return
 
@@ -238,3 +269,15 @@ def save(imgdir, imgname):
     gPad.Print(imgdir+imgname+".pdf")
     gPad.Print(imgdir+imgname+".png")
 
+# ______________________________________________________________________________
+# I/O
+
+def get_infiles(txtfile, fast=False):
+    infiles = []
+    with open(txtfile) as f:
+        for line in f:
+            infiles.append(line.strip())
+    if fast:
+        half = len(infiles)/2
+        infiles = [infiles[0], infiles[half]]
+    return infiles
