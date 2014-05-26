@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
         ("maxTracks"    , po::value<int>(&maxTracks)->default_value(-1), "Specfiy max number of tracks per event")
 
         // Only for bank generation
-        ("layout,L"     , po::value<std::string>(&layout), "Specify layout file")
+        ("layout,L"     , po::value<std::string>(&layout), "Specify trigger tower layout file")
         ("no-filter"    , po::bool_switch(&nofilter)->default_value(false), "Do not apply filtering")
 
         // Only for pattern matching
@@ -87,9 +87,9 @@ int main(int argc, char **argv) {
         ("bank_nFakeSuperstrips"   , po::value<int>(&bankOption.nFakeSuperstrips)->default_value(0), "Specify # of fake superstrips")
         ("bank_nDCBits"            , po::value<int>(&bankOption.nDCBits)->default_value(0), "Specify # of DC bits")
         ("bank_requireTriggerTower", po::value<bool>(&bankOption.requireTriggerTower)->default_value(false), "Apply trigger tower requirement")
-        ("bank_activeLayers"       , po::value<std::vector<int> >(&bankOption.activeLayers), "Specify active layers")
-        ("bank_inactiveLayers"     , po::value<std::vector<int> >(&bankOption.inactiveLayers), "Specify inactive layers")
-        ("bank_triggerTowers"      , po::value<std::vector<int> >(&bankOption.triggerTowers), "Specify trigger towers (a.k.a. sectors)")
+        ("bank_activeLayers"       , po::value<std::vector<int> >(&bankOption.activeLayers), "Specify active layers (NOT IMPLEMENTED)")
+        ("bank_inactiveLayers"     , po::value<std::vector<int> >(&bankOption.inactiveLayers), "Specify inactive layers (NOT IMPLEMENTED)")
+        ("bank_triggerTowers"      , po::value<std::vector<int> >(&bankOption.triggerTowers), "Specify trigger towers (NOT IMPLEMENTED)")
 
         // Specifically for a track fitter
         ("fit_pqType"              , po::value<int>(&fitOption.pqType)->default_value(0), "Specify choice of variables for p,q")

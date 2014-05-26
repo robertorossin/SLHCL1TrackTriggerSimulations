@@ -33,7 +33,7 @@ static const id_type iLayerMask_         = 0x1F;  // 0-15
 
 // Retrieve layer, ladder, module from a moduleId
 inline id_type decodeLayer(id_type moduleId) {
-    return moduleId / 10000;
+    return (moduleId / 10000) % 100;
 }
 
 inline id_type decodeLadder(id_type moduleId) {
@@ -41,7 +41,7 @@ inline id_type decodeLadder(id_type moduleId) {
 }
 
 inline id_type decodeModule(id_type moduleId) {
-    return moduleId % 100;
+    return (moduleId) % 100;
 }
 
 // Encode moduleId, superstrip location into a superstripId

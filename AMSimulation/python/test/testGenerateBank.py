@@ -36,6 +36,13 @@ class TestAMSim(unittest.TestCase):
                 self.assertTrue(layer not in layers)
                 layers.append(layer)
 
+                self.assertNotEqual(modId, 0)
+
+            for trkId in ievt.TTStubs_trkId:
+                self.assertEqual(trkId, 1)
+
+            self.assertTrue(ievt.TTStubs_modId.size() <= 6)
+
     def test_nhits(self):
         tree = self.ttree_tmp
         for ievt in tree:
@@ -44,6 +51,8 @@ class TestAMSim(unittest.TestCase):
                 self.assertEqual(hit.size(), 1)
             for hit in ievt.TTStubs_hitRows:
                 self.assertEqual(hit.size(), 1)
+            #for hitTrkIds in ievt.TTStubs_hitTrkIds:
+            #    self.assertEqual(hitTrkIds[0], 1)
 
 
 if __name__ == "__main__":

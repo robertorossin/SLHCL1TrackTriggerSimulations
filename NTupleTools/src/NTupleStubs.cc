@@ -19,6 +19,7 @@
 
 
 unsigned NTupleStubs::findById(const std::vector<unsigned>& vec, unsigned id, bool throwError) {
+    // FIXME: this doesn't guarantee exact match because there can be multiple stubs in one module
     std::vector<unsigned>::const_iterator found;
     found = std::find(vec.begin(), vec.end(), id);
     if (found == vec.end() && throwError)
