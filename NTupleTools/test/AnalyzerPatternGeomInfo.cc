@@ -148,8 +148,8 @@ void AnalyzerPatternGeomInfo::beginRun(const edm::Run& iRun, const edm::EventSet
         if (stackDetId.isBarrel() ) {
             uint32_t geoId0 = det0->geographicalId().rawId();
             uint32_t geoId1 = det1->geographicalId().rawId();
-            PXBDetId detId0 = PXBDetId(geoId0);
-            PXBDetId detId1 = PXBDetId(geoId1);
+            PXBDetId detId0(geoId0);
+            PXBDetId detId1(geoId1);
 
             /// Get the Stack, iPhi, iZ from StackedTrackerDetId
             uint32_t iStack = stackDetId.iLayer();
@@ -197,14 +197,14 @@ void AnalyzerPatternGeomInfo::beginRun(const edm::Run& iRun, const edm::EventSet
 
             /// Find pixel topology related information
             const PixelGeomDetUnit* pixUnit0 = dynamic_cast<const PixelGeomDetUnit*>(detUnit0);
-            const PixelGeomDetUnit* pixUnit1 = dynamic_cast<const PixelGeomDetUnit*>(detUnit1);
+            //const PixelGeomDetUnit* pixUnit1 = dynamic_cast<const PixelGeomDetUnit*>(detUnit1);
             const PixelTopology* pixTopo0 = dynamic_cast<const PixelTopology*>(&(pixUnit0->specificTopology()) );
-            const PixelTopology* pixTopo1 = dynamic_cast<const PixelTopology*>(&(pixUnit1->specificTopology()) );
+            //const PixelTopology* pixTopo1 = dynamic_cast<const PixelTopology*>(&(pixUnit1->specificTopology()) );
 
             for (int col=0; col!=pixTopo0->ncolumns(); ++col) {
                 for (int row=0; row!=pixTopo0->nrows(); ++row) {
                     MeasurementPoint mp(row + 0.5, col + 0.5);
-                    GlobalPoint gp = detUnit0->surface().toGlobal(detUnit0->topology().localPosition(mp) );
+                    GlobalPoint gp = detUnit0->surface().toGlobal(pixTopo0->localPosition(mp) );
                     double signed_r = gp.y() >= 0 ? gp.perp() : -gp.perp();
 
                     if (theStackedGeometry->isPSModule(stackDetId)) {
@@ -224,8 +224,8 @@ void AnalyzerPatternGeomInfo::beginRun(const edm::Run& iRun, const edm::EventSet
         if (stackDetId.isEndcap() ) {
             uint32_t geoId0 = det0->geographicalId().rawId();
             uint32_t geoId1 = det1->geographicalId().rawId();
-            PXFDetId detId0 = PXFDetId(geoId0);
-            PXFDetId detId1 = PXFDetId(geoId1);
+            PXFDetId detId0(geoId0);
+            PXFDetId detId1(geoId1);
 
             /// Get the Stack, iPhi, iZ from StackedTrackerDetId
             uint32_t iSide  = stackDetId.iSide();
@@ -277,14 +277,14 @@ void AnalyzerPatternGeomInfo::beginRun(const edm::Run& iRun, const edm::EventSet
 
             /// Find pixel topology related information
             const PixelGeomDetUnit* pixUnit0 = dynamic_cast<const PixelGeomDetUnit*>(detUnit0);
-            const PixelGeomDetUnit* pixUnit1 = dynamic_cast<const PixelGeomDetUnit*>(detUnit1);
+            //const PixelGeomDetUnit* pixUnit1 = dynamic_cast<const PixelGeomDetUnit*>(detUnit1);
             const PixelTopology* pixTopo0 = dynamic_cast<const PixelTopology*>(&(pixUnit0->specificTopology()) );
-            const PixelTopology* pixTopo1 = dynamic_cast<const PixelTopology*>(&(pixUnit1->specificTopology()) );
+            //const PixelTopology* pixTopo1 = dynamic_cast<const PixelTopology*>(&(pixUnit1->specificTopology()) );
 
             for (int col=0; col!=pixTopo0->ncolumns(); ++col) {
                 for (int row=0; row!=pixTopo0->nrows(); ++row) {
                     MeasurementPoint mp(row + 0.5, col + 0.5);
-                    GlobalPoint gp = detUnit0->surface().toGlobal(detUnit0->topology().localPosition(mp) );
+                    GlobalPoint gp = detUnit0->surface().toGlobal(pixTopo0->localPosition(mp) );
                     double signed_r = gp.y() >= 0 ? gp.perp() : -gp.perp();
 
                     if (theStackedGeometry->isPSModule(stackDetId)) {
@@ -485,7 +485,7 @@ void AnalyzerPatternGeomInfo::analyze(const edm::Event& iEvent, const edm::Event
             }
 
             uint32_t stackId = moduleId0ToStackId.at(moduleId);
-            uint32_t geoId = moduleId0ToGeoId.at(moduleId);
+            //uint32_t geoId = moduleId0ToGeoId.at(moduleId);
 
             StackedTrackerDetId stackDetId(stackId);
             //const GeomDet* det0 = theStackedGeometry->idToDet(stackDetId, 0);
@@ -494,12 +494,12 @@ void AnalyzerPatternGeomInfo::analyze(const edm::Event& iEvent, const edm::Event
             const GeomDetUnit* detUnit1 = theStackedGeometry->idToDetUnit(stackDetId, 1);
 
             const PixelGeomDetUnit* pixUnit0 = dynamic_cast<const PixelGeomDetUnit*>(detUnit0);
-            const PixelGeomDetUnit* pixUnit1 = dynamic_cast<const PixelGeomDetUnit*>(detUnit1);
-            //const PixelTopology* pixTopo0 = dynamic_cast<const PixelTopology*>(&(pixUnit0->specificTopology()) );
+            //const PixelGeomDetUnit* pixUnit1 = dynamic_cast<const PixelGeomDetUnit*>(detUnit1);
+            const PixelTopology* pixTopo0 = dynamic_cast<const PixelTopology*>(&(pixUnit0->specificTopology()) );
             //const PixelTopology* pixTopo1 = dynamic_cast<const PixelTopology*>(&(pixUnit1->specificTopology()) );
 
             MeasurementPoint mp(row + 0.5, col + 0.5);
-            GlobalPoint gp = detUnit0->surface().toGlobal(detUnit0->topology().localPosition(mp) );
+            GlobalPoint gp = detUnit0->surface().toGlobal(pixTopo0->localPosition(mp) );
             double signed_r = gp.y() >= 0 ? gp.perp() : -gp.perp();
 
             // Individual event display

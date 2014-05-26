@@ -20,20 +20,20 @@
 #include "SimDataFormats/TrackerDigiSimLink/interface/PixelDigiSimLink.h"
 
 
-unsigned NTupleStubs::findById(const std::vector<unsigned>& vec, unsigned id) {
+unsigned NTupleStubs::findById(const std::vector<unsigned>& vec, unsigned id, bool throwError) {
     std::vector<unsigned>::const_iterator found;
     found = std::find(vec.begin(), vec.end(), id);
-    if (found == vec.end())
+    if (found == vec.end() && throwError)
         throw cms::Exception("LogicError") << "Id not found: " << id << ".\n";
     return (found - vec.begin());
 }
 
 unsigned NTupleStubs::getModuleLayer(const DetId& id) {
-    if (id.subdetId() == 1) {  // barrel
+    if (id.subdetId() == (int) PixelSubdetector::PixelBarrel) {
         PXBDetId pxbId(id);
         uint32_t layer  = pxbId.layer();
         return layer;
-    } else if (id.subdetId() == 2) {  // endcap
+    } else if (id.subdetId() == (int) PixelSubdetector::PixelEndcap) {
         PXFDetId pxfId(id);
         uint32_t side   = pxfId.side();
         uint32_t disk   = pxfId.disk();
@@ -45,11 +45,11 @@ unsigned NTupleStubs::getModuleLayer(const DetId& id) {
 }
 
 unsigned NTupleStubs::getModuleLadder(const DetId& id) {
-    if (id.subdetId() == 1) {  // barrel
+    if (id.subdetId() == (int) PixelSubdetector::PixelBarrel) {
         PXBDetId pxbId(id);
         uint32_t ladder = pxbId.ladder();
         return ladder;
-    } else if (id.subdetId() == 2) {  // endcap
+    } else if (id.subdetId() == (int) PixelSubdetector::PixelEndcap) {
         PXFDetId pxfId(id);
         uint32_t ring   = pxfId.ring();
         uint32_t blade  = pxfId.blade();
@@ -64,11 +64,11 @@ unsigned NTupleStubs::getModuleLadder(const DetId& id) {
 }
 
 unsigned NTupleStubs::getModuleModule(const DetId& id) {
-    if (id.subdetId() == 1) {  // barrel
+    if (id.subdetId() == (int) PixelSubdetector::PixelBarrel) {
         PXBDetId pxbId(id);
         uint32_t module = pxbId.module();
         return module;
-    } else if (id.subdetId() == 2) {  // endcap
+    } else if (id.subdetId() == (int) PixelSubdetector::PixelEndcap) {
         PXFDetId pxfId(id);
         uint32_t module = pxfId.module();
         return module;
@@ -89,14 +89,14 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
   inputTagClus_        (iConfig.getParameter<edm::InputTag>("inputTagClus")),
   inputTagStub_        (iConfig.getParameter<edm::InputTag>("inputTagStub")),
   inputTagTrack_       (iConfig.getParameter<edm::InputTag>("inputTagTrack")),
-  inputTagPixelDigi_   (iConfig.getParameter<edm::InputTag>("inputTagPixelDigi")),
+  inputTagDigi_        (iConfig.getParameter<edm::InputTag>("inputTagDigi")),
   inputTagClusMCAssoc_ (iConfig.getParameter<edm::InputTag>("inputTagClusMCAssoc")),
   inputTagStubMCAssoc_ (iConfig.getParameter<edm::InputTag>("inputTagStubMCAssoc")),
   inputTagTrackMCAssoc_(iConfig.getParameter<edm::InputTag>("inputTagTrackMCAssoc")),
   prefixClus_          (iConfig.getParameter<std::string>("prefixClus")),
   prefixStub_          (iConfig.getParameter<std::string>("prefixStub")),
   prefixTrack_         (iConfig.getParameter<std::string>("prefixTrack")),
-  prefixPixelDigi_     (iConfig.getParameter<std::string>("prefixPixelDigi")),
+  prefixDigi_          (iConfig.getParameter<std::string>("prefixDigi")),
   suffix_              (iConfig.getParameter<std::string>("suffix")) {
 
     // Remember r is rho in cylindrical coordinate system
@@ -498,9 +498,9 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
     /// SimPixelDigis
     edm::Handle<edm::DetSetVector<PixelDigi> > pixelDigis;
-    iEvent.getByLabel(inputTagPixelDigi_, pixelDigis);
+    iEvent.getByLabel(inputTagDigi_, pixelDigis);
     edm::Handle<edm::DetSetVector<PixelDigiSimLink> >  pixelDigiSimLinks;
-    iEvent.getByLabel(inputTagPixelDigi_, pixelDigiSimLinks);
+    iEvent.getByLabel(inputTagDigi_, pixelDigiSimLinks);
 
 
     //__________________________________________________________________________
@@ -548,6 +548,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 const GeomDetUnit* geoUnit = theStackedGeometry->idToDetUnit(detId, stack);
                 const PixelGeomDetUnit* pixUnit = dynamic_cast<const PixelGeomDetUnit*>(geoUnit);
                 const PixelTopology* pixTopo = dynamic_cast<const PixelTopology*>(&(pixUnit->specificTopology()) );
+                //const Bounds& bounds = pixUnit->specificSurface().bounds();
 
                 uint32_t iModuleCols = pixTopo->ncolumns();
                 uint32_t iModuleRows = pixTopo->nrows();
@@ -557,6 +558,10 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 //uint32_t iModuleROCsY = pixTopo->rocsY();
                 //uint32_t iModuleRowsPerROC = pixTopo->rowsperroc();
                 //uint32_t iModuleColsPerROC = pixTopo->colsperroc();
+                //float detThickness = bounds.thickness();
+                //float detLength = bounds.length();
+                //float detWidth = bounds.width();
+                //float detWidthAtHalfLength = bounds.widthAtHalfLength();
 
                 /// digis a.k.a. hits
                 const std::vector<Ref_PixelDigi_>& hits = it->getHits();
@@ -636,13 +641,14 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
                 /// Sim links for the hits
                 if (pixelDigiSimLinks.isValid()) {
-                    const edm::DetSet<PixelDigiSimLink>& simlink = (*pixelDigiSimLinks)[geoId.rawId()];
+                    const edm::DetSet<PixelDigiSimLink>& simlink = (*pixelDigiSimLinks)[geoId];
                     for (unsigned ii = 0; ii < hits.size(); ++ii) {
                         for (edm::DetSet<PixelDigiSimLink>::const_iterator itsim = simlink.data.begin(); itsim != simlink.data.end(); ++itsim) {
                             if (hitChans.at(ii) == (int) itsim->channel()) {
                                 hitTrkIds.at(ii) = itsim->SimTrackId();
                                 hitEvtIds.at(ii) = itsim->eventId().rawId();
                                 hitFracs.at(ii) = itsim->fraction();
+                                break;
                             }
                         }
                     }
@@ -843,13 +849,14 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
                 /// Sim links for the hits
                 if (pixelDigiSimLinks.isValid()) {
-                    const edm::DetSet<PixelDigiSimLink>& simlink = (*pixelDigiSimLinks)[geoId0.rawId()];
+                    const edm::DetSet<PixelDigiSimLink>& simlink = (*pixelDigiSimLinks)[geoId0];
                     for (unsigned ii = 0; ii < hits.size(); ++ii) {
                         for (edm::DetSet<PixelDigiSimLink>::const_iterator itsim = simlink.data.begin(); itsim != simlink.data.end(); ++itsim) {
                             if (hitChans.at(ii) == (int) itsim->channel()) {
                                 hitTrkIds.at(ii) = itsim->SimTrackId();
                                 hitEvtIds.at(ii) = itsim->eventId().rawId();
                                 hitFracs.at(ii) = itsim->fraction();
+                                break;
                             }
                         }
                     }
@@ -948,6 +955,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
 
     /// SimPixelDigis -- skipped for now
+    /// Add position, modId, clusId, stubId and sim info?
     //if (pixelDigis.isValid() && pixelDigiSimLinks.isValid()) {
     //    edm::LogInfo("NTupleSimPixelDigis") << "Size: " << pixelDigis->size();
     //
@@ -1027,7 +1035,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vc_isUnknown     , prefixClus_ + "isUnknown"      + suffix_);
     iEvent.put(vc_isCombinatoric, prefixClus_ + "isCombinatoric" + suffix_);
     iEvent.put(vc_tpId          , prefixClus_ + "tpId"           + suffix_);
-    iEvent.put(vc_trkId         , prefixClus_ + "trkId"           + suffix_);
+    iEvent.put(vc_trkId         , prefixClus_ + "trkId"          + suffix_);
     iEvent.put(vc_pdgId         , prefixClus_ + "pdgId"          + suffix_);
     iEvent.put(vc_simPt         , prefixClus_ + "simPt"          + suffix_);
     iEvent.put(vc_simEta        , prefixClus_ + "simEta"         + suffix_);
