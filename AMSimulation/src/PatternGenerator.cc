@@ -38,13 +38,12 @@ int PatternGenerator::readTriggerTowerFile(TString src) {
     triggerTowerMap_.clear();
     unsigned triggerTowerId = 0;
     for (unsigned i=0; i<values.size(); ++i) {
-        if (i != 0) {  // skip the first index
-            if (values.at(i-1) <= 6 && values.at(i) <= 8) {  // eta_idx, phi_idx
-                triggerTowerId = values.at(i-1) * 10 + values.at(i);
-                triggerTowerMap_.insert(std::make_pair(triggerTowerId, std::vector<unsigned>()));
-            } else if (values.at(i) > 10000) {
-                triggerTowerMap_.at(triggerTowerId).push_back(values.at(i));
-            }
+        if (i == 0)  continue;  // skip the first index
+        if (values.at(i-1) <= 6 && values.at(i) <= 8) {  // eta_idx, phi_idx
+            triggerTowerId = (values.at(i-1)-1) * 8 + (values.at(i)-1);  // mapped to 0-47
+            triggerTowerMap_.insert(std::make_pair(triggerTowerId, std::vector<unsigned>()));
+        } else if (values.at(i) > 10000) {
+            triggerTowerMap_.at(triggerTowerId).push_back(values.at(i));
         }
     }
 
