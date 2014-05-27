@@ -1,4 +1,4 @@
-from ROOT import TH1, TH1F, TH2F, TProfile, TFile, TChain, TCanvas, TLegend, TLatex, TLine, gROOT, gInterpreter, gStyle, gSystem, gPad
+from ROOT import TH1, TH1F, TH2F, TProfile, TProfile2D, TFile, TChain, TCanvas, TLegend, TLatex, TLine, gROOT, gInterpreter, gStyle, gSystem, gPad
 from rootcolors import *
 from math import sqrt
 from random import randint
@@ -34,7 +34,6 @@ latex.SetTextSize(0.026)
 line = TLine()
 line.SetLineColor(kGray+2)
 line.SetLineStyle(2)
-
 
 # ______________________________________________________________________________
 # Classes

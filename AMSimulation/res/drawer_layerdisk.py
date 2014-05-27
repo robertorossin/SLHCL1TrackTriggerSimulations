@@ -12,13 +12,15 @@ latex.SetTextSize(0.06)
 # Configurations
 
 sections = {}
-sections["rates"         ] = True
-sections["rates_by_layer"] = True
-sections["rates_by_tower"] = True
-sections["efficiencies"  ] = False
+sections["rates"                ] = True
+sections["rates_by_layer"       ] = True
+sections["rates_by_tower"       ] = True
+sections["efficiencies"         ] = True
+sections["efficiencies_by_layer"] = False
+#sections["efficiencies_by_tower"] = False
 
 drawerInit = DrawerInit()
-infiles = get_infiles("input.txt", fast=True)
+infiles = get_infiles("input.txt", fast=False)
 
 chain = TChain("ntupler/tree", "")
 for f in infiles:
@@ -43,48 +45,19 @@ e_offset = 5
 e_nrings = [15 + e_offset]
 e_nmods  = [20,24,28,28,32,36,36,40,40,52,56,64,68,76,80]
 
-# 2D
 histos = {}
-histos["b5"]  = TH2F("b5" , "; Barrel module index; Barrel ladder index", b_nmods[0], 0, b_nmods[0], b_nlads[0], 0, b_nlads[0])
-histos["b6"]  = TH2F("b6" , "; Barrel module index; Barrel ladder index", b_nmods[1], 0, b_nmods[1], b_nlads[1], 0, b_nlads[1])
-histos["b7"]  = TH2F("b7" , "; Barrel module index; Barrel ladder index", b_nmods[2], 0, b_nmods[2], b_nlads[2], 0, b_nlads[2])
-histos["b8"]  = TH2F("b8" , "; Barrel module index; Barrel ladder index", b_nmods[3], 0, b_nmods[3], b_nlads[3], 0, b_nlads[3])
-histos["b9"]  = TH2F("b9" , "; Barrel module index; Barrel ladder index", b_nmods[4], 0, b_nmods[4], b_nlads[4], 0, b_nlads[4])
-histos["b10"] = TH2F("b10", "; Barrel module index; Barrel ladder index", b_nmods[5], 0, b_nmods[5], b_nlads[5], 0, b_nlads[5])
 
-histos["e11"] = TH2F("e11", "; r: Endcap ring index+%i; #theta: Endcap module index" % e_offset, 2*e_nrings[0], -e_nrings[0], e_nrings[0], 2*e_nrings[0], -e_nrings[0], e_nrings[0])
-histos["e12"] = TH2F("e12", "; r: Endcap ring index+%i; #theta: Endcap module index" % e_offset, 2*e_nrings[0], -e_nrings[0], e_nrings[0], 2*e_nrings[0], -e_nrings[0], e_nrings[0])
-histos["e13"] = TH2F("e13", "; r: Endcap ring index+%i; #theta: Endcap module index" % e_offset, 2*e_nrings[0], -e_nrings[0], e_nrings[0], 2*e_nrings[0], -e_nrings[0], e_nrings[0])
-histos["e14"] = TH2F("e14", "; r: Endcap ring index+%i; #theta: Endcap module index" % e_offset, 2*e_nrings[0], -e_nrings[0], e_nrings[0], 2*e_nrings[0], -e_nrings[0], e_nrings[0])
-histos["e15"] = TH2F("e15", "; r: Endcap ring index+%i; #theta: Endcap module index" % e_offset, 2*e_nrings[0], -e_nrings[0], e_nrings[0], 2*e_nrings[0], -e_nrings[0], e_nrings[0])
+# 2D
+def book2D():
+    for i in xrange(5,11):  # barrel
+        histos["b%i" % i] = TH2F("b%i" % i, "; Barrel module index; Barrel ladder index", b_nmods[i-5], 0, b_nmods[i-5], b_nlads[i-5], 0, b_nlads[i-5])
 
-histos["e18"] = TH2F("e18", "; r: Endcap ring index+%i; #theta: Endcap module index" % e_offset, 2*e_nrings[0], -e_nrings[0], e_nrings[0], 2*e_nrings[0], -e_nrings[0], e_nrings[0])
-histos["e19"] = TH2F("e19", "; r: Endcap ring index+%i; #theta: Endcap module index" % e_offset, 2*e_nrings[0], -e_nrings[0], e_nrings[0], 2*e_nrings[0], -e_nrings[0], e_nrings[0])
-histos["e20"] = TH2F("e20", "; r: Endcap ring index+%i; #theta: Endcap module index" % e_offset, 2*e_nrings[0], -e_nrings[0], e_nrings[0], 2*e_nrings[0], -e_nrings[0], e_nrings[0])
-histos["e21"] = TH2F("e21", "; r: Endcap ring index+%i; #theta: Endcap module index" % e_offset, 2*e_nrings[0], -e_nrings[0], e_nrings[0], 2*e_nrings[0], -e_nrings[0], e_nrings[0])
-histos["e22"] = TH2F("e22", "; r: Endcap ring index+%i; #theta: Endcap module index" % e_offset, 2*e_nrings[0], -e_nrings[0], e_nrings[0], 2*e_nrings[0], -e_nrings[0], e_nrings[0])
+    for i in xrange(11,23):  # endcap
+        if i == 16 or i == 17:  continue
+        histos["e%i" % i] = TH2F("e%i" % i, "; r: Endcap ring index+%i; #theta: Endcap module index" % e_offset, 2*e_nrings[0], -e_nrings[0], e_nrings[0], 2*e_nrings[0], -e_nrings[0], e_nrings[0])
 
-histos["e11_r0"]  = TH2F("e11_r0" , "", e_nmods[0] , 0, 2*pi, e_nrings[0], 0, e_nrings[0])
-histos["e11_r1"]  = TH2F("e11_r1" , "", e_nmods[1] , 0, 2*pi, e_nrings[0], 0, e_nrings[0])
-histos["e11_r2"]  = TH2F("e11_r2" , "", e_nmods[2] , 0, 2*pi, e_nrings[0], 0, e_nrings[0])
-histos["e11_r3"]  = TH2F("e11_r3" , "", e_nmods[3] , 0, 2*pi, e_nrings[0], 0, e_nrings[0])
-histos["e11_r4"]  = TH2F("e11_r4" , "", e_nmods[4] , 0, 2*pi, e_nrings[0], 0, e_nrings[0])
-histos["e11_r5"]  = TH2F("e11_r5" , "", e_nmods[5] , 0, 2*pi, e_nrings[0], 0, e_nrings[0])
-histos["e11_r6"]  = TH2F("e11_r6" , "", e_nmods[6] , 0, 2*pi, e_nrings[0], 0, e_nrings[0])
-histos["e11_r7"]  = TH2F("e11_r7" , "", e_nmods[7] , 0, 2*pi, e_nrings[0], 0, e_nrings[0])
-histos["e11_r8"]  = TH2F("e11_r8" , "", e_nmods[8] , 0, 2*pi, e_nrings[0], 0, e_nrings[0])
-histos["e11_r9"]  = TH2F("e11_r9" , "", e_nmods[9] , 0, 2*pi, e_nrings[0], 0, e_nrings[0])
-histos["e11_r10"] = TH2F("e11_r10", "", e_nmods[10], 0, 2*pi, e_nrings[0], 0, e_nrings[0])
-histos["e11_r11"] = TH2F("e11_r11", "", e_nmods[11], 0, 2*pi, e_nrings[0], 0, e_nrings[0])
-histos["e11_r12"] = TH2F("e11_r12", "", e_nmods[12], 0, 2*pi, e_nrings[0], 0, e_nrings[0])
-histos["e11_r13"] = TH2F("e11_r13", "", e_nmods[13], 0, 2*pi, e_nrings[0], 0, e_nrings[0])
-histos["e11_r14"] = TH2F("e11_r14", "", e_nmods[14], 0, 2*pi, e_nrings[0], 0, e_nrings[0])
-for i in xrange(12,16):
-    for j in xrange(0,15):
-        histos["e%i_r%i" % (i,j)] = histos["e%i_r%i" % (11,j)].Clone("e%i_r%i" % (i,j))
-for i in xrange(18,23):
-    for j in xrange(0,15):
-        histos["e%i_r%i" % (i,j)] = histos["e%i_r%i" % (11,j)].Clone("e%i_r%i" % (i,j))
+        for j in xrange(0,15):  # endcap rings
+            histos["e%i_r%i" % (i,j)] = TH2F("e%i_r%i" % (i,j), "", e_nmods[j], 0, 2*pi, e_nrings[0], 0, e_nrings[0])
 
 # 1D
 def book1D(xtitle="", nbinsx=50, xlow=0, xup=50):
@@ -96,6 +69,16 @@ def book1D(xtitle="", nbinsx=50, xlow=0, xup=50):
         h.SetFillColor(lightpalette[i])
         histos[j] = h
 
+spalette = [sOrange, sMagenta, sViolet, sBlue, sCyan, sGreen]
+def bookEff1D(isPt, xtitle="", nbinsx=50, xlow=0, xup=50):
+    for i in xrange(5,16):
+        j = "l%i_pt" % i if isPt else "l%i_eta" % i
+        h = TH1F(j, xtitle, nbinsx, xlow, xup)
+        h.SetLineWidth(2)
+        h.SetLineColor(spalette[(i-5)%6])
+        h.SetMarkerColor(spalette[(i-5)%6])
+        histos[j] = h
+
 def draw1D():
     # Stack them by hand
     histos["b_ss"].Add(histos["b_ps"])
@@ -104,6 +87,25 @@ def draw1D():
 
     # Draw
     draws([histos["e_ss"], histos["e_ps"], histos["b_ss"], histos["b_ps"]], stats=False)
+
+def drawEff1D(isPt, isBarrel):
+    if isBarrel:
+        h = histos["l%i_pt" % 5 if isPt else "l%i_eta" % 5]
+    else:
+        h = histos["l%i_pt" % 11 if isPt else "l%i_eta" % 11]
+    h.SetStats(0)
+    h.SetMaximum(1.1)
+    h.SetMinimum(0.)
+    h.Draw("e1")
+    if isBarrel:
+        for i in xrange(6,11):
+            h = histos["l%i_pt" % i if isPt else "l%i_eta" % i]
+            h.Draw("e1 same")
+    else:
+        for i in xrange(12,16):
+            h = histos["l%i_pt" % i if isPt else "l%i_eta" % i]
+            h.Draw("e1 same")
+    CMS_label()
 
 
 # ______________________________________________________________________________
@@ -131,19 +133,20 @@ for k, v in ttmap.iteritems():
 # Rates
 
 if sections["rates"]:
-    for hname, h in histos.iteritems():
-        h.Reset()
+    book2D()
 
     tree.SetBranchStatus("*", 0)
-    tree.SetBranchStatus("TTStubs_modId", 1)
-    tree.SetBranchStatus("TTStubs_simPt", 1)
-    tree.SetBranchStatus("TTStubs_simEta", 1)
+    tree.SetBranchStatus("TTStubs_modId"      , 1)
+    tree.SetBranchStatus("genParts_pt"        , 1)
+    tree.SetBranchStatus("genParts_eta"       , 1)
 
     for ievt in tree:
-        # Loop over stubs
-        for moduleId, simPt, simEta in zip(ievt.TTStubs_modId, ievt.TTStubs_simPt, ievt.TTStubs_simEta):
-            if simPt < 2 or abs(simEta) > 2.2:  continue
+        # Check genParticle
+        if ievt.genParts_pt[0] < 2 or abs(ievt.genParts_eta[0]) > 2.2:
+            continue
 
+        # Loop over stubs
+        for moduleId in ievt.TTStubs_modId:
             ilay = (moduleId / 10000) % 100
             ilad = (moduleId / 100) % 100
             imod = (moduleId) % 100
@@ -157,10 +160,6 @@ if sections["rates"]:
 
     nentries = tree.GetEntriesFast()
     print nentries
-
-    ## Normalize
-    #for hname, h in histos.iteritems():
-    #    h.Scale(1.0/nentries)
 
     # Barrel
     for i in xrange(5,11):
@@ -206,23 +205,22 @@ if sections["rates"]:
 # Rates (1D)
 
 if sections["rates_by_layer"]:
-    for hname, h in histos.iteritems():
-        h.Reset()
-
     book1D("; layer index; rate", 25, 0, 25)
 
     tree.SetBranchStatus("*", 0)
-    tree.SetBranchStatus("TTStubs_modId", 1)
-    tree.SetBranchStatus("TTStubs_barrel", 1)
-    tree.SetBranchStatus("TTStubs_psmodule", 1)
-    tree.SetBranchStatus("TTStubs_simPt", 1)
-    tree.SetBranchStatus("TTStubs_simEta", 1)
+    tree.SetBranchStatus("TTStubs_modId"      , 1)
+    tree.SetBranchStatus("TTStubs_barrel"     , 1)
+    tree.SetBranchStatus("TTStubs_psmodule"   , 1)
+    tree.SetBranchStatus("genParts_pt"        , 1)
+    tree.SetBranchStatus("genParts_eta"       , 1)
 
     for ievt in tree:
-        # Loop over stubs
-        for moduleId, barrel, psmodule, simPt, simEta in zip(ievt.TTStubs_modId, ievt.TTStubs_barrel, ievt.TTStubs_psmodule, ievt.TTStubs_simPt, ievt.TTStubs_simEta):
-            if simPt < 2 or abs(simEta) > 2.2:  continue
+        # Check genParticle
+        if ievt.genParts_pt[0] < 2 or abs(ievt.genParts_eta[0]) > 2.2:
+            continue
 
+        # Loop over stubs
+        for moduleId, barrel, psmodule in zip(ievt.TTStubs_modId, ievt.TTStubs_barrel, ievt.TTStubs_psmodule):
             ilay = (moduleId / 10000) % 100
             ilad = (moduleId / 100) % 100
             imod = (moduleId) % 100
@@ -243,22 +241,22 @@ if sections["rates_by_layer"]:
 
 
 if sections["rates_by_tower"]:
-    for hname, h in histos.iteritems():
-        h.Reset()
-
     book1D("; tower index; rate", 50, 0, 50)
 
     tree.SetBranchStatus("*", 0)
-    tree.SetBranchStatus("TTStubs_modId", 1)
-    tree.SetBranchStatus("TTStubs_barrel", 1)
-    tree.SetBranchStatus("TTStubs_psmodule", 1)
-    tree.SetBranchStatus("TTStubs_simPt", 1)
-    tree.SetBranchStatus("TTStubs_simEta", 1)
+    tree.SetBranchStatus("TTStubs_modId"      , 1)
+    tree.SetBranchStatus("TTStubs_barrel"     , 1)
+    tree.SetBranchStatus("TTStubs_psmodule"   , 1)
+    tree.SetBranchStatus("genParts_pt"        , 1)
+    tree.SetBranchStatus("genParts_eta"       , 1)
 
     for ievt in tree:
+        # Check genParticle
+        if ievt.genParts_pt[0] < 2 or abs(ievt.genParts_eta[0]) > 2.2:
+            continue
+
         # Loop over stubs
-        for moduleId, barrel, psmodule, simPt, simEta in zip(ievt.TTStubs_modId, ievt.TTStubs_barrel, ievt.TTStubs_psmodule, ievt.TTStubs_simPt, ievt.TTStubs_simEta):
-            if simPt < 2 or abs(simEta) > 2.2:  continue
+        for moduleId, barrel, psmodule in zip(ievt.TTStubs_modId, ievt.TTStubs_barrel, ievt.TTStubs_psmodule):
 
             if moduleId not in ttmap_reversed:
                 towers = [49]  # not listed in any trigger tower
@@ -285,8 +283,7 @@ if sections["rates_by_tower"]:
 # Efficiencies
 
 if sections["efficiencies"]:
-    for hname, h in histos.iteritems():
-        h.Reset()
+    book2D()
 
     tree.SetBranchStatus("*", 0)
     tree.SetBranchStatus("simPixelDigis_modId", 1)
@@ -295,9 +292,20 @@ if sections["efficiencies"]:
     tree.SetBranchStatus("TTStubs_modId"      , 1)
     tree.SetBranchStatus("TTStubs_trkId"      , 1)
     tree.SetBranchStatus("TTStubs_hitChans"   , 1)
+    tree.SetBranchStatus("genParts_pt"        , 1)
+    tree.SetBranchStatus("genParts_eta"       , 1)
+
+    numerators = {}
+    denominators = {}
 
     for ievt in tree:
-        # Loop over stubs
+        # Check genParticle
+        if ievt.genParts_pt[0] < 2 or abs(ievt.genParts_eta[0]) > 2.2:
+            continue
+
+        # Loop over digis
+        keys_denom = []
+        keys_num = []
         for moduleId, trkId, chan in zip(ievt.simPixelDigis_modId, ievt.simPixelDigis_trkId, ievt.simPixelDigis_chan):
             if trkId != 1:  continue
 
@@ -305,15 +313,218 @@ if sections["efficiencies"]:
             ilad = (moduleId / 100) % 100
             imod = (moduleId) % 100
 
+            key = (ilay, ilad, imod)
+            if key not in keys_denom:
+                keys_denom.append(key)
+
             for b_moduleId, b_trkId, b_hitChans in zip(ievt.TTStubs_modId, ievt.TTStubs_trkId, ievt.TTStubs_hitChans):
                 if b_trkId != 1:  continue
                 if moduleId != b_moduleId:  continue
 
                 for h_chan in b_hitChans:
                     if chan != h_chan:  continue
-                    print "FOUND: ", moduleId, chan
+                    if key not in keys_num:
+                        keys_num.append(key)
+                    break
+                break
 
+        for key in keys_denom:
+            if key not in denominators:
+                denominators[key] = 1
+            else:
+                denominators[key] += 1
 
+        for key in keys_num:
+            if key not in numerators:
+                numerators[key] = 1
+            else:
+                numerators[key] += 1
 
+    ratios = {}
+    for k, d in denominators.iteritems():
+        ilay = k[0]
+        ilad = k[1]
+        imod = k[2]
 
+        if k in numerators:
+            n = numerators[k]
+            assert(n <= d)
+            ratio = float(n) / float(d)
+            error = sqrt(ratio * (1-ratio) / float(d))
+            ratios[k] = ratio
+
+            if ilay < 11:  # barrel
+                b = histos["b%i" % (ilay)].FindFixBin(imod, ilad)
+                histos["b%i" % (ilay)].SetBinContent(b, ratio)
+                histos["b%i" % (ilay)].SetBinError(b, error)
+
+            else:  # endcap
+                irad = 2*pi * imod / e_nmods[ilad]
+                b = histos["e%i_r%i" % (ilay,ilad)].FindFixBin(irad, ilad + e_offset)
+                histos["e%i_r%i" % (ilay,ilad)].SetBinContent(b, ratio)
+                histos["e%i_r%i" % (ilay,ilad)].SetBinError(b, error)
+
+    nentries = tree.GetEntriesFast()
+    print nentries
+
+    # Barrel
+    for i in xrange(5,11):
+        hname = "b%i" % i
+        histos[hname].SetMaximum(1.1)
+        histos[hname].SetMinimum(0.)
+        draw2D([histos[hname]], stats=False)
+        latex.DrawLatex(0.68, 0.88, "Barrel %i" % (i-4))
+        save(imgdir, "efficiencies_%s" % hname)
+
+    # Endcap
+    for i in xrange(11,23):
+        if i == 16 or i == 17:  continue
+
+        hname = "e%s" % i
+        draw2D([histos[hname]], stats=False, palette=False)
+
+        for j in xrange(0,15):
+            hname1 = "e%s_r%i" % (i,j)
+            if j == 0:
+                histos[hname1].SetMaximum(1.1)
+                histos[hname1].SetMinimum(0.)
+                histos[hname1].Draw("same pol colz")
+                gPad.Modified(); gPad.Update()
+                xy = (0.91, 0.13, 0.95, 0.95)
+                paletteObj = histos[hname1].FindObject("palette")
+                paletteObj.SetX1NDC(xy[0]); paletteObj.SetY1NDC(xy[1]); paletteObj.SetX2NDC(xy[2]); paletteObj.SetY2NDC(xy[3])
+                paletteObj.SetTitleSize(0.024); paletteObj.SetLabelSize(0.024)
+                gPad.Modified(); gPad.Update()
+            else:
+                histos[hname1].SetMaximum(1.1)
+                histos[hname1].SetMinimum(0.)
+                histos[hname1].Draw("same pol col")
+        if i < 18:
+            latex.DrawLatex(0.62, 0.88, "Endcap +%i" % (i-10))
+        else:
+            latex.DrawLatex(0.62, 0.88, "Endcap -%i" % (i-17))
+        save(imgdir, "efficiencies_%s" % hname)
+
+# ______________________________________________________________________________
+# Efficiencies (1D)
+
+if sections["efficiencies_by_layer"]:
+    bookEff1D(True, "; p_{T} [GeV]; efficiency", 50, 0, 100)
+    bookEff1D(False, "; #eta; efficiency", 50, -2.5, 2.5)
+
+    tree.SetBranchStatus("*", 0)
+    tree.SetBranchStatus("simPixelDigis_modId", 1)
+    tree.SetBranchStatus("simPixelDigis_trkId", 1)
+    tree.SetBranchStatus("simPixelDigis_chan" , 1)
+    tree.SetBranchStatus("TTStubs_modId"      , 1)
+    tree.SetBranchStatus("TTStubs_trkId"      , 1)
+    tree.SetBranchStatus("TTStubs_hitChans"   , 1)
+    tree.SetBranchStatus("genParts_pt"        , 1)
+    tree.SetBranchStatus("genParts_eta"       , 1)
+
+    numerators = {}
+    denominators = {}
+
+    for ievt in tree:
+        # Check genParticle
+        ipt = int(ievt.genParts_pt[0]+0.5)  # round up
+        scaled_eta = (10.*ievt.genParts_eta[0])
+        ieta = int(scaled_eta+0.5 if scaled_eta > 0 else scaled_eta-0.5)
+        #print ievt.genParts_pt[0], ievt.genParts_eta[0], ipt, ieta
+
+        # Loop over digis
+        keys_denom = []
+        keys_num = []
+        for moduleId, trkId, chan in zip(ievt.simPixelDigis_modId, ievt.simPixelDigis_trkId, ievt.simPixelDigis_chan):
+            if trkId != 1:  continue
+
+            ilay = (moduleId / 10000) % 100
+            ilad = (moduleId / 100) % 100
+            imod = (moduleId) % 100
+
+            if ilay >= 18:  ilay -= 7  # combine positive and negative sides
+
+            key = (ilay, ipt, ieta)
+            if key not in keys_denom:
+                keys_denom.append(key)
+
+            for b_moduleId, b_trkId, b_hitChans in zip(ievt.TTStubs_modId, ievt.TTStubs_trkId, ievt.TTStubs_hitChans):
+                if b_trkId != 1:  continue
+                if moduleId != b_moduleId:  continue
+
+                for h_chan in b_hitChans:
+                    if chan != h_chan:  continue
+                    if key not in keys_num:
+                        keys_num.append(key)
+                    break
+                break
+
+        for key in keys_denom:
+            if key not in denominators:
+                denominators[key] = 1
+            else:
+                denominators[key] += 1
+
+        for key in keys_num:
+            if key not in numerators:
+                numerators[key] = 1
+            else:
+                numerators[key] += 1
+
+    ratios = {}
+    for k, d in denominators.iteritems():
+        ilay = k[0]
+        ipt = k[1]
+        ieta = k[2]
+
+        if k in numerators:
+            n = numerators[k]
+            assert(n <= d)
+            ratio = float(n) / float(d)
+            error = sqrt(ratio * (1-ratio) / float(d))
+            ratios[k] = ratio
+
+            pt = float(ipt)
+            eta = float(ieta)/10
+
+            if abs(eta) <= 2.5:
+                b = histos["l%i_pt" % (ilay)].FindFixBin(pt)
+                histos["l%i_pt" % (ilay)].SetBinContent(b, ratio)
+                histos["l%i_pt" % (ilay)].SetBinError(b, error)
+
+            if pt >= 2:
+                b = histos["l%i_eta" % (ilay)].FindFixBin(eta)
+                histos["l%i_eta" % (ilay)].SetBinContent(b, ratio)
+                histos["l%i_eta" % (ilay)].SetBinError(b, error)
+
+    drawEff1D(True, True)
+    leg1 = TLegend(0.60,0.16,0.94,0.40)
+    leg1.SetFillStyle(0); leg1.SetLineColor(0); leg1.SetShadowColor(0); leg1.SetBorderSize(0)
+    leg1.AddEntry(histos["l5_pt"], "Barrel layer 1")
+    leg1.AddEntry(histos["l6_pt"], "Barrel layer 2")
+    leg1.AddEntry(histos["l7_pt"], "Barrel layer 3")
+    leg1.AddEntry(histos["l8_pt"], "Barrel layer 4")
+    leg1.AddEntry(histos["l9_pt"], "Barrel layer 5")
+    leg1.AddEntry(histos["l10_pt"], "Barrel layer 6")
+    leg1.Draw()
+    save(imgdir, "efficiencies_by_layer_pt_barrel")
+
+    drawEff1D(False, True)
+    leg1.Draw()
+    save(imgdir, "efficiencies_by_layer_eta_barrel")
+
+    drawEff1D(True, False)
+    leg1 = TLegend(0.56,0.20,0.94,0.40)
+    leg1.SetFillStyle(0); leg1.SetLineColor(0); leg1.SetShadowColor(0); leg1.SetBorderSize(0)
+    leg1.AddEntry(histos["l11_pt"], "Endcap disks +/-1")
+    leg1.AddEntry(histos["l12_pt"], "Endcap disks +/-2")
+    leg1.AddEntry(histos["l13_pt"], "Endcap disks +/-3")
+    leg1.AddEntry(histos["l14_pt"], "Endcap disks +/-4")
+    leg1.AddEntry(histos["l15_pt"], "Endcap disks +/-5")
+    leg1.Draw()
+    save(imgdir, "efficiencies_by_layer_pt_endcap")
+
+    drawEff1D(False, False)
+    leg1.Draw()
+    save(imgdir, "efficiencies_by_layer_eta_endcap")
 
