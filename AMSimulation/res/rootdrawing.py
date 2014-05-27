@@ -181,11 +181,12 @@ def project2D(tree, histos):
     return
 
 # Draw
-def draw(histos, ytitle="Events", logx=False, logy=False, text=False):
+def draw(histos, ytitle="Events", logx=False, logy=False, stats=True, text=False):
     if isinstance(histos[0], HistView):
-        h = histos[0].h
-    else:
-        h = histos[0]
+        histos = map(getattr(x, "h"), histos)
+    h = histos[0]
+    if not stats:
+        h.SetStats(0)
     h.SetMaximum(h.GetMaximum() * 1.4)
     if not logy:  h.SetMinimum(0.)
     h.GetYaxis().SetTitle(ytitle)
@@ -197,31 +198,26 @@ def draw(histos, ytitle="Events", logx=False, logy=False, text=False):
     CMS_label()
     return
 
-def draws(histos, ytitle="Events", logx=False, logy=False):
+# Draw more than one
+def draws(histos, ytitle="Events", logx=False, logy=False, stats=True):
     if isinstance(histos[0], HistView):
-        h = histos[0].h
-        ymax = max([hv.h.GetMaximum() for hv in histos])
-    else:
-        h = histos[0]
-        ymax = max([h.GetMaximum() for h in histos])
+        histos = map(getattr(x, "h"), histos)
+    h = histos[0]
+    if not stats:
+        h.SetStats(0)
     if not logy:  h.SetMinimum(0.)
     h.GetYaxis().SetTitle(ytitle)
     h.Draw("hist")
     gPad.SetLogx(logx); gPad.SetLogy(logy)
-    if isinstance(histos[0], HistView):
-        for hv in histos[1:]:
-            hv.h.Draw("same hist")
-    else:
-        for h in histos[1:]:
-            h.Draw("same hist")
+    for h in histos[1:]:
+        h.Draw("same hist")
     CMS_label()
     return
 
 def draw2D(histos, logx=False, logy=False, logz=False, palette=True, stats=True):
-    if isinstance(histos[0], HistView2D):
-        h = histos[0].h
-    else:
-        h = histos[0]
+    if isinstance(histos[0], HistView):
+        histos = map(getattr(x, "h"), histos)
+    h = histos[0]
     if not stats:
         h.SetStats(0)
     h.Draw("colz")
