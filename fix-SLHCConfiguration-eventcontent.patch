@@ -1,5 +1,5 @@
 diff --git a/SLHCUpgradeSimulations/Configuration/python/combinedCustoms_TTI.py b/SLHCUpgradeSimulations/Configuration/python/combinedCustoms_TTI.py
-index b02134d..50cdf1f 100644
+index b02134d..636e550 100644
 --- a/SLHCUpgradeSimulations/Configuration/python/combinedCustoms_TTI.py
 +++ b/SLHCUpgradeSimulations/Configuration/python/combinedCustoms_TTI.py
 @@ -46,13 +46,14 @@ def l1EventContent_TTI(process):
@@ -12,11 +12,10 @@ index b02134d..50cdf1f 100644
  
  	    # drop what is not used in the stubs
 -            getattr(process,b).outputCommands.append('drop *_TTStubAssociatorFromPixelDigis_StubRejected_*')
--	    getattr(process,b).outputCommands.append('drop *_TTStubsFromPixelDigis_StubRejected_*')
++	    getattr(process,b).outputCommands.append('drop *_TTStubAssociatorFromPixelDigis_StubRejected_*')
+ 	    getattr(process,b).outputCommands.append('drop *_TTStubsFromPixelDigis_StubRejected_*')
 -	    getattr(process,b).outputCommands.append('drop *_TTClustersFromPixelDigis_ClusterInclusive_*')
 -	    getattr(process,b).outputCommands.append('drop *_TTClusterAssociatorFromPixelDigis_ClusterInclusive_*')
-+	    #getattr(process,b).outputCommands.append('drop *_TTStubAssociatorFromPixelDigis_StubRejected_*')
-+	    #getattr(process,b).outputCommands.append('drop *_TTStubsFromPixelDigis_StubRejected_*')
 +	    #getattr(process,b).outputCommands.append('drop *_TTClustersFromPixelDigis_ClusterInclusive_*')
 +	    #getattr(process,b).outputCommands.append('drop *_TTClusterAssociatorFromPixelDigis_ClusterInclusive_*')
  
