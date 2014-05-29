@@ -34,7 +34,7 @@ class PatternMatcher {
 
         chain_ = new TChain("ntupler/tree");
 
-        makeLayerMap();
+        layerMap_ = getLayerMergingMap(nLayers_);
     }
 
     // Destructor
@@ -68,9 +68,6 @@ class PatternMatcher {
     // Main driver
     int run(TString out, TString src, TString bank);
 
-  private:
-    void makeLayerMap();
-
 
   public:
     // Configurations
@@ -98,8 +95,7 @@ class PatternMatcher {
     std::vector<TTPattern> patterns_;
     std::unordered_multimap<addr_type, bit_n_index_pair> ssIdMapFast_;   // key: superstripId, value: pointer to TTPattern
 
-    std::map<id_type, id_type> layerMap_;  // defines layer merging
-    std::map<id_type, std::vector<id_type> > triggerTowerMap_;
+    std::map<unsigned, unsigned> layerMap_;  // defines layer merging
 };
 
 #endif

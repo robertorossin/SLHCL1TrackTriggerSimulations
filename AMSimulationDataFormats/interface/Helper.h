@@ -1,6 +1,7 @@
 #ifndef AMSimulationDataFormats_Helper_h_
 #define AMSimulationDataFormats_Helper_h_
 
+#include <map>
 //#include <cstdint>
 //#include <array>
 #include <stdint.h>  // consistent with DataFormats/DetId/interface/DetId.h
@@ -15,6 +16,7 @@ typedef uint32_t id_type;
 typedef uint64_t addr_type;
 typedef std::tr1::array<addr_type,8>  pattern_type;  // maximum number of superstrips in a pattern set to 8 due to hardware design
 
+#ifndef __GCCXML__
 // Constants
 // Using full definitions now -- need to be reduced eventually
 static const id_type iSubModuleStartBit_ = 0;
@@ -126,6 +128,36 @@ inline addr_type encodeFakeSuperstripId() {
 inline bool isFakeSuperstripId(addr_type id) {
     return id == encodeFakeSuperstripId();
 }
+
+// Make a map to merge layers in barrel and in endcap
+inline std::map<unsigned, unsigned> getLayerMergingMap(int n) {
+    // Hardcoded layer information
+    if (n <= 6) {
+        std::map<unsigned, unsigned> thismap {
+            {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
+            {11,10}, {12,9}, {13,8}, {14,7}, {15,6},
+            {18,10}, {19,9}, {20,8}, {21,7}, {22,6}
+        };
+        return thismap;
+
+    } else if (n == 7) {
+        std::map<unsigned, unsigned> thismap {
+            {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
+            {11,11}, {12,10}, {13,9}, {14,8}, {15,7},
+            {18,11}, {19,10}, {20,9}, {21,8}, {22,7}
+        };
+        return thismap;
+
+    } else {  // >= 8
+        std::map<unsigned, unsigned> thismap {
+            {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
+            {11,11}, {12,12}, {13,10}, {14,9}, {15,8},
+            {18,11}, {19,12}, {20,10}, {21,9}, {22,8}
+        };
+        return thismap;
+    }
+}
+#endif  // if not defined __GCCXML__
 
 }  // namespace slhcl1tt
 
