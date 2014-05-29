@@ -1,7 +1,7 @@
-#ifndef AMSimulation_TTTrack_h_
-#define AMSimulation_TTTrack_h_
+#ifndef AMSimulationDataFormats_TTTrack_h_
+#define AMSimulationDataFormats_TTTrack_h_
 
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Vector.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/Vector.h"
 
 #include <vector>
 

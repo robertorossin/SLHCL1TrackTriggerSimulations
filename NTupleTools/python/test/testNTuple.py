@@ -21,6 +21,9 @@ class TestNTuple(unittest.TestCase):
         self.fvec4 = vector('float')()
         self.fvec5 = vector('float')()
         self.fvec6 = vector('float')()
+        self.ivec1 = vector('int')()
+        self.ivec2 = vector('int')()
+        self.ivec3 = vector('int')()
         self.uvec1 = vector('unsigned int')()
         self.uvec2 = vector('unsigned int')()
         self.uvec3 = vector('unsigned int')()
@@ -248,7 +251,7 @@ class TestNTuple(unittest.TestCase):
         tree = self.ttree
         tree.SetBranchAddress("TTTracks_pt", self.fvec1)
         tree.SetBranchAddress("TTTracks_phi", self.fvec2)
-        tree.SetBranchAddress("TTTracks_isGenuine", self.bvec2)
+        tree.SetBranchAddress("TTTracks_isGenuine", self.bvec1)
         for i in xrange(self.nevents):
             tree.GetEntry(i)
             n = getattr(tree, "TTTracks_size")
@@ -258,7 +261,7 @@ class TestNTuple(unittest.TestCase):
                 self.assertTrue(abs(self.fvec2[j]) < pi+1e-6)
 
                 # test associated tp
-                if self.bvec2[j]:
+                if self.bvec1[j]:
                     simPt1 = getattr(tree, "TTTracks_simPt")[j]
                     simPt2 = getattr(tree, "trkParts_pt")[getattr(tree, "TTTracks_tpId")[j]]
                     self.assertEqual(simPt1, simPt2)
@@ -268,6 +271,27 @@ class TestNTuple(unittest.TestCase):
             with self.assertRaises(IndexError):
                 print self.fvec1[n]
 
+    def test_simPixelDigis(self):
+        tree = self.ttree
+        tree.SetBranchAddress("simPixelDigis_x", self.fvec1)
+        tree.SetBranchAddress("simPixelDigis_y", self.fvec2)
+        tree.SetBranchAddress("simPixelDigis_z", self.fvec3)
+        tree.SetBranchAddress("simPixelDigis_modId", self.uvec1)
+        tree.SetBranchAddress("simPixelDigis_col", self.ivec1)
+        tree.SetBranchAddress("simPixelDigis_row", self.ivec2)
+        for i in xrange(self.nevents):
+            tree.GetEntry(i)
+            n = getattr(tree, "simPixelDigis_size")
+            self.assertTrue(n > 0)
+            for j in xrange(n): 
+                self.assertTrue(abs(self.fvec1[j]) < 110)
+                self.assertTrue(abs(self.fvec2[j]) < 110)
+                self.assertTrue(abs(self.fvec3[j]) < 300)
+                self.assertTrue(self.uvec1[j] < 230000)
+                self.assertTrue(self.ivec1[j] < 32)
+                self.assertTrue(self.ivec2[j] < 1024)
+            with self.assertRaises(IndexError):
+                print self.fvec1[n]
 
     #@unittest.skipIf(process != "particleGun", "Not particle gun")
     def test_particleGun(self):

@@ -13,7 +13,6 @@
 
 
 // TODO: factorize tracks from clusters/stubs?
-// TODO: cluster or chip occupancy?
 
 class NTupleStubs : public edm::EDProducer {
   public:
@@ -27,7 +26,7 @@ class NTupleStubs : public edm::EDProducer {
     virtual void beginRun(const edm::Run&, const edm::EventSetup&);
     virtual void endRun(const edm::Run&, const edm::EventSetup&) {}
 
-    unsigned findById(const std::vector<unsigned>& vec, unsigned id);
+    unsigned findById(const std::vector<unsigned>& vec, unsigned id, bool throwError=true);
     unsigned getModuleLayer(const DetId& id);
     unsigned getModuleLadder(const DetId& id);
     unsigned getModuleModule(const DetId& id);
@@ -38,9 +37,9 @@ class NTupleStubs : public edm::EDProducer {
     const StackedTrackerGeometry * theStackedGeometry;
     const MagneticField* theMagneticField;
 
-    const edm::InputTag inputTagClus_, inputTagStub_, inputTagTrack_, inputTagPixelDigi_;
+    const edm::InputTag inputTagClus_, inputTagStub_, inputTagTrack_, inputTagDigi_;
     const edm::InputTag inputTagClusMCAssoc_, inputTagStubMCAssoc_, inputTagTrackMCAssoc_;
-    const std::string   prefixClus_, prefixStub_, prefixTrack_, prefixPixelDigi_, suffix_;
+    const std::string   prefixClus_, prefixStub_, prefixTrack_, prefixDigi_, suffix_;
 };
 
 #endif

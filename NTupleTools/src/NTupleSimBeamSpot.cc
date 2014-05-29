@@ -37,7 +37,7 @@ void NTupleSimBeamSpot::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
             *v_bz = position.z();
             *v_sigmaZ = beamSpot->sigmaZ();
 
-        } else {
+        } else if (inputTag_.encode() != "") {
             edm::LogError("NTupleSimBeamSpot") << "Cannot get the product: " << inputTag_;
         }
     }

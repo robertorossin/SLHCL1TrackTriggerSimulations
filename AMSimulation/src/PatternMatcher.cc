@@ -16,17 +16,17 @@ int PatternMatcher::readPatterns(TString src) {
         typedef unsigned short unsigned16;
         //typedef unsigned long long unsigned64;
         typedef ULong64_t unsigned64;
-        unsigned hash;
         unsigned frequency;
         std::vector<unsigned64> * superstripIds = 0;
         std::vector<unsigned16> * superstripBits = 0;
 
-        ttree->SetBranchAddress("hash", &hash);
         ttree->SetBranchAddress("frequency", &frequency);
         ttree->SetBranchAddress("superstripIds", &superstripIds);
         ttree->SetBranchAddress("superstripBits", &superstripBits);
 
         Long64_t nentries = ttree->GetEntries();
+        if (nentries > maxPatterns_)
+            nentries = maxPatterns_;
         if (verbose_)  std::cout << Info() << "Reading " << nentries << " patterns." << std::endl;
 
         // _____________________________________________________________________
@@ -42,7 +42,7 @@ int PatternMatcher::readPatterns(TString src) {
                 superstrips.push_back(ss);
             }
 
-            TTPattern patt(hash, superstrips);
+            TTPattern patt(superstrips);
             patterns_.push_back(patt);
         }
 
@@ -95,7 +95,7 @@ int PatternMatcher::loadPatterns() {
 
 // _____________________________________________________________________________
 // Read the input ntuples
-int PatternMatcher::readFile(TString src) {  // currently it's a carbon copy from PatternGenerator
+int PatternMatcher::readFile(TString src) {
     if (src.EndsWith(".root")) {
         if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
         if (chain_->Add(src) )  // 1 if successful, 0 otherwise
@@ -138,7 +138,6 @@ int PatternMatcher::makeRoads() {
     std::vector<float> *                vb_simEta         = 0;
     std::vector<float> *                vb_simPhi         = 0;
     std::vector<int> *                  vb_trkId          = 0;
-    unsigned                            v_event           = 0;
 
     chain_->SetBranchStatus("*", 0);
     chain_->SetBranchStatus("TTStubs_x"        , 1);
@@ -161,7 +160,6 @@ int PatternMatcher::makeRoads() {
     chain_->SetBranchStatus("TTStubs_simEta"   , 1);
     chain_->SetBranchStatus("TTStubs_simPhi"   , 1);
     chain_->SetBranchStatus("TTStubs_trkId"    , 1);
-    chain_->SetBranchStatus("event"            , 1);
 
     chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
     chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
@@ -183,12 +181,11 @@ int PatternMatcher::makeRoads() {
     chain_->SetBranchAddress("TTStubs_simEta"   , &(vb_simEta));
     chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
     chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
-    chain_->SetBranchAddress("event"            , &(v_event));
 
+    allRoads_.clear();
 
     // _________________________________________________________________________
     // Loop over all events
-    allRoads_.clear();
     Long64_t nPassed = 0;
     for (Long64_t ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
@@ -275,10 +272,9 @@ int PatternMatcher::makeRoads() {
                 int nFakeSuperstrips = std::count(pattId.begin(), pattId.end(), encodeFakeSuperstripId());
 
                 if ((int) it.second.size() >= (nLayers_ - nFakeSuperstrips - po.nMisses)) {  // if number of hits more than the requirement
-                    unsigned hash = hashThisEvent(v_event, vb_simPhi->back());  // FIXME: will switch to use generator seed instead
                     const std::vector<TTHit>& hits = it.second;
 
-                    TTRoad road(hash, pattId, hits);
+                    TTRoad road(pattId, hits);
                     roadsInThisEvent.push_back(road);
                 }
             }
@@ -311,7 +307,6 @@ int PatternMatcher::writeRoads(TString out) {
 
     //typedef unsigned long long unsigned64;
     typedef ULong64_t unsigned64;
-    std::auto_ptr<std::vector<unsigned> >                 vr_hash            (new std::vector<unsigned>());
     std::auto_ptr<std::vector<std::vector<unsigned64> > > vr_patternIds      (new std::vector<std::vector<unsigned64> >());
     std::auto_ptr<std::vector<std::vector<float> > >      vr_hitXs           (new std::vector<std::vector<float> >());
     std::auto_ptr<std::vector<std::vector<float> > >      vr_hitYs           (new std::vector<std::vector<float> >());
@@ -323,7 +318,6 @@ int PatternMatcher::writeRoads(TString out) {
     std::auto_ptr<std::vector<std::vector<float> > >      vr_hitPts          (new std::vector<std::vector<float> >());
     std::auto_ptr<std::vector<std::vector<unsigned64> > > vr_hitSuperstripIds(new std::vector<std::vector<unsigned64> >());
 
-    ttree->Branch(prefixRoad_ + "hash"             + suffix_, &(*vr_hash));
     ttree->Branch(prefixRoad_ + "patternIds"       + suffix_, &(*vr_patternIds));
     ttree->Branch(prefixRoad_ + "hitXs"            + suffix_, &(*vr_hitXs));
     ttree->Branch(prefixRoad_ + "hitYs"            + suffix_, &(*vr_hitYs));
@@ -339,7 +333,6 @@ int PatternMatcher::writeRoads(TString out) {
     // Loop over all roads
     for (unsigned ievt=0; ievt<nentries; ++ievt) {
         if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7u", ievt) << std::endl;
-        vr_hash            ->clear();
         vr_patternIds      ->clear();
         vr_hitXs           ->clear();
         vr_hitYs           ->clear();
@@ -369,7 +362,6 @@ int PatternMatcher::writeRoads(TString out) {
             std::vector<unsigned64> hitSuperstripIds;
 
             const TTRoad& road = roadsInThisEvent.at(i);
-            unsigned                  hash   = road.hash();
             const pattern_type&       pattId = road.patternId();
             const std::vector<TTHit>& hits   = road.getHits();
 
@@ -392,7 +384,6 @@ int PatternMatcher::writeRoads(TString out) {
                 hitSuperstripIds.push_back(hit.superstripId());
             }
 
-            vr_hash            ->push_back(hash);
             vr_patternIds      ->push_back(patternIds);
             vr_hitXs           ->push_back(hitXs);
             vr_hitYs           ->push_back(hitYs);
@@ -406,7 +397,7 @@ int PatternMatcher::writeRoads(TString out) {
         }
 
         ttree->Fill();
-        assert(vr_hash->size() == allRoads_.at(ievt).size());
+        assert(vr_hitXs->size() == allRoads_.at(ievt).size());
     }
     assert(ttree->GetEntries() == (int) allRoads_.size());
 
@@ -416,37 +407,6 @@ int PatternMatcher::writeRoads(TString out) {
     return 0;
 }
 
-
-// _____________________________________________________________________________
-// Private functions
-
-// Make a map to merge layers in barrel and in endcap
-void PatternMatcher::makeLayerMap() {
-    if (nLayers_ <= 5) {
-        std::cout << Warning() << "Does not really support nLayers = " << nLayers_ << ". Setting for nLayers = 6 is used." << std::endl;
-    }
-
-    // Hardcoded layer information
-    if (nLayers_ <= 6) {
-        layerMap_ = std::map<id_type, id_type> {
-            {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
-            {11,10}, {12,9}, {13,8}, {14,7}, {15,6},
-            {18,10}, {19,9}, {20,8}, {21,7}, {22,6}
-        };
-    } else if (nLayers_ == 7) {
-        layerMap_ = std::map<id_type, id_type> {
-            {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
-            {11,11}, {12,10}, {13,9}, {14,8}, {15,7},
-            {18,11}, {19,10}, {20,9}, {21,8}, {22,7}
-        };
-    } else {  // >= 8
-        layerMap_ = std::map<id_type, id_type> {
-            {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
-            {11,11}, {12,12}, {13,10}, {14,9}, {15,8},
-            {18,11}, {19,12}, {20,10}, {21,9}, {22,8}
-        };
-    }
-}
 
 // _____________________________________________________________________________
 // Main driver
