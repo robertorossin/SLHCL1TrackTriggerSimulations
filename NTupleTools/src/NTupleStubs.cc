@@ -537,9 +537,11 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
     /// SimPixelDigis
     edm::Handle<edm::DetSetVector<PixelDigi> > pixelDigis;
-    iEvent.getByLabel(inputTagDigi_, pixelDigis);
+    if (inputTagDigi_.encode() != "")
+        iEvent.getByLabel(inputTagDigi_, pixelDigis);
     edm::Handle<edm::DetSetVector<PixelDigiSimLink> >  pixelDigiSimLinks;
-    iEvent.getByLabel(inputTagDigi_, pixelDigiSimLinks);
+    if (inputTagDigi_.encode() != "")
+        iEvent.getByLabel(inputTagDigi_, pixelDigiSimLinks);
 
 
     //__________________________________________________________________________
@@ -603,9 +605,9 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 //float detWidthAtHalfLength = bounds.widthAtHalfLength();
 
                 /// digis a.k.a. hits
-                const std::vector<Ref_PixelDigi_>& hits = it->getHits();
                 const std::vector<int>& hitCols = it->getCols();
                 const std::vector<int>& hitRows = it->getRows();
+                unsigned nhits = hitCols.size();
                 std::vector<int> hitADCs;  // should be unsigned, but use int for uniformity
                 std::vector<int> hitChans;
                 std::vector<int> hitTrkIds;
@@ -614,9 +616,9 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 std::vector<float> hitXs;
                 std::vector<float> hitYs;
                 std::vector<float> hitZs;
-                for (unsigned ii = 0; ii < hits.size(); ++ii) {
-                    hitADCs.push_back(hits.at(ii)->adc());
-                    hitChans.push_back(hits.at(ii)->channel() );
+                for (unsigned ii = 0; ii < nhits; ++ii) {
+                    hitADCs.push_back(0);         // to be updated when digis are found
+                    hitChans.push_back(0);        // to be updated when digis are found
                     hitTrkIds.push_back(-1);      // to be updated when sim links are found
                     hitEvtIds.push_back(999999);  // to be updated when sim links are found
                     hitFracs.push_back(0.);       // to be updated when sim links are found
@@ -669,19 +671,28 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vc_geoId->push_back(geoId.rawId());
                 vc_stack->push_back(stack);
                 vc_width->push_back(width);                     // sviret/HL_LHC: CLUS_nstrips
-                vc_nhits->push_back(hits.size());
+                vc_nhits->push_back(nhits);
                 vc_hitCols->push_back(hitCols);
                 vc_hitRows->push_back(hitRows);
-                vc_hitADCs->push_back(hitADCs);
-                vc_hitChans->push_back(hitChans);
                 vc_hitXs->push_back(hitXs);
                 vc_hitYs->push_back(hitYs);
                 vc_hitZs->push_back(hitZs);
 
-                /// Sim links for the hits
+                /// Digis
+                if (pixelDigis.isValid()) {
+                    const std::vector<Ref_PixelDigi_>& hits = it->getHits();
+                    for (unsigned ii = 0; ii < nhits; ++ii) {
+                        hitADCs.at(ii) = hits.at(ii)->adc();
+                        hitChans.at(ii) = hits.at(ii)->channel();
+                    }
+                }
+                vc_hitADCs->push_back(hitADCs);
+                vc_hitChans->push_back(hitChans);
+
+                /// Sim links for the digis
                 if (pixelDigiSimLinks.isValid()) {
                     const edm::DetSet<PixelDigiSimLink>& simlink = (*pixelDigiSimLinks)[geoId];
-                    for (unsigned ii = 0; ii < hits.size(); ++ii) {
+                    for (unsigned ii = 0; ii < nhits; ++ii) {
                         for (edm::DetSet<PixelDigiSimLink>::const_iterator itsim = simlink.data.begin(); itsim != simlink.data.end(); ++itsim) {
                             if (hitChans.at(ii) == (int) itsim->channel()) {
                                 hitTrkIds.at(ii) = itsim->SimTrackId();
@@ -800,9 +811,9 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 const edm::Ref<edmNew::DetSetVector<TTCluster<Ref_PixelDigi_> >, TTCluster<Ref_PixelDigi_> >& clusterRef = it->getClusterRef(0);
                 //const DetId testgeoId0 = theStackedGeometry->idToDet(clusterRef->getDetId(), clusterRef->getStackMember())->geographicalId();
                 //assert(testgeoId0 == geoId0);
-                const std::vector<Ref_PixelDigi_>& hits = clusterRef->getHits();
                 const std::vector<int>& hitCols = clusterRef->getCols();
                 const std::vector<int>& hitRows = clusterRef->getRows();
+                unsigned nhits = hitCols.size();
                 std::vector<int> hitADCs;  // should be unsigned, but use int for uniformity
                 std::vector<int> hitChans;
                 std::vector<int> hitTrkIds;
@@ -811,9 +822,9 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 std::vector<float> hitXs;
                 std::vector<float> hitYs;
                 std::vector<float> hitZs;
-                for (unsigned ii = 0; ii < hits.size(); ++ii) {
-                    hitADCs.push_back(hits.at(ii)->adc());
-                    hitChans.push_back(hits.at(ii)->channel() );
+                for (unsigned ii = 0; ii < nhits; ++ii) {
+                    hitADCs.push_back(0);         // to be updated when digis are found
+                    hitChans.push_back(0);        // to be updated when digis are found
                     hitTrkIds.push_back(-1);      // to be updated when sim links are found
                     hitEvtIds.push_back(999999);  // to be updated when sim links are found
                     hitFracs.push_back(0.);       // to be updated when sim links are found
@@ -870,11 +881,9 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vb_geoId1->push_back(geoId1.rawId());
                 vb_clusId0->push_back(clusId0);                 // sviret/HL_LHC: STUB_clust1
                 vb_clusId1->push_back(clusId1);                 // sviret/HL_LHC: STUB_clust2
-                vb_nhits->push_back(hits.size());
+                vb_nhits->push_back(nhits);
                 vb_hitCols->push_back(hitCols);                 // sviret/HL_LHC: STUB_pix
                 vb_hitRows->push_back(hitRows);
-                vb_hitADCs->push_back(hitADCs);
-                vb_hitChans->push_back(hitChans);
                 vb_hitXs->push_back(hitXs);
                 vb_hitYs->push_back(hitYs);
                 vb_hitZs->push_back(hitZs);
@@ -886,10 +895,21 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vb_separation->push_back(separation);
                 vb_detWindow->push_back(theStackedGeometry->getDetUnitWindow(detId));
 
-                /// Sim links for the hits
+                /// Digis
+                if (pixelDigis.isValid()) {
+                    const std::vector<Ref_PixelDigi_>& hits = clusterRef->getHits();
+                    for (unsigned ii = 0; ii < nhits; ++ii) {
+                        hitADCs.at(ii) = hits.at(ii)->adc();
+                        hitChans.at(ii) = hits.at(ii)->channel();
+                    }
+                }
+                vb_hitADCs->push_back(hitADCs);
+                vb_hitChans->push_back(hitChans);
+
+                /// Sim links for the digis
                 if (pixelDigiSimLinks.isValid()) {
                     const edm::DetSet<PixelDigiSimLink>& simlink = (*pixelDigiSimLinks)[geoId0];
-                    for (unsigned ii = 0; ii < hits.size(); ++ii) {
+                    for (unsigned ii = 0; ii < nhits; ++ii) {
                         for (edm::DetSet<PixelDigiSimLink>::const_iterator itsim = simlink.data.begin(); itsim != simlink.data.end(); ++itsim) {
                             if (hitChans.at(ii) == (int) itsim->channel()) {
                                 hitTrkIds.at(ii) = itsim->SimTrackId();
@@ -1091,7 +1111,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
         }
         *vd_size = vd_x->size();
 
-    } else {
+    } else if (inputTagDigi_.encode() != "") {
         edm::LogError("NTupleSimPixelDigis") << "Cannot get the product: " << inputTagDigi_;
     }
 
