@@ -95,7 +95,7 @@ int PatternMatcher::loadPatterns() {
 
 // _____________________________________________________________________________
 // Read the input ntuples
-int PatternMatcher::readFile(TString src) {  // currently it's a carbon copy from PatternGenerator
+int PatternMatcher::readFile(TString src) {
     if (src.EndsWith(".root")) {
         if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
         if (chain_->Add(src) )  // 1 if successful, 0 otherwise
@@ -138,7 +138,6 @@ int PatternMatcher::makeRoads() {
     std::vector<float> *                vb_simEta         = 0;
     std::vector<float> *                vb_simPhi         = 0;
     std::vector<int> *                  vb_trkId          = 0;
-    unsigned                            v_event           = 0;
 
     chain_->SetBranchStatus("*", 0);
     chain_->SetBranchStatus("TTStubs_x"        , 1);
@@ -161,7 +160,6 @@ int PatternMatcher::makeRoads() {
     chain_->SetBranchStatus("TTStubs_simEta"   , 1);
     chain_->SetBranchStatus("TTStubs_simPhi"   , 1);
     chain_->SetBranchStatus("TTStubs_trkId"    , 1);
-    chain_->SetBranchStatus("event"            , 1);
 
     chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
     chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
@@ -183,7 +181,6 @@ int PatternMatcher::makeRoads() {
     chain_->SetBranchAddress("TTStubs_simEta"   , &(vb_simEta));
     chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
     chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
-    chain_->SetBranchAddress("event"            , &(v_event));
 
 
     // _________________________________________________________________________

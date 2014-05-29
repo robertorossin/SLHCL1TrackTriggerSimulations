@@ -1,3 +1,4 @@
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/StubCleaner.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternGenerator.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternMatcher.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitter.h"
@@ -34,6 +35,7 @@ int main(int argc, char **argv) {
     generic.add_options()
         ("version"             , "Print version")
         ("help,h"              , "Produce help message")
+        ("cleanStubs,C"        , "Clean stubs and pick one unique stub per layer")
         ("generateBank,G"      , "Generate associative memory pattern bank")
         ("mergeBank,M"         , "Merge associative memory pattern bank")
         ("analyzeBank,A"       , "Analyze associative memory pattern bank")
@@ -82,7 +84,7 @@ int main(int argc, char **argv) {
         ("bank_maxPhi"             , po::value<float>(&bankOption.maxPhi)->default_value( M_PI), "Specify max phi (from -pi to pi)")
         ("bank_nLayers"            , po::value<int>(&bankOption.nLayers)->default_value(6), "Specify # of layers")
         ("bank_nSubLadders"        , po::value<int>(&bankOption.nSubLadders)->default_value(32), "Specify # of subladders (a.k.a. segments)")
-        ("bank_nSubModules"        , po::value<int>(&bankOption.nSubModules)->default_value(1024), "Specify # of submodules (a.k.a. superstrips)")
+        ("bank_nSubModules"        , po::value<int>(&bankOption.nSubModules)->default_value(512), "Specify # of submodules (a.k.a. superstrips)")
         ("bank_nMisses"            , po::value<int>(&bankOption.nMisses)->default_value(0), "Specify # of allowed misses")
         ("bank_nFakeSuperstrips"   , po::value<int>(&bankOption.nFakeSuperstrips)->default_value(0), "Specify # of fake superstrips")
         ("bank_nDCBits"            , po::value<int>(&bankOption.nDCBits)->default_value(0), "Specify # of DC bits")
@@ -145,13 +147,14 @@ int main(int argc, char **argv) {
     fitOption.nLayers = bankOption.nLayers;
 
     // At least one option needs to be called
-    if (!(vm.count("generateBank")       ||
+    if (!(vm.count("cleanStubs")         ||
+          vm.count("generateBank")       ||
           vm.count("mergeBank")          ||
           vm.count("analyzeBank")        ||
           vm.count("patternRecognition") ||
           vm.count("trackFitting")       ||
           vm.count("write")              ) ) {
-        std::cout << "Must select one of '-G', '-M', '-A', '-R', '-F' or 'W'" << std::endl;
+        std::cout << "Must select one of '-C', '-G', '-M', '-A', '-R', '-F' or 'W'" << std::endl;
         std::cout << visible << std::endl;
         return 1;
     }
@@ -169,7 +172,7 @@ int main(int argc, char **argv) {
     bankOption.nSubModules      = getPowerOfTwo(bankOption.nSubModules);
     bankOption.nLayers          = std::min(std::max(3, bankOption.nLayers), 8);
     bankOption.nSubLadders      = std::min(std::max(1, bankOption.nSubLadders), 32);
-    bankOption.nSubModules      = std::min(std::max(1, bankOption.nSubModules), 1024);
+    bankOption.nSubModules      = std::min(std::max(1, bankOption.nSubModules), 512);
     bankOption.nMisses          = std::min(std::max(0, bankOption.nMisses), 3);
     bankOption.nFakeSuperstrips = std::min(std::max(0, bankOption.nFakeSuperstrips), 3);
     bankOption.nDCBits          = std::min(std::max(0, bankOption.nDCBits), 4);
@@ -191,11 +194,28 @@ int main(int argc, char **argv) {
 
     // _________________________________________________________________________
     // Calling main functions
-    if (vm.count("generateBank")) {
+    if (vm.count("cleanStubs")) {
         std::cout << Color("magenta") << "Parsed pattern bank options:" << EndColor() << std::endl;
         std::cout << bankOption << std::endl;
+        std::cout << Color("magenta") << "Start stub cleaning..." << EndColor() << std::endl;
 
-        std::cout << Color("magenta") << "Start generating pattern bank..." << EndColor() << std::endl;
+        StubCleaner cleaner(bankOption);
+        cleaner.setFilter(!nofilter);
+        cleaner.setNEvents(maxEvents);
+        cleaner.setVerbosity(verbose);
+        int exitcode = cleaner.run(output, input);
+        if (exitcode) {
+            std::cerr << "An error occurred during stub cleaning. Exiting." << std::endl;
+            return exitcode;
+        }
+
+        std::cout << "Stub cleaning " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
+
+
+    } else if (vm.count("generateBank")) {
+        std::cout << Color("magenta") << "Parsed pattern bank options:" << EndColor() << std::endl;
+        std::cout << bankOption << std::endl;
+        std::cout << Color("magenta") << "Start pattern bank generation..." << EndColor() << std::endl;
 
         PatternGenerator generator(bankOption);
         generator.setFilter(!nofilter);
@@ -219,8 +239,7 @@ int main(int argc, char **argv) {
     } else if (vm.count("patternRecognition")) {
         std::cout << Color("magenta") << "Parsed pattern bank options:" << EndColor() << std::endl;
         std::cout << bankOption << std::endl;
-
-        std::cout << Color("magenta") << "Start running pattern recognition..." << EndColor() << std::endl;
+        std::cout << Color("magenta") << "Start pattern recognition..." << EndColor() << std::endl;
 
         PatternMatcher matcher(bankOption);
         matcher.setNEvents(maxEvents);
@@ -239,8 +258,7 @@ int main(int argc, char **argv) {
     } else if (vm.count("trackFitting")) {
         std::cout << Color("magenta") << "Parsed track fitting options:" << EndColor() << std::endl;
         std::cout << fitOption << std::endl;
-
-        std::cout << Color("magenta") << "Start running track fitting..." << EndColor() << std::endl;
+        std::cout << Color("magenta") << "Start track fitting..." << EndColor() << std::endl;
 
         TrackFitter fitter(fitOption);
         fitter.setNEvents(maxEvents);
@@ -255,7 +273,6 @@ int main(int argc, char **argv) {
         std::cout << "Track fitting " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
 
     } else if (vm.count("write")) {
-
         std::cout << Color("magenta") << "Start writing full ntuple..." << EndColor() << std::endl;
 
         NTupleMaker writer;

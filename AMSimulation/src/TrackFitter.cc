@@ -3,7 +3,7 @@
 
 // _____________________________________________________________________________
 // Read the input ntuples
-int TrackFitter::readFile(TString src) {  // currently it's a carbon copy from PatternGenerator
+int TrackFitter::readFile(TString src) {
     if (src.EndsWith(".root")) {
         if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
         if (chain_->Add(src) )  // 1 if successful, 0 otherwise
