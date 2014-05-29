@@ -1,7 +1,7 @@
 #ifndef AMSimulation_PatternGenerator_h_
 #define AMSimulation_PatternGenerator_h_
 
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TTPattern.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTPattern.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HelperMath.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"

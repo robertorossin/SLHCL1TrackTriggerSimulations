@@ -1,5 +1,5 @@
-#ifndef AMSimulation_Vector_h_
-#define AMSimulation_Vector_h_
+#ifndef AMSimulationDataFormats_Vector_h_
+#define AMSimulationDataFormats_Vector_h_
 
 
 // copied from DataFormats/Math/interface/Point3D.h to avoid dependency for now

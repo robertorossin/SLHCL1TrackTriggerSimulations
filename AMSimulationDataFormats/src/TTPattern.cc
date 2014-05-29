@@ -1,4 +1,4 @@
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TTPattern.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTPattern.h"
 #include <iostream>
 
 

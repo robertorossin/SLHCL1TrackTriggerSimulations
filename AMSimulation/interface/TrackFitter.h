@@ -1,8 +1,8 @@
 #ifndef AMSimulation_TrackFitter_h_
 #define AMSimulation_TrackFitter_h_
 
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TTPattern.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TTTrack.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTPattern.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTTrack.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgo.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"

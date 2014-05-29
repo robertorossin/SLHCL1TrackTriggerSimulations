@@ -16,12 +16,10 @@ int PatternMatcher::readPatterns(TString src) {
         typedef unsigned short unsigned16;
         //typedef unsigned long long unsigned64;
         typedef ULong64_t unsigned64;
-        unsigned hash;
         unsigned frequency;
         std::vector<unsigned64> * superstripIds = 0;
         std::vector<unsigned16> * superstripBits = 0;
 
-        ttree->SetBranchAddress("hash", &hash);
         ttree->SetBranchAddress("frequency", &frequency);
         ttree->SetBranchAddress("superstripIds", &superstripIds);
         ttree->SetBranchAddress("superstripBits", &superstripBits);
@@ -44,7 +42,7 @@ int PatternMatcher::readPatterns(TString src) {
                 superstrips.push_back(ss);
             }
 
-            TTPattern patt(hash, superstrips);
+            TTPattern patt(superstrips);
             patterns_.push_back(patt);
         }
 
@@ -277,10 +275,9 @@ int PatternMatcher::makeRoads() {
                 int nFakeSuperstrips = std::count(pattId.begin(), pattId.end(), encodeFakeSuperstripId());
 
                 if ((int) it.second.size() >= (nLayers_ - nFakeSuperstrips - po.nMisses)) {  // if number of hits more than the requirement
-                    unsigned hash = hashThisEvent(v_event, vb_simPhi->back());  // FIXME: will switch to use generator seed instead
                     const std::vector<TTHit>& hits = it.second;
 
-                    TTRoad road(hash, pattId, hits);
+                    TTRoad road(pattId, hits);
                     roadsInThisEvent.push_back(road);
                 }
             }
@@ -313,7 +310,6 @@ int PatternMatcher::writeRoads(TString out) {
 
     //typedef unsigned long long unsigned64;
     typedef ULong64_t unsigned64;
-    std::auto_ptr<std::vector<unsigned> >                 vr_hash            (new std::vector<unsigned>());
     std::auto_ptr<std::vector<std::vector<unsigned64> > > vr_patternIds      (new std::vector<std::vector<unsigned64> >());
     std::auto_ptr<std::vector<std::vector<float> > >      vr_hitXs           (new std::vector<std::vector<float> >());
     std::auto_ptr<std::vector<std::vector<float> > >      vr_hitYs           (new std::vector<std::vector<float> >());
@@ -325,7 +321,6 @@ int PatternMatcher::writeRoads(TString out) {
     std::auto_ptr<std::vector<std::vector<float> > >      vr_hitPts          (new std::vector<std::vector<float> >());
     std::auto_ptr<std::vector<std::vector<unsigned64> > > vr_hitSuperstripIds(new std::vector<std::vector<unsigned64> >());
 
-    ttree->Branch(prefixRoad_ + "hash"             + suffix_, &(*vr_hash));
     ttree->Branch(prefixRoad_ + "patternIds"       + suffix_, &(*vr_patternIds));
     ttree->Branch(prefixRoad_ + "hitXs"            + suffix_, &(*vr_hitXs));
     ttree->Branch(prefixRoad_ + "hitYs"            + suffix_, &(*vr_hitYs));
@@ -341,7 +336,6 @@ int PatternMatcher::writeRoads(TString out) {
     // Loop over all roads
     for (unsigned ievt=0; ievt<nentries; ++ievt) {
         if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7u", ievt) << std::endl;
-        vr_hash            ->clear();
         vr_patternIds      ->clear();
         vr_hitXs           ->clear();
         vr_hitYs           ->clear();
@@ -371,7 +365,6 @@ int PatternMatcher::writeRoads(TString out) {
             std::vector<unsigned64> hitSuperstripIds;
 
             const TTRoad& road = roadsInThisEvent.at(i);
-            unsigned                  hash   = road.hash();
             const pattern_type&       pattId = road.patternId();
             const std::vector<TTHit>& hits   = road.getHits();
 
@@ -394,7 +387,6 @@ int PatternMatcher::writeRoads(TString out) {
                 hitSuperstripIds.push_back(hit.superstripId());
             }
 
-            vr_hash            ->push_back(hash);
             vr_patternIds      ->push_back(patternIds);
             vr_hitXs           ->push_back(hitXs);
             vr_hitYs           ->push_back(hitYs);
@@ -408,7 +400,7 @@ int PatternMatcher::writeRoads(TString out) {
         }
 
         ttree->Fill();
-        assert(vr_hash->size() == allRoads_.at(ievt).size());
+        assert(vr_hitXs->size() == allRoads_.at(ievt).size());
     }
     assert(ttree->GetEntries() == (int) allRoads_.size());
 

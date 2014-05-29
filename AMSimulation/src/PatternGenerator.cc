@@ -758,8 +758,7 @@ int PatternGenerator::makePatterns() {
             continue;
 
         // Create a pattern
-        unsigned hash = hashThisEvent(v_event, vb_simPhi->back());  // FIXME: will switch to use generator seed instead
-        TTPattern patt(hash, goodAndFakeSuperstrips);
+        TTPattern patt(goodAndFakeSuperstrips);
         allPatterns_.push_back(patt);  // save the pattern
 
         ++nPassed;
@@ -808,12 +807,10 @@ int PatternGenerator::writePatterns(TString out) {
     typedef unsigned short unsigned16;
     //typedef unsigned long long unsigned64;
     typedef ULong64_t unsigned64;
-    std::auto_ptr<unsigned>                   hash            (new unsigned(0));
     std::auto_ptr<unsigned>                   frequency       (new unsigned(0));
     std::auto_ptr<std::vector<unsigned64> >   superstripIds   (new std::vector<unsigned64>());
     std::auto_ptr<std::vector<unsigned16> >   superstripBits  (new std::vector<unsigned16>());
 
-    ttree->Branch("hash"            , &(*hash));
     ttree->Branch("frequency"       , &(*frequency));
     ttree->Branch("superstripIds"   , &(*superstripIds));
     ttree->Branch("superstripBits"  , &(*superstripBits));
@@ -824,7 +821,6 @@ int PatternGenerator::writePatterns(TString out) {
         if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7i", ievt) << std::endl;
 
         const TTPattern& patt = goodPatterns_.at(ievt);
-        *hash = patt.hash();
         *frequency = patt.frequency();
 
         superstripIds->clear();

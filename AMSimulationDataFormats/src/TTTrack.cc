@@ -1,4 +1,4 @@
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TTTrack.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTTrack.h"
 
 
 namespace slhcl1tt {

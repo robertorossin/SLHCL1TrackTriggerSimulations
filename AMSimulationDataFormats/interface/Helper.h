@@ -1,5 +1,5 @@
-#ifndef AMSimulation_HelperPattern_h_
-#define AMSimulation_HelperPattern_h_
+#ifndef AMSimulationDataFormats_Helper_h_
+#define AMSimulationDataFormats_Helper_h_
 
 //#include <cstdint>
 //#include <array>
@@ -28,7 +28,7 @@ static const id_type iSubModuleMask_     = 0x3FF; // 0-1023
 static const id_type iSubLadderMask_     = 0x1F;  // 0-31
 static const id_type iModuleMask_        = 0x7F;  // 0-127
 static const id_type iLadderMask_        = 0x7F;  // 0-127
-static const id_type iLayerMask_         = 0x1F;  // 0-15
+static const id_type iLayerMask_         = 0x1F;  // 0-31
 
 
 // Retrieve layer, ladder, module from a moduleId

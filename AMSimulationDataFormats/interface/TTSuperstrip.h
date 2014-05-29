@@ -1,7 +1,7 @@
-#ifndef AMSimulation_TTSuperstrip_h_
-#define AMSimulation_TTSuperstrip_h_
+#ifndef AMSimulationDataFormats_TTSuperstrip_h_
+#define AMSimulationDataFormats_TTSuperstrip_h_
 
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HelperPattern.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/Helper.h"
 
 #include <cmath>
 #include <iosfwd>

@@ -28,7 +28,6 @@ int TrackFitter::makeTracks() {
     // For reading
     //typedef unsigned long long unsigned64;
     typedef ULong64_t unsigned64;
-    std::vector<unsigned> *                 vr_hash             = 0;
     std::vector<std::vector<unsigned64> > * vr_patternIds       = 0;
     std::vector<std::vector<float> > *      vr_hitXs            = 0;
     std::vector<std::vector<float> > *      vr_hitYs            = 0;
@@ -40,9 +39,8 @@ int TrackFitter::makeTracks() {
     std::vector<std::vector<float> > *      vr_hitPts           = 0;
     std::vector<std::vector<unsigned64> > * vr_hitSuperstripIds = 0;
 
-    chain_->SetBranchStatus("*", 1);
+    //chain_->SetBranchStatus("*", 1);
 
-    chain_->SetBranchAddress(prefixRoad_ + "hash"             + suffix_, &(vr_hash));
     chain_->SetBranchAddress(prefixRoad_ + "patternIds"       + suffix_, &(vr_patternIds));
     chain_->SetBranchAddress(prefixRoad_ + "hitXs"            + suffix_, &(vr_hitXs));
     chain_->SetBranchAddress(prefixRoad_ + "hitYs"            + suffix_, &(vr_hitYs));
@@ -76,7 +74,6 @@ int TrackFitter::makeTracks() {
 
         std::vector<TTTrack> tracksInThisEvent;
         for (unsigned i=0; i<nroads; ++i) {
-            unsigned hash = vr_hash->at(i);
             pattern_type patternId;
 
             std::vector<addr_type> addresses;
@@ -118,7 +115,7 @@ int TrackFitter::makeTracks() {
                 hitsViewUV.push_back(hitViewUV);
             }
 
-            TTRoad road(hash, patternId, hits);
+            TTRoad road(patternId, hits);
 
             // Fitting starts here
             RetinaTrackFitterAlgo<ZR> retinaZR(po.pqType, po.pbins, po.qbins, po.pmin, po.qmin, po.pmax, po.qmax, po.sigma, po.minWeight);
