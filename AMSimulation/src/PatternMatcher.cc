@@ -182,10 +182,10 @@ int PatternMatcher::makeRoads() {
     chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
     chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
 
+    allRoads_.clear();
 
     // _________________________________________________________________________
     // Loop over all events
-    allRoads_.clear();
     Long64_t nPassed = 0;
     for (Long64_t ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain

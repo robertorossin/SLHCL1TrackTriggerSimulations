@@ -145,7 +145,6 @@ int StubCleaner::cleanStubs(TString out) {
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " [# passed: " << nPassed << "]" << std::endl;
 
         if (!nstubs) {  // skip if no stub
-            ++nPassed;
             ttree->Fill();
             continue;
         }
@@ -459,8 +458,12 @@ int StubCleaner::cleanStubs(TString out) {
 
         if (!require && filter_)
             keep = false;
-        if (!keep)  //  do not keep any stub
-            ngoodstubs = 0;
+
+        if (keep) {
+            ++nPassed;
+        } else {
+            ngoodstubs = 0;  //  do not keep any stub
+        }
 
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " keep? " << keep << std::endl;
 
@@ -485,12 +488,11 @@ int StubCleaner::cleanStubs(TString out) {
         vb_simPhi   ->resize(ngoodstubs);
         vb_trkId    ->resize(ngoodstubs);
 
-        ++nPassed;
         ttree->Fill();
     }
     if (verbose_)  std::cout << Info() << "Processed " << nEvents_ << " events, kept " << nPassed << " events." << std::endl;
 
-    assert(ttree->GetEntries() == nPassed);
+    assert(ttree->GetEntries() == nEvents_);
     tfile->Write();
     delete ttf_event;
     delete ttree;

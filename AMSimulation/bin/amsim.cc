@@ -64,9 +64,11 @@ int main(int argc, char **argv) {
         ("maxHits"      , po::value<int>(&maxHits)->default_value(-1), "Specfiy max number of hits per road")
         ("maxTracks"    , po::value<int>(&maxTracks)->default_value(-1), "Specfiy max number of tracks per event")
 
+        // Only for stub filtering
+        ("no-filter"    , po::bool_switch(&nofilter)->default_value(false), "Do not apply filtering")
+
         // Only for bank generation
         ("layout,L"     , po::value<std::string>(&layout), "Specify trigger tower layout file")
-        ("no-filter"    , po::bool_switch(&nofilter)->default_value(false), "Do not apply filtering")
 
         // Only for pattern matching
         ("bank,B"       , po::value<std::string>(&bankfile), "Specify pattern bank file")
@@ -218,7 +220,6 @@ int main(int argc, char **argv) {
         std::cout << Color("magenta") << "Start pattern bank generation..." << EndColor() << std::endl;
 
         PatternGenerator generator(bankOption);
-        generator.setFilter(!nofilter);
         generator.setNEvents(maxEvents);
         generator.setMaxPatterns(maxPatterns);
         generator.setVerbosity(verbose);

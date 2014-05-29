@@ -10,10 +10,10 @@ PYTHONTEST=${CMSSW_BASE}/src/SLHCL1TrackTriggerSimulations/AMSimulation/python/t
 
 #(amsim --help) || die 'Failure getting help message' $?
 
-(amsim -C -i test_ntuple.txt -o stubs.root -L trigger_sector_map.csv -n 100 --no-filter --bank_nDCBits 0) || die 'Failure during stub cleaning' $?
+(amsim -C -i test_ntuple.txt -o stubs.root -n 100 --no-filter --bank_nDCBits 0) || die 'Failure during stub cleaning' $?
 (python ${PYTHONTEST}/testStubCleaning.py ${LOCAL_TOP_DIR}/stubs.root) || die 'Failure using tesStubCleaning.py' $?
 
-(amsim -G -i test_ntuple.txt -o patternBank.root -L trigger_sector_map.csv -n 100 --no-filter --bank_nDCBits 0) || die 'Failure during pattern bank generation' $?
+(amsim -G -i stubs.root -o patternBank.root -L trigger_sector_map.csv -n 100 --bank_nDCBits 0) || die 'Failure during pattern bank generation' $?
 (python ${PYTHONTEST}/testPatternBankGeneration.py ${LOCAL_TOP_DIR}/patternBank.root) || die 'Failure using patternBankGeneration.py' $?
 
 (amsim -R -i test_ntuple.txt -o roads.root -B patternBank.root -n 100 --bank_nDCBits 0) || die 'Failure during pattern recognition' $?

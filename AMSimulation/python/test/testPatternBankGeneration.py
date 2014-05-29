@@ -15,44 +15,33 @@ class TestAMSim(unittest.TestCase):
         self.tfile = TFile.Open(self.infile)
         self.ttree = self.tfile.Get("patternBank")
         self.nevents = self.ttree.GetEntries()
-        self.tfile_tmp = TFile.Open(self.infile.replace(".root","_tmp.root"))
-        self.ttree_tmp = self.tfile_tmp.Get("ntupler/tree")
-        self.nevents_tmp = self.ttree_tmp.GetEntries()
 
     def tearDown(self):
         pass
 
     def test_nevents(self):
-        self.assertEqual(self.nevents, 99)  # 1 event has zero stub
-        self.assertEqual(self.nevents_tmp, 100)
+        self.assertEqual(self.nevents, 61)  # 1 event has zero stub
 
-    def test_nstubs(self):
-        tree = self.ttree_tmp
+    def test_superstripIds(self):
+        tree = self.ttree
         for ievt in tree:
-            # Check for layer uniqueness
-            layers = []
-            for modId in ievt.TTStubs_modId:
-                layer = modId/10000
-                self.assertTrue(layer not in layers)
-                layers.append(layer)
+            for ssId in ievt.superstripIds:
+                self.assertNotEqual(ssId, 0)
 
-                self.assertNotEqual(modId, 0)
+            self.assertTrue(ievt.superstripIds.size() == 6)
 
-            for trkId in ievt.TTStubs_trkId:
-                self.assertEqual(trkId, 1)
-
-            self.assertTrue(ievt.TTStubs_modId.size() <= 6)
-
-    def test_nhits(self):
-        tree = self.ttree_tmp
+    def test_superstripBits(self):
+        tree = self.ttree
         for ievt in tree:
-            # Check for hit singleness
-            for hit in ievt.TTStubs_hitCols:
-                self.assertEqual(hit.size(), 1)
-            for hit in ievt.TTStubs_hitRows:
-                self.assertEqual(hit.size(), 1)
-            #for hitTrkIds in ievt.TTStubs_hitTrkIds:
-            #    self.assertEqual(hitTrkIds[0], 1)
+            for ssBit in ievt.superstripBits:
+                self.assertEqual(ssBit, 1)
+
+            self.assertTrue(ievt.superstripBits.size() == 6)
+
+    def test_frequency(self):
+        tree = self.ttree
+        for ievt in tree:
+            self.assertEqual(ievt.frequency, 1)
 
 
 if __name__ == "__main__":
