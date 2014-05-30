@@ -37,7 +37,7 @@ class TestAMSim(unittest.TestCase):
             for iroad in ievt.AMTTRoads_hitXs:
                 for ihit in iroad:
                     n += 1
-        self.assertEqual(n, 366)
+        self.assertEqual(n, 414)
 
 
 if __name__ == "__main__":

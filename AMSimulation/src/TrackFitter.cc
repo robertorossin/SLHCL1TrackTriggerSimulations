@@ -27,8 +27,8 @@ int TrackFitter::makeTracks() {
 
     // For reading
     //typedef unsigned long long unsigned64;
-    typedef ULong64_t unsigned64;
-    std::vector<std::vector<unsigned64> > * vr_patternIds       = 0;
+    //typedef ULong64_t unsigned64;
+    std::vector<std::vector<unsigned> > *   vr_patternIds       = 0;
     std::vector<std::vector<float> > *      vr_hitXs            = 0;
     std::vector<std::vector<float> > *      vr_hitYs            = 0;
     std::vector<std::vector<float> > *      vr_hitZs            = 0;
@@ -37,7 +37,7 @@ int TrackFitter::makeTracks() {
     std::vector<std::vector<float> > *      vr_hitZErrors       = 0;
     std::vector<std::vector<int> > *        vr_hitCharges       = 0;
     std::vector<std::vector<float> > *      vr_hitPts           = 0;
-    std::vector<std::vector<unsigned64> > * vr_hitSuperstripIds = 0;
+    std::vector<std::vector<unsigned> > *   vr_hitSuperstripIds = 0;
 
     //chain_->SetBranchStatus("*", 1);
 

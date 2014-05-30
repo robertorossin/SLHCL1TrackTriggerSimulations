@@ -15,9 +15,9 @@ int PatternMatcher::readPatterns(TString src) {
         // For reading
         typedef unsigned short unsigned16;
         //typedef unsigned long long unsigned64;
-        typedef ULong64_t unsigned64;
+        //typedef ULong64_t unsigned64;
         unsigned frequency;
-        std::vector<unsigned64> * superstripIds = 0;
+        std::vector<unsigned>   * superstripIds = 0;
         std::vector<unsigned16> * superstripBits = 0;
 
         ttree->SetBranchAddress("frequency", &frequency);
@@ -214,13 +214,15 @@ int PatternMatcher::makeRoads() {
             unsigned ncols = vb_iModCols->at(l);
             unsigned nrows = vb_iModRows->at(l);
             unsigned nhits = vb_nhits->at(l);
-            assert(nhits > 0);
+            if (nrows == 960 || nrows == 1016)
+                nrows = 1024;
+            assert(nhits > 0 && (ncols == 2 || ncols == 32) && nrows == 1024);
             int col = 0;
             int row = 0;
 
-            float x = vb_x->at(l);  // FIXME: change to hit position
-            float y = vb_y->at(l);
-            float z = vb_z->at(l);
+            //float x = vb_x->at(l);
+            //float y = vb_y->at(l);
+            //float z = vb_z->at(l);
             float pt = vb_roughPt->at(l);  // can we calculate rough pt for each hit?
 
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
@@ -238,9 +240,9 @@ int PatternMatcher::makeRoads() {
                 // Use DCBits
                 encodeDCBit(nDCBits_, ssId, ssBit);
 
-                //x = vb_hitXs->at(l).at(m);
-                //y = vb_hitYs->at(l).at(m);
-                //z = vb_hitZs->at(l).at(m);
+                float x = vb_hitXs->at(l).at(m);
+                float y = vb_hitYs->at(l).at(m);
+                float z = vb_hitZs->at(l).at(m);
 
                 auto found = ssIdMapFast_.equal_range(ssId);  // find by superstrip id
                 for (auto it=found.first; it!=found.second; ++it) {  // loop over all found superstrips in the ssIdMapFast_
@@ -306,8 +308,8 @@ int PatternMatcher::writeRoads(TString out) {
     TTree* ttree = new TTree("tree", "");
 
     //typedef unsigned long long unsigned64;
-    typedef ULong64_t unsigned64;
-    std::auto_ptr<std::vector<std::vector<unsigned64> > > vr_patternIds      (new std::vector<std::vector<unsigned64> >());
+    //typedef ULong64_t unsigned64;
+    std::auto_ptr<std::vector<std::vector<unsigned> > >   vr_patternIds      (new std::vector<std::vector<unsigned> >());
     std::auto_ptr<std::vector<std::vector<float> > >      vr_hitXs           (new std::vector<std::vector<float> >());
     std::auto_ptr<std::vector<std::vector<float> > >      vr_hitYs           (new std::vector<std::vector<float> >());
     std::auto_ptr<std::vector<std::vector<float> > >      vr_hitZs           (new std::vector<std::vector<float> >());
@@ -316,7 +318,7 @@ int PatternMatcher::writeRoads(TString out) {
     std::auto_ptr<std::vector<std::vector<float> > >      vr_hitZErrors      (new std::vector<std::vector<float> >());
     std::auto_ptr<std::vector<std::vector<int> > >        vr_hitCharges      (new std::vector<std::vector<int> >());
     std::auto_ptr<std::vector<std::vector<float> > >      vr_hitPts          (new std::vector<std::vector<float> >());
-    std::auto_ptr<std::vector<std::vector<unsigned64> > > vr_hitSuperstripIds(new std::vector<std::vector<unsigned64> >());
+    std::auto_ptr<std::vector<std::vector<unsigned> > >   vr_hitSuperstripIds(new std::vector<std::vector<unsigned> >());
 
     ttree->Branch(prefixRoad_ + "patternIds"       + suffix_, &(*vr_patternIds));
     ttree->Branch(prefixRoad_ + "hitXs"            + suffix_, &(*vr_hitXs));
@@ -350,16 +352,16 @@ int PatternMatcher::writeRoads(TString out) {
         for (unsigned i=0; i<nroads; ++i) {
             if ((int) i >= maxRoads_)  break;
 
-            std::vector<unsigned64> patternIds;
-            std::vector<float>      hitXs;
-            std::vector<float>      hitYs;
-            std::vector<float>      hitZs;
-            std::vector<float>      hitXErrors;
-            std::vector<float>      hitYErrors;
-            std::vector<float>      hitZErrors;
-            std::vector<int>        hitCharges;
-            std::vector<float>      hitPts;
-            std::vector<unsigned64> hitSuperstripIds;
+            std::vector<unsigned> patternIds;
+            std::vector<float>    hitXs;
+            std::vector<float>    hitYs;
+            std::vector<float>    hitZs;
+            std::vector<float>    hitXErrors;
+            std::vector<float>    hitYErrors;
+            std::vector<float>    hitZErrors;
+            std::vector<int>      hitCharges;
+            std::vector<float>    hitPts;
+            std::vector<unsigned> hitSuperstripIds;
 
             const TTRoad& road = roadsInThisEvent.at(i);
             const pattern_type&       pattId = road.patternId();

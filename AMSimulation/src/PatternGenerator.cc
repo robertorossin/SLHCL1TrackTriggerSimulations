@@ -194,7 +194,9 @@ int PatternGenerator::makePatterns() {
             unsigned ncols = vb_iModCols->at(l);
             unsigned nrows = vb_iModRows->at(l);
             unsigned nhits = vb_nhits->at(l);
-            assert(nhits == 1);
+            if (nrows == 960 || nrows == 1016)
+                nrows = 1024;
+            assert(nhits == 1 && (ncols == 2 || ncols == 32) && nrows == 1024);
             int col = vb_hitCols->at(l).at(0);
             int row = vb_hitRows->at(l).at(0);
 
@@ -318,9 +320,9 @@ int PatternGenerator::writePatterns(TString out) {
 
     typedef unsigned short unsigned16;
     //typedef unsigned long long unsigned64;
-    typedef ULong64_t unsigned64;
+    //typedef ULong64_t unsigned64;
     std::auto_ptr<unsigned>                   frequency       (new unsigned(0));
-    std::auto_ptr<std::vector<unsigned64> >   superstripIds   (new std::vector<unsigned64>());
+    std::auto_ptr<std::vector<unsigned> >     superstripIds   (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned16> >   superstripBits  (new std::vector<unsigned16>());
 
     ttree->Branch("frequency"       , &(*frequency));
@@ -398,7 +400,7 @@ bool PatternGenerator::isFullyContainedInTriggerTower(const TTPattern& patt) {
     std::map<unsigned, unsigned> triggerTowerIdCounts;
     unsigned moduleIdCount = 0;
     for(auto it: patt.id()) {  // loop over superstripIds in a pattern
-        id_type moduleId = decodeSuperstripAndEncodeModuleId(it);  // retrieve the moduleId
+        id_type moduleId = decodeSuperstripModuleId(it);  // retrieve the moduleId
         auto found = triggerTowerMapReversed_.find(moduleId);
         if (found == triggerTowerMapReversed_.end()) {  // if moduleId not in the map
             // do nothing
