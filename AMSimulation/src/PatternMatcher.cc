@@ -13,14 +13,15 @@ int PatternMatcher::readPatterns(TString src) {
         }
 
         // For reading
+        typedef unsigned char unsigned8;
         typedef unsigned short unsigned16;
         //typedef unsigned long long unsigned64;
         //typedef ULong64_t unsigned64;
-        unsigned frequency;
+        //unsigned8 frequency;
         std::vector<unsigned>   * superstripIds = 0;
         std::vector<unsigned16> * superstripBits = 0;
 
-        ttree->SetBranchAddress("frequency", &frequency);
+        //ttree->SetBranchAddress("frequency", &frequency);
         ttree->SetBranchAddress("superstripIds", &superstripIds);
         ttree->SetBranchAddress("superstripBits", &superstripBits);
 
@@ -31,6 +32,7 @@ int PatternMatcher::readPatterns(TString src) {
 
         // _____________________________________________________________________
         // Loop over all patterns
+        patterns_.reserve(nentries);
         for (Long64_t ievt=0; ievt<nentries; ++ievt) {
             ttree->GetEntry(ievt);
             assert(superstripIds->size() == superstripBits->size());
@@ -51,6 +53,8 @@ int PatternMatcher::readPatterns(TString src) {
             return 1;
         }
 
+        delete superstripIds;
+        delete superstripBits;
         delete ttree;
         delete tfile;
     }

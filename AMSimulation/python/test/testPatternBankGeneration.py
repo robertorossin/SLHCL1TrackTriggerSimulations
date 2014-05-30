@@ -41,7 +41,7 @@ class TestAMSim(unittest.TestCase):
     def test_frequency(self):
         tree = self.ttree
         for ievt in tree:
-            self.assertEqual(ievt.frequency, 1)
+            self.assertEqual(ord(ievt.frequency), 1)
 
 
 if __name__ == "__main__":

@@ -318,10 +318,11 @@ int PatternGenerator::writePatterns(TString out) {
     TFile* tfile = TFile::Open(out, "RECREATE");
     TTree* ttree = new TTree("patternBank", "");
 
+    typedef unsigned char unsigned8;
     typedef unsigned short unsigned16;
     //typedef unsigned long long unsigned64;
     //typedef ULong64_t unsigned64;
-    std::auto_ptr<unsigned>                   frequency       (new unsigned(0));
+    std::auto_ptr<unsigned8>                  frequency       (new unsigned8(0));
     std::auto_ptr<std::vector<unsigned> >     superstripIds   (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned16> >   superstripBits  (new std::vector<unsigned16>());
 
@@ -374,6 +375,7 @@ int PatternGenerator::writePatterns(TString out) {
 void PatternGenerator::uniquifyPatterns() {
     assert(!allPatterns_.empty());
     goodPatterns_.clear();
+    //goodPatterns_.reserve(allPatterns_.size());
 
     std::map<pattern_type, unsigned> patternIdMap;  // key: patternId, value: index in goodPatterns_
     for (unsigned i=0; i<allPatterns_.size(); ++i) {

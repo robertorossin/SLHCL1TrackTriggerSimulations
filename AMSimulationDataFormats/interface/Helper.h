@@ -11,6 +11,7 @@ namespace slhcl1tt {
 
 // Typically, short is 16 bits, int is 32 bits, long is 32 bits and long long is 64 bits
 // But we need to guarantee on the size of the integer
+typedef uint8_t count_type;  // for frequency
 typedef uint16_t bit_type;   // for DC bits: 0 - 2^16 (=65536 max for nDCBits_=4)
 typedef uint16_t key_type;   // for key used in the pattern matching map
 typedef uint32_t id_type;    // generic

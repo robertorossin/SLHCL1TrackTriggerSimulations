@@ -46,7 +46,7 @@ class TTPattern {
     addr_type getSuperstripId(int l)              const { return superstrips_.at(l).id(); }
     bit_type getSuperstripBit(int l)              const { return superstrips_.at(l).bit(); }
 
-    unsigned frequency()                          const { return frequency_; }
+    count_type frequency()                        const { return frequency_; }
     pattern_type id()                             const {
         pattern_type emptyPatternId;
         assert(patternId_ != emptyPatternId);
@@ -65,7 +65,7 @@ class TTPattern {
     void concatenate();
 
   private:
-    unsigned frequency_;
+    count_type frequency_;
     std::vector<TTSuperstrip> superstrips_;
     pattern_type patternId_;
 };
