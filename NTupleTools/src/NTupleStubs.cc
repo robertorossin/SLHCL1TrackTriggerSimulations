@@ -855,7 +855,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vb_z->push_back(position.z());                  // sviret/HL_LHC: STUB_z
                 vb_r->push_back(position.perp());
                 vb_phi->push_back(position.phi());
-                vb_coordx->push_back(localcoord.x());           // sviret/HL_LHC: STUB_strip
+                vb_coordx->push_back(localcoord.x());           // sviret/HL_LHC: STUB_strip (in half-strip unit?)
                 vb_coordy->push_back(localcoord.y());           // sviret/HL_LHC: STUB_seg
                 vb_dirx->push_back(direction.x());
                 vb_diry->push_back(direction.y());
