@@ -16,21 +16,13 @@ class TTPattern {
   public:
     // Constructors
     TTPattern()
-    : frequency_(1), superstrips_(), patternId_() {}
+    : frequency_(1), superstrips_() {}
 
     TTPattern(const std::vector<TTSuperstrip>& superstrips)
-    : frequency_(1), superstrips_(superstrips),
-      patternId_() {
-
-        concatenate();
-    }
+    : frequency_(1), superstrips_(superstrips) {}
 
     TTPattern(const TTPattern& rhs)
-    : frequency_(rhs.frequency_), superstrips_(rhs.superstrips_),
-      patternId_() {
-
-        concatenate();
-    }
+    : frequency_(rhs.frequency_), superstrips_(rhs.superstrips_) {}
 
     // Destructor
     ~TTPattern() {}
@@ -47,27 +39,36 @@ class TTPattern {
     bit_type getSuperstripBit(int l)              const { return superstrips_.at(l).bit(); }
 
     count_type frequency()                        const { return frequency_; }
+
     pattern_type id()                             const {
-        pattern_type emptyPatternId;
-        assert(patternId_ != emptyPatternId);
-        return patternId_;
+        pattern_type patternId;
+        for (unsigned i=0; i<patternId.size(); ++i) {
+            if (i<superstrips_.size())
+                patternId.at(i) = superstrips_.at(i).id();
+            else
+                patternId.at(i) = 0;
+        }
+        return patternId;
     }
-    //unsigned nFakeSuperstrips()                   const {
-    //    pattern_type emptyPatternId;
-    //    assert(patternId_ != emptyPatternId);
-    //    return std::count(patternId_.begin(), patternId_.end(), encodeFakeSuperstripId());
-    //}
+
+    pattern_bit_type bit()                        const {
+        pattern_bit_type patternBit;
+        for (unsigned i=0; i<patternBit.size(); ++i) {
+            if (i<superstrips_.size())
+                patternBit.at(i) = superstrips_.at(i).bit();
+            else
+                patternBit.at(i) = 1;
+        }
+        return patternBit;
+    }
 
     // Functions
     void merge(const TTPattern& rhs);
 
-  private:
-    void concatenate();
 
   private:
     count_type frequency_;
     std::vector<TTSuperstrip> superstrips_;
-    pattern_type patternId_;
 };
 
 

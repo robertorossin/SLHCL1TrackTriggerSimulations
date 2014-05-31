@@ -16,7 +16,9 @@ typedef uint16_t bit_type;   // for DC bits: 0 - 2^16 (=65536 max for nDCBits_=4
 typedef uint16_t key_type;   // for key used in the pattern matching map
 typedef uint32_t id_type;    // generic
 typedef uint32_t addr_type;  // now reduced to 32-bit (from 64-bit) and is therefore the same as id_type
+
 typedef std::tr1::array<addr_type,8>  pattern_type;  // maximum number of superstrips in a pattern set to 8 due to hardware design
+typedef std::tr1::array<bit_type,8>  pattern_bit_type;  // one DC bit for one superstrip
 
 
 // The following need to be hidden from dictionary generation

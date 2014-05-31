@@ -13,15 +13,6 @@ void TTPattern::merge(const TTPattern& rhs) {
     ++frequency_;
 }
 
-void TTPattern::concatenate() {
-    std::vector<addr_type> addresses;
-    for (unsigned i=0; i<superstrips_.size(); ++i) {
-        addresses.push_back(superstrips_.at(i).id());
-    }
-    addresses.resize(8,0);  // pad with zeroes
-    std::copy(addresses.begin(), addresses.end(), patternId_.begin());
-}
-
 
 std::ostream& operator<<(std::ostream& o, const pattern_type& pattId) {
     for (pattern_type::const_iterator it=pattId.begin(); it!=pattId.end(); ++it) {
