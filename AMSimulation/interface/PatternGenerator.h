@@ -88,7 +88,6 @@ class PatternGenerator {
     // Containers
     TChain * chain_;
     std::vector<TTPattern> allPatterns_;
-    std::vector<TTPattern> goodPatterns_;
 
     std::map<unsigned, unsigned> layerMap_;  // defines layer merging
 

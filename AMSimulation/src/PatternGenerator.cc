@@ -160,6 +160,7 @@ int PatternGenerator::makePatterns() {
     chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
 
     allPatterns_.clear();
+    allPatterns_.reserve(20000000);  // reserved for 20M possible patterns
     if (nEvents_ >= (Long64_t) allPatterns_.max_size()) {
         std::cout << Error() << "Number of events is more than the max_size of a std::vector." << std::endl;
         return 1;
@@ -194,7 +195,9 @@ int PatternGenerator::makePatterns() {
             unsigned ncols = vb_iModCols->at(l);
             unsigned nrows = vb_iModRows->at(l);
             unsigned nhits = vb_nhits->at(l);
-            assert(nhits == 1);
+            if (nrows == 960 || nrows == 1016)
+                nrows = 1024;
+            assert(nhits == 1 && (ncols == 2 || ncols == 32) && nrows == 1024);  // input files must already be cleaned
             int col = vb_hitCols->at(l).at(0);
             int row = vb_hitRows->at(l).at(0);
 
@@ -215,7 +218,7 @@ int PatternGenerator::makePatterns() {
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " ssId: " << ssId << " ssBit: " << ssBit << " col: " << col << " row: " << row << " trkId: " << vb_hitTrkIds->at(l).at(0) << std::endl;
         }
 
-        // Fake superstrip mechanism is carried out here
+        // Fake superstrip mechanism is carried out below
 
         // This map uses the fact that the keys in a C++ map are sorted
         std::map<unsigned, unsigned> mlayerToSuperstripMap;  // key: mlayer, value: index of superstrip in goodSuperstrips
@@ -279,25 +282,25 @@ int PatternGenerator::makePatterns() {
 
     // Erase patterns not fully contained in a trigger tower
     if (po.requireTriggerTower) {
-        for (std::vector<TTPattern>::iterator it=goodPatterns_.begin(); it!=goodPatterns_.end(); ) {
+        for (std::vector<TTPattern>::iterator it=allPatterns_.begin(); it!=allPatterns_.end(); ) {
             if (isFullyContainedInTriggerTower(*it)) {
                 ++it;
             } else {
-                it = goodPatterns_.erase(it);
+                it = allPatterns_.erase(it);
             }
         }
     }
 
     if (verbose_>2) {
-        for (unsigned i=0; i<goodPatterns_.size(); ++i) {
-            const TTPattern& patt = goodPatterns_.at(i);
+        for (unsigned i=0; i<allPatterns_.size(); ++i) {
+            const TTPattern& patt = allPatterns_.at(i);
             std::cout << Debug() << "... patt: " << i << " " << patt << std::endl;
         }
     }
 
-    if (verbose_)  std::cout << Info() << "Made " << goodPatterns_.size() << " final patterns, out of " << allPatterns_.size() << " inclusive, full-resolution patterns." << std::endl;
+    if (verbose_)  std::cout << Info() << "Made " << allPatterns_.size() << " final patterns, out of " << allPatterns_.size() << " inclusive, full-resolution patterns." << std::endl;
 
-    std::sort(goodPatterns_.begin(), goodPatterns_.end(), sortByFrequency);
+    std::sort(allPatterns_.begin(), allPatterns_.end(), sortByFrequency);
     return 0;
 }
 
@@ -310,17 +313,18 @@ int PatternGenerator::writePatterns(TString out) {
         return 1;
     }
 
-    if (maxPatterns_ > (int) goodPatterns_.size())
-        maxPatterns_ = goodPatterns_.size();
+    if (maxPatterns_ > (int) allPatterns_.size())
+        maxPatterns_ = allPatterns_.size();
     if (verbose_)  std::cout << Info() << "Recreating " << out << " with " << maxPatterns_ << " patterns." << std::endl;
     TFile* tfile = TFile::Open(out, "RECREATE");
     TTree* ttree = new TTree("patternBank", "");
 
+    typedef unsigned char unsigned8;
     typedef unsigned short unsigned16;
     //typedef unsigned long long unsigned64;
-    typedef ULong64_t unsigned64;
-    std::auto_ptr<unsigned>                   frequency       (new unsigned(0));
-    std::auto_ptr<std::vector<unsigned64> >   superstripIds   (new std::vector<unsigned64>());
+    //typedef ULong64_t unsigned64;
+    std::auto_ptr<unsigned8>                  frequency       (new unsigned8(0));
+    std::auto_ptr<std::vector<unsigned> >     superstripIds   (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned16> >   superstripBits  (new std::vector<unsigned16>());
 
     ttree->Branch("frequency"       , &(*frequency));
@@ -332,16 +336,19 @@ int PatternGenerator::writePatterns(TString out) {
     for (int ievt=0; ievt<maxPatterns_; ++ievt) {
         if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7i", ievt) << std::endl;
 
-        const TTPattern& patt = goodPatterns_.at(ievt);
+        const TTPattern& patt = allPatterns_.at(ievt);
         *frequency = patt.frequency();
 
         superstripIds->clear();
+        const pattern_type& pattId = patt.id();
+        for (unsigned i=0; i<pattId.size(); ++i) {
+            superstripIds->push_back(pattId.at(i));
+        }
+
         superstripBits->clear();
-        const std::vector<TTSuperstrip> superstrips = patt.getSuperstrips();
-        for (unsigned i=0; i<superstrips.size(); ++i) {
-            const TTSuperstrip& superstrip = superstrips.at(i);
-            superstripIds->push_back(superstrip.id());
-            superstripBits->push_back(superstrip.bit());
+        const pattern_bit_type& pattBit = patt.bit();
+        for (unsigned i=0; i<pattBit.size(); ++i) {
+            superstripBits->push_back(pattBit.at(i));
         }
 
         ttree->Fill();
@@ -371,7 +378,8 @@ int PatternGenerator::writePatterns(TString out) {
 // Make unique patterns from 'allPatterns_' and put them into 'goodPatterns_'
 void PatternGenerator::uniquifyPatterns() {
     assert(!allPatterns_.empty());
-    goodPatterns_.clear();
+    std::vector<TTPattern> goodPatterns;
+    goodPatterns.reserve(allPatterns_.size());
 
     std::map<pattern_type, unsigned> patternIdMap;  // key: patternId, value: index in goodPatterns_
     for (unsigned i=0; i<allPatterns_.size(); ++i) {
@@ -380,17 +388,19 @@ void PatternGenerator::uniquifyPatterns() {
 
         auto found = patternIdMap.find(pattId);
         if (found == patternIdMap.end()) {  // if not exist, insert the pattern
-            goodPatterns_.push_back(patt);
-            patternIdMap.insert(std::make_pair(pattId, goodPatterns_.size()-1) );
+            goodPatterns.push_back(patt);
+            patternIdMap.insert(std::make_pair(pattId, goodPatterns.size()-1) );
 
         } else {
             // If exist, merge them
             // merge(...) will update the DC bit and increase the frequency
             unsigned index = found->second;
-            goodPatterns_.at(index).merge(patt);
+            goodPatterns.at(index).merge(patt);
         }
     }
-    //allPatterns_.clear();
+
+    // In the end, swap allPatterns_ with goodPatterns. Memory used for goodPatterns is deallocated once out of scope
+    allPatterns_.swap(goodPatterns);
 }
 
 // Remove patterns not fully contained in a trigger tower
@@ -398,7 +408,7 @@ bool PatternGenerator::isFullyContainedInTriggerTower(const TTPattern& patt) {
     std::map<unsigned, unsigned> triggerTowerIdCounts;
     unsigned moduleIdCount = 0;
     for(auto it: patt.id()) {  // loop over superstripIds in a pattern
-        id_type moduleId = decodeSuperstripAndEncodeModuleId(it);  // retrieve the moduleId
+        id_type moduleId = decodeSuperstripModuleId(it);  // retrieve the moduleId
         auto found = triggerTowerMapReversed_.find(moduleId);
         if (found == triggerTowerMapReversed_.end()) {  // if moduleId not in the map
             // do nothing

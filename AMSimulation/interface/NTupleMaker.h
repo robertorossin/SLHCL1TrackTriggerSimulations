@@ -29,8 +29,8 @@ class NTupleMaker {
     };
 
     NTupleMaker()
-    : nEvents_(999999999),
-      verbose_(1) {
+    : trim_(true),
+      nEvents_(999999999), verbose_(1) {
 
         chain_ = new TChain("ntupler/tree");
         chain_roads_  = new TChain("ntupler/tree");
@@ -42,6 +42,7 @@ class NTupleMaker {
     ~NTupleMaker() {}
 
     // Setters
+    void setTrim(bool b=true)     { trim_ = b; }
     void setNEvents(int n)        { if (n != -1)  nEvents_ = std::max(0, n); }
     void setVerbosity(int n)      { verbose_ = n; }
 
@@ -80,8 +81,10 @@ class NTupleMaker {
     void makeLeafMap();
     void makeConnector(const TBranch*, TTree*);
 
+
   private:
     // Program options
+    bool trim_;  // do not keep every branch
     int nEvents_;
     int verbose_;
 
