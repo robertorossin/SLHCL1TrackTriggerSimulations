@@ -2,7 +2,119 @@
 
 
 // _____________________________________________________________________________
-// private functions
+int NTupleMaker::readRoads(TString src) {
+    if (src.EndsWith(".root")) {
+        if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
+        if (chain_roads_->Add(src) )  // 1 if successful, 0 otherwise
+            return 0;
+    }
+
+    std::cout << Error() << "Roads source should be a .root file." << std::endl;
+    return 1;
+}
+
+
+// _____________________________________________________________________________
+int NTupleMaker::readTracks(TString src) {
+    if (src.EndsWith(".root")) {
+        if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
+        if (chain_tracks_->Add(src) )  // 1 if successful, 0 otherwise
+            return 0;
+    }
+
+    std::cout << Error() << "Tracks source should be a .root file." << std::endl;
+    return 1;
+}
+
+
+// _____________________________________________________________________________
+// Read the input ntuples
+int NTupleMaker::readFile(TString src) {
+    if (src.EndsWith(".root")) {
+        if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
+        if (chain_->Add(src) )  // 1 if successful, 0 otherwise
+            return 0;
+
+    } else if (src.EndsWith(".txt")) {
+        TFileCollection* fc = new TFileCollection("fileinfolist", "", src);
+        if (chain_->AddFileInfoList((TCollection*) fc->GetList()) )  // 1 if successful, 0 otherwise
+            return 0;
+    }
+
+    std::cout << Error() << "Input source should be either a .root file or a .txt file." << std::endl;
+    return 1;
+}
+
+
+// _____________________________________________________________________________
+// Merge roads, tracks into main ntuple
+int NTupleMaker::writeTree(TString out) {
+    if (!out.EndsWith(".root")) {
+        std::cout << Error() << "Output filename must be .root" << std::endl;
+        return 1;
+    }
+
+    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
+
+    // For writing
+    TFile* tfile = TFile::Open(out, "RECREATE");
+    tfile->mkdir("ntupler")->cd();
+
+    if (trim_) {
+        chain_->SetBranchStatus("TTClusters_*"   , 0);
+        chain_->SetBranchStatus("TTTracks_*"     , 0);
+        chain_->SetBranchStatus("simPixelDigis_*", 0);
+        chain_->SetBranchStatus("simBeamSpot_*"  , 0);
+        chain_->SetBranchStatus("genMET_*"       , 0);
+        chain_->SetBranchStatus("genJets_*"      , 0);
+    }
+
+    TTree* ttree = (TTree*) chain_->CloneTree(0); // Do not copy the data yet
+    // The clone should not delete any shared i/o buffers.
+    ResetDeleteBranches(ttree);
+
+    // For merging
+    TObjArray* branches_roads = chain_roads_->GetListOfBranches();
+    for (int i=0; i<branches_roads->GetEntries(); ++i) {
+        TBranch* branch = (TBranch*) branches_roads->At(i);
+        makeConnector(branch, ttree);
+        connectors.back()->connect(chain_roads_);
+    }
+
+    //TObjArray* branches_tracks = chain_tracks_->GetListOfBranches();
+    //for (int i=0; i<branches_tracks->GetEntries(); ++i) {
+    //    TBranch* branch = (TBranch*) branches_tracks->At(i);
+    //    makeConnector(branch, ttree);
+    //    connectors.back()->connect(chain_tracks_);
+    //}
+
+    // _________________________________________________________________________
+    // Loop over all events
+    for (Long64_t ievt=0; ievt<nEvents_; ++ievt) {
+        Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
+        if (local_entry < 0)  break;
+        chain_->GetEntry(ievt);
+
+        assert(chain_roads_->LoadTree(ievt) >= 0);
+        chain_roads_->GetEntry(ievt);
+
+        //assert(chain_tracks_->LoadTree(ievt) >= 0);
+        //chain_tracks_->GetEntry(ievt);
+
+        if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
+
+        ttree->Fill();
+    }
+
+    tfile->Write();
+    delete ttree;
+    delete tfile;
+    return 0;
+}
+
+
+// _____________________________________________________________________________
+// Private functions
 
 // TypedBranchConnector constructor
 template <class T>
@@ -104,109 +216,6 @@ void NTupleMaker::makeConnector(const TBranch* branch, TTree* tree) {
 
         default       : std::cout << Error() << "Cannot handle leaf of ClassName: " << branchClassName << std::endl; break;
     }
-}
-
-
-// _____________________________________________________________________________
-int NTupleMaker::readRoads(TString src) {
-    if (src.EndsWith(".root")) {
-        if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
-        if (chain_roads_->Add(src) )  // 1 if successful, 0 otherwise
-            return 0;
-    }
-
-    std::cout << Error() << "Roads source should be a .root file." << std::endl;
-    return 1;
-}
-
-
-// _____________________________________________________________________________
-int NTupleMaker::readTracks(TString src) {
-    if (src.EndsWith(".root")) {
-        if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
-        if (chain_tracks_->Add(src) )  // 1 if successful, 0 otherwise
-            return 0;
-    }
-
-    std::cout << Error() << "Tracks source should be a .root file." << std::endl;
-    return 1;
-}
-
-
-// _____________________________________________________________________________
-// Read the input ntuples
-int NTupleMaker::readFile(TString src) {
-    if (src.EndsWith(".root")) {
-        if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
-        if (chain_->Add(src) )  // 1 if successful, 0 otherwise
-            return 0;
-
-    } else if (src.EndsWith(".txt")) {
-        TFileCollection* fc = new TFileCollection("fileinfolist", "", src);
-        if (chain_->AddFileInfoList((TCollection*) fc->GetList()) )  // 1 if successful, 0 otherwise
-            return 0;
-    }
-
-    std::cout << Error() << "Input source should be either a .root file or a .txt file." << std::endl;
-    return 1;
-}
-
-
-// _____________________________________________________________________________
-// Merge roads, tracks into main ntuple
-int NTupleMaker::writeTree(TString out) {
-    if (!out.EndsWith(".root")) {
-        std::cout << Error() << "Output filename must be .root" << std::endl;
-        return 1;
-    }
-
-    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
-
-    // For writing
-    TFile* tfile = TFile::Open(out, "RECREATE");
-    tfile->mkdir("ntupler")->cd();
-
-    TTree* ttree = (TTree*) chain_->CloneTree(0); // Do not copy the data yet
-    // The clone should not delete any shared i/o buffers.
-    ResetDeleteBranches(ttree);
-
-    // For merging
-    TObjArray* branches_roads = chain_roads_->GetListOfBranches();
-    for (int i=0; i<branches_roads->GetEntries(); ++i) {
-        TBranch* branch = (TBranch*) branches_roads->At(i);
-        makeConnector(branch, ttree);
-        connectors.back()->connect(chain_roads_);
-    }
-
-    //TObjArray* branches_tracks = chain_tracks_->GetListOfBranches();
-    //for (int i=0; i<branches_tracks->GetEntries(); ++i) {
-    //    TBranch* branch = (TBranch*) branches_tracks->At(i);
-    //    makeConnector(branch, ttree);
-    //    connectors.back()->connect(chain_tracks_);
-    //}
-
-    // _________________________________________________________________________
-    // Loop over all events
-    for (Long64_t ievt=0; ievt<nEvents_; ++ievt) {
-        Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
-        if (local_entry < 0)  break;
-        chain_->GetEntry(ievt);
-
-        assert(chain_roads_->LoadTree(ievt) >= 0);
-        chain_roads_->GetEntry(ievt);
-
-        //assert(chain_tracks_->LoadTree(ievt) >= 0);
-        //chain_tracks_->GetEntry(ievt);
-
-        if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
-
-        ttree->Fill();
-    }
-
-    tfile->Write();
-    delete ttree;
-    delete tfile;
-    return 0;
 }
 
 

@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     // and in config file
     std::string input, output, layout, bankfile, roadfile, trackfile;
     int maxEvents, maxPatterns, maxRoads, maxHits, maxTracks;
-    bool nofilter;
+    bool nofilter, notrim;
     PatternBankOption bankOption;
     TrackFitterOption fitOption;
     po::options_description config("Configuration");
@@ -74,6 +74,7 @@ int main(int argc, char **argv) {
         ("bank,B"       , po::value<std::string>(&bankfile), "Specify pattern bank file")
 
         // Only for writing full ntuple
+        ("no-trim"      , po::bool_switch(&notrim)->default_value(false), "Do not trim TTree branches")
         ("roads"        , po::value<std::string>(&roadfile), "Specify file containing the roads")
         ("tracks"       , po::value<std::string>(&trackfile), "Specify file containing the tracks")
 
@@ -277,6 +278,7 @@ int main(int argc, char **argv) {
         std::cout << Color("magenta") << "Start writing full ntuple..." << EndColor() << std::endl;
 
         NTupleMaker writer;
+        writer.setTrim(!notrim);
         writer.setNEvents(maxEvents);
         writer.setVerbosity(verbose);
         int exitcode = writer.run(output, input, roadfile, trackfile);
