@@ -50,20 +50,20 @@ class TTHit {
     // Constructors
     TTHit()
     : x_(0.), y_(0.), z_(0.), xerr_(999.), yerr_(999.), zerr_(999.),
-      charge_(-1), pt_(0.), ssId_(0) {}
+      charge_(-1), pt_(0.), ssId_(0), ssBit_(1) {}
 
-    TTHit(float x, float y, float z, float pt, addr_type ssId)
+    TTHit(float x, float y, float z, float pt, addr_type ssId, bit_type ssBit)
     : x_(x), y_(y), z_(z), xerr_(999.), yerr_(999.), zerr_(999.),
-      charge_(-1), pt_(pt), ssId_(ssId) {}
+      charge_(-1), pt_(pt), ssId_(ssId), ssBit_(ssBit) {}
 
     TTHit(float x, float y, float z, float xerr, float yerr, float zerr,
-          int charge, float pt, addr_type ssId)
+          int charge, float pt, addr_type ssId, bit_type ssBit)
     : x_(x), y_(y), z_(z), xerr_(xerr), yerr_(yerr), zerr_(zerr),
-      charge_(charge), pt_(pt), ssId_(ssId) {}
+      charge_(charge), pt_(pt), ssId_(ssId), ssBit_(ssBit) {}
 
     TTHit(const TTHit& rhs)
     : x_(rhs.x_), y_(rhs.y_), z_(rhs.z_), xerr_(rhs.xerr_), yerr_(rhs.yerr_), zerr_(rhs.zerr_),
-      charge_(rhs.charge_), pt_(rhs.pt_), ssId_(rhs.ssId_) {}
+      charge_(rhs.charge_), pt_(rhs.pt_), ssId_(rhs.ssId_), ssBit_(rhs.ssBit_) {}
 
     // Destructor
     ~TTHit() {}
@@ -78,6 +78,7 @@ class TTHit {
     void setCharge(int charge)            { charge_ = charge; }
     void setPt(float pt)                  { pt_ = pt; }
     void setSuperstripId(addr_type ssId)  { ssId_ = ssId; }
+    void setSuperstripBit(bit_type ssBit) { ssBit_ = ssBit; }
 
     // Getters
     float x()                       const { return x_; }
@@ -89,6 +90,7 @@ class TTHit {
     int charge()                    const { return charge_; }
     float pt()                      const { return pt_; }
     addr_type superstripId()        const { return ssId_; }
+    bit_type superstripBit()        const { return ssBit_; }
 
     // Functions
     // Simple trigonometrics
@@ -110,6 +112,7 @@ class TTHit {
     int charge_;
     float pt_;
     addr_type ssId_;
+    bit_type ssBit_;
 };
 
 

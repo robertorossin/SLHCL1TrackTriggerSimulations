@@ -21,8 +21,6 @@ using namespace slhcl1tt;
 
 class PatternMatcher {
   public:
-    typedef std::pair<bit_type, unsigned>  bit_n_index_pair;
-
     // Constructor
     PatternMatcher(PatternBankOption option)
     : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits),
@@ -82,7 +80,7 @@ class PatternMatcher {
 
     // Program options
     int nEvents_;
-    int maxPatterns_;  // maximum number of patterns
+    int maxPatterns_;  // maximum number of patterns -- bad if the patternBank is not properly sorted
     int maxRoads_;  // max number of roads per event
     int maxHits_;   // max number of hits per road
     int verbose_;
@@ -90,10 +88,9 @@ class PatternMatcher {
     // Containers
     TChain * chain_;
     std::vector<std::vector<TTRoad> > allRoads_;
-    //std::vector<std::vector<TTRoad> > goodRoads_;
 
-    std::vector<TTPattern> patterns_;
-    std::unordered_multimap<addr_type, bit_n_index_pair> ssIdMapFast_;   // key: superstripId, value: pointer to TTPattern
+    std::vector<TTPattern> allPatterns_;
+    std::unordered_multimap<addr_type, addr_type> ssIdMapFast_;   // key: superstripId, value: pointer to TTPattern
 
     std::map<unsigned, unsigned> layerMap_;  // defines layer merging
 };

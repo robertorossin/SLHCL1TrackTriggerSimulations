@@ -26,31 +26,35 @@ int TrackFitter::makeTracks() {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
 
     // For reading
+    typedef unsigned char unsigned8;
+    typedef unsigned short unsigned16;
     //typedef unsigned long long unsigned64;
     //typedef ULong64_t unsigned64;
-    std::vector<std::vector<unsigned> > *   vr_patternIds       = 0;
-    std::vector<std::vector<float> > *      vr_hitXs            = 0;
-    std::vector<std::vector<float> > *      vr_hitYs            = 0;
-    std::vector<std::vector<float> > *      vr_hitZs            = 0;
-    std::vector<std::vector<float> > *      vr_hitXErrors       = 0;
-    std::vector<std::vector<float> > *      vr_hitYErrors       = 0;
-    std::vector<std::vector<float> > *      vr_hitZErrors       = 0;
-    std::vector<std::vector<int> > *        vr_hitCharges       = 0;
-    std::vector<std::vector<float> > *      vr_hitPts           = 0;
-    std::vector<std::vector<unsigned> > *   vr_hitSuperstripIds = 0;
+    std::vector<std::vector<unsigned> > *   vr_patternIds        = 0;
+    std::vector<std::vector<float> > *      vr_hitXs             = 0;
+    std::vector<std::vector<float> > *      vr_hitYs             = 0;
+    std::vector<std::vector<float> > *      vr_hitZs             = 0;
+    std::vector<std::vector<float> > *      vr_hitXErrors        = 0;
+    std::vector<std::vector<float> > *      vr_hitYErrors        = 0;
+    std::vector<std::vector<float> > *      vr_hitZErrors        = 0;
+    std::vector<std::vector<int> > *        vr_hitCharges        = 0;
+    std::vector<std::vector<float> > *      vr_hitPts            = 0;
+    std::vector<std::vector<unsigned> > *   vr_hitSuperstripIds  = 0;
+    std::vector<std::vector<unsigned16> > * vr_hitSuperstripBits = 0;
 
     //chain_->SetBranchStatus("*", 1);
 
-    chain_->SetBranchAddress(prefixRoad_ + "patternIds"       + suffix_, &(vr_patternIds));
-    chain_->SetBranchAddress(prefixRoad_ + "hitXs"            + suffix_, &(vr_hitXs));
-    chain_->SetBranchAddress(prefixRoad_ + "hitYs"            + suffix_, &(vr_hitYs));
-    chain_->SetBranchAddress(prefixRoad_ + "hitZs"            + suffix_, &(vr_hitZs));
-    chain_->SetBranchAddress(prefixRoad_ + "hitXErrors"       + suffix_, &(vr_hitXErrors));
-    chain_->SetBranchAddress(prefixRoad_ + "hitYErrors"       + suffix_, &(vr_hitYErrors));
-    chain_->SetBranchAddress(prefixRoad_ + "hitZErrors"       + suffix_, &(vr_hitZErrors));
-    chain_->SetBranchAddress(prefixRoad_ + "hitCharges"       + suffix_, &(vr_hitCharges));
-    chain_->SetBranchAddress(prefixRoad_ + "hitPts"           + suffix_, &(vr_hitPts));
-    chain_->SetBranchAddress(prefixRoad_ + "hitSuperstripIds" + suffix_, &(vr_hitSuperstripIds));
+    chain_->SetBranchAddress(prefixRoad_ + "patternIds"        + suffix_, &(vr_patternIds));
+    chain_->SetBranchAddress(prefixRoad_ + "hitXs"             + suffix_, &(vr_hitXs));
+    chain_->SetBranchAddress(prefixRoad_ + "hitYs"             + suffix_, &(vr_hitYs));
+    chain_->SetBranchAddress(prefixRoad_ + "hitZs"             + suffix_, &(vr_hitZs));
+    chain_->SetBranchAddress(prefixRoad_ + "hitXErrors"        + suffix_, &(vr_hitXErrors));
+    chain_->SetBranchAddress(prefixRoad_ + "hitYErrors"        + suffix_, &(vr_hitYErrors));
+    chain_->SetBranchAddress(prefixRoad_ + "hitZErrors"        + suffix_, &(vr_hitZErrors));
+    chain_->SetBranchAddress(prefixRoad_ + "hitCharges"        + suffix_, &(vr_hitCharges));
+    chain_->SetBranchAddress(prefixRoad_ + "hitPts"            + suffix_, &(vr_hitPts));
+    chain_->SetBranchAddress(prefixRoad_ + "hitSuperstripIds"  + suffix_, &(vr_hitSuperstripIds));
+    chain_->SetBranchAddress(prefixRoad_ + "hitSuperstripBits" + suffix_, &(vr_hitSuperstripBits));
 
 
     // _________________________________________________________________________
@@ -102,7 +106,8 @@ int TrackFitter::makeTracks() {
                     vr_hitZErrors->at(i).at(j),
                     vr_hitCharges->at(i).at(j),
                     vr_hitPts->at(i).at(j),
-                    vr_hitSuperstripIds->at(i).at(j) );
+                    vr_hitSuperstripIds->at(i).at(j),
+                    vr_hitSuperstripBits->at(i).at(j) );
                 hits.push_back(hit);
 
                 // In R-Z plane, a track is a straight line
