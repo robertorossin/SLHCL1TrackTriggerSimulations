@@ -1,5 +1,11 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternMatcher.h"
 
+static const unsigned MAX_NPATTERNS = 30000000;  // 30M = only 1/8 of design goal
+
+static const unsigned MAX_NLAYERS = pattern_type().size();  // ought to be 8
+
+static const unsigned MAX_NKEYS = (1<<21)-1;  // 2097151
+
 
 // _____________________________________________________________________________
 // Read from the pattern bank
@@ -28,27 +34,36 @@ int PatternMatcher::readPatterns(TString src) {
         Long64_t nentries = ttree->GetEntries();
         if (nentries > maxPatterns_)
             nentries = maxPatterns_;
+        if (nentries > MAX_NPATTERNS) {
+            std::cout << Error() << "Number of patterns exceeds the allocated amount! " << nentries << " vs. " << MAX_NPATTERNS << std::endl;
+            return 1;
+        }
         if (verbose_)  std::cout << Info() << "Reading " << nentries << " patterns." << std::endl;
 
         // _____________________________________________________________________
         // Loop over all patterns
-        allPatterns_.reserve(nentries);
+        assert(ptr_allPatternIds_ == 0 && ptr_allPatternBits_ == 0);
+        ptr_allPatternIds_ = new addr_type[MAX_NPATTERNS * MAX_NLAYERS];
+        ptr_allPatternBits_ = new bit_type[MAX_NPATTERNS * MAX_NLAYERS];
+        size_allPatternIds_ = 0;
+        size_allPatternBits_ = 0;
+
         for (Long64_t ievt=0; ievt<nentries; ++ievt) {
             ttree->GetEntry(ievt);
-            assert(superstripIds->size() == superstripBits->size());
-            unsigned nsuperstrips = superstripIds->size();
-
-            std::vector<TTSuperstrip> superstrips;
-            for (unsigned i=0; i<nsuperstrips; ++i) {
-                TTSuperstrip ss(superstripIds->at(i), superstripBits->at(i));
-                superstrips.push_back(ss);
+            if (verbose_>2) {
+                std::cout << Debug() << "... patt: " << ievt << " # superstripIds: " << superstripIds->size() << " # superstripBits: " << superstripBits->size() << " # allPatternIds: " << size_allPatternIds_ << " # allPatternBits: " << size_allPatternBits_ << std::endl;
+                std::cout << Debug() << "... ... " << superstripIds->at(0) << " " << superstripIds->at(1) << " " << superstripIds->at(2) << " " << superstripIds->at(3) << " " << superstripIds->at(4) << " " << superstripIds->at(5) << " " << superstripIds->at(6) << " " << superstripIds->at(7) << std::endl;
             }
+            assert(superstripIds->size() == MAX_NLAYERS && superstripBits->size() == MAX_NLAYERS);
 
-            TTPattern patt(superstrips);
-            allPatterns_.push_back(patt);
+            std::copy(superstripIds->begin(), superstripIds->begin()+MAX_NLAYERS, ptr_allPatternIds_ + size_allPatternIds_*MAX_NLAYERS);
+            size_allPatternIds_ += 1;
+
+            std::copy(superstripBits->begin(), superstripBits->begin()+MAX_NLAYERS, ptr_allPatternBits_ + size_allPatternBits_*MAX_NLAYERS);
+            size_allPatternBits_ += 1;
         }
 
-        if ((Long64_t) allPatterns_.size() != nentries) {
+        if ((Long64_t) size_allPatternIds_ != nentries || (Long64_t) size_allPatternBits_ != nentries) {
             std::cout << Error() << "Failed to read all patterns from the root file: " << src << std::endl;
             return 1;
         }
@@ -59,8 +74,8 @@ int PatternMatcher::readPatterns(TString src) {
         delete tfile;
     }
 
-    if (allPatterns_.empty()) {
-        std::cout << Error() << "Pattern bank has zero entry." << std::endl;
+    if (ptr_allPatternIds_ == 0 || ptr_allPatternBits_ == 0) {
+        std::cout << Error() << "Pattern bank pointer is NULL." << std::endl;
         return 1;
     }
     return 0;
@@ -69,28 +84,33 @@ int PatternMatcher::readPatterns(TString src) {
 
 // _____________________________________________________________________________
 int PatternMatcher::loadPatterns() {
-    unsigned nentries = allPatterns_.size();
+    unsigned nentries = size_allPatternIds_;
     assert(nentries>0);
 
     // _________________________________________________________________________
     // Loop over all patterns
-    for (unsigned ievt=0; ievt<nentries; ++ievt) {
-        const TTPattern& patt = allPatterns_.at(ievt);
 
-        for (int l=0; l<nLayers_; ++l) {
-            addr_type ssId = patt.getSuperstripId(l);
-            //bit_type ssBit = patt.getSuperstripBit(l);
+    ssIdHashMap_.clear();
+    ssIdHashMap_.resize(MAX_NKEYS);
+    for (unsigned ievt=0; ievt<nentries; ++ievt) {
+
+        for (unsigned l=0; l<MAX_NLAYERS; ++l) {
+            addr_type ssId = ptr_allPatternIds_[ievt*MAX_NLAYERS + l];
             if (ssId == 0)  continue;  // avoid zero
 
-            // Using unordered_multimap, so collision is ok
-            ssIdMapFast_.insert(std::make_pair(ssId, ievt) );
+            key_type hash = hashSuperstripId(ssId);
+            ssIdHashMap_.at(hash).push_back(ievt);  // ievt is used as the id of a pattern
         }
+
         if (verbose_>2) {
-            std::cout << Debug() << "... patt: " << ievt << " " << patt << std::endl;
+            std::cout << Debug() << "... patt: " << ievt << " ";
+            for (unsigned l=0; l<MAX_NLAYERS; ++l) {
+                std::cout << ptr_allPatternIds_[ievt*MAX_NLAYERS + l] << " ";
+            }
+            std::cout << std::endl;
         }
     }
 
-    if (verbose_>1)  std::cout << Debug() << "Identified " << ssIdMapFast_.size() << " possible 'ssId's." << std::endl;
     if (verbose_)  std::cout << Info() << "Loaded the patterns into memory." << std::endl;
     return 0;
 }
@@ -187,6 +207,11 @@ int PatternMatcher::makeRoads() {
 
     allRoads_.clear();
 
+    // Make sure the map has already been set up
+    assert(size_allPatternIds_ > 0);
+    assert(ssIdHashMap_.size() == MAX_NKEYS);
+
+
     // _________________________________________________________________________
     // Loop over all events
     Long64_t nPassed = 0;
@@ -204,12 +229,7 @@ int PatternMatcher::makeRoads() {
             continue;
         }
 
-        if (allPatterns_.empty() || ssIdMapFast_.empty()) {
-            std::cout << Error() << "Patterns are not yet loaded!" << std::endl;
-            return 1;
-        }
-
-        std::map<unsigned, std::vector<TTHit> >  foundPatternMap;  // key: index of pattern in allPatterns_
+        std::map<unsigned, std::vector<TTHit> >  foundPatternMap;  // key: index of pattern
 
         // Loop over reconstructed stubs
         for (unsigned l=0; l<nstubs; ++l) {
@@ -247,31 +267,31 @@ int PatternMatcher::makeRoads() {
                 float y = vb_hitYs->at(l).at(m);
                 float z = vb_hitZs->at(l).at(m);
 
-                auto found = ssIdMapFast_.equal_range(ssId);  // find by superstrip id
-                for (auto it=found.first; it!=found.second; ++it) {  // loop over all found superstrips in the ssIdMapFast_
-                    auto found2 = foundPatternMap.find(it->second);  // find by index of pattern in pattern_
-                    if (found2 != foundPatternMap.end()) {  // found the pattern number in the foundPatternMap
-                        std::vector<TTHit>& hits = found2->second;
-                        TTHit hit(x, y, z, pt, ssId, ssBit);
-                        hits.push_back(hit);
+                key_type hash = hashSuperstripId(ssId);
+                for (auto it=ssIdHashMap_.at(hash).begin(); it!=ssIdHashMap_.at(hash).end(); ++it) {  // loop over all possible patterns
+                    auto found = foundPatternMap.find(*it);  // find by index of pattern
+                    if (found != foundPatternMap.end()) {  // found
+                        found->second.emplace_back(x, y, z, pt, ssId, ssBit);  // construct a TTHit in place
 
                     } else {
                         std::vector<TTHit> hits;
-                        TTHit hit(x, y, z, pt, ssId, ssBit);
-                        hits.push_back(hit);
-
-                        foundPatternMap.insert(std::make_pair(it->second, hits));
+                        hits.emplace_back(x, y, z, pt, ssId, ssBit);  // construct a TTHit in place
+                        foundPatternMap.insert(std::make_pair(*it, hits));
                     }
                 }
-                if (verbose_>2)  std::cout << Debug() << "... ... ... hit: " << m << " ssId: " << ssId << " ssBit: " << ssBit << " col: " << col << " row: " << row << " trkId: " << vb_hitTrkIds->at(l).at(m) << std::endl;
+                if (verbose_>2) {
+                    std::cout << Debug() << "... ... ... hit: " << m << " ssId: " << ssId << " ssBit: " << ssBit << " col: " << col << " row: " << row << " trkId: " << vb_hitTrkIds->at(l).at(m) << std::endl;
+                    std::cout << Debug() << "... ... ... hit: " << m << " hash: " << hash << " # values: " << ssIdHashMap_.at(hash).size() << std::endl;
+                }
             }
         }
 
         std::vector<TTRoad> roadsInThisEvent;
         if (! foundPatternMap.empty()) {
             for (auto it: foundPatternMap) {
-                pattern_type pattId = allPatterns_.at(it.first).id();
-                pattern_bit_type pattBit = allPatterns_.at(it.first).bit();
+                const TTPattern& patt = makeTTPattern(it.first);
+                pattern_type pattId = patt.id();
+                pattern_bit_type pattBit = patt.bit();
                 const std::vector<TTHit>& hits = it.second;
 
                 count_type count = 0, count_l = 0;
@@ -307,6 +327,7 @@ int PatternMatcher::makeRoads() {
 
     if (verbose_)  std::cout << Info() << "Processed " << nEvents_ << " events, triggered on " << nPassed << " events." << std::endl;
 
+    clearHashMap();
     return 0;
 }
 
@@ -433,6 +454,28 @@ int PatternMatcher::writeRoads(TString out) {
     delete ttree;
     delete tfile;
     return 0;
+}
+
+// _____________________________________________________________________________
+// Private functions
+
+TTPattern PatternMatcher::makeTTPattern(unsigned index) const {
+    std::vector<TTSuperstrip> superstrips;
+    for (unsigned l=0; l<MAX_NLAYERS; ++l) {
+        TTSuperstrip ss(ptr_allPatternIds_[index*MAX_NLAYERS + l], ptr_allPatternBits_[index*MAX_NLAYERS + l]);
+        superstrips.push_back(ss);
+    }
+    TTPattern patt(superstrips);
+    return patt;
+}
+
+void PatternMatcher::clearHashMap() {
+    for (auto i: ssIdHashMap_) {
+        i.clear();
+        std::vector<unsigned>().swap(i); // free memory
+    }
+    ssIdHashMap_.clear();
+    std::vector<std::vector<unsigned> >().swap(ssIdHashMap_);  // free memory
 }
 
 

@@ -130,6 +130,7 @@ int StubCleaner::cleanStubs(TString out) {
     // _________________________________________________________________________
     // Loop over all events
     Long64_t nPassed = 0;
+    Long64_t nKept = 0;
     int curTree = chain_->GetTreeNumber();
     for (Long64_t ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
@@ -141,11 +142,11 @@ int StubCleaner::cleanStubs(TString out) {
         chain_->GetEntry(ievt);
 
         unsigned nstubs = vb_modId->size();
-        if (verbose_>1 && ievt%1000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7lld", ievt, nPassed) << std::endl;
+        if (verbose_>1 && ievt%20000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7lld", ievt, nKept) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " [# passed: " << nPassed << "]" << std::endl;
 
         if (!nstubs) {  // skip if no stub
-            ++nPassed;
+            ++nKept;
             ttree->Fill();
             continue;
         }
@@ -460,7 +461,9 @@ int StubCleaner::cleanStubs(TString out) {
         if (!require && filter_)
             keep = false;
 
-        if (!keep)  //  do not keep any stub
+        if (keep)
+            ++nPassed;
+        else //  do not keep any stub
             ngoodstubs = 0;
 
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " keep? " << keep << std::endl;
@@ -486,12 +489,12 @@ int StubCleaner::cleanStubs(TString out) {
         vb_simPhi   ->resize(ngoodstubs);
         vb_trkId    ->resize(ngoodstubs);
 
-        ++nPassed;
+        ++nKept;
         ttree->Fill();
     }
-    if (verbose_)  std::cout << Info() << "Processed " << nEvents_ << " events, kept " << nPassed << " events." << std::endl;
+    if (verbose_)  std::cout << Info() << "Processed " << nEvents_ << " events, kept " << nKept << " events, passed " << nPassed << std::endl;
 
-    assert(ttree->GetEntries() == nPassed);
+    assert(ttree->GetEntries() == nKept);
     tfile->Write();
     delete ttf_event;
     delete ttree;

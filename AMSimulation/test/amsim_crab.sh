@@ -42,8 +42,11 @@ fi
 #ls .
 
 
-# Take line i from input.txt
-sed -i "$i"'q;d' input.txt
+# Take line 2i,2i+1 from input.txt (mu+,mu-)
+#sed -i "$i"'q;d' input.txt
+let "i2_0=2*$i"
+let "i2_1=2*$i+1"
+sed -i -n "$i2_0","$i2_1"p input.txt
 
 echo "Running on input source:"
 cat input.txt
