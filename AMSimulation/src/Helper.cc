@@ -106,12 +106,6 @@ TString Debug() {
     return Color("gray") + "DEBUG" + Color("reset") + "  : ";
 }
 
-
-std::size_t hashThisEvent(unsigned evt, float phi) {
-    TString s1 = Form("%.8f%08u", phi, evt);
-    return s1.Hash();
-}
-
 }  // namespace slhcl1tt
 
 void ResetDeleteBranches (TTree* tree) {

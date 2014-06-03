@@ -11,13 +11,13 @@ namespace slhcl1tt {
 
 // Typically, short is 16 bits, int is 32 bits, long is 32 bits and long long is 64 bits
 // But we need to guarantee on the size of the integer
-typedef uint8_t count_type;  // for frequency
+typedef uint8_t  count_type; // for frequency
 typedef uint16_t bit_type;   // for DC bits: 0 - 2^16 (=65536 max for nDCBits_=4)
-typedef uint16_t key_type;   // for key used in the pattern matching map
 typedef uint32_t id_type;    // generic
-typedef uint32_t addr_type;  // now reduced to 32-bit (from 64-bit) and is therefore the same as id_type
+typedef uint32_t addr_type;  // for full superstrip id, now reduced to 32-bit (from 64-bit) and is therefore the same as id_type
+typedef uint32_t key_type;   // for key used in the pattern matching map, now increased to 32-bit (from 16-bit) and is therefore the same as id_type
 
-typedef std::tr1::array<addr_type,8>  pattern_type;  // maximum number of superstrips in a pattern set to 8 due to hardware design
+typedef std::tr1::array<addr_type,8> pattern_type;  // maximum number of superstrips in a pattern set to 8 due to hardware design
 typedef std::tr1::array<bit_type,8>  pattern_bit_type;  // one DC bit for one superstrip
 
 
@@ -46,6 +46,20 @@ static const id_type iModuleIdMask_      = 0x3FFFF; // 0-262143
 // Retrieve layer, ladder, module from a moduleId
 inline id_type decodeLayer(id_type moduleId) {
     return (moduleId / 10000) % 100;
+}
+
+inline id_type decodeLayer4bit(id_type moduleId) {
+    id_type lay = (moduleId / 10000) % 100;
+    if (5 <= lay && lay <= 10)
+        return (lay - 5);
+    if (11 <= lay && lay <= 15)
+        return (lay - 5);
+    if (18 <= lay && lay <= 22)
+        return (lay - 7);
+    if (26 == lay)  // fake superstrip
+        return 15;
+    throw "Unexpected layer id";
+    return -1;
 }
 
 inline id_type decodeLadder(id_type moduleId) {
@@ -90,6 +104,10 @@ inline id_type decodeSuperstripLayer(addr_type superstripId) {
     return decodeLayer(decodeSuperstripModuleId(superstripId));
 }
 
+inline id_type decodeSuperstripLayer4bit(addr_type superstripId) {
+    return decodeLayer4bit(decodeSuperstripModuleId(superstripId));
+}
+
 inline id_type decodeSuperstripLadder(addr_type superstripId) {
     return decodeLadder(decodeSuperstripModuleId(superstripId));
 }
@@ -113,7 +131,7 @@ inline void encodeDCBit(id_type nDCBits, addr_type& superstripId, bit_type& supe
     id_type col = decodeSuperstripSubLadder(superstripId);
     id_type row = decodeSuperstripSubModule(superstripId);
 
-    // FIXME: only do the submodule, since there's only one DC bit
+    // Only do the submodule, since there's only one DC bit
     //id_type col_mod_n = col % (1 << nDCBits);
     id_type row_mod_n = row % (1 << nDCBits);
     //col /= (1 << nDCBits);
@@ -125,14 +143,30 @@ inline void encodeDCBit(id_type nDCBits, addr_type& superstripId, bit_type& supe
 }
 
 inline addr_type encodeFakeSuperstripId() {
-    // An impossible value
-    addr_type id = 0;
-    id -= 1;  // 2^32 - 1 = 4294967295
-    return id;
+    // An impossible value: 2^32 - 1 = 4294967295
+    return addr_type(-1);
 }
 
-inline bool isFakeSuperstripId(addr_type id) {
-    return id == encodeFakeSuperstripId();
+inline bool isFakeSuperstripId(addr_type superstripId) {
+    return (superstripId == encodeFakeSuperstripId());
+}
+
+inline key_type hashSuperstripId(addr_type superstripId) {
+    // A simple hash function to make superstripId distribute more or less uniformly
+    // Hence we might prefer to keep the least significant bits
+    id_type lay = decodeSuperstripLayer4bit(superstripId);
+    id_type lad = decodeSuperstripLadder(superstripId);
+    id_type mod = decodeSuperstripModule(superstripId);
+    id_type col = decodeSuperstripSubLadder(superstripId);
+    id_type row = decodeSuperstripSubModule(superstripId);
+    // Going from 32 bits (18 - 5 - 9) to 21 bits (4 - 4 - 7 - 1 - 5)
+    key_type h = 0;
+    h |= key_type(lay & 0xF ) << 17 |
+         key_type(lad & 0xF ) << 13 |
+         key_type(mod & 0x7F) << 6  |
+         key_type(col & 0x1 ) << 5  |
+         key_type(row & 0x1F) << 0  ;
+    return h;
 }
 
 // Make a map to merge layers in barrel and in endcap

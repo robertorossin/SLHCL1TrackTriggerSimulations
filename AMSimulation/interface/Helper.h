@@ -32,8 +32,6 @@ TString Warning();
 TString Info();
 TString Debug();
 
-std::size_t hashThisEvent(unsigned evt, float phi);
-
 }  // namespace slhcl1tt
 
 

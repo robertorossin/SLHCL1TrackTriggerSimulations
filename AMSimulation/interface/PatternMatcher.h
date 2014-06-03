@@ -7,7 +7,6 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 using namespace slhcl1tt;
 
-#include <unordered_map>
 #include "TFile.h"
 #include "TFileCollection.h"
 #include "TChain.h"
@@ -25,7 +24,8 @@ class PatternMatcher {
     PatternMatcher(PatternBankOption option)
     : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits),
       prefixRoad_("AMTTRoads_"), suffix_(""),
-      nEvents_(999999999), maxPatterns_(999999999), maxRoads_(999999999), maxHits_(999999999), verbose_(1) {
+      nEvents_(999999999), maxPatterns_(999999999), maxRoads_(999999999), maxHits_(999999999), verbose_(1),
+      ptr_allPatternIds_(0), ptr_allPatternBits_(0), size_allPatternIds_(0), size_allPatternBits_(0) {
 
         assert(3 <= nLayers_ && nLayers_ <= 8);
         assert(0 <= nDCBits_ && nDCBits_ <= 4);
@@ -36,7 +36,10 @@ class PatternMatcher {
     }
 
     // Destructor
-    ~PatternMatcher() {}
+    ~PatternMatcher() {
+        delete ptr_allPatternIds_;
+        delete ptr_allPatternBits_;
+    }
 
     // Setters
     //void setNLayers(int n)          { nLayers_ = n; }
@@ -66,6 +69,11 @@ class PatternMatcher {
     // Main driver
     int run(TString out, TString src, TString bank);
 
+  private:
+    TTPattern makeTTPattern(unsigned index) const;
+
+    void clearHashMap();
+
 
   public:
     // Configurations
@@ -89,8 +97,12 @@ class PatternMatcher {
     TChain * chain_;
     std::vector<std::vector<TTRoad> > allRoads_;
 
-    std::vector<TTPattern> allPatterns_;
-    std::unordered_multimap<addr_type, addr_type> ssIdMapFast_;   // key: superstripId, value: pointer to TTPattern
+    addr_type* ptr_allPatternIds_;  // serialize patternIds to achieve minimum memory usage
+    bit_type* ptr_allPatternBits_;  // serialize patternBits to achieve minimum memory usage
+    unsigned size_allPatternIds_;   // keep track of the size of ptr_allPatternIds_
+    unsigned size_allPatternBits_;  // keep track of the size of ptr_allPatternBits_
+
+    std::vector<std::vector<unsigned> > ssIdHashMap_;
 
     std::map<unsigned, unsigned> layerMap_;  // defines layer merging
 };
