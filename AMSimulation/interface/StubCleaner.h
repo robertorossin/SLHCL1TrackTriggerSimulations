@@ -16,6 +16,10 @@ using namespace slhcl1tt;
 #include "TString.h"
 
 
+// SETTINGS: none
+// INPUT   : TTree with moduleId, hitId, sim info
+// OUTPUT  : TTree with moduleId, hitId, sim info
+
 class StubCleaner {
   public:
     // Constructor
@@ -28,7 +32,6 @@ class StubCleaner {
 
         chain_ = new TChain("ntupler/tree");
 
-        //eventSelect_ = "(genParts_pt[0]>2 && abs(genParts_eta[0])<2.2 && Sum$(TTStubs_trkId==1 && abs(atan2(TTStubs_r,TTStubs_z)-atan2(genParts_pt[0],genParts_pz[0]))<0.05 && abs(deltaPhi(atan2(TTStubs_y,TTStubs_x),genParts_phi[0]))<0.03)>=Sum$(TTStubs_trkId==1)-2)";
         eventSelect_ = "(1)";  // always on
 
         layerMap_ = getLayerMergingMap(nLayers_);
@@ -56,11 +59,6 @@ class StubCleaner {
     // Main driver
     int run(TString out, TString src);
 
-  private:
-    void erase999999(std::vector<id_type>& vec);
-    void erase999999(std::vector<int>& vec);
-    void erase999(std::vector<float>& vec);
-
 
   public:
     // Configurations
@@ -83,6 +81,5 @@ class StubCleaner {
 
     std::map<unsigned, unsigned> layerMap_;  // defines layer merging
 };
-
 
 #endif

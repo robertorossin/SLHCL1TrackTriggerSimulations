@@ -68,8 +68,6 @@ int PatternMatcher::readPatterns(TString src) {
             return 1;
         }
 
-        delete superstripIds;
-        delete superstripBits;
         delete ttree;
         delete tfile;
     }
