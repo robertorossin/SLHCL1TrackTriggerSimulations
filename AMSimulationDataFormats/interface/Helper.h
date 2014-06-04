@@ -6,6 +6,7 @@
 //#include <array>
 #include <stdint.h>  // consistent with DataFormats/DetId/interface/DetId.h
 #include <tr1/array>
+#include <cmath>
 
 namespace slhcl1tt {
 
@@ -43,6 +44,11 @@ static const id_type iModuleIdMask_      = 0x3FFFF; // 0-262143
 
 
 /// Functions
+inline id_type halfStripRound(float x) {
+    static const float p = 10.;
+    return floor((x*2)*p + 0.5)/p;
+}
+
 // Retrieve layer, ladder, module from a moduleId
 inline id_type decodeLayer(id_type moduleId) {
     return (moduleId / 10000) % 100;

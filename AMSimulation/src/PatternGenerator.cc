@@ -95,65 +95,53 @@ int PatternGenerator::makePatterns() {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
 
     // For reading
-    std::vector<float> *                vb_x              = 0;
-    std::vector<float> *                vb_y              = 0;
-    std::vector<float> *                vb_z              = 0;
-    std::vector<float> *                vb_r              = 0;
-    std::vector<float> *                vb_phi            = 0;
-    std::vector<float> *                vb_roughPt        = 0;
-    std::vector<unsigned> *             vb_iModCols       = 0;
-    std::vector<unsigned> *             vb_iModRows       = 0;
-    std::vector<unsigned> *             vb_modId          = 0;
-    std::vector<unsigned> *             vb_nhits          = 0;
-    std::vector<std::vector<int> > *    vb_hitCols        = 0;
-    std::vector<std::vector<int> > *    vb_hitRows        = 0;
-    std::vector<std::vector<int> > *    vb_hitTrkIds      = 0;
-    std::vector<std::vector<float> > *  vb_hitXs          = 0;
-    std::vector<std::vector<float> > *  vb_hitYs          = 0;
-    std::vector<std::vector<float> > *  vb_hitZs          = 0;
-    std::vector<float> *                vb_simPt          = 0;
-    std::vector<float> *                vb_simEta         = 0;
-    std::vector<float> *                vb_simPhi         = 0;
-    std::vector<int> *                  vb_trkId          = 0;
+    std::vector<float> *          vb_x          = 0;
+    std::vector<float> *          vb_y          = 0;
+    std::vector<float> *          vb_z          = 0;
+    std::vector<float> *          vb_r          = 0;
+    std::vector<float> *          vb_phi        = 0;
+    std::vector<float> *          vb_coordx     = 0;
+    std::vector<float> *          vb_coordy     = 0;
+    std::vector<float> *          vb_roughPt    = 0;
+    std::vector<unsigned> *       vb_iModCols   = 0;
+    std::vector<unsigned> *       vb_iModRows   = 0;
+    std::vector<unsigned> *       vb_modId      = 0;
+    std::vector<unsigned> *       vb_nhits      = 0;
+    std::vector<float> *          vb_simPt      = 0;
+    std::vector<float> *          vb_simEta     = 0;
+    std::vector<float> *          vb_simPhi     = 0;
+    std::vector<int> *            vb_trkId      = 0;
 
-    chain_->SetBranchStatus("*", 0);
-    chain_->SetBranchStatus("TTStubs_x"        , 1);
-    chain_->SetBranchStatus("TTStubs_y"        , 1);
-    chain_->SetBranchStatus("TTStubs_z"        , 1);
-    chain_->SetBranchStatus("TTStubs_r"        , 1);
-    chain_->SetBranchStatus("TTStubs_phi"      , 1);
-    chain_->SetBranchStatus("TTStubs_roughPt"  , 1);
-    chain_->SetBranchStatus("TTStubs_iModCols" , 1);
-    chain_->SetBranchStatus("TTStubs_iModRows" , 1);
-    chain_->SetBranchStatus("TTStubs_modId"    , 1);
-    chain_->SetBranchStatus("TTStubs_nhits"    , 1);
-    chain_->SetBranchStatus("TTStubs_hitCols"  , 1);
-    chain_->SetBranchStatus("TTStubs_hitRows"  , 1);
-    chain_->SetBranchStatus("TTStubs_hitTrkIds", 1);
-    chain_->SetBranchStatus("TTStubs_hitXs"    , 1);
-    chain_->SetBranchStatus("TTStubs_hitYs"    , 1);
-    chain_->SetBranchStatus("TTStubs_hitZs"    , 1);
-    chain_->SetBranchStatus("TTStubs_simPt"    , 1);
-    chain_->SetBranchStatus("TTStubs_simEta"   , 1);
-    chain_->SetBranchStatus("TTStubs_simPhi"   , 1);
-    chain_->SetBranchStatus("TTStubs_trkId"    , 1);
+    chain_->SetBranchStatus("*"                 , 0);
+    chain_->SetBranchStatus("TTStubs_x"         , 1);
+    chain_->SetBranchStatus("TTStubs_y"         , 1);
+    chain_->SetBranchStatus("TTStubs_z"         , 1);
+    chain_->SetBranchStatus("TTStubs_r"         , 1);
+    chain_->SetBranchStatus("TTStubs_phi"       , 1);
+    chain_->SetBranchStatus("TTStubs_coordx"    , 1);
+    chain_->SetBranchStatus("TTStubs_coordy"    , 1);
+    chain_->SetBranchStatus("TTStubs_roughPt"   , 1);
+    chain_->SetBranchStatus("TTStubs_iModCols"  , 1);
+    chain_->SetBranchStatus("TTStubs_iModRows"  , 1);
+    chain_->SetBranchStatus("TTStubs_modId"     , 1);
+    chain_->SetBranchStatus("TTStubs_nhits"     , 1);
+    chain_->SetBranchStatus("TTStubs_simPt"     , 1);
+    chain_->SetBranchStatus("TTStubs_simEta"    , 1);
+    chain_->SetBranchStatus("TTStubs_simPhi"    , 1);
+    chain_->SetBranchStatus("TTStubs_trkId"     , 1);
 
     chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
     chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
     chain_->SetBranchAddress("TTStubs_z"        , &(vb_z));
     chain_->SetBranchAddress("TTStubs_r"        , &(vb_r));
     chain_->SetBranchAddress("TTStubs_phi"      , &(vb_phi));
+    chain_->SetBranchAddress("TTStubs_coordx"   , &(vb_coordx));
+    chain_->SetBranchAddress("TTStubs_coordy"   , &(vb_coordy));
     chain_->SetBranchAddress("TTStubs_roughPt"  , &(vb_roughPt));
     chain_->SetBranchAddress("TTStubs_iModCols" , &(vb_iModCols));
     chain_->SetBranchAddress("TTStubs_iModRows" , &(vb_iModRows));
     chain_->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
     chain_->SetBranchAddress("TTStubs_nhits"    , &(vb_nhits));
-    chain_->SetBranchAddress("TTStubs_hitCols"  , &(vb_hitCols));
-    chain_->SetBranchAddress("TTStubs_hitRows"  , &(vb_hitRows));
-    chain_->SetBranchAddress("TTStubs_hitTrkIds", &(vb_hitTrkIds));
-    chain_->SetBranchAddress("TTStubs_hitXs"    , &(vb_hitXs));
-    chain_->SetBranchAddress("TTStubs_hitYs"    , &(vb_hitYs));
-    chain_->SetBranchAddress("TTStubs_hitZs"    , &(vb_hitZs));
     chain_->SetBranchAddress("TTStubs_simPt"    , &(vb_simPt));
     chain_->SetBranchAddress("TTStubs_simEta"   , &(vb_simEta));
     chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
@@ -197,9 +185,15 @@ int PatternGenerator::makePatterns() {
             unsigned nhits = vb_nhits->at(l);
             if (nrows == 960 || nrows == 1016)
                 nrows = 1024;
-            assert(nhits == 1 && (ncols == 2 || ncols == 32) && nrows == 1024);  // input files must already be cleaned
-            int col = vb_hitCols->at(l).at(0);
-            int row = vb_hitRows->at(l).at(0);
+            assert(nhits > 0 && (ncols == 2 || ncols == 32) && nrows == 1024);
+            float coordx = vb_coordx->at(l);
+            float coordy = vb_coordy->at(l);
+
+            // Using half-strip unit
+            int col = halfStripRound(coordy);
+            int row = halfStripRound(coordx);
+            ncols *= 2;
+            nrows *= 2;
 
             // Set to lower resolution according to nSubLadders and nSubModules
             col /= (ncols / std::min((int) ncols, po.nSubLadders));
@@ -207,15 +201,17 @@ int PatternGenerator::makePatterns() {
             addr_type ssId = encodeSuperstripId(moduleId, col, row);
             bit_type ssBit = 1 << 0;
 
-            // Use DCBit
+            // Use DCBits
             encodeDCBit(nDCBits_, ssId, ssBit);
 
             // Create a superstrip
             TTSuperstrip ss(ssId, ssBit);
             goodSuperstrips.push_back(ss);
 
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " ssId: " << ssId << " ssBit: " << ssBit << " col: " << col << " row: " << row << " trkId: " << vb_hitTrkIds->at(l).at(0) << std::endl;
+            if (verbose_>2) {
+                std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
+                std::cout << Debug() << "... ... stub: " << l << " ssId: " << ssId << " ssBit: " << ssBit << " col: " << col << " row: " << row << std::endl;
+            }
         }
 
         // Fake superstrip mechanism is carried out below

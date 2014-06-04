@@ -139,65 +139,53 @@ int PatternMatcher::makeRoads() {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
 
     // For reading
-    std::vector<float> *                vb_x              = 0;
-    std::vector<float> *                vb_y              = 0;
-    std::vector<float> *                vb_z              = 0;
-    std::vector<float> *                vb_r              = 0;
-    std::vector<float> *                vb_phi            = 0;
-    std::vector<float> *                vb_roughPt        = 0;
-    std::vector<unsigned> *             vb_iModCols       = 0;
-    std::vector<unsigned> *             vb_iModRows       = 0;
-    std::vector<unsigned> *             vb_modId          = 0;
-    std::vector<unsigned> *             vb_nhits          = 0;
-    std::vector<std::vector<int> > *    vb_hitCols        = 0;
-    std::vector<std::vector<int> > *    vb_hitRows        = 0;
-    std::vector<std::vector<int> > *    vb_hitTrkIds      = 0;
-    std::vector<std::vector<float> > *  vb_hitXs          = 0;
-    std::vector<std::vector<float> > *  vb_hitYs          = 0;
-    std::vector<std::vector<float> > *  vb_hitZs          = 0;
-    std::vector<float> *                vb_simPt          = 0;
-    std::vector<float> *                vb_simEta         = 0;
-    std::vector<float> *                vb_simPhi         = 0;
-    std::vector<int> *                  vb_trkId          = 0;
+    std::vector<float> *          vb_x          = 0;
+    std::vector<float> *          vb_y          = 0;
+    std::vector<float> *          vb_z          = 0;
+    std::vector<float> *          vb_r          = 0;
+    std::vector<float> *          vb_phi        = 0;
+    std::vector<float> *          vb_coordx     = 0;
+    std::vector<float> *          vb_coordy     = 0;
+    std::vector<float> *          vb_roughPt    = 0;
+    std::vector<unsigned> *       vb_iModCols   = 0;
+    std::vector<unsigned> *       vb_iModRows   = 0;
+    std::vector<unsigned> *       vb_modId      = 0;
+    std::vector<unsigned> *       vb_nhits      = 0;
+    std::vector<float> *          vb_simPt      = 0;
+    std::vector<float> *          vb_simEta     = 0;
+    std::vector<float> *          vb_simPhi     = 0;
+    std::vector<int> *            vb_trkId      = 0;
 
-    chain_->SetBranchStatus("*", 0);
-    chain_->SetBranchStatus("TTStubs_x"        , 1);
-    chain_->SetBranchStatus("TTStubs_y"        , 1);
-    chain_->SetBranchStatus("TTStubs_z"        , 1);
-    chain_->SetBranchStatus("TTStubs_r"        , 1);
-    chain_->SetBranchStatus("TTStubs_phi"      , 1);
-    chain_->SetBranchStatus("TTStubs_roughPt"  , 1);
-    chain_->SetBranchStatus("TTStubs_iModCols" , 1);
-    chain_->SetBranchStatus("TTStubs_iModRows" , 1);
-    chain_->SetBranchStatus("TTStubs_modId"    , 1);
-    chain_->SetBranchStatus("TTStubs_nhits"    , 1);
-    chain_->SetBranchStatus("TTStubs_hitCols"  , 1);
-    chain_->SetBranchStatus("TTStubs_hitRows"  , 1);
-    chain_->SetBranchStatus("TTStubs_hitTrkIds", 1);
-    chain_->SetBranchStatus("TTStubs_hitXs"    , 1);
-    chain_->SetBranchStatus("TTStubs_hitYs"    , 1);
-    chain_->SetBranchStatus("TTStubs_hitZs"    , 1);
-    chain_->SetBranchStatus("TTStubs_simPt"    , 1);
-    chain_->SetBranchStatus("TTStubs_simEta"   , 1);
-    chain_->SetBranchStatus("TTStubs_simPhi"   , 1);
-    chain_->SetBranchStatus("TTStubs_trkId"    , 1);
+    chain_->SetBranchStatus("*"                 , 0);
+    chain_->SetBranchStatus("TTStubs_x"         , 1);
+    chain_->SetBranchStatus("TTStubs_y"         , 1);
+    chain_->SetBranchStatus("TTStubs_z"         , 1);
+    chain_->SetBranchStatus("TTStubs_r"         , 1);
+    chain_->SetBranchStatus("TTStubs_phi"       , 1);
+    chain_->SetBranchStatus("TTStubs_coordx"    , 1);
+    chain_->SetBranchStatus("TTStubs_coordy"    , 1);
+    chain_->SetBranchStatus("TTStubs_roughPt"   , 1);
+    chain_->SetBranchStatus("TTStubs_iModCols"  , 1);
+    chain_->SetBranchStatus("TTStubs_iModRows"  , 1);
+    chain_->SetBranchStatus("TTStubs_modId"     , 1);
+    chain_->SetBranchStatus("TTStubs_nhits"     , 1);
+    chain_->SetBranchStatus("TTStubs_simPt"     , 1);
+    chain_->SetBranchStatus("TTStubs_simEta"    , 1);
+    chain_->SetBranchStatus("TTStubs_simPhi"    , 1);
+    chain_->SetBranchStatus("TTStubs_trkId"     , 1);
 
     chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
     chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
     chain_->SetBranchAddress("TTStubs_z"        , &(vb_z));
     chain_->SetBranchAddress("TTStubs_r"        , &(vb_r));
     chain_->SetBranchAddress("TTStubs_phi"      , &(vb_phi));
+    chain_->SetBranchAddress("TTStubs_coordx"   , &(vb_coordx));
+    chain_->SetBranchAddress("TTStubs_coordy"   , &(vb_coordy));
     chain_->SetBranchAddress("TTStubs_roughPt"  , &(vb_roughPt));
     chain_->SetBranchAddress("TTStubs_iModCols" , &(vb_iModCols));
     chain_->SetBranchAddress("TTStubs_iModRows" , &(vb_iModRows));
     chain_->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
     chain_->SetBranchAddress("TTStubs_nhits"    , &(vb_nhits));
-    chain_->SetBranchAddress("TTStubs_hitCols"  , &(vb_hitCols));
-    chain_->SetBranchAddress("TTStubs_hitRows"  , &(vb_hitRows));
-    chain_->SetBranchAddress("TTStubs_hitTrkIds", &(vb_hitTrkIds));
-    chain_->SetBranchAddress("TTStubs_hitXs"    , &(vb_hitXs));
-    chain_->SetBranchAddress("TTStubs_hitYs"    , &(vb_hitYs));
-    chain_->SetBranchAddress("TTStubs_hitZs"    , &(vb_hitZs));
     chain_->SetBranchAddress("TTStubs_simPt"    , &(vb_simPt));
     chain_->SetBranchAddress("TTStubs_simEta"   , &(vb_simEta));
     chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
@@ -238,49 +226,45 @@ int PatternMatcher::makeRoads() {
             if (nrows == 960 || nrows == 1016)
                 nrows = 1024;
             assert(nhits > 0 && (ncols == 2 || ncols == 32) && nrows == 1024);
-            int col = 0;
-            int row = 0;
+            float coordx = vb_coordx->at(l);
+            float coordy = vb_coordy->at(l);
 
-            //float x = vb_x->at(l);
-            //float y = vb_y->at(l);
-            //float z = vb_z->at(l);
+            // Using half-strip unit
+            int col = halfStripRound(coordy);
+            int row = halfStripRound(coordx);
+            ncols *= 2;
+            nrows *= 2;
+
+            float x = vb_x->at(l);
+            float y = vb_y->at(l);
+            float z = vb_z->at(l);
             float pt = vb_roughPt->at(l);
 
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
+            // Set to lower resolution according to nSubLadders and nSubModules
+            col /= (ncols / std::min((int) ncols, po.nSubLadders));
+            row /= (nrows / std::min((int) nrows, po.nSubModules));
+            addr_type ssId = encodeSuperstripId(moduleId, col, row);
+            bit_type ssBit = 1 << 0;
 
-            for (unsigned m=0; m<nhits; ++m) {
-                col = vb_hitCols->at(l).at(m);
-                row = vb_hitRows->at(l).at(m);
+            // Use DCBits
+            encodeDCBit(nDCBits_, ssId, ssBit);
 
-                // Set to lower resolution according to nSubLadders and nSubModules
-                col /= (ncols / std::min((int) ncols, po.nSubLadders));
-                row /= (nrows / std::min((int) nrows, po.nSubModules));
-                addr_type ssId = encodeSuperstripId(moduleId, col, row);
-                bit_type ssBit = 1 << 0;
+            key_type hash = hashSuperstripId(ssId);
+            for (auto it=ssIdHashMap_.at(hash).begin(); it!=ssIdHashMap_.at(hash).end(); ++it) {  // loop over all possible patterns
+                auto found = foundPatternMap.find(*it);  // find by index of pattern
+                if (found != foundPatternMap.end()) {  // found
+                    found->second.emplace_back(x, y, z, pt, ssId, ssBit);  // construct a TTHit in place
 
-                // Use DCBits
-                encodeDCBit(nDCBits_, ssId, ssBit);
-
-                float x = vb_hitXs->at(l).at(m);
-                float y = vb_hitYs->at(l).at(m);
-                float z = vb_hitZs->at(l).at(m);
-
-                key_type hash = hashSuperstripId(ssId);
-                for (auto it=ssIdHashMap_.at(hash).begin(); it!=ssIdHashMap_.at(hash).end(); ++it) {  // loop over all possible patterns
-                    auto found = foundPatternMap.find(*it);  // find by index of pattern
-                    if (found != foundPatternMap.end()) {  // found
-                        found->second.emplace_back(x, y, z, pt, ssId, ssBit);  // construct a TTHit in place
-
-                    } else {
-                        std::vector<TTHit> hits;
-                        hits.emplace_back(x, y, z, pt, ssId, ssBit);  // construct a TTHit in place
-                        foundPatternMap.insert(std::make_pair(*it, hits));
-                    }
+                } else {
+                    std::vector<TTHit> hits;
+                    hits.emplace_back(x, y, z, pt, ssId, ssBit);  // construct a TTHit in place
+                    foundPatternMap.insert(std::make_pair(*it, hits));
                 }
-                if (verbose_>2) {
-                    std::cout << Debug() << "... ... ... hit: " << m << " ssId: " << ssId << " ssBit: " << ssBit << " col: " << col << " row: " << row << " trkId: " << vb_hitTrkIds->at(l).at(m) << std::endl;
-                    std::cout << Debug() << "... ... ... hit: " << m << " hash: " << hash << " # values: " << ssIdHashMap_.at(hash).size() << std::endl;
-                }
+            }
+            if (verbose_>2) {
+                std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
+                std::cout << Debug() << "... ... stub: " << l << " ssId: " << ssId << " ssBit: " << ssBit << " col: " << col << " row: " << row << std::endl;
+                std::cout << Debug() << "... ... stub: " << l << " hash: " << hash << " # values: " << ssIdHashMap_.at(hash).size() << std::endl;
             }
         }
 
