@@ -65,7 +65,7 @@ class AnalyzerPatternGeomInfo : public edm::EDAnalyzer {
     std::map<uint32_t, uint32_t> moduleId1ToGeoId;
 
     /// Patterns
-    std::vector<std::vector<uint64_t> > superstripIds;
+    std::vector<std::vector<uint32_t> > superstripIds;
 
     /// Histograms
     TH2F* hPXB_PS_ZR;
@@ -311,8 +311,7 @@ void AnalyzerPatternGeomInfo::beginJob() {
     TFile* tfile = TFile::Open(bankfile_.c_str());
     TTree* ttree = (TTree*) tfile->Get("patternBank");
 
-    typedef ULong64_t unsigned64;
-    std::vector<unsigned64> * superstripIdsForBranch = 0;
+    std::vector<unsigned> * superstripIdsForBranch = 0;
     ttree->SetBranchAddress("superstripIds", &superstripIdsForBranch);
 
     Long64_t nentries = ttree->GetEntries();
@@ -320,9 +319,9 @@ void AnalyzerPatternGeomInfo::beginJob() {
         ttree->GetEntry(ievt);
         unsigned nsuperstrips = superstripIdsForBranch->size();
 
-        std::vector<uint64_t> superstripIds_ievt;
+        std::vector<uint32_t> superstripIds_ievt;
         for (unsigned i=0; i<nsuperstrips; ++i) {
-            uint64_t superstripId = superstripIdsForBranch->at(i);
+            uint32_t superstripId = superstripIdsForBranch->at(i);
             superstripIds_ievt.push_back(superstripId);
         }
 
@@ -467,18 +466,14 @@ void AnalyzerPatternGeomInfo::analyze(const edm::Event& iEvent, const edm::Event
         unsigned nsuperstrips = superstripIds.at(ievt).size();
 
         for (unsigned i=0; i<nsuperstrips; ++i) {
-            uint64_t superstripId = superstripIds.at(ievt).at(i);
+            uint32_t superstripId = superstripIds.at(ievt).at(i);
             if (superstripId == 0)  continue;
+            if (superstripId == 4294967295)  continue;  // fake superstrip
 
             // Always check whether the decoding is correct!
-            uint32_t lay = (superstripId >> 29) & 0x1F;
-            uint32_t lad = (superstripId >> 22) & 0x7F;
-            uint32_t mod = (superstripId >> 15) & 0x7F;
-            uint32_t col = (superstripId >> 10) & 0x1F;
-            uint32_t row = (superstripId >> 0 ) & 0x3FF;
-            uint32_t moduleId = 10000*lay + 100*lad + mod;
-
-            if (lad == 127 && mod == 127)  continue;  // fake superstrip
+            uint32_t moduleId = (superstripId >> 14) & 0x3FFFF;
+            uint32_t col = (superstripId >> 9 ) & 0x1F;
+            uint32_t row = (superstripId >> 0 ) & 0x1FF;
 
             if (verbose_ > 0) {
                 std::cout << "ievt: " << ievt << " superstripId: " << superstripId << "  moduleId: " << moduleId << " col: "  << col << " row: " << row << std::endl;
