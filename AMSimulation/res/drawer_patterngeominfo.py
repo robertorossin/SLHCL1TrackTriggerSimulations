@@ -17,8 +17,8 @@ sections["XY"] = True
 sections["UV"] = False  # FIXME
 
 drawerInit = DrawerInit()
-fname = "patternGeomInfo_Extended2023TTI_fib35.root"
-nentries = 35
+fname = "patternGeomInfo_Extended2023TTI_fib36.root"
+nentries = 36
 
 tfile = TFile.Open(fname)
 tfiledir = tfile.Get("geominfo")

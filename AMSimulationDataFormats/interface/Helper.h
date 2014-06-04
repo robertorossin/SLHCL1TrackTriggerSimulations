@@ -6,6 +6,7 @@
 //#include <array>
 #include <stdint.h>  // consistent with DataFormats/DetId/interface/DetId.h
 #include <tr1/array>
+#include <cmath>
 
 namespace slhcl1tt {
 
@@ -43,6 +44,11 @@ static const id_type iModuleIdMask_      = 0x3FFFF; // 0-262143
 
 
 /// Functions
+inline id_type halfStripRound(float x) {
+    static const float p = 10.;
+    return floor((x*2)*p + 0.5)/p;
+}
+
 // Retrieve layer, ladder, module from a moduleId
 inline id_type decodeLayer(id_type moduleId) {
     return (moduleId / 10000) % 100;
@@ -75,8 +81,8 @@ inline id_type encodeModuleId(id_type lay, id_type lad, id_type mod) {
 }
 
 // Encode moduleId, superstrip location into a superstripId
-// SubLadder = column = _segment_
-// SubModule = row = _superstrip_
+// SubLadder = column = _segment_ = coordy
+// SubModule = row = _superstrip_ = coordx
 inline addr_type encodeSuperstripId(id_type moduleId, id_type col, id_type row, bool truncate=false) {
     // If 'truncate' is set to true, we truncate 1 bit in submodule
     // This is needed if using full definition of col and row
@@ -174,25 +180,25 @@ inline std::map<unsigned, unsigned> getLayerMergingMap(int n) {
     // Hardcoded layer information
     if (n <= 6) {
         std::map<unsigned, unsigned> thismap {
-            {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
-            {11,10}, {12,9}, {13,8}, {14,7}, {15,6},
-            {18,10}, {19,9}, {20,8}, {21,7}, {22,6}
+            {5,0}, {6,1}, {7,2}, {8,3}, {9,4}, {10,5},
+            {11,5}, {12,4}, {13,3}, {14,2}, {15,1},
+            {18,5}, {19,4}, {20,3}, {21,2}, {22,1}
         };
         return thismap;
 
     } else if (n == 7) {
         std::map<unsigned, unsigned> thismap {
-            {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
-            {11,11}, {12,10}, {13,9}, {14,8}, {15,7},
-            {18,11}, {19,10}, {20,9}, {21,8}, {22,7}
+            {5,0}, {6,1}, {7,2}, {8,3}, {9,4}, {10,5},
+            {11,6}, {12,5}, {13,4}, {14,3}, {15,2},
+            {18,6}, {19,5}, {20,4}, {21,3}, {22,2}
         };
         return thismap;
 
     } else {  // >= 8
         std::map<unsigned, unsigned> thismap {
-            {5,5}, {6,6}, {7,7}, {8,8}, {9,9}, {10,10},
-            {11,11}, {12,12}, {13,10}, {14,9}, {15,8},
-            {18,11}, {19,12}, {20,10}, {21,9}, {22,8}
+            {5,0}, {6,1}, {7,2}, {8,3}, {9,4}, {10,5},
+            {11,7}, {12,6}, {13,5}, {14,4}, {15,3},
+            {18,7}, {19,6}, {20,5}, {21,4}, {22,3}
         };
         return thismap;
     }

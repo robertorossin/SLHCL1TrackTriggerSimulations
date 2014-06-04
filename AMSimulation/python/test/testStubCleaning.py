@@ -45,17 +45,6 @@ class TestAMSim(unittest.TestCase):
             nstubs = ievt.TTStubs_modId.size()
             self.assertTrue(nstubs <= 6)
 
-    def test_nhits(self):
-        tree = self.ttree
-        for ievt in tree:
-            # Check for hit singleness
-            for hit in ievt.TTStubs_hitCols:
-                self.assertEqual(hit.size(), 1)
-            for hit in ievt.TTStubs_hitRows:
-                self.assertEqual(hit.size(), 1)
-            #for hitTrkIds in ievt.TTStubs_hitTrkIds:
-            #    self.assertEqual(hitTrkIds[0], 1)
-
     def test_count(self):
         tree = self.ttree
         countA = 0
@@ -84,14 +73,14 @@ class TestAMSim(unittest.TestCase):
                 count5 += 1
             elif nstubs == 6:
                 count6 += 1
-        self.assertEqual(countA, 492)
+        self.assertEqual(countA, 493)
         self.assertEqual(count0, 1)
         self.assertEqual(count1, 3)
         self.assertEqual(count2, 8)
         self.assertEqual(count3, 9)
         self.assertEqual(count4, 10)
-        self.assertEqual(count5, 8)
-        self.assertEqual(count6, 61)
+        self.assertEqual(count5, 7)
+        self.assertEqual(count6, 62)
         self.assertEqual(count0+count1+count2+count3+count4+count5+count6, 100)
         self.assertEqual(1*count1+2*count2+3*count3+4*count4+5*count5+6*count6, countA)
 

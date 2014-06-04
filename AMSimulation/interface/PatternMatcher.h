@@ -31,8 +31,6 @@ class PatternMatcher {
         assert(0 <= nDCBits_ && nDCBits_ <= 4);
 
         chain_ = new TChain("ntupler/tree");
-
-        layerMap_ = getLayerMergingMap(nLayers_);
     }
 
     // Destructor
@@ -103,8 +101,6 @@ class PatternMatcher {
     unsigned size_allPatternBits_;  // keep track of the size of ptr_allPatternBits_
 
     std::vector<std::vector<unsigned> > ssIdHashMap_;
-
-    std::map<unsigned, unsigned> layerMap_;  // defines layer merging
 };
 
 #endif
