@@ -102,6 +102,11 @@ int StubCleaner::cleanStubs(TString out) {
     chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
     chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
 
+    // In addition, keep genParticle info
+    chain_->SetBranchStatus("genParts_pt"       , 1);
+    chain_->SetBranchStatus("genParts_eta"      , 1);
+    chain_->SetBranchStatus("genParts_phi"      , 1);
+
     // Set up TTreeFormula for event selection
     TTreeFormula* ttf_event = new TTreeFormula("ttf_event", eventSelect_, chain_);
     //ttf_event->SetQuickLoad(1);
@@ -178,36 +183,36 @@ int StubCleaner::cleanStubs(TString out) {
 
         // _____________________________________________________________________
         // Remove multiple stubs in one layer
-        std::vector<std::pair<unsigned, float> > vec_index_minDR;
+        std::vector<std::pair<unsigned, float> > vec_index_minDEta;
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
             int trkId = vb_trkId->at(l);  // check sim info
             if (trkId == good_trkId) {
                 float stub_eta = ROOT::Math::Impl::Eta_FromRhoZ(vb_r->at(l), vb_z->at(l));
-                float stub_phi = std::atan2(vb_y->at(l), vb_x->at(l));
-                float dR = deltaR(simEta, simPhi, stub_eta, stub_phi);
-                vec_index_minDR.push_back(std::make_pair(l, dR));
+                //float stub_phi = std::atan2(vb_y->at(l), vb_x->at(l));
+                float dEta = std::abs(simEta - stub_eta);
+                vec_index_minDEta.push_back(std::make_pair(l, dEta));
             }
         }
 
-        std::sort(vec_index_minDR.begin(), vec_index_minDR.end(), sortByFloat);
+        std::sort(vec_index_minDEta.begin(), vec_index_minDEta.end(), sortByFloat);
 
         std::vector<unsigned> goodLayerStubs(nLayers_, 999999);
-        for (std::vector<std::pair<unsigned, float> >::const_iterator it=vec_index_minDR.begin();
-             it!=vec_index_minDR.end(); ++it) {
+        for (std::vector<std::pair<unsigned, float> >::const_iterator it=vec_index_minDEta.begin();
+             it!=vec_index_minDEta.end(); ++it) {
             unsigned l = it->first;
-            float dR = it->second;
+            float dEta = it->second;
 
             unsigned moduleId = vb_modId->at(l);
             unsigned layer = decodeLayer(moduleId);
             unsigned mlayer = layerMap_.at(layer);  // mapping of layer --> mlayer must exist
 
             if (goodLayerStubs.at(mlayer) == 999999) {
-                goodLayerStubs.at(mlayer) = l;  // for each mlayer, takes the stub with minDR to simTrack
+                goodLayerStubs.at(mlayer) = l;  // for each mlayer, takes the stub with minDEta to simTrack
             } else {
                 unsigned l_old = goodLayerStubs.at(mlayer);
                 unsigned moduleId_old = vb_modId->at(l_old);
                 unsigned layer_old = decodeLayer(moduleId_old);
-                if (layer > layer_old && dR < 0.1) {
+                if (layer > layer_old && dEta < 0.1) {
                     // in case of layer merging, take the stub further away in z,
                     // as it provides larger lever arm. However, endcap provides
                     // worse resolution
@@ -294,10 +299,6 @@ int StubCleaner::cleanStubs(TString out) {
     delete ttf_event;
     delete ttree;
     delete tfile;
-
-    if (verbose_)  std::cout << Info() << "Replacing input source." << std::endl;
-    chain_->Reset();
-    chain_->Add(out);
 
     return 0;
 }
