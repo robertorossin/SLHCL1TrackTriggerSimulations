@@ -210,11 +210,11 @@ void AnalyzerPatternGeomInfo::beginRun(const edm::Run& iRun, const edm::EventSet
                     if (theStackedGeometry->isPSModule(stackDetId)) {
                         hPXB_PS_ZR->Fill(gp.z()*10., signed_r*10.);
                         hPXB_PS_XY->Fill(gp.x()*10., gp.y()*10.);
-                        hPXB_PS_UV->Fill(2e5*gp.x()/gp.perp2(), 2e5*gp.y()/gp.perp2());
+                        hPXB_PS_UV->Fill(2e5*0.1*gp.x()/gp.perp2(), 2e5*0.1*gp.y()/gp.perp2());
                     } else {
                         hPXB_2S_ZR->Fill(gp.z()*10., signed_r*10.);
                         hPXB_2S_XY->Fill(gp.x()*10., gp.y()*10.);
-                        hPXB_2S_UV->Fill(2e5*gp.x()/gp.perp2(), 2e5*gp.y()/gp.perp2());
+                        hPXB_2S_UV->Fill(2e5*0.1*gp.x()/gp.perp2(), 2e5*0.1*gp.y()/gp.perp2());
                     }
                 }
             }
@@ -290,11 +290,11 @@ void AnalyzerPatternGeomInfo::beginRun(const edm::Run& iRun, const edm::EventSet
                     if (theStackedGeometry->isPSModule(stackDetId)) {
                         hPXF_PS_ZR->Fill(gp.z()*10., signed_r*10.);
                         hPXF_PS_XY->Fill(gp.x()*10., gp.y()*10.);
-                        hPXF_PS_UV->Fill(2e5*gp.x()/gp.perp2(), 2e5*gp.y()/gp.perp2());
+                        hPXF_PS_UV->Fill(2e5*0.1*gp.x()/gp.perp2(), 2e5*0.1*gp.y()/gp.perp2());
                     } else {
                         hPXF_2S_ZR->Fill(gp.z()*10., signed_r*10.);
                         hPXF_2S_XY->Fill(gp.x()*10., gp.y()*10.);
-                        hPXF_2S_UV->Fill(2e5*gp.x()/gp.perp2(), 2e5*gp.y()/gp.perp2());
+                        hPXF_2S_UV->Fill(2e5*0.1*gp.x()/gp.perp2(), 2e5*0.1*gp.y()/gp.perp2());
                     }
                 }
             }
@@ -503,12 +503,12 @@ void AnalyzerPatternGeomInfo::analyze(const edm::Event& iEvent, const edm::Event
 
                 if (stackDetId.isBarrel()) {
                     vecPXB_ind_XY.at(fib_x)->Fill(gp.x()*10., gp.y()*10.);
-                    vecPXB_ind_UV.at(fib_x)->Fill(2e5*gp.x()/gp.perp2(), 2e5*gp.y()/gp.perp2());
+                    vecPXB_ind_UV.at(fib_x)->Fill(2e5*0.1*gp.x()/gp.perp2(), 2e5*0.1*gp.y()/gp.perp2());
                 }
 
                 if (stackDetId.isEndcap()) {
                     vecPXF_ind_XY.at(fib_x)->Fill(gp.x()*10., gp.y()*10.);
-                    vecPXF_ind_UV.at(fib_x)->Fill(2e5*gp.x()/gp.perp2(), 2e5*gp.y()/gp.perp2());
+                    vecPXF_ind_UV.at(fib_x)->Fill(2e5*0.1*gp.x()/gp.perp2(), 2e5*0.1*gp.y()/gp.perp2());
                 }
             }
 
@@ -517,12 +517,12 @@ void AnalyzerPatternGeomInfo::analyze(const edm::Event& iEvent, const edm::Event
 
             if (stackDetId.isBarrel()) {
                 vecPXB_sum_XY.at(fib_x)->Fill(gp.x()*10., gp.y()*10.);
-                vecPXB_sum_UV.at(fib_x)->Fill(2e5*gp.x()/gp.perp2(), 2e5*gp.y()/gp.perp2());
+                vecPXB_sum_UV.at(fib_x)->Fill(2e5*0.1*gp.x()/gp.perp2(), 2e5*0.1*gp.y()/gp.perp2());
             }
 
             if (stackDetId.isEndcap()) {
                 vecPXF_sum_XY.at(fib_x)->Fill(gp.x()*10., gp.y()*10.);
-                vecPXF_sum_UV.at(fib_x)->Fill(2e5*gp.x()/gp.perp2(), 2e5*gp.y()/gp.perp2());
+                vecPXF_sum_UV.at(fib_x)->Fill(2e5*0.1*gp.x()/gp.perp2(), 2e5*0.1*gp.y()/gp.perp2());
             }
         }
 
