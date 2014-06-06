@@ -6,20 +6,20 @@
 #include "TTreeFormula.h"
 
 void tcut2(int nEvents=-1,
-           const char *output = "out.root",
-           const char *input = "",
-           const char *suffix = ".root",
-           const char *prefix = "results") {
+           const char *output = "out.root") {
+    //const char *input = "";
+    //const char *suffix = ".root";
+    //const char *prefix = "results";
 
     //TFile* infile = TFile::Open(input);
     //TTree* intree = (TTree*) infile->Get("ntupler/tree");
 
     //TString cut = "genParts_pt[0]>2 && abs(genParts_eta[0])<2.2 && Sum$(TTStubs_trkId==1 && abs(atan2(TTStubs_r,TTStubs_z)-atan2(genParts_pt[0],genParts_pz[0]))<0.05 && abs(deltaPhi(atan2(TTStubs_y,TTStubs_x),genParts_phi[0]))<0.03)>=Sum$(TTStubs_trkId==1)-2";
-    TString cut = "genParts_pt[0]>20 && abs(genParts_eta[0])<1.0";
+    TString cut = "genParts_pt[0]>20 && abs(genParts_eta[0])<0.8";
 
     TChain* chain_ = new TChain("ntupler/tree");
-    chain_->Add("/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_ntuple/SingleMuMinus_OneOverPt_vz0_20140420/ntuple_1_1_Y0t.root");
-    //chain_->Add("/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_ntuple/SingleMuPlus_OneOverPt_vz0_20140420/ntuple_1_1_EAj.root");
+    chain_->Add("root://cmsxrootd-site.fnal.gov//store/user/l1upgrades/SLHC/GEN/620_SLHC10_ntuple/SingleMuPlus_OneOverPt_vz0_20140522/ntuple_21_1_hPH.root");
+    chain_->Add("root://cmsxrootd-site.fnal.gov//store/user/l1upgrades/SLHC/GEN/620_SLHC10_ntuple/SingleMuMinus_OneOverPt_vz0_20140522/ntuple_21_1_dYD.root");
 
     TTreeFormula* ttf_event = new TTreeFormula("ttf_event", cut, chain_);
     
@@ -53,4 +53,10 @@ void tcut2(int nEvents=-1,
     //delete infile;
     delete chain_;
 }
+
+/*
+Example usage
+-------------
+root -l -b -q tcut2.C+\(-1,\"out.root\"\)
+*/
 

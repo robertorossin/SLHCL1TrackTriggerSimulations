@@ -1,4 +1,4 @@
-from ROOT import TH1, TH1F, TH2F, TProfile, TProfile2D, TFile, TChain, TCanvas, TLegend, TLatex, TLine, gROOT, gInterpreter, gStyle, gSystem, gPad
+from ROOT import TH1, TH1F, TH2F, TProfile, TProfile2D, TFile, TChain, TCanvas, TLegend, TLatex, TLine, TGraphAsymmErrors, gROOT, gInterpreter, gStyle, gSystem, gPad
 from rootcolors import *
 from math import sqrt
 from random import randint
@@ -182,7 +182,7 @@ def project2D(tree, histos):
 # Draw
 def draw(histos, ytitle="Events", logx=False, logy=False, stats=True, text=False):
     if isinstance(histos[0], HistView):
-        histos = map(getattr(x, "h"), histos)
+        histos = [hv.h for hv in histos]
     h = histos[0]
     if not stats:
         h.SetStats(0)
@@ -200,7 +200,7 @@ def draw(histos, ytitle="Events", logx=False, logy=False, stats=True, text=False
 # Draw more than one
 def draws(histos, ytitle="Events", logx=False, logy=False, stats=True):
     if isinstance(histos[0], HistView):
-        histos = map(getattr(x, "h"), histos)
+        histos = [hv.h for hv in histos]
     h = histos[0]
     if not stats:
         h.SetStats(0)
@@ -215,7 +215,7 @@ def draws(histos, ytitle="Events", logx=False, logy=False, stats=True):
 
 def draw2D(histos, logx=False, logy=False, logz=False, palette=True, stats=True):
     if isinstance(histos[0], HistView):
-        histos = map(getattr(x, "h"), histos)
+        histos = [hv.h for hv in histos]
     h = histos[0]
     if not stats:
         h.SetStats(0)
@@ -273,6 +273,5 @@ def get_infiles(txtfile, fast=False):
         for line in f:
             infiles.append(line.strip())
     if fast:
-        half = len(infiles)/2
-        infiles = [infiles[0], infiles[half]]
+        infiles = infiles[:2]
     return infiles
