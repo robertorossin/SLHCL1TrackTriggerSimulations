@@ -39,7 +39,7 @@ class TestAMSim(unittest.TestCase):
                 for ihit in iroad:
                     n += 1
                 self.assertTrue(iroad.size() == 0 or iroad.size() >= 6)
-        self.assertEqual(n, 372)
+        self.assertEqual(n, 373)
 
     def test_charge(self):
         tree = self.ttree

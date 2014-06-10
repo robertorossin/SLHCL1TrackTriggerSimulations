@@ -12,9 +12,9 @@ latex.SetTextSize(0.06)
 # Configurations
 
 sections = {}
-sections["ZR"] = True
-sections["XY"] = True
-sections["UV"] = False  # FIXME
+sections["ZR"] = False
+sections["XY"] = False
+sections["UV"] = True
 
 drawerInit = DrawerInit()
 fname = "patternGeomInfo_Extended2023TTI_fib36.root"
@@ -268,3 +268,65 @@ if sections["XY"]:
         c2.cd()
         gPad.Print(imgdir+"XYviewEC_patt%i.png" % fib(i))
 
+
+# ______________________________________________________________________________
+# UV
+if sections["UV"]:
+    h_old = None
+    h_oldEC = None
+    latex_old = None
+    latex_oldEC = None
+
+    for i in xrange(nentries):
+        if i==0 and not useTklayout:
+            c1 = TCanvas("UVCanvas", "UVView Canvas", 600, 600)
+            hPXB_PS_UV.Draw()
+            hPXB_2S_UV.Draw("same")
+
+            c2 = TCanvas("UVCanvasEC", "UVView Canvas (Endcap)", 600, 600)
+            hPXF_PS_UV.Draw("")
+            hPXF_2S_UV.Draw("same")
+
+        elif i==0:
+            img003.Draw()
+            img004.Draw()
+            c1 = img003
+            c2 = img004
+
+        if h_old:
+            h_old.Reset()
+            h_oldEC.Reset()
+            h_sum.Reset()
+            h_sumEC.Reset()
+            latex_old.Delete()
+            latex_oldEC.Delete()
+
+        c1.cd()
+        h_sum = tfiledir.Get("hPXB_sum_UV_%i" % fib(i))
+        h_sum.Draw("same col")
+        c2.cd()
+        h_sumEC = tfiledir.Get("hPXF_sum_UV_%i" % fib(i))
+        h_sumEC.Draw("same col")
+
+        c1.cd()
+        h = tfiledir.Get("hPXB_ind_UV_%i" % fib(i))
+        h.SetMarkerStyle(markerstyle)
+        h.SetMarkerSize(markersize)
+        h.Draw("same")
+        latex_old = latex.DrawLatex(0.7, 0.91, "n = %i" % fib(i))
+
+        c2.cd()
+        hEC = tfiledir.Get("hPXF_ind_UV_%i" % fib(i))
+        hEC.SetMarkerStyle(markerstyle)
+        hEC.SetMarkerSize(markersize)
+        hEC.Draw("same")
+        latex_oldEC = latex.DrawLatex(0.7, 0.91, "n = %i" % fib(i))
+
+        h_old = h
+        h_oldEC = hEC
+
+        c1.cd()
+        gPad.Print(imgdir+"UVview_patt%i.png" % fib(i))
+
+        c2.cd()
+        gPad.Print(imgdir+"UVviewEC_patt%i.png" % fib(i))
