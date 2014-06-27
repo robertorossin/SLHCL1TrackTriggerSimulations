@@ -9,13 +9,12 @@ generator = cms.EDProducer("FlatRandomOneOverPtGunProducer",
         MaxEta = cms.double(2.5),
         MaxPhi = cms.double(3.14159265359),
         MinEta = cms.double(-2.5),
-        MinPhi = cms.double(-3.14159265359), ## in radians
+        MinPhi = cms.double(-3.14159265359),
         XFlatSpread = cms.double(1.5), ## in mm
         YFlatSpread = cms.double(1.5), ## in mm
         ZFlatSpread = cms.double(150.), ## in mm
     ),
-    Verbosity = cms.untracked.int32(0), ## set to 1 (or greater)  for printouts
-
+    Verbosity = cms.untracked.int32(0),
     psethack = cms.string('single mu- 1/pt 0.01 to 1'),
     AddAntiParticle = cms.bool(False),
     firstRun = cms.untracked.uint32(1)
