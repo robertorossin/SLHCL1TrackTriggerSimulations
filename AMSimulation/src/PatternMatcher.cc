@@ -191,7 +191,22 @@ int PatternMatcher::makeRoads() {
     chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
     chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
 
+    // In addition, keep genParticle info
+    std::vector<float> *          vp_pt         = 0;
+    std::vector<float> *          vp_eta        = 0;
+    std::vector<float> *          vp_phi        = 0;
+
+    chain_->SetBranchStatus("genParts_pt"       , 1);
+    chain_->SetBranchStatus("genParts_eta"      , 1);
+    chain_->SetBranchStatus("genParts_phi"      , 1);
+
+    chain_->SetBranchAddress("genParts_pt"      , &(vp_pt));
+    chain_->SetBranchAddress("genParts_eta"     , &(vp_eta));
+    chain_->SetBranchAddress("genParts_phi"     , &(vp_phi));
+
+
     allRoads_.clear();
+    allGenParts_.clear();
 
     // Make sure the map has already been set up
     assert(size_allPatternIds_ > 0);
@@ -212,6 +227,7 @@ int PatternMatcher::makeRoads() {
 
         if (!nstubs) {  // skip if no stub
             allRoads_.push_back(std::vector<TTRoad>());
+            allGenParts_.push_back(std::vector<genPart>());
             continue;
         }
 
@@ -305,7 +321,20 @@ int PatternMatcher::makeRoads() {
                 ++nPassed;
         }
         allRoads_.push_back(roadsInThisEvent);
+
+        // In addition, keep genParticle info
+        unsigned nparts = vp_pt->size();
+        std::vector<genPart> genPartsInThisEvent;
+        for (unsigned l=0; l<nparts; ++l) {
+            genPart part;
+            part.pt  = vp_pt->at(l);
+            part.eta = vp_eta->at(l);
+            part.phi = vp_phi->at(l);
+            genPartsInThisEvent.push_back(part);
+        }
+        allGenParts_.push_back(genPartsInThisEvent);
     }
+    assert(allRoads_.size() == allGenParts_.size());
 
     if (verbose_)  std::cout << Info() << "Processed " << nEvents_ << " events, triggered on " << nPassed << " events." << std::endl;
 
@@ -356,21 +385,35 @@ int PatternMatcher::writeRoads(TString out) {
     ttree->Branch(prefixRoad_ + "hitSuperstripIds"  + suffix_, &(*vr_hitSuperstripIds));
     ttree->Branch(prefixRoad_ + "hitSuperstripBits" + suffix_, &(*vr_hitSuperstripBits));
 
+    // In addition, keep genParticle info
+    std::auto_ptr<std::vector<float> > vp_pt    (new std::vector<float>());
+    std::auto_ptr<std::vector<float> > vp_eta   (new std::vector<float>());
+    std::auto_ptr<std::vector<float> > vp_phi   (new std::vector<float>());
+
+    ttree->Branch("genParts_pt" , &(*vp_pt));
+    ttree->Branch("genParts_eta", &(*vp_pt));
+    ttree->Branch("genParts_phi", &(*vp_pt));
+
+
     // _________________________________________________________________________
     // Loop over all roads
     for (unsigned ievt=0; ievt<nentries; ++ievt) {
         if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7u", ievt) << std::endl;
-        vr_patternIds      ->clear();
-        vr_hitXs           ->clear();
-        vr_hitYs           ->clear();
-        vr_hitZs           ->clear();
-        vr_hitXErrors      ->clear();
-        vr_hitYErrors      ->clear();
-        vr_hitZErrors      ->clear();
-        vr_hitCharges      ->clear();
-        vr_hitPts          ->clear();
-        vr_hitSuperstripIds->clear();
+        vr_patternIds       ->clear();
+        vr_hitXs            ->clear();
+        vr_hitYs            ->clear();
+        vr_hitZs            ->clear();
+        vr_hitXErrors       ->clear();
+        vr_hitYErrors       ->clear();
+        vr_hitZErrors       ->clear();
+        vr_hitCharges       ->clear();
+        vr_hitPts           ->clear();
+        vr_hitSuperstripIds ->clear();
         vr_hitSuperstripBits->clear();
+
+        vp_pt               ->clear();
+        vp_eta              ->clear();
+        vp_phi              ->clear();
 
         const std::vector<TTRoad>& roadsInThisEvent = allRoads_.at(ievt);
         unsigned nroads = roadsInThisEvent.size();
@@ -427,8 +470,18 @@ int PatternMatcher::writeRoads(TString out) {
             vr_hitSuperstripBits->push_back(hitSuperstripBits);
         }
 
+        const std::vector<genPart>& genPartsInThisEvent = allGenParts_.at(ievt);
+        unsigned nparts = genPartsInThisEvent.size();
+
+        for (unsigned i=0; i<nparts; ++i) {
+            vp_pt ->push_back(genPartsInThisEvent.at(i).pt);
+            vp_eta->push_back(genPartsInThisEvent.at(i).eta);
+            vp_phi->push_back(genPartsInThisEvent.at(i).phi);
+        }
+
         ttree->Fill();
-        assert(vr_hitXs->size() == allRoads_.at(ievt).size());
+        assert(vr_hitXs->size() == nroads);
+        assert(vp_pt->size() == nparts);
     }
     assert(ttree->GetEntries() == (int) allRoads_.size());
 

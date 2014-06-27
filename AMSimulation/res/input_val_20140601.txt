@@ -1,0 +1,1 @@
+/uscms_data/d2/jiafu/L1TrackTrigger/CMSSW_6_2_0_SLHC10/../CRAB_amsim/input_val_20140601.txt

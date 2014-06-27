@@ -18,6 +18,12 @@ using namespace slhcl1tt;
 // INPUT   : TTree with moduleId, hitId, sim info + pattern bank
 // OUTPUT  : Roads
 
+struct genPart {
+    float pt;
+    float eta;
+    float phi;
+};
+
 class PatternMatcher {
   public:
     // Constructor
@@ -94,6 +100,8 @@ class PatternMatcher {
     // Containers
     TChain * chain_;
     std::vector<std::vector<TTRoad> > allRoads_;
+
+    std::vector<std::vector<genPart> > allGenParts_;
 
     addr_type* ptr_allPatternIds_;  // serialize patternIds to achieve minimum memory usage
     bit_type* ptr_allPatternBits_;  // serialize patternBits to achieve minimum memory usage

@@ -14,7 +14,7 @@ using namespace slhcl1tt;
 #include "TString.h"
 
 
-// SETTINGS: DC bits, superstrip size, # of fake superstrips, # of DC bits
+// SETTINGS: Superstrip size, # of fake superstrips, # of DC bits
 // INPUT   : TTree with moduleId, hitId, sim info + trigger tower file
 // OUTPUT  : Pattern bank
 
