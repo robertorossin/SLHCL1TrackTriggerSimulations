@@ -112,11 +112,11 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >                   (prefixClus_ + "surfy"          + suffix_);
     produces<std::vector<float> >                   (prefixClus_ + "surfz"          + suffix_);
     produces<std::vector<unsigned> >                (prefixClus_ + "stackId"        + suffix_);
-    produces<std::vector<unsigned> >                (prefixClus_ + "iLayer"         + suffix_);
-    produces<std::vector<unsigned> >                (prefixClus_ + "iRing"          + suffix_);
-    produces<std::vector<unsigned> >                (prefixClus_ + "iSide"          + suffix_);
-    produces<std::vector<unsigned> >                (prefixClus_ + "iPhi"           + suffix_);
-    produces<std::vector<unsigned> >                (prefixClus_ + "iZ"             + suffix_);
+    //produces<std::vector<unsigned> >                (prefixClus_ + "iLayer"         + suffix_);
+    //produces<std::vector<unsigned> >                (prefixClus_ + "iRing"          + suffix_);
+    //produces<std::vector<unsigned> >                (prefixClus_ + "iSide"          + suffix_);
+    //produces<std::vector<unsigned> >                (prefixClus_ + "iPhi"           + suffix_);
+    //produces<std::vector<unsigned> >                (prefixClus_ + "iZ"             + suffix_);
     produces<std::vector<unsigned> >                (prefixClus_ + "iModLayer"      + suffix_);
     produces<std::vector<unsigned> >                (prefixClus_ + "iModLadder"     + suffix_);
     produces<std::vector<unsigned> >                (prefixClus_ + "iModModule"     + suffix_);
@@ -211,28 +211,28 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >                   (prefixStub_ + "simPhi"         + suffix_);
     produces<unsigned>                              (prefixStub_ + "size"           + suffix_);
 
-    produces<std::vector<float> >                   (prefixTrack_ + "px"             + suffix_);
-    produces<std::vector<float> >                   (prefixTrack_ + "py"             + suffix_);
-    produces<std::vector<float> >                   (prefixTrack_ + "pz"             + suffix_);
-    produces<std::vector<float> >                   (prefixTrack_ + "pt"             + suffix_);
-    produces<std::vector<float> >                   (prefixTrack_ + "eta"            + suffix_);
-    produces<std::vector<float> >                   (prefixTrack_ + "phi"            + suffix_);
-    produces<std::vector<float> >                   (prefixTrack_ + "vx"             + suffix_);
-    produces<std::vector<float> >                   (prefixTrack_ + "vy"             + suffix_);
-    produces<std::vector<float> >                   (prefixTrack_ + "vz"             + suffix_);
-    produces<std::vector<float> >                   (prefixTrack_ + "rinv"           + suffix_);
-    produces<std::vector<float> >                   (prefixTrack_ + "chi2"           + suffix_);
-    produces<std::vector<float> >                   (prefixTrack_ + "ptconsistency"  + suffix_);
-    produces<std::vector<unsigned> >                (prefixTrack_ + "nstubs"         + suffix_);
-    produces<std::vector<bool> >                    (prefixTrack_ + "isGenuine"      + suffix_);
-    produces<std::vector<bool> >                    (prefixTrack_ + "isUnknown"      + suffix_);
-    produces<std::vector<bool> >                    (prefixTrack_ + "isCombinatoric" + suffix_);
-    produces<std::vector<int> >                     (prefixTrack_ + "tpId"           + suffix_);
-    produces<std::vector<int> >                     (prefixTrack_ + "pdgId"          + suffix_);
-    produces<std::vector<float> >                   (prefixTrack_ + "simPt"          + suffix_);
-    produces<std::vector<float> >                   (prefixTrack_ + "simEta"         + suffix_);
-    produces<std::vector<float> >                   (prefixTrack_ + "simPhi"         + suffix_);
-    produces<unsigned>                              (prefixTrack_ + "size"           + suffix_);
+    //produces<std::vector<float> >                   (prefixTrack_ + "px"             + suffix_);
+    //produces<std::vector<float> >                   (prefixTrack_ + "py"             + suffix_);
+    //produces<std::vector<float> >                   (prefixTrack_ + "pz"             + suffix_);
+    //produces<std::vector<float> >                   (prefixTrack_ + "pt"             + suffix_);
+    //produces<std::vector<float> >                   (prefixTrack_ + "eta"            + suffix_);
+    //produces<std::vector<float> >                   (prefixTrack_ + "phi"            + suffix_);
+    //produces<std::vector<float> >                   (prefixTrack_ + "vx"             + suffix_);
+    //produces<std::vector<float> >                   (prefixTrack_ + "vy"             + suffix_);
+    //produces<std::vector<float> >                   (prefixTrack_ + "vz"             + suffix_);
+    //produces<std::vector<float> >                   (prefixTrack_ + "rinv"           + suffix_);
+    //produces<std::vector<float> >                   (prefixTrack_ + "chi2"           + suffix_);
+    //produces<std::vector<float> >                   (prefixTrack_ + "ptconsistency"  + suffix_);
+    //produces<std::vector<unsigned> >                (prefixTrack_ + "nstubs"         + suffix_);
+    //produces<std::vector<bool> >                    (prefixTrack_ + "isGenuine"      + suffix_);
+    //produces<std::vector<bool> >                    (prefixTrack_ + "isUnknown"      + suffix_);
+    //produces<std::vector<bool> >                    (prefixTrack_ + "isCombinatoric" + suffix_);
+    //produces<std::vector<int> >                     (prefixTrack_ + "tpId"           + suffix_);
+    //produces<std::vector<int> >                     (prefixTrack_ + "pdgId"          + suffix_);
+    //produces<std::vector<float> >                   (prefixTrack_ + "simPt"          + suffix_);
+    //produces<std::vector<float> >                   (prefixTrack_ + "simEta"         + suffix_);
+    //produces<std::vector<float> >                   (prefixTrack_ + "simPhi"         + suffix_);
+    //produces<unsigned>                              (prefixTrack_ + "size"           + suffix_);
 
     produces<std::vector<float> >                   (prefixDigi_ + "x"              + suffix_);
     produces<std::vector<float> >                   (prefixDigi_ + "y"              + suffix_);
@@ -374,11 +374,11 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> >                  vc_surfy            (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  vc_surfz            (new std::vector<float>());
     std::auto_ptr<std::vector<unsigned> >               vc_stackId          (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >               vc_iLayer           (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >               vc_iRing            (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >               vc_iSide            (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >               vc_iPhi             (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<unsigned> >               vc_iZ               (new std::vector<unsigned>());
+    //std::auto_ptr<std::vector<unsigned> >               vc_iLayer           (new std::vector<unsigned>());
+    //std::auto_ptr<std::vector<unsigned> >               vc_iRing            (new std::vector<unsigned>());
+    //std::auto_ptr<std::vector<unsigned> >               vc_iSide            (new std::vector<unsigned>());
+    //std::auto_ptr<std::vector<unsigned> >               vc_iPhi             (new std::vector<unsigned>());
+    //std::auto_ptr<std::vector<unsigned> >               vc_iZ               (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> >               vc_iModLayer        (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> >               vc_iModLadder       (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> >               vc_iModModule       (new std::vector<unsigned>());
@@ -473,28 +473,28 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> >                  vb_simPhi           (new std::vector<float>());
     std::auto_ptr<unsigned>                             vb_size             (new unsigned(0));
 
-    std::auto_ptr<std::vector<float> >                  vt_px               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >                  vt_py               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >                  vt_pz               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >                  vt_pt               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >                  vt_eta              (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >                  vt_phi              (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >                  vt_vx               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >                  vt_vy               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >                  vt_vz               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >                  vt_rinv             (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >                  vt_chi2             (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >                  vt_ptconsistency    (new std::vector<float>());
-    std::auto_ptr<std::vector<unsigned> >               vt_nstubs           (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<bool> >                   vt_isGenuine        (new std::vector<bool>());
-    std::auto_ptr<std::vector<bool> >                   vt_isUnknown        (new std::vector<bool>());
-    std::auto_ptr<std::vector<bool> >                   vt_isCombinatoric   (new std::vector<bool>());
-    std::auto_ptr<std::vector<int> >                    vt_tpId             (new std::vector<int>());
-    std::auto_ptr<std::vector<int> >                    vt_pdgId            (new std::vector<int>());
-    std::auto_ptr<std::vector<float> >                  vt_simPt            (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >                  vt_simEta           (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >                  vt_simPhi           (new std::vector<float>());
-    std::auto_ptr<unsigned>                             vt_size             (new unsigned(0));
+    //std::auto_ptr<std::vector<float> >                  vt_px               (new std::vector<float>());
+    //std::auto_ptr<std::vector<float> >                  vt_py               (new std::vector<float>());
+    //std::auto_ptr<std::vector<float> >                  vt_pz               (new std::vector<float>());
+    //std::auto_ptr<std::vector<float> >                  vt_pt               (new std::vector<float>());
+    //std::auto_ptr<std::vector<float> >                  vt_eta              (new std::vector<float>());
+    //std::auto_ptr<std::vector<float> >                  vt_phi              (new std::vector<float>());
+    //std::auto_ptr<std::vector<float> >                  vt_vx               (new std::vector<float>());
+    //std::auto_ptr<std::vector<float> >                  vt_vy               (new std::vector<float>());
+    //std::auto_ptr<std::vector<float> >                  vt_vz               (new std::vector<float>());
+    //std::auto_ptr<std::vector<float> >                  vt_rinv             (new std::vector<float>());
+    //std::auto_ptr<std::vector<float> >                  vt_chi2             (new std::vector<float>());
+    //std::auto_ptr<std::vector<float> >                  vt_ptconsistency    (new std::vector<float>());
+    //std::auto_ptr<std::vector<unsigned> >               vt_nstubs           (new std::vector<unsigned>());
+    //std::auto_ptr<std::vector<bool> >                   vt_isGenuine        (new std::vector<bool>());
+    //std::auto_ptr<std::vector<bool> >                   vt_isUnknown        (new std::vector<bool>());
+    //std::auto_ptr<std::vector<bool> >                   vt_isCombinatoric   (new std::vector<bool>());
+    //std::auto_ptr<std::vector<int> >                    vt_tpId             (new std::vector<int>());
+    //std::auto_ptr<std::vector<int> >                    vt_pdgId            (new std::vector<int>());
+    //std::auto_ptr<std::vector<float> >                  vt_simPt            (new std::vector<float>());
+    //std::auto_ptr<std::vector<float> >                  vt_simEta           (new std::vector<float>());
+    //std::auto_ptr<std::vector<float> >                  vt_simPhi           (new std::vector<float>());
+    //std::auto_ptr<unsigned>                             vt_size             (new unsigned(0));
 
     std::auto_ptr<std::vector<float> >                  vd_x                (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  vd_y                (new std::vector<float>());
@@ -653,11 +653,11 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vc_surfy->push_back(surfposition.y());
                 vc_surfz->push_back(surfposition.z());
                 vc_stackId->push_back(stackId);  // this is stub raw Id
-                vc_iLayer->push_back(iLayer);
-                vc_iRing->push_back(iRing);
-                vc_iSide->push_back(iSide);
-                vc_iPhi->push_back(iPhi);
-                vc_iZ->push_back(iZ);
+                //vc_iLayer->push_back(iLayer);
+                //vc_iRing->push_back(iRing);
+                //vc_iSide->push_back(iSide);
+                //vc_iPhi->push_back(iPhi);
+                //vc_iZ->push_back(iZ);
                 vc_iModLayer->push_back(iModuleLayer);          // sviret/HL_LHC: CLUS_layer
                 vc_iModLadder->push_back(iModuleLadder);        // sviret/HL_LHC: CLUS_ladder
                 vc_iModModule->push_back(iModuleModule);        // sviret/HL_LHC: CLUS_module
@@ -957,60 +957,60 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
 
     /// TTTracks
-    if (pixelDigiTTTracks.isValid() && mcAssocTTTracks.isValid()) {
-        edm::LogInfo("NTupleTracks") << "Size: " << pixelDigiTTTracks->size();
-
-        typedef typename std::vector<TTTrack<Ref_PixelDigi_> >::const_iterator const_iterator;
-        typedef edm::Ptr<TTTrack<Ref_PixelDigi_> > pointer;
-
-        unsigned n = 0;
-        for (const_iterator it = pixelDigiTTTracks->begin(); it != pixelDigiTTTracks->end(); ++it) {
-            GlobalVector momentum = it->getMomentum();
-            GlobalPoint  poca = it->getPOCA();  // point of closest approach
-
-            edm::LogInfo("NTupleTracks") << "pt: " << momentum.perp() << " vz: " << poca.z() << std::endl;
-
-            vt_px->push_back(momentum.x());
-            vt_py->push_back(momentum.y());
-            vt_pz->push_back(momentum.z());
-            vt_pt->push_back(momentum.perp());
-            vt_eta->push_back(momentum.eta());
-            vt_phi->push_back(momentum.phi());
-            vt_vx->push_back(poca.x());
-            vt_vy->push_back(poca.y());
-            vt_vz->push_back(poca.z());
-            vt_rinv->push_back(it->getRInv());
-            vt_chi2->push_back(it->getChi2());
-            vt_ptconsistency->push_back(it->getStubPtConsistency());
-            vt_nstubs->push_back(it->getStubRefs().size());
-
-            /// Make the pointer to retrieve from MC matching
-            pointer iptr(pixelDigiTTTracks, it - pixelDigiTTTracks->begin());
-            vt_isGenuine->push_back(mcAssocTTTracks->isGenuine(iptr));
-            vt_isUnknown->push_back(mcAssocTTTracks->isUnknown(iptr));
-            vt_isCombinatoric->push_back(mcAssocTTTracks->isCombinatoric(iptr));
-            if (vt_isGenuine->back()) {
-                edm::Ptr<TrackingParticle> tpptr = mcAssocTTTracks->findTrackingParticlePtr(iptr);
-                vt_tpId->push_back(tpptr.key());
-                vt_pdgId->push_back(tpptr->pdgId());
-                vt_simPt->push_back(tpptr->pt());
-                vt_simEta->push_back(tpptr->eta());
-                vt_simPhi->push_back(tpptr->phi());
-            } else {
-                vt_tpId->push_back(-1);
-                vt_pdgId->push_back(-99);
-                vt_simPt->push_back(-99.);
-                vt_simEta->push_back(-99.);
-                vt_simPhi->push_back(-99.);
-            }
-
-            n++;
-        }
-        *vt_size = vt_px->size();
-
-    } else {
-        edm::LogError("NTupleTracks") << "Cannot get the product: " << inputTagTrack_;
-    }
+    //if (pixelDigiTTTracks.isValid() && mcAssocTTTracks.isValid()) {
+    //    edm::LogInfo("NTupleTracks") << "Size: " << pixelDigiTTTracks->size();
+    //
+    //    typedef typename std::vector<TTTrack<Ref_PixelDigi_> >::const_iterator const_iterator;
+    //    typedef edm::Ptr<TTTrack<Ref_PixelDigi_> > pointer;
+    //
+    //    unsigned n = 0;
+    //    for (const_iterator it = pixelDigiTTTracks->begin(); it != pixelDigiTTTracks->end(); ++it) {
+    //        GlobalVector momentum = it->getMomentum();
+    //        GlobalPoint  poca = it->getPOCA();  // point of closest approach
+    //
+    //        edm::LogInfo("NTupleTracks") << "pt: " << momentum.perp() << " vz: " << poca.z() << std::endl;
+    //
+    //        vt_px->push_back(momentum.x());
+    //        vt_py->push_back(momentum.y());
+    //        vt_pz->push_back(momentum.z());
+    //        vt_pt->push_back(momentum.perp());
+    //        vt_eta->push_back(momentum.eta());
+    //        vt_phi->push_back(momentum.phi());
+    //        vt_vx->push_back(poca.x());
+    //        vt_vy->push_back(poca.y());
+    //        vt_vz->push_back(poca.z());
+    //        vt_rinv->push_back(it->getRInv());
+    //        vt_chi2->push_back(it->getChi2());
+    //        vt_ptconsistency->push_back(it->getStubPtConsistency());
+    //        vt_nstubs->push_back(it->getStubRefs().size());
+    //
+    //        /// Make the pointer to retrieve from MC matching
+    //        pointer iptr(pixelDigiTTTracks, it - pixelDigiTTTracks->begin());
+    //        vt_isGenuine->push_back(mcAssocTTTracks->isGenuine(iptr));
+    //        vt_isUnknown->push_back(mcAssocTTTracks->isUnknown(iptr));
+    //        vt_isCombinatoric->push_back(mcAssocTTTracks->isCombinatoric(iptr));
+    //        if (vt_isGenuine->back()) {
+    //            edm::Ptr<TrackingParticle> tpptr = mcAssocTTTracks->findTrackingParticlePtr(iptr);
+    //            vt_tpId->push_back(tpptr.key());
+    //            vt_pdgId->push_back(tpptr->pdgId());
+    //            vt_simPt->push_back(tpptr->pt());
+    //            vt_simEta->push_back(tpptr->eta());
+    //            vt_simPhi->push_back(tpptr->phi());
+    //        } else {
+    //            vt_tpId->push_back(-1);
+    //            vt_pdgId->push_back(-99);
+    //            vt_simPt->push_back(-99.);
+    //            vt_simEta->push_back(-99.);
+    //            vt_simPhi->push_back(-99.);
+    //        }
+    //
+    //        n++;
+    //    }
+    //    *vt_size = vt_px->size();
+    //
+    //} else {
+    //    edm::LogError("NTupleTracks") << "Cannot get the product: " << inputTagTrack_;
+    //}
 
 
     /// SimPixelDigis
@@ -1130,11 +1130,11 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vc_surfy         , prefixClus_ + "surfy"          + suffix_);
     iEvent.put(vc_surfz         , prefixClus_ + "surfz"          + suffix_);
     iEvent.put(vc_stackId       , prefixClus_ + "stackId"        + suffix_);
-    iEvent.put(vc_iLayer        , prefixClus_ + "iLayer"         + suffix_);
-    iEvent.put(vc_iRing         , prefixClus_ + "iRing"          + suffix_);
-    iEvent.put(vc_iSide         , prefixClus_ + "iSide"          + suffix_);
-    iEvent.put(vc_iPhi          , prefixClus_ + "iPhi"           + suffix_);
-    iEvent.put(vc_iZ            , prefixClus_ + "iZ"             + suffix_);
+    //iEvent.put(vc_iLayer        , prefixClus_ + "iLayer"         + suffix_);
+    //iEvent.put(vc_iRing         , prefixClus_ + "iRing"          + suffix_);
+    //iEvent.put(vc_iSide         , prefixClus_ + "iSide"          + suffix_);
+    //iEvent.put(vc_iPhi          , prefixClus_ + "iPhi"           + suffix_);
+    //iEvent.put(vc_iZ            , prefixClus_ + "iZ"             + suffix_);
     iEvent.put(vc_iModLayer     , prefixClus_ + "iModLayer"      + suffix_);
     iEvent.put(vc_iModLadder    , prefixClus_ + "iModLadder"     + suffix_);
     iEvent.put(vc_iModModule    , prefixClus_ + "iModModule"     + suffix_);
@@ -1229,28 +1229,28 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vb_simPhi        , prefixStub_ + "simPhi"         + suffix_);
     iEvent.put(vb_size          , prefixStub_ + "size"           + suffix_);
 
-    iEvent.put(vt_px            , prefixTrack_ + "px"             + suffix_);
-    iEvent.put(vt_py            , prefixTrack_ + "py"             + suffix_);
-    iEvent.put(vt_pz            , prefixTrack_ + "pz"             + suffix_);
-    iEvent.put(vt_pt            , prefixTrack_ + "pt"             + suffix_);
-    iEvent.put(vt_eta           , prefixTrack_ + "eta"            + suffix_);
-    iEvent.put(vt_phi           , prefixTrack_ + "phi"            + suffix_);
-    iEvent.put(vt_vx            , prefixTrack_ + "vx"             + suffix_);
-    iEvent.put(vt_vy            , prefixTrack_ + "vy"             + suffix_);
-    iEvent.put(vt_vz            , prefixTrack_ + "vz"             + suffix_);
-    iEvent.put(vt_rinv          , prefixTrack_ + "rinv"           + suffix_);
-    iEvent.put(vt_chi2          , prefixTrack_ + "chi2"           + suffix_);
-    iEvent.put(vt_ptconsistency , prefixTrack_ + "ptconsistency"  + suffix_);
-    iEvent.put(vt_nstubs        , prefixTrack_ + "nstubs"         + suffix_);
-    iEvent.put(vt_isGenuine     , prefixTrack_ + "isGenuine"      + suffix_);
-    iEvent.put(vt_isUnknown     , prefixTrack_ + "isUnknown"      + suffix_);
-    iEvent.put(vt_isCombinatoric, prefixTrack_ + "isCombinatoric" + suffix_);
-    iEvent.put(vt_tpId          , prefixTrack_ + "tpId"           + suffix_);
-    iEvent.put(vt_pdgId         , prefixTrack_ + "pdgId"          + suffix_);
-    iEvent.put(vt_simPt         , prefixTrack_ + "simPt"          + suffix_);
-    iEvent.put(vt_simEta        , prefixTrack_ + "simEta"         + suffix_);
-    iEvent.put(vt_simPhi        , prefixTrack_ + "simPhi"         + suffix_);
-    iEvent.put(vt_size          , prefixTrack_ + "size"           + suffix_);
+    //iEvent.put(vt_px            , prefixTrack_ + "px"             + suffix_);
+    //iEvent.put(vt_py            , prefixTrack_ + "py"             + suffix_);
+    //iEvent.put(vt_pz            , prefixTrack_ + "pz"             + suffix_);
+    //iEvent.put(vt_pt            , prefixTrack_ + "pt"             + suffix_);
+    //iEvent.put(vt_eta           , prefixTrack_ + "eta"            + suffix_);
+    //iEvent.put(vt_phi           , prefixTrack_ + "phi"            + suffix_);
+    //iEvent.put(vt_vx            , prefixTrack_ + "vx"             + suffix_);
+    //iEvent.put(vt_vy            , prefixTrack_ + "vy"             + suffix_);
+    //iEvent.put(vt_vz            , prefixTrack_ + "vz"             + suffix_);
+    //iEvent.put(vt_rinv          , prefixTrack_ + "rinv"           + suffix_);
+    //iEvent.put(vt_chi2          , prefixTrack_ + "chi2"           + suffix_);
+    //iEvent.put(vt_ptconsistency , prefixTrack_ + "ptconsistency"  + suffix_);
+    //iEvent.put(vt_nstubs        , prefixTrack_ + "nstubs"         + suffix_);
+    //iEvent.put(vt_isGenuine     , prefixTrack_ + "isGenuine"      + suffix_);
+    //iEvent.put(vt_isUnknown     , prefixTrack_ + "isUnknown"      + suffix_);
+    //iEvent.put(vt_isCombinatoric, prefixTrack_ + "isCombinatoric" + suffix_);
+    //iEvent.put(vt_tpId          , prefixTrack_ + "tpId"           + suffix_);
+    //iEvent.put(vt_pdgId         , prefixTrack_ + "pdgId"          + suffix_);
+    //iEvent.put(vt_simPt         , prefixTrack_ + "simPt"          + suffix_);
+    //iEvent.put(vt_simEta        , prefixTrack_ + "simEta"         + suffix_);
+    //iEvent.put(vt_simPhi        , prefixTrack_ + "simPhi"         + suffix_);
+    //iEvent.put(vt_size          , prefixTrack_ + "size"           + suffix_);
 
     iEvent.put(vd_x             , prefixDigi_ + "x"              + suffix_);
     iEvent.put(vd_y             , prefixDigi_ + "y"              + suffix_);

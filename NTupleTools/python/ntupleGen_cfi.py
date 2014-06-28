@@ -36,5 +36,6 @@ ntupleGenEventInfo = cms.EDProducer('NTupleGenEventInfo',
     suffix = cms.string(''),
 )
 
-ntupleGen = cms.Sequence((prunedGenParticles * ntupleGenParticles) * ntupleGenJets * ntupleGenMET * ntupleGenEventInfo)
+#ntupleGen = cms.Sequence((prunedGenParticles * ntupleGenParticles) * ntupleGenJets * ntupleGenMET * ntupleGenEventInfo)
+ntupleGen = cms.Sequence((prunedGenParticles * ntupleGenParticles) * ntupleGenEventInfo)
 
