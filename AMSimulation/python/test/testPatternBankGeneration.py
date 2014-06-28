@@ -20,7 +20,7 @@ class TestAMSim(unittest.TestCase):
         pass
 
     def test_nevents(self):
-        self.assertEqual(self.nevents, 62)
+        self.assertEqual(self.nevents, 77)
 
     def test_superstripIds(self):
         tree = self.ttree

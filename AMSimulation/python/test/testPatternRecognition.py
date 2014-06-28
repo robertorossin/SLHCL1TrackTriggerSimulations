@@ -29,7 +29,7 @@ class TestAMSim(unittest.TestCase):
             for iroad in ievt.AMTTRoads_hitXs:
                 n += 1
             self.assertTrue(ievt.AMTTRoads_hitXs.size() == 0 or ievt.AMTTRoads_hitXs.size() == 1)
-        self.assertEqual(n, 62)
+        self.assertEqual(n, 77)
 
     def test_nhits(self):
         tree = self.ttree
@@ -39,7 +39,7 @@ class TestAMSim(unittest.TestCase):
                 for ihit in iroad:
                     n += 1
                 self.assertTrue(iroad.size() == 0 or iroad.size() >= 6)
-        self.assertEqual(n, 373)
+        self.assertEqual(n, 464)
 
     def test_charge(self):
         tree = self.ttree
