@@ -14,7 +14,7 @@ using namespace slhcl1tt;
 #include "TString.h"
 
 
-// SETTINGS: majority logic, merged layers, etc
+// SETTINGS: Majority logic
 // INPUT   : TTree with moduleId, hitId, sim info + pattern bank
 // OUTPUT  : Roads
 
@@ -74,7 +74,7 @@ class PatternMatcher {
     int run(TString out, TString src, TString bank);
 
   private:
-    TTPattern makeTTPattern(unsigned index) const;
+    void constructPatternFromArray(unsigned index, TTPattern& pattern);
 
     void clearHashMap();
 
@@ -100,7 +100,6 @@ class PatternMatcher {
     // Containers
     TChain * chain_;
     std::vector<std::vector<TTRoad> > allRoads_;
-
     std::vector<std::vector<genPart> > allGenParts_;
 
     addr_type* ptr_allPatternIds_;  // serialize patternIds to achieve minimum memory usage
@@ -108,7 +107,7 @@ class PatternMatcher {
     unsigned size_allPatternIds_;   // keep track of the size of ptr_allPatternIds_
     unsigned size_allPatternBits_;  // keep track of the size of ptr_allPatternBits_
 
-    std::vector<std::vector<unsigned> > ssIdHashMap_;
+    std::vector<std::vector<unsigned> > ssHashMap_;
 };
 
 #endif
