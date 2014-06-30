@@ -3,78 +3,47 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTSuperstrip.h"
 
-#include <cassert>
-#include <algorithm>
 #include <iosfwd>
+//#include <array>
+#include <tr1/array>
 #include <vector>
 
 
-// FIXME: eliminate the use of 64-bit integers
 namespace slhcl1tt {
 
-class TTPattern {
-  public:
-    // Constructors
-    TTPattern()
-    : frequency_(1), superstrips_() {}
+typedef std::tr1::array<addr_type,8> pattern_type;  // maximum number of superstrips in a pattern set to 8 due to hardware design
+typedef std::tr1::array<bit_type,8>  pattern_bit_type;  // one DC bit for one superstrip
 
-    TTPattern(const std::vector<TTSuperstrip>& superstrips)
-    : frequency_(1), superstrips_(superstrips) {}
-
-    TTPattern(const TTPattern& rhs)
-    : frequency_(rhs.frequency_), superstrips_(rhs.superstrips_) {}
-
-    // Destructor
-    ~TTPattern() {}
-
-    // Setters
-    // One can change the bit, but not the address since the address is
-    // part of the pattern id
-    void setSuperstripBit(int l, bit_type bit)  { superstrips_.at(l).setBit(bit); }
-
-    // Getters
-    std::vector<TTSuperstrip> getSuperstrips()    const { return superstrips_; }
-    TTSuperstrip getSuperstrip(int l)             const { return superstrips_.at(l); }
-    addr_type getSuperstripId(int l)              const { return superstrips_.at(l).id(); }
-    bit_type getSuperstripBit(int l)              const { return superstrips_.at(l).bit(); }
-
-    count_type frequency()                        const { return frequency_; }
-
-    pattern_type id()                             const {
-        pattern_type patternId;
-        for (unsigned i=0; i<patternId.size(); ++i) {
-            if (i<superstrips_.size())
-                patternId.at(i) = superstrips_.at(i).id();
-            else
-                patternId.at(i) = 0;
-        }
-        return patternId;
-    }
-
-    pattern_bit_type bit()                        const {
-        pattern_bit_type patternBit;
-        for (unsigned i=0; i<patternBit.size(); ++i) {
-            if (i<superstrips_.size())
-                patternBit.at(i) = superstrips_.at(i).bit();
-            else
-                patternBit.at(i) = 1;
-        }
-        return patternBit;
-    }
+// TTPattern is a collection of 8 TTSuperstrips
+// A POD type is used to reduce memory consumption.
+struct TTPattern {
+    count_type frequency;
+    pattern_type id;
+    pattern_bit_type bit;
 
     // Functions
-    void merge(const TTPattern& rhs);
+    std::vector<TTSuperstrip> getSuperstrips() const {
+        std::vector<TTSuperstrip> superstrips;
+        for (unsigned i=0; i<id.size(); ++i) {
+            TTSuperstrip ss;
+            constructSuperstrip(id.at(i), bit.at(i), ss);
+            superstrips.push_back(ss);
+        }
+        return superstrips;
+    }
 
-
-  private:
-    count_type frequency_;
-    std::vector<TTSuperstrip> superstrips_;
+    TTSuperstrip getSuperstrip(int l)          const {
+        TTSuperstrip ss;
+        constructSuperstrip(id.at(l), bit.at(l), ss);
+        return ss;
+    }
 };
 
 
-// TTRoad is just a data holder. In actuality, a road should be a word,
+// TTRoad is a collection of TTHit. In actuality, a road should be a word,
 // and its relevant data is retrieved using a lookup table. In software,
 // we simply skip this lookup.
+// TTRoad is not a POD data type due to the use of std::vector<TTHit>.
 class TTRoad {
   public:
     // Constructors
@@ -106,16 +75,30 @@ class TTRoad {
 
 
 // _____________________________________________________________________________
-// To sort a collection of patterns using frequency
-inline bool sortByFrequency(const TTPattern& lhs, const TTPattern& rhs) {
-    return lhs.frequency() > rhs.frequency();
-}
+// Functions
+
+// Construct a TTPattern from a vector of TTSuperstrip
+void constructPattern(const std::vector<TTSuperstrip>& superstrips, TTPattern& pattern);
+
+// Merge an input TTPattern into an existing TTPattern
+void unionPattern(const TTPattern& inputPattern, TTPattern& outputPattern);
+
+// Compare two patterns using superstrip id (for uniquifying)
+bool isEqualPatternId(const TTPattern& lhs, const TTPattern& rhs);
+
+// Compare two patterns using superstrip id (for sorting)
+bool isLesserPatternId(const TTPattern& lhs, const TTPattern& rhs);
+
+// Compare two patterns using frequency (for sorting)
+bool isHigherPatternFrequency(const TTPattern& lhs, const TTPattern& rhs);
 
 // _____________________________________________________________________________
 // Output streams
 std::ostream& operator<<(std::ostream& o, const pattern_type& pattId);
 
 std::ostream& operator<<(std::ostream& o, const TTPattern& patt);
+
+std::ostream& operator<<(std::ostream& o, const std::vector<TTHit>& hits);
 
 std::ostream& operator<<(std::ostream& o, const TTRoad& road);
 
