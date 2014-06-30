@@ -3,8 +3,8 @@ import FWCore.ParameterSet.Config as cms
 # reference: https://github.com/cms-sw/genproductions/blob/master/python/FourteenTeV/Neutrino_Pt2to20_gun_cff.py
 generator = cms.EDProducer('FlatRandomPtGunProducer',
 	PGunParameters = cms.PSet(
-		PartID = cms.vint32(12),  ## eminus
-		MinPhi = cms.double(-3.14159265359), ## in radians
+		PartID = cms.vint32(12),
+		MinPhi = cms.double(-3.14159265359),
 		MaxPhi = cms.double(3.14159265359),
 		MinEta = cms.double(-3),
 		MaxEta = cms.double(3),
@@ -13,7 +13,7 @@ generator = cms.EDProducer('FlatRandomPtGunProducer',
 	),
 	Verbosity = cms.untracked.int32(0),
 	psethack = cms.string('single neutrino 2<Pt<20 -3<Eta<3'),
-	AddAntiParticle = cms.bool(False),  ## only eminus
+	AddAntiParticle = cms.bool(False),
 )
 
 configurationMetadata = cms.untracked.PSet(

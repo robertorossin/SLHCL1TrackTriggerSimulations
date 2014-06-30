@@ -8,7 +8,7 @@ options = VarParsing('analysis')
 options.parseArguments()
 # Modify the defaults
 if not options.inputFiles:
-    options.inputFiles = ['file:rawsim_numEvent20.root']
+    options.inputFiles = ['file:rawsim_numEvent100.root']
 if options.outputFile == "output.root":
     options.outputFile = "test_ntuple.root"
 

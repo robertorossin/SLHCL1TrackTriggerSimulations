@@ -1,21 +1,21 @@
 import FWCore.ParameterSet.Config as cms
 
 # reference: https://github.com/cms-sw/genproductions/blob/master/python/EightTeV/SingleMuMinusFlatPt0p2To100_cff.py
-generator = cms.EDProducer("FlatRandomPtGunProducer",
+generator = cms.EDProducer("FlatRandomOneOverPtGunProducer",
     PGunParameters = cms.PSet(
-        MaxPt = cms.double(100.0),
-        MinPt = cms.double(1.0),
-        PartID = cms.vint32(13),
-        MaxEta = cms.double(2.5),
-        MaxPhi = cms.double(3.14159265359),
-        MinEta = cms.double(-2.5),
-        MinPhi = cms.double(-3.14159265359),
+        MaxOneOverPt = cms.double(0.5),
+        MinOneOverPt = cms.double(0.005),
+        PartID = cms.vint32(-13),
+        MaxEta = cms.double(0.8),
+        MaxPhi = cms.double(1.6),
+        MinEta = cms.double(-0.2),
+        MinPhi = cms.double(0.6),
         XFlatSpread = cms.double(1.5), ## in mm
         YFlatSpread = cms.double(1.5), ## in mm
         ZFlatSpread = cms.double(150.), ## in mm
     ),
     Verbosity = cms.untracked.int32(0),
-    psethack = cms.string('single mu- pt 1 to 100'),
+    psethack = cms.string('single mu+ 1/pt 0.005 to 0.5'),
     AddAntiParticle = cms.bool(False),
     firstRun = cms.untracked.uint32(1)
 )

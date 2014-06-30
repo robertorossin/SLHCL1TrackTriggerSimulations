@@ -73,14 +73,14 @@ class TestAMSim(unittest.TestCase):
                 count5 += 1
             elif nstubs == 6:
                 count6 += 1
-        self.assertEqual(countA, 493)
-        self.assertEqual(count0, 1)
-        self.assertEqual(count1, 3)
-        self.assertEqual(count2, 8)
-        self.assertEqual(count3, 9)
-        self.assertEqual(count4, 10)
-        self.assertEqual(count5, 7)
-        self.assertEqual(count6, 62)
+        self.assertEqual(countA, 571)
+        self.assertEqual(count0, 0)
+        self.assertEqual(count1, 0)
+        self.assertEqual(count2, 0)
+        self.assertEqual(count3, 0)
+        self.assertEqual(count4, 6)
+        self.assertEqual(count5, 17)
+        self.assertEqual(count6, 77)
         self.assertEqual(count0+count1+count2+count3+count4+count5+count6, 100)
         self.assertEqual(1*count1+2*count2+3*count3+4*count4+5*count5+6*count6, countA)
 
