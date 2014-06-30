@@ -26,10 +26,7 @@ int TrackFitter::makeTracks() {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
 
     // For reading
-    typedef unsigned char unsigned8;
     typedef unsigned short unsigned16;
-    //typedef unsigned long long unsigned64;
-    //typedef ULong64_t unsigned64;
     std::vector<std::vector<unsigned> > *   vr_patternIds        = 0;
     std::vector<std::vector<float> > *      vr_hitXs             = 0;
     std::vector<std::vector<float> > *      vr_hitYs             = 0;
@@ -61,14 +58,14 @@ int TrackFitter::makeTracks() {
     // Loop over all events
 
     allTracks_.clear();
-    Long64_t nPassed = 0;
-    for (Long64_t ievt=0; ievt<nEvents_; ++ievt) {
+    int nPassed = 0;
+    for (int ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
 
         unsigned nroads = vr_patternIds->size();
-        if (verbose_>1 && ievt%1000==0)  std::cout << Debug() << Form("... Processing event: %7lld, fitting: %7lld", ievt, nPassed) << std::endl;
+        if (verbose_>1 && ievt%1000==0)  std::cout << Debug() << Form("... Processing event: %7i, fitting: %7i", ievt, nPassed) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # roads: " << nroads << " [# tracks: " << allTracks_.size() << "]" << std::endl;
 
         if (!nroads) {  // skip if no road
@@ -93,11 +90,12 @@ int TrackFitter::makeTracks() {
             //    return 1;
             //}
 
+            TTHit hit;
             std::vector<TTHit> hits;
             std::vector<ZR> hitsViewZR;
             std::vector<UV> hitsViewUV;
             for (unsigned j=0; j<nhits; ++j) {
-                TTHit hit(
+                constructHit(
                     vr_hitXs->at(i).at(j),
                     vr_hitYs->at(i).at(j),
                     vr_hitZs->at(i).at(j),
@@ -107,11 +105,12 @@ int TrackFitter::makeTracks() {
                     vr_hitCharges->at(i).at(j),
                     vr_hitPts->at(i).at(j),
                     vr_hitSuperstripIds->at(i).at(j),
-                    vr_hitSuperstripBits->at(i).at(j) );
+                    vr_hitSuperstripBits->at(i).at(j),
+                    hit);
                 hits.push_back(hit);
 
                 // In R-Z plane, a track is a straight line
-                ZR hitViewZR(hit.rho(), hit.z());
+                ZR hitViewZR(hit.rho(), hit.z);
                 hitsViewZR.push_back(hitViewZR);
 
                 // In X-Y plane, a track is a circle
@@ -157,7 +156,6 @@ int TrackFitter::makeTracks() {
     }
 
     if (verbose_)  std::cout << Info() << "Processed " << nEvents_ << " events, fit " << nPassed << " events." << std::endl;
-
     return 0;
 }
 
@@ -170,7 +168,7 @@ int TrackFitter::writeTracks(TString out) {
         return 1;
     }
 
-    unsigned nentries = allTracks_.size();
+    const unsigned nentries = allTracks_.size();
     if (verbose_)  std::cout << Info() << "Recreating " << out << " with " << nentries << " events." << std::endl;
     TFile* tfile = TFile::Open(out, "RECREATE");
     tfile->mkdir("ntupler")->cd();
@@ -250,7 +248,7 @@ int TrackFitter::writeTracks(TString out) {
 
         ttree->Fill();
     }
-    assert(ttree->GetEntries() == (int) allTracks_.size());
+    assert(ttree->GetEntries() == (int) nentries);
 
     tfile->Write();
     delete ttree;

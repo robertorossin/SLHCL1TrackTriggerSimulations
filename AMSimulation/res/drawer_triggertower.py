@@ -21,6 +21,8 @@ chain.Add("stubs_40M.1.root")
 tree = chain
 
 triggerTowerMap = json.load(open("../data/trigger_sector_map.json"))
+for i in xrange(6*8):
+    print "Tower %i has %i modules." % (i, len(triggerTowerMap[str(i)]))
 
 imgdir = "figures_triggertower/"
 if not imgdir.endswith("/"):  imgdir += "/"

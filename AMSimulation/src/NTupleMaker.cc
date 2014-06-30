@@ -87,7 +87,7 @@ int NTupleMaker::writeTree(TString out) {
 
     // _________________________________________________________________________
     // Loop over all events
-    for (Long64_t ievt=0; ievt<nEvents_; ++ievt) {
+    for (int ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
@@ -98,7 +98,7 @@ int NTupleMaker::writeTree(TString out) {
         //assert(chain_tracks_->LoadTree(ievt) >= 0);
         //chain_tracks_->GetEntry(ievt);
 
-        if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
+        if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7i", ievt) << std::endl;
 
         ttree->Fill();
     }

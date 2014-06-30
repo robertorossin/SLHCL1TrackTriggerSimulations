@@ -4,7 +4,7 @@
 #include "Math/GenVector/eta.h"
 #endif
 
-static const unsigned MIN_NLAYERS = 3;
+static const unsigned MIN_NGOODSTUBS = 3;
 
 bool sortByFloat(const std::pair<unsigned, float>& lhs, const std::pair<unsigned, float>& rhs) {
     return lhs.second < rhs.second;
@@ -122,10 +122,10 @@ int StubCleaner::cleanStubs(TString out) {
 
     // _________________________________________________________________________
     // Loop over all events
-    Long64_t nPassed = 0;
-    Long64_t nKept = 0;
+    int nPassed = 0;
+    int nKept = 0;
     int curTree = chain_->GetTreeNumber();
-    for (Long64_t ievt=0; ievt<nEvents_; ++ievt) {
+    for (int ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         if (chain_->GetTreeNumber() != curTree) {  // for TTreeFormula
@@ -135,7 +135,7 @@ int StubCleaner::cleanStubs(TString out) {
         chain_->GetEntry(ievt);
 
         unsigned nstubs = vb_modId->size();
-        if (verbose_>1 && ievt%20000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7lld", ievt, nKept) << std::endl;
+        if (verbose_>1 && ievt%20000==0)  std::cout << Debug() << Form("... Processing event: %7i, keeping: %7i", ievt, nKept) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " [# passed: " << nPassed << "]" << std::endl;
 
         if (!nstubs) {  // skip if no stub
@@ -152,7 +152,7 @@ int StubCleaner::cleanStubs(TString out) {
             keep = (ttf_event->EvalInstance() != 0);
 
         // Check min # of layers
-        bool require = (nstubs >= MIN_NLAYERS);
+        bool require = (nstubs >= MIN_NGOODSTUBS);
         if (!require && filter_)
             keep = false;
 
@@ -173,6 +173,7 @@ int StubCleaner::cleanStubs(TString out) {
             }
         }
 
+        // Apply pt, eta, phi requirements
         bool sim = (po.minPt  <= simPt  && simPt  <= po.maxPt  &&
                     po.minEta <= simEta && simEta <= po.maxEta &&
                     po.minPhi <= simPhi && simPhi <= po.maxPhi);
@@ -194,6 +195,7 @@ int StubCleaner::cleanStubs(TString out) {
             }
         }
 
+        // Sort: smallest deltaEta to largest
         std::sort(vec_index_minDEta.begin(), vec_index_minDEta.end(), sortByFloat);
 
         std::vector<unsigned> goodLayerStubs(nLayers_, 999999);
@@ -222,7 +224,7 @@ int StubCleaner::cleanStubs(TString out) {
         }
 
         // _____________________________________________________________________
-        // Now make keep-or-ignore decisions
+        // Now make keep-or-ignore decision per stub
         unsigned ngoodstubs = 0;
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
             bool keepstub = true;
@@ -260,8 +262,7 @@ int StubCleaner::cleanStubs(TString out) {
         }
 
         // Check again min # of layers
-        require = (ngoodstubs >= MIN_NLAYERS);
-
+        require = (ngoodstubs >= MIN_NGOODSTUBS);
         if (!require && filter_)
             keep = false;
 
@@ -292,7 +293,7 @@ int StubCleaner::cleanStubs(TString out) {
         ++nKept;
         ttree->Fill();
     }
-    if (verbose_)  std::cout << Info() << "Processed " << nEvents_ << " events, kept " << nKept << " events, passed " << nPassed << std::endl;
+    if (verbose_)  std::cout << Info() << "Processed " << nEvents_ << " events, kept " << nKept << ", passed " << nPassed << std::endl;
 
     assert(ttree->GetEntries() == nKept);
     tfile->Write();

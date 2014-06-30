@@ -4,7 +4,12 @@
 #include "Math/GenVector/eta.h"
 #endif
 
+//#include <type_traits>  // defines std::is_pod()
+
 static const unsigned MAX_NTOWERS = 6 * 8;
+
+static const unsigned MAX_NPATTERNS = 40000000;  // 40M = only 1/4 of design goal
+
 static const unsigned MIN_NLAYERS = 3;
 
 
@@ -48,19 +53,23 @@ int PatternGenerator::readTriggerTowerFile(TString src) {
     }
 
     if (triggerTowerMap_.size() != MAX_NTOWERS) {
-        std::cout << Error() << "Failed to get all trigger towers from the trigger tower file: " << src << std::endl;
+        std::cout << Error() << "Failed to get all trigger towers from the file: " << src << std::endl;
         return 1;
     }
 
-    // Prepare the reversed trigger tower map
-    triggerTowerMapReversed_.clear();
+    //for (unsigned i=0; i<MAX_NTOWERS; ++i) {
+    //    std::cout << "Tower " << i << " has " << triggerTowerMap_[i].size() << " modules. " << std::endl;
+    //}
+
+    // Prepare the trigger tower reverse map
+    triggerTowerReverseMap_.clear();
     for (auto it: triggerTowerMap_) {  // loop over trigger tower map
         for (auto it2: it.second) {  // loop over the moduleIds in the tower
-            auto found = triggerTowerMapReversed_.find(it2);
-            if (found == triggerTowerMapReversed_.end()) {  // if moduleId is not yet in the reversed map
+            auto found = triggerTowerReverseMap_.find(it2);
+            if (found == triggerTowerReverseMap_.end()) {  // if moduleId is not yet in the reverse map
                 std::vector<unsigned> triggerTowerIds;
                 triggerTowerIds.push_back(it.first);  // push back the towerId
-                triggerTowerMapReversed_.insert(std::make_pair(it2, triggerTowerIds));
+                triggerTowerReverseMap_.insert(std::make_pair(it2, triggerTowerIds));
             } else {
                 found->second.push_back(it.first);  // push back the towerId
             }
@@ -147,23 +156,31 @@ int PatternGenerator::makePatterns() {
     chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
     chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
 
+    //assert(std::is_pod<TTSuperstrip>::value && std::is_pod<TTPattern>::value && std::is_pod<TTHit>::value);
+
     allPatterns_.clear();
-    allPatterns_.reserve(20000000);  // reserved for 20M possible patterns
-    if (nEvents_ >= (Long64_t) allPatterns_.max_size()) {
+    allPatterns_.reserve(MAX_NPATTERNS);
+    if ((unsigned) nEvents_ >= allPatterns_.max_size()) {
         std::cout << Error() << "Number of events is more than the max_size of a std::vector." << std::endl;
         return 1;
     }
 
     // _________________________________________________________________________
     // Loop over all events
-    Long64_t nPassed = 0;
-    for (Long64_t ievt=0; ievt<nEvents_; ++ievt) {
+
+    // Containers are declared outside the event loop to reduce memory allocations
+    TTPattern patt;
+    std::vector<TTSuperstrip> goodSuperstrips, goodAndFakeSuperstrips;
+
+    int nRead = 0;
+    int nKept = 0;
+    for (int ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
 
         unsigned nstubs = vb_modId->size();
-        if (verbose_>1 && ievt%1000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7lld", ievt, nPassed) << std::endl;
+        if (verbose_>1 && ievt%1000==0)  std::cout << Debug() << Form("... Processing event: %7i, keeping: %7i", ievt, nKept) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " [# patterns: " << allPatterns_.size() << "]" << std::endl;
 
         if (!nstubs) {  // skip if no stub
@@ -171,13 +188,13 @@ int PatternGenerator::makePatterns() {
         }
 
         // Loop over reconstructed stubs
-        std::vector<TTSuperstrip> goodSuperstrips;
+        goodSuperstrips.clear();
         for (unsigned l=0; l<nstubs; ++l) {
             unsigned moduleId = vb_modId->at(l);
             // If there is a valid hit, but moduleId does not exist in any
             // trigger tower (due to cables, connections, or just too forward),
             // we drop them
-            if (po.requireTriggerTower && triggerTowerMapReversed_.find(moduleId) == triggerTowerMapReversed_.end())
+            if (po.requireTriggerTower && triggerTowerReverseMap_.find(moduleId) == triggerTowerReverseMap_.end())
                 continue;
 
             unsigned ncols = vb_iModCols->at(l);
@@ -189,15 +206,15 @@ int PatternGenerator::makePatterns() {
             float coordx = vb_coordx->at(l);
             float coordy = vb_coordy->at(l);
 
-            // Using half-strip unit
-            int col = halfStripRound(coordy);
-            int row = halfStripRound(coordx);
+            // Use half-strip unit
+            id_type col = halfStripRound(coordy);
+            id_type row = halfStripRound(coordx);
             ncols *= 2;
             nrows *= 2;
 
             // Set to lower resolution according to nSubLadders and nSubModules
-            col /= (ncols / std::min((int) ncols, po.nSubLadders));
-            row /= (nrows / std::min((int) nrows, po.nSubModules));
+            col /= (ncols / std::min(ncols, (unsigned) po.nSubLadders));
+            row /= (nrows / std::min(nrows, (unsigned) po.nSubModules));
             addr_type ssId = encodeSuperstripId(moduleId, col, row);
             bit_type ssBit = 1 << 0;
 
@@ -205,7 +222,8 @@ int PatternGenerator::makePatterns() {
             encodeDCBit(nDCBits_, ssId, ssBit);
 
             // Create a superstrip
-            TTSuperstrip ss(ssId, ssBit);
+            TTSuperstrip ss;
+            constructSuperstrip(ssId, ssBit, ss);
             goodSuperstrips.push_back(ss);
 
             if (verbose_>2) {
@@ -214,45 +232,12 @@ int PatternGenerator::makePatterns() {
             }
         }
 
-        // Fake superstrip mechanism is carried out below
 
-        // This map uses the fact that the keys in a C++ map are sorted
-        std::map<unsigned, unsigned> mlayerToSuperstripMap;  // key: mlayer, value: index of superstrip in goodSuperstrips
-        for (unsigned i=0; i<goodSuperstrips.size(); ++i) {
-            addr_type ssId = goodSuperstrips.at(i).id();
-            unsigned layer = decodeSuperstripLayer(ssId);
-            unsigned mlayer = layerMap_.at(layer);
-            if (mlayerToSuperstripMap.find(mlayer) == mlayerToSuperstripMap.end()) {  // not found
-                mlayerToSuperstripMap.insert(std::make_pair(mlayer, i));
-            } else {
-                std::cout << Error() << "There is supposed to be one unique superstrip per layer at this stage" << std::endl;
-            }
-        }
-
-        // Now find mlayer that is lacking a superstrip
-        int nFakeSuperstripsInThisPattern = 0;
-        for (std::map<unsigned, unsigned>::const_iterator it=layerMap_.begin(); it!=layerMap_.end(); ++it) {
-            unsigned mlayer = it->second;
-            if (mlayerToSuperstripMap.find(mlayer) == mlayerToSuperstripMap.end()) {  // not found
-                mlayerToSuperstripMap.insert(std::make_pair(mlayer, goodSuperstrips.size()) );
-                nFakeSuperstripsInThisPattern += 1;
-            }
-        }
-
-        // Insert fake superstrips
-        std::vector<TTSuperstrip> goodAndFakeSuperstrips;
-        for (std::map<unsigned, unsigned>::const_iterator it=mlayerToSuperstripMap.begin(); it!=mlayerToSuperstripMap.end(); ++it) {
-            if (it->second == goodSuperstrips.size()) {  // create a fake superstrip
-                addr_type ssId = encodeFakeSuperstripId();
-                bit_type ssBit = 1 << 0;
-                TTSuperstrip ss(ssId, ssBit);
-                goodAndFakeSuperstrips.push_back(ss);
-
-            } else {
-                const TTSuperstrip& ss = goodSuperstrips.at(it->second);
-                goodAndFakeSuperstrips.push_back(ss);
-            }
-        }
+        // Add fake superstrips
+        goodAndFakeSuperstrips.clear();
+        addFakeSuperstrips(goodSuperstrips, goodAndFakeSuperstrips);
+        int nFakeSuperstripsInThisPattern = goodAndFakeSuperstrips.size() - goodSuperstrips.size();
+        assert(nFakeSuperstripsInThisPattern >= 0);
 
         if (verbose_>2) {
             std::cout << Debug() << "... evt: " << ievt << " # goodAndFakeSuperstrips: " << goodAndFakeSuperstrips.size() << " {";
@@ -266,26 +251,22 @@ int PatternGenerator::makePatterns() {
         bool keep = ((int) goodSuperstrips.size() + nFakeSuperstripsInThisPattern >= nLayers_);
         if (keep) {
             // Create a pattern
-            TTPattern patt(goodAndFakeSuperstrips);
+            constructPattern(goodAndFakeSuperstrips, patt);
             allPatterns_.push_back(patt);  // save the pattern
 
-            ++nPassed;
+            ++nKept;
         }
+        ++nRead;
     }
+    if (verbose_)  std::cout << Info() << Form("Read: %7i, kept: %7i", nRead, nKept) << std::endl;
+
 
     // Keep only unique patterns
     uniquifyPatterns();  // do this after allPatterns_ is populated
 
-    // Erase patterns not fully contained in a trigger tower
-    if (po.requireTriggerTower) {
-        for (std::vector<TTPattern>::iterator it=allPatterns_.begin(); it!=allPatterns_.end(); ) {
-            if (isFullyContainedInTriggerTower(*it)) {
-                ++it;
-            } else {
-                it = allPatterns_.erase(it);
-            }
-        }
-    }
+    // Erase patterns not fully contained within any trigger tower
+    if (po.requireTriggerTower)
+        erasePatternsNotWithinTriggerTowers();
 
     if (verbose_>2) {
         for (unsigned i=0; i<allPatterns_.size(); ++i) {
@@ -294,9 +275,10 @@ int PatternGenerator::makePatterns() {
         }
     }
 
-    if (verbose_)  std::cout << Info() << "Made " << allPatterns_.size() << " final patterns, out of " << allPatterns_.size() << " inclusive, full-resolution patterns." << std::endl;
+    std::sort(allPatterns_.begin(), allPatterns_.end(), isHigherPatternFrequency);
 
-    std::sort(allPatterns_.begin(), allPatterns_.end(), sortByFrequency);
+    if (verbose_)  std::cout << Info() << "Made " << allPatterns_.size() << " final patterns, highest frequency: " << (unsigned) allPatterns_.front().frequency << std::endl;
+
     return 0;
 }
 
@@ -309,16 +291,13 @@ int PatternGenerator::writePatterns(TString out) {
         return 1;
     }
 
-    if (maxPatterns_ > (int) allPatterns_.size())
-        maxPatterns_ = allPatterns_.size();
-    if (verbose_)  std::cout << Info() << "Recreating " << out << " with " << maxPatterns_ << " patterns." << std::endl;
+    const unsigned nentries = allPatterns_.size();
+    if (verbose_)  std::cout << Info() << "Recreating " << out << " with " << nentries << " patterns." << std::endl;
     TFile* tfile = TFile::Open(out, "RECREATE");
     TTree* ttree = new TTree("patternBank", "");
 
     typedef unsigned char unsigned8;
     typedef unsigned short unsigned16;
-    //typedef unsigned long long unsigned64;
-    //typedef ULong64_t unsigned64;
     std::auto_ptr<unsigned8>                  frequency       (new unsigned8(0));
     std::auto_ptr<std::vector<unsigned> >     superstripIds   (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned16> >   superstripBits  (new std::vector<unsigned16>());
@@ -327,42 +306,32 @@ int PatternGenerator::writePatterns(TString out) {
     ttree->Branch("superstripIds"   , &(*superstripIds));
     ttree->Branch("superstripBits"  , &(*superstripBits));
 
+
     // _________________________________________________________________________
-    // Loop over good patterns
-    for (int ievt=0; ievt<maxPatterns_; ++ievt) {
-        if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7i", ievt) << std::endl;
+    // Loop over all patterns
+    for (unsigned ievt=0; ievt<nentries; ++ievt) {
+        if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7u", ievt) << std::endl;
+        superstripIds->clear();
+        superstripBits->clear();
 
         const TTPattern& patt = allPatterns_.at(ievt);
-        *frequency = patt.frequency();
+        *frequency = patt.frequency;
 
-        superstripIds->clear();
-        const pattern_type& pattId = patt.id();
-        for (unsigned i=0; i<pattId.size(); ++i) {
-            superstripIds->push_back(pattId.at(i));
-        }
+        // Assume patterns are sorted by frequency
+        if (*frequency < minFrequency_)
+            break;
 
-        superstripBits->clear();
-        const pattern_bit_type& pattBit = patt.bit();
-        for (unsigned i=0; i<pattBit.size(); ++i) {
-            superstripBits->push_back(pattBit.at(i));
+        for (unsigned i=0; i<pattern_type().size(); ++i) {
+            superstripIds->push_back(patt.id.at(i));
+            superstripBits->push_back(patt.bit.at(i));
         }
 
         ttree->Fill();
     }
-    assert(ttree->GetEntries() == maxPatterns_);
-
-    // Also save the triggerTower
-    TTree* ttree2 = new TTree("triggerTower", "");
-    std::map<unsigned, std::vector<unsigned> > * ptr_triggerTowerMap_ = &triggerTowerMap_;
-    ttree2->Branch("triggerTowerMap", ptr_triggerTowerMap_);
-    std::map<unsigned, std::vector<unsigned> > * ptr_triggerTowerMapReversed_ = &triggerTowerMapReversed_;
-    ttree2->Branch("triggerTowerMapReversed", ptr_triggerTowerMapReversed_);
-    ttree2->Fill();
-    assert(ttree2->GetEntries() == 1);
+    assert(ttree->GetEntries() == (int) nentries);
 
     tfile->Write();
     delete ttree;
-    delete ttree2;
     delete tfile;
     return 0;
 }
@@ -371,8 +340,80 @@ int PatternGenerator::writePatterns(TString out) {
 // _____________________________________________________________________________
 // Private functions
 
-// Make unique patterns from 'allPatterns_' and put them into 'goodPatterns_'
+void PatternGenerator::addFakeSuperstrips(const std::vector<TTSuperstrip>& goodSuperstrips,
+                                          std::vector<TTSuperstrip>& goodAndFakeSuperstrips) {
+    // This map uses the fact that the keys in a C++ map are sorted
+    std::map<unsigned, unsigned> mlayerToSuperstripMap;  // key: mlayer, value: index of superstrip in goodSuperstrips
+    for (unsigned i=0; i<goodSuperstrips.size(); ++i) {
+        addr_type ssId = goodSuperstrips.at(i).id;
+        unsigned layer = decodeSuperstripLayer(ssId);
+        unsigned mlayer = layerMap_.at(layer);
+        // The superstrips must not collide in 'mlayer'
+        assert(mlayerToSuperstripMap.find(mlayer) == mlayerToSuperstripMap.end());
+        mlayerToSuperstripMap.insert(std::make_pair(mlayer, i));
+    }
+
+    // Now find mlayer that is lacking a superstrip
+    for (std::map<unsigned, unsigned>::const_iterator it=layerMap_.begin(); it!=layerMap_.end(); ++it) {
+        unsigned mlayer = it->second;
+        if (mlayerToSuperstripMap.find(mlayer) == mlayerToSuperstripMap.end()) {  // not found
+            mlayerToSuperstripMap.insert(std::make_pair(mlayer, goodSuperstrips.size()) );
+        }
+    }
+
+    // Insert fake superstrips
+    addr_type fake_ssId = encodeFakeSuperstripId();
+    bit_type fake_ssBit = 1 << 0;
+    TTSuperstrip fake_ss;
+    constructSuperstrip(fake_ssId, fake_ssBit, fake_ss);
+
+    for (std::map<unsigned, unsigned>::const_iterator it=mlayerToSuperstripMap.begin(); it!=mlayerToSuperstripMap.end(); ++it) {
+        if (it->second == goodSuperstrips.size()) {  // create a fake superstrip
+            goodAndFakeSuperstrips.push_back(fake_ss);
+
+        } else {  // put a good superstrip
+            goodAndFakeSuperstrips.push_back(goodSuperstrips.at(it->second));
+        }
+    }
+}
+
+// Keep unique patterns but also increase frequency
+// reference: http://en.cppreference.com/w/cpp/algorithm/unique
+template<typename ForwardIterator, typename BinaryPredicate>
+ForwardIterator uniqueForPattern(ForwardIterator first, ForwardIterator last,
+                                 BinaryPredicate pred) {
+    if (first == last)
+        return last;
+
+    ForwardIterator result = first;
+    while (++first != last) {
+        if (!pred(*result, *first)) {
+            *(++result) = std::move(*first);
+        } else {
+            unionPattern(*first, *result);
+        }
+    }
+    return ++result;
+}
+
 void PatternGenerator::uniquifyPatterns() {
+    assert(!allPatterns_.empty());
+
+    // Introspective sort
+    std::sort(allPatterns_.begin(), allPatterns_.end(), isLesserPatternId);
+
+    // Merge sort
+    //std::stable_sort(allPatterns_.begin(), allPatterns_.end(), isLesserPatternId);
+
+    // Heap sort
+    //std::make_heap(allPatterns_.begin(), allPatterns_.end(), isLesserPatternId);
+    //std::sort_heap(allPatterns_.begin(), allPatterns_.end(), isLesserPatternId);
+
+    std::vector<TTPattern>::iterator last = uniqueForPattern(allPatterns_.begin(), allPatterns_.end(), isEqualPatternId);
+    allPatterns_.erase(last, allPatterns_.end());
+}
+
+void PatternGenerator::uniquifyPatternsUsingStdMap() {
     assert(!allPatterns_.empty());
     std::vector<TTPattern> goodPatterns;
     goodPatterns.reserve(allPatterns_.size());
@@ -380,7 +421,7 @@ void PatternGenerator::uniquifyPatterns() {
     std::map<pattern_type, unsigned> patternIdMap;  // key: patternId, value: index in goodPatterns_
     for (unsigned i=0; i<allPatterns_.size(); ++i) {
         const TTPattern& patt = allPatterns_.at(i);
-        const pattern_type& pattId = patt.id();
+        const pattern_type& pattId = patt.id;
 
         auto found = patternIdMap.find(pattId);
         if (found == patternIdMap.end()) {  // if not exist, insert the pattern
@@ -390,8 +431,7 @@ void PatternGenerator::uniquifyPatterns() {
         } else {
             // If exist, merge them
             // merge(...) will update the DC bit and increase the frequency
-            unsigned index = found->second;
-            goodPatterns.at(index).merge(patt);
+            unionPattern(patt, goodPatterns.at(found->second));
         }
     }
 
@@ -399,23 +439,47 @@ void PatternGenerator::uniquifyPatterns() {
     allPatterns_.swap(goodPatterns);
 }
 
-// Remove patterns not fully contained in a trigger tower
-bool PatternGenerator::isFullyContainedInTriggerTower(const TTPattern& patt) {
+// FIXME: this function has not been checked!
+// Apply C++ erase-remove idiom when the predicate is a class member function
+// reference: http://en.cppreference.com/w/cpp/algorithm/remove
+void PatternGenerator::erasePatternsNotWithinTriggerTowers() {
+    auto first = allPatterns_.begin();
+    auto last = allPatterns_.end();
+
+    // find_if
+    for (; first != last; ++first) {
+        if (isNotWithinTriggerTower(*first)) {
+            break;
+        }
+    }
+
+    // remove_if
+    auto result = first;
+    if (first != last) {
+        for (; first != last; ++first) {
+            if (!isNotWithinTriggerTower(*first)) {
+                *result++ = std::move(*first);
+            }
+        }
+    }
+
+    // erase
+    allPatterns_.erase(result, last);
+}
+
+bool PatternGenerator::isNotWithinTriggerTower(const TTPattern& patt) {
+    const pattern_type& pattId = patt.id;
     std::map<unsigned, unsigned> triggerTowerIdCounts;
     unsigned moduleIdCount = 0;
-    for(auto it: patt.id()) {  // loop over superstripIds in a pattern
-        id_type moduleId = decodeSuperstripModuleId(it);  // retrieve the moduleId
-        auto found = triggerTowerMapReversed_.find(moduleId);
-        if (found == triggerTowerMapReversed_.end()) {  // if moduleId not in the map
+    id_type moduleId = 0;
+    for (unsigned l=0; l<pattId.size(); ++l) {  // loop over superstripIds in a pattern
+        moduleId = decodeSuperstripModuleId(pattId.at(l));  // retrieve the moduleId
+        auto found = triggerTowerReverseMap_.find(moduleId);
+        if (found == triggerTowerReverseMap_.end()) {  // if moduleId not in the reverse map
             // do nothing
         } else {
-            for (auto it2: found->second) {  // loop over towerIds containing the module
-                auto found2 = triggerTowerIdCounts.find(it2);
-                if (found2 == triggerTowerIdCounts.end()) {  // if not yet found, insert 1
-                    triggerTowerIdCounts.insert(std::make_pair(it2, 1));
-                } else {  // if found, just increment the counter
-                    found2->second += 1;
-                }
+            for (auto tower: found->second) {  // loop over towerIds containing the module
+                ++triggerTowerIdCounts[tower];  // increment towerId counter (default value is zero)
             }
             moduleIdCount += 1;
         }
@@ -424,11 +488,11 @@ bool PatternGenerator::isFullyContainedInTriggerTower(const TTPattern& patt) {
 
     // Loop over the counters in the map
     for (auto it: triggerTowerIdCounts) {
-        if ((int) it.second == (int) moduleIdCount) {
-            return true;
+        if (it.second == moduleIdCount) {  // all moduleIds share at least one trigger tower
+            return false;
         }
     }
-    return false;
+    return true;
 }
 
 

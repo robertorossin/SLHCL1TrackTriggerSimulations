@@ -23,7 +23,7 @@ class PatternGenerator {
     // Constructor
     PatternGenerator(PatternBankOption option)
     : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits), nFakeSuperstrips_(po.nFakeSuperstrips),
-      nEvents_(999999999), maxPatterns_(999999999), verbose_(1) {
+      nEvents_(999999999), minFrequency_(1), verbose_(1) {
 
         assert(3 <= nLayers_ && nLayers_ <= 8);
         assert(0 <= nDCBits_ && nDCBits_ <= 4);
@@ -44,7 +44,7 @@ class PatternGenerator {
     //void setNFakeSuperstrips(int n) { nFakeSuperstrips_ = n; }
 
     void setNEvents(int n)          { if (n != -1)  nEvents_ = std::max(0, n); }
-    void setMaxPatterns(int n)      { if (n != -1)  maxPatterns_ = std::max(0, n); }
+    void setMinFrequency(int n)     { minFrequency_ = std::max(1, minFrequency_); }
     void setVerbosity(int n)        { verbose_ = n; }
 
     // Getters
@@ -65,9 +65,16 @@ class PatternGenerator {
     int run(TString out, TString src, TString layout);
 
   private:
+    void addFakeSuperstrips(const std::vector<TTSuperstrip>& goodSuperstrips,
+                            std::vector<TTSuperstrip>& goodAndFakeSuperstrips);
+
     void uniquifyPatterns();
 
-    bool isFullyContainedInTriggerTower(const TTPattern& patt);
+    void uniquifyPatternsUsingStdMap();  // simpler, but need more memory (also slower)
+
+    void erasePatternsNotWithinTriggerTowers();
+
+    bool isNotWithinTriggerTower(const TTPattern& patt);
 
 
   public:
@@ -82,7 +89,7 @@ class PatternGenerator {
 
     // Program options
     int nEvents_;
-    int maxPatterns_;  // maximum number of patterns
+    int minFrequency_;  // min frequency of a pattern to be valid
     int verbose_;
 
     // Containers
@@ -92,7 +99,7 @@ class PatternGenerator {
     std::map<unsigned, unsigned> layerMap_;  // defines layer merging
 
     std::map<unsigned, std::vector<unsigned> > triggerTowerMap_;  // key: towerId, value: moduleIds in the tower
-    std::map<unsigned, std::vector<unsigned> > triggerTowerMapReversed_;  // key: moduleId, value: towerIds containing the module
+    std::map<unsigned, std::vector<unsigned> > triggerTowerReverseMap_;  // key: moduleId, value: towerIds containing the module
 };
 
 #endif

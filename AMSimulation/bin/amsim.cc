@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     // Declare a group of options that will be allowed both on command line
     // and in config file
     std::string input, output, layout, bankfile, roadfile, trackfile;
-    int maxEvents, maxPatterns, maxRoads, maxHits, maxTracks;
+    int maxEvents, minFrequency, maxPatterns, maxRoads, maxHits, maxTracks;
     bool nofilter, notrim;
     PatternBankOption bankOption;
     TrackFitterOption fitOption;
@@ -59,19 +59,22 @@ int main(int argc, char **argv) {
         ("input,i"      , po::value<std::string>(&input)->required(), "Specify input files")
         ("output,o"     , po::value<std::string>(&output)->required(), "Specify output file")
         ("maxEvents,n"  , po::value<int>(&maxEvents)->default_value(-1), "Specfiy max number of events")
-        ("maxPatterns"  , po::value<int>(&maxPatterns)->default_value(-1), "Specfiy max number of patterns")
-        ("maxRoads"     , po::value<int>(&maxRoads)->default_value(-1), "Specfiy max number of roads per event")
-        ("maxHits"      , po::value<int>(&maxHits)->default_value(-1), "Specfiy max number of hits per road")
-        ("maxTracks"    , po::value<int>(&maxTracks)->default_value(-1), "Specfiy max number of tracks per event")
 
         // Only for stub filtering
         ("no-filter"    , po::bool_switch(&nofilter)->default_value(false), "Do not apply filtering")
 
         // Only for bank generation
         ("layout,L"     , po::value<std::string>(&layout), "Specify trigger tower layout file")
+        ("minFrequency" , po::value<int>(&minFrequency)->default_value(1), "Specify min frequency of a pattern to be valid")
 
         // Only for pattern matching
         ("bank,B"       , po::value<std::string>(&bankfile), "Specify pattern bank file")
+        ("maxPatterns"  , po::value<int>(&maxPatterns)->default_value(-1), "Specfiy max number of patterns")
+        ("maxRoads"     , po::value<int>(&maxRoads)->default_value(-1), "Specfiy max number of roads per event")
+        ("maxHits"      , po::value<int>(&maxHits)->default_value(-1), "Specfiy max number of hits per road")
+
+        // Only for track fitting
+        ("maxTracks"    , po::value<int>(&maxTracks)->default_value(-1), "Specfiy max number of tracks per event")
 
         // Only for writing full ntuple
         ("no-trim"      , po::bool_switch(&notrim)->default_value(false), "Do not trim TTree branches")
@@ -81,8 +84,8 @@ int main(int argc, char **argv) {
         // Specifically for a pattern bank
         ("bank_minPt"              , po::value<float>(&bankOption.minPt)->default_value(   2.0), "Specify min pt")
         ("bank_maxPt"              , po::value<float>(&bankOption.maxPt)->default_value(9999.0), "Specify max pt")
-        ("bank_minEta"             , po::value<float>(&bankOption.minEta)->default_value(-2.2), "Specify min eta (signed)")
-        ("bank_maxEta"             , po::value<float>(&bankOption.maxEta)->default_value( 2.2), "Specify max eta (signed)")
+        ("bank_minEta"             , po::value<float>(&bankOption.minEta)->default_value(-2.5), "Specify min eta (signed)")
+        ("bank_maxEta"             , po::value<float>(&bankOption.maxEta)->default_value( 2.5), "Specify max eta (signed)")
         ("bank_minPhi"             , po::value<float>(&bankOption.minPhi)->default_value(-M_PI), "Specify min phi (from -pi to pi)")
         ("bank_maxPhi"             , po::value<float>(&bankOption.maxPhi)->default_value( M_PI), "Specify max phi (from -pi to pi)")
         ("bank_nLayers"            , po::value<int>(&bankOption.nLayers)->default_value(6), "Specify # of layers")
@@ -222,7 +225,7 @@ int main(int argc, char **argv) {
 
         PatternGenerator generator(bankOption);
         generator.setNEvents(maxEvents);
-        generator.setMaxPatterns(maxPatterns);
+        generator.setMinFrequency(minFrequency);
         generator.setVerbosity(verbose);
         int exitcode = generator.run(output, input, layout);
         if (exitcode) {
