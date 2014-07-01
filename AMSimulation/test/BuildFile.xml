@@ -3,4 +3,8 @@
     <flags   TEST_RUNNER_ARGS=" /bin/bash SLHCL1TrackTriggerSimulations/AMSimulation/test runtests_amsim.sh"/>
     <use   name="FWCore/Utilities"/>
   </bin>
+  <bin   name="TestSuperstripOperations" file="TestRunner.cpp,TestSuperstripOperations.cpp">
+    <use   name="SLHCL1TrackTriggerSimulations/AMSimulation"/>
+    <use   name="cppunit"/>
+  </bin>
 </environment>

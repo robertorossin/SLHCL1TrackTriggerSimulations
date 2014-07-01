@@ -5,7 +5,7 @@ function die { echo $1: status $2 ;  exit $2; }
 
 [ -e test_ntuple.root ] || die 'Failure getting ntuple root file' $?
 [ -e test_ntuple.txt ] || echo "test_ntuple.root" > test_ntuple.txt
-[ -e trigger_sector_map.csv ] || ln -s src/SLHCL1TrackTriggerSimulations/AMSimulation/data/trigger_sector_map.csv
+[ -e trigger_sector_map.csv ] || ln -s ${CMSSW_BASE}/src/SLHCL1TrackTriggerSimulations/AMSimulation/data/trigger_sector_map.csv
 PYTHONTEST=${CMSSW_BASE}/src/SLHCL1TrackTriggerSimulations/AMSimulation/python/test
 
 #(amsim --help) || die 'Failure getting help message' $?

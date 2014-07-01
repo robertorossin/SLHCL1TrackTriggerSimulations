@@ -3,6 +3,8 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTPattern.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripHasher.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HelperMath.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 using namespace slhcl1tt;
@@ -37,12 +39,25 @@ class PatternMatcher {
         assert(0 <= nDCBits_ && nDCBits_ <= 4);
 
         chain_ = new TChain("ntupler/tree");
+
+        // Decide on the size of superstrip
+        if (!po.subLadderVarSize.empty() && !po.subModuleVarSize.empty())
+            superstripArbiter_ = new SuperstripArbiter(6, po.subLadderVarSize, po.subModuleVarSize);
+        else
+            superstripArbiter_ = new SuperstripArbiter(6, po.subLadderSize, po.subModuleSize);
+
+        id_type subLadderNBits = msb(32/superstripArbiter_->minSubLadderSize());
+        id_type subModuleNBits = msb(1024/superstripArbiter_->minSubModuleSize());
+        superstripHasher_ = new SuperstripHasher(subLadderNBits, subModuleNBits);
     }
 
     // Destructor
     ~PatternMatcher() {
         delete ptr_allPatternIds_;
         delete ptr_allPatternBits_;
+
+        delete superstripArbiter_;
+        delete superstripHasher_;
     }
 
     // Setters
@@ -108,6 +123,9 @@ class PatternMatcher {
     unsigned size_allPatternBits_;  // keep track of the size of ptr_allPatternBits_
 
     std::vector<std::vector<unsigned> > ssHashMap_;
+
+    SuperstripArbiter* superstripArbiter_;
+    SuperstripHasher*  superstripHasher_;
 };
 
 #endif

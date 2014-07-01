@@ -4,7 +4,7 @@ static const unsigned MAX_NPATTERNS = 40000000;  // 40M = only 1/4 of design goa
 
 static const unsigned MAX_NLAYERS = pattern_type().size();  // ought to be 8
 
-static const unsigned MAX_NKEYS = (1<<21)-1;  // 2097151
+static const unsigned MAX_NKEYS = (1<<24)-1;
 
 
 // _____________________________________________________________________________
@@ -97,7 +97,7 @@ int PatternMatcher::loadPatterns() {
             addr_type ssId = ptr_allPatternIds_[ievt*MAX_NLAYERS + l];
             if (ssId == 0)  continue;  // avoid zero
 
-            key_type hash = hashSuperstripId(ssId);
+            key_type hash = superstripHasher_->hash(ssId);
             ssHashMap_.at(hash).push_back(ievt);  // ievt is used as the index of pattern
         }
 
@@ -205,7 +205,6 @@ int PatternMatcher::makeRoads() {
     chain_->SetBranchAddress("genParts_eta"     , &(vp_eta));
     chain_->SetBranchAddress("genParts_phi"     , &(vp_phi));
 
-
     allRoads_.clear();
     allGenParts_.clear();
 
@@ -239,8 +238,8 @@ int PatternMatcher::makeRoads() {
         // Loop over reconstructed stubs
         for (unsigned l=0; l<nstubs; ++l) {
             unsigned moduleId = vb_modId->at(l);
-            unsigned ncols = vb_iModCols->at(l);
-            unsigned nrows = vb_iModRows->at(l);
+            unsigned ncols = vb_iModCols->at(l);  // unused
+            unsigned nrows = vb_iModRows->at(l);  // unused
             unsigned nhits = vb_nhits->at(l);
             if (nrows == 960 || nrows == 1016)
                 nrows = 1024;
@@ -254,9 +253,9 @@ int PatternMatcher::makeRoads() {
             ncols *= 2;
             nrows *= 2;
 
-            // Set to lower resolution according to nSubLadders and nSubModules
-            col /= (ncols / std::min(ncols, (unsigned) po.nSubLadders));
-            row /= (nrows / std::min(nrows, (unsigned) po.nSubModules));
+            // Find superstrip address
+            col = superstripArbiter_->subladder(moduleId, col);
+            row = superstripArbiter_->submodule(moduleId, row);
             addr_type ssId = encodeSuperstripId(moduleId, col, row);
             bit_type ssBit = 1 << 0;
 
@@ -274,7 +273,7 @@ int PatternMatcher::makeRoads() {
             constructHit(x, y, z, 0., 0., 0., -1, pt, ssId, ssBit, hit);
 
             // Hash table lookup
-            key_type hash = hashSuperstripId(ssId);
+            key_type hash = superstripHasher_->hash(ssId);
             for (std::vector<unsigned>::const_iterator it=ssHashMap_.at(hash).begin(); it!=ssHashMap_.at(hash).end(); ++it) {  // loop over all possible patterns
                 foundPatternMap[*it].push_back(hit);  // key: index of pattern
             }

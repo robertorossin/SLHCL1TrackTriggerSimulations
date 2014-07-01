@@ -22,7 +22,7 @@ int PatternGenerator::readTriggerTowerFile(TString src) {
 
         unsigned i = 0;
         std::string line;
-        ifstream ifs(src.Data());
+        std::ifstream ifs(src.Data());
         while (std::getline(ifs, line)) {
             std::istringstream iss(line);
             std::string issline;
@@ -197,8 +197,8 @@ int PatternGenerator::makePatterns() {
             if (po.requireTriggerTower && triggerTowerReverseMap_.find(moduleId) == triggerTowerReverseMap_.end())
                 continue;
 
-            unsigned ncols = vb_iModCols->at(l);
-            unsigned nrows = vb_iModRows->at(l);
+            unsigned ncols = vb_iModCols->at(l);  // unused
+            unsigned nrows = vb_iModRows->at(l);  // unused
             unsigned nhits = vb_nhits->at(l);
             if (nrows == 960 || nrows == 1016)
                 nrows = 1024;
@@ -212,9 +212,9 @@ int PatternGenerator::makePatterns() {
             ncols *= 2;
             nrows *= 2;
 
-            // Set to lower resolution according to nSubLadders and nSubModules
-            col /= (ncols / std::min(ncols, (unsigned) po.nSubLadders));
-            row /= (nrows / std::min(nrows, (unsigned) po.nSubModules));
+            // Find superstrip address
+            col = superstripArbiter_->subladder(moduleId, col);
+            row = superstripArbiter_->submodule(moduleId, row);
             addr_type ssId = encodeSuperstripId(moduleId, col, row);
             bit_type ssBit = 1 << 0;
 
