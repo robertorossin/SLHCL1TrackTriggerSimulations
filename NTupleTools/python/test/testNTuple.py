@@ -152,9 +152,9 @@ class TestNTuple(unittest.TestCase):
         #tree.SetBranchAddress("TTClusters_iSide", self.uvec3)
         #tree.SetBranchAddress("TTClusters_iPhi", self.uvec4)
         #tree.SetBranchAddress("TTClusters_iZ", self.uvec5)
-        tree.SetBranchAddress("TTClusters_iModLayer", self.uvec6)
-        tree.SetBranchAddress("TTClusters_iModLadder", self.uvec7)
-        tree.SetBranchAddress("TTClusters_iModModule", self.uvec8)
+        #tree.SetBranchAddress("TTClusters_iModLayer", self.uvec6)
+        #tree.SetBranchAddress("TTClusters_iModLadder", self.uvec7)
+        #tree.SetBranchAddress("TTClusters_iModModule", self.uvec8)
         tree.SetBranchAddress("TTClusters_nhits", self.uvec9)
         tree.SetBranchAddress("TTClusters_barrel", self.bvec1)
         tree.SetBranchAddress("TTClusters_isGenuine", self.bvec2)
@@ -171,9 +171,9 @@ class TestNTuple(unittest.TestCase):
                 self.assertTrue(self.fvec5[j] >= 0 and self.fvec5[j] < 32)
                 #self.assertTrue(not self.bvec1[j] or (self.uvec1[j]<16 and self.uvec4[j]<256 and self.uvec5[j]<128))  # barrel
                 #self.assertTrue(self.bvec1[j] or (self.uvec3[j]<4 and self.uvec5[j]<16 and self.uvec2[j]<32 and self.uvec4[j]<128))  # endcap
-                self.assertTrue(self.uvec6[j] in [5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22])
-                self.assertTrue(self.uvec7[j] < 100)
-                self.assertTrue(self.uvec8[j] < 200)
+                #self.assertTrue(self.uvec6[j] in [5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22])
+                #self.assertTrue(self.uvec7[j] < 100)
+                #self.assertTrue(self.uvec8[j] < 200)
                 self.assertTrue(self.uvec9[j] >= 1)
 
                 # test associated tp
@@ -194,14 +194,14 @@ class TestNTuple(unittest.TestCase):
         tree.SetBranchAddress("TTStubs_z", self.fvec3)
         tree.SetBranchAddress("TTStubs_roughPt", self.fvec4)
         tree.SetBranchAddress("TTStubs_trigDist", self.fvec5)
-        tree.SetBranchAddress("TTStubs_iLayer", self.uvec1)
-        tree.SetBranchAddress("TTStubs_iRing", self.uvec2)
-        tree.SetBranchAddress("TTStubs_iSide", self.uvec3)
-        tree.SetBranchAddress("TTStubs_iPhi", self.uvec4)
-        tree.SetBranchAddress("TTStubs_iZ", self.uvec5)
-        tree.SetBranchAddress("TTStubs_iModLayer", self.uvec6)
-        tree.SetBranchAddress("TTStubs_iModLadder", self.uvec7)
-        tree.SetBranchAddress("TTStubs_iModModule", self.uvec8)
+        #tree.SetBranchAddress("TTStubs_iLayer", self.uvec1)
+        #tree.SetBranchAddress("TTStubs_iRing", self.uvec2)
+        #tree.SetBranchAddress("TTStubs_iSide", self.uvec3)
+        #tree.SetBranchAddress("TTStubs_iPhi", self.uvec4)
+        #tree.SetBranchAddress("TTStubs_iZ", self.uvec5)
+        #tree.SetBranchAddress("TTStubs_iModLayer", self.uvec6)
+        #tree.SetBranchAddress("TTStubs_iModLadder", self.uvec7)
+        #tree.SetBranchAddress("TTStubs_iModModule", self.uvec8)
         tree.SetBranchAddress("TTStubs_nhits", self.uvec9)
         tree.SetBranchAddress("TTStubs_barrel", self.bvec1)
         tree.SetBranchAddress("TTStubs_isGenuine", self.bvec2)
@@ -215,12 +215,12 @@ class TestNTuple(unittest.TestCase):
                 self.assertTrue(abs(self.fvec2[j]) < 110)
                 self.assertTrue(abs(self.fvec3[j]) < 300)
                 self.assertTrue(self.fvec4[j] > 0)
-                #self.assertTrue(abs(self.fvec5[j]) < 3)
-                self.assertTrue(not self.bvec1[j] or (self.uvec1[j]<16 and self.uvec4[j]<256 and self.uvec5[j]<128))  # barrel
-                self.assertTrue(self.bvec1[j] or (self.uvec3[j]<4 and self.uvec5[j]<16 and self.uvec2[j]<32 and self.uvec4[j]<128))  # endcap
-                self.assertTrue(self.uvec6[j] in [5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22])
-                self.assertTrue(self.uvec7[j] < 100)
-                self.assertTrue(self.uvec8[j] < 200)
+                self.assertTrue(abs(self.fvec5[j]) < 7.5)
+                #self.assertTrue(not self.bvec1[j] or (self.uvec1[j]<16 and self.uvec4[j]<256 and self.uvec5[j]<128))  # barrel
+                #self.assertTrue(self.bvec1[j] or (self.uvec3[j]<4 and self.uvec5[j]<16 and self.uvec2[j]<32 and self.uvec4[j]<128))  # endcap
+                #self.assertTrue(self.uvec6[j] in [5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22])
+                #self.assertTrue(self.uvec7[j] < 100)
+                #self.assertTrue(self.uvec8[j] < 200)
                 self.assertTrue(self.uvec9[j] >= 1)
 
                 # test associated clusters
