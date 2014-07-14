@@ -13,18 +13,6 @@
 #include <string>
 
 
-int getPowerOfTwo(int n) {
-    if (n <= 1)
-        return 1;
-    int m = 1;
-    while (n > 1) {
-        n /= 2;
-        m *= 2;
-    }
-    return m;
-}
-
-
 // _____________________________________________________________________________
 int main(int argc, char **argv) {
 
@@ -88,15 +76,15 @@ int main(int argc, char **argv) {
         ("bank_maxEta"             , po::value<float>(&bankOption.maxEta)->default_value( 2.5), "Specify max eta (signed)")
         ("bank_minPhi"             , po::value<float>(&bankOption.minPhi)->default_value(-M_PI), "Specify min phi (from -pi to pi)")
         ("bank_maxPhi"             , po::value<float>(&bankOption.maxPhi)->default_value( M_PI), "Specify max phi (from -pi to pi)")
+        ("bank_subLadderSize"      , po::value<int>(&bankOption.subLadderSize)->default_value(4), "Specify the size of a subladder (a.k.a. segment)")
+        ("bank_subModuleSize"      , po::value<int>(&bankOption.subModuleSize)->default_value(8), "Specify the size of a submodule (a.k.a. superstrip)")
         ("bank_nLayers"            , po::value<int>(&bankOption.nLayers)->default_value(6), "Specify # of layers")
-        ("bank_nSubLadders"        , po::value<int>(&bankOption.nSubLadders)->default_value(32), "Specify # of subladders (a.k.a. segments)")
-        ("bank_nSubModules"        , po::value<int>(&bankOption.nSubModules)->default_value(512), "Specify # of submodules (a.k.a. superstrips)")
         ("bank_nMisses"            , po::value<int>(&bankOption.nMisses)->default_value(0), "Specify # of allowed misses")
         ("bank_nFakeSuperstrips"   , po::value<int>(&bankOption.nFakeSuperstrips)->default_value(0), "Specify # of fake superstrips")
         ("bank_nDCBits"            , po::value<int>(&bankOption.nDCBits)->default_value(0), "Specify # of DC bits")
         ("bank_requireTriggerTower", po::value<bool>(&bankOption.requireTriggerTower)->default_value(false), "Apply trigger tower requirement")
-        ("bank_activeLayers"       , po::value<std::vector<int> >(&bankOption.activeLayers), "Specify active layers (NOT IMPLEMENTED)")
-        ("bank_inactiveLayers"     , po::value<std::vector<int> >(&bankOption.inactiveLayers), "Specify inactive layers (NOT IMPLEMENTED)")
+        ("bank_subLadderVarSize"   , po::value<std::vector<int> >(&bankOption.subLadderVarSize), "Specify the variable size of a subladder per layer (takes precedence over --bank_subLadderSize)")
+        ("bank_subModuleVarSize"   , po::value<std::vector<int> >(&bankOption.subModuleVarSize), "Specify the variable size of a submodule per layer (takes precedence over --bank_subModuleSize)")
         ("bank_triggerTowers"      , po::value<std::vector<int> >(&bankOption.triggerTowers), "Specify trigger towers (NOT IMPLEMENTED)")
 
         // Specifically for a track fitter
@@ -174,29 +162,43 @@ int main(int argc, char **argv) {
     }
 
     // Restrict the interger ranges
-    bankOption.nSubLadders      = getPowerOfTwo(bankOption.nSubLadders);
-    bankOption.nSubModules      = getPowerOfTwo(bankOption.nSubModules);
+    bankOption.subLadderSize    = std::min(std::max(1, bankOption.subLadderSize), 32);
+    bankOption.subModuleSize    = std::min(std::max(2, bankOption.subModuleSize), 1024);
     bankOption.nLayers          = std::min(std::max(3, bankOption.nLayers), 8);
-    bankOption.nSubLadders      = std::min(std::max(1, bankOption.nSubLadders), 32);
-    bankOption.nSubModules      = std::min(std::max(1, bankOption.nSubModules), 512);
     bankOption.nMisses          = std::min(std::max(0, bankOption.nMisses), 3);
     bankOption.nFakeSuperstrips = std::min(std::max(0, bankOption.nFakeSuperstrips), 3);
     bankOption.nDCBits          = std::min(std::max(0, bankOption.nDCBits), 4);
+    if (!bankOption.subLadderVarSize.empty())
+        for (unsigned i=0; i<bankOption.subLadderVarSize.size(); ++i)
+            bankOption.subLadderVarSize.at(i) = std::min(std::max(1, bankOption.subLadderVarSize.at(i)), 32);
+    if (!bankOption.subModuleVarSize.empty())
+        for (unsigned i=0; i<bankOption.subModuleVarSize.size(); ++i)
+            bankOption.subModuleVarSize.at(i) = std::min(std::max(2, bankOption.subModuleVarSize.at(i)), 1024);
 
     // Protection against conflict in nSubModules vs. nDCBits
-    if (bankOption.nSubModules == 1 && bankOption.nDCBits > 0) {
-        std::cout << Warning() << "Requested # of submodules: 1, # of DC bits: " << bankOption.nDCBits << " --> " << 0 << std::endl;
+    if (bankOption.subModuleSize == 1024 && bankOption.nDCBits > 0) {
+        std::cout << Warning() << "Requested subModuleSize: 1024, # of DC bits: " << bankOption.nDCBits << " --> " << 0 << std::endl;
         bankOption.nDCBits = 0;
     }
-    if (bankOption.nSubModules == 2 && bankOption.nDCBits > 1) {
-        std::cout << Warning() << "Requested # of submodules: 2, # of DC bits: " << bankOption.nDCBits << " --> " << 1 << std::endl;
+    if (bankOption.subModuleSize == 512 && bankOption.nDCBits > 1) {
+        std::cout << Warning() << "Requested subModuleSize: 512, # of DC bits: " << bankOption.nDCBits << " --> " << 1 << std::endl;
         bankOption.nDCBits = 1;
     }
-    if (bankOption.nSubModules == 4 && bankOption.nDCBits > 2) {
-        std::cout << Warning() << "Requested # of submodules: 4, # of DC bits: " << bankOption.nDCBits << " --> " << 2 << std::endl;
+    if (bankOption.subModuleSize == 256 && bankOption.nDCBits > 2) {
+        std::cout << Warning() << "Requested subModuleSize: 256, # of DC bits: " << bankOption.nDCBits << " --> " << 2 << std::endl;
         bankOption.nDCBits = 2;
     }
+    if (!bankOption.subModuleVarSize.empty() && bankOption.nDCBits > 0) {
+        std::cout << Warning() << "Requested variable subModuleSizes, # of DC bits: " << bankOption.nDCBits << " --> " << 0 << std::endl;
+        bankOption.nDCBits = 0;
+    }
 
+    // Set default values for subLadderVarSize if only subModuleVarSize is given
+    if (!bankOption.subModuleVarSize.empty() && bankOption.subLadderVarSize.empty()) {
+        for (unsigned i=0; i<bankOption.subModuleVarSize.size(); ++i) {
+            bankOption.subLadderVarSize.push_back(1);
+        }
+    }
 
     // _________________________________________________________________________
     // Calling main functions

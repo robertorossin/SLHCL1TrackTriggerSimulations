@@ -1,7 +1,6 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterOption.h"
 
 #include <iostream>
-#include <algorithm>
 #include <iterator>
 
 

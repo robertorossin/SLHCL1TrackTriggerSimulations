@@ -13,15 +13,15 @@ struct PatternBankOption {
     float maxEta;  // not absolute eta
     float minPhi;  // from -pi to pi
     float maxPhi;  // from -pi to pi
+    int subLadderSize;  // 1, 2, 4, 8, 16, 32
+    int subModuleSize;  // 1, 2, 4, 8, 16, 32, 64, 128, 256, 512
     int nLayers;
-    int nSubLadders;  // 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024
-    int nSubModules;  // 1, 2, 4, 8, 16, 32
     int nMisses;
     int nFakeSuperstrips;
     int nDCBits;
     bool requireTriggerTower;
-    std::vector<int> activeLayers;
-    std::vector<int> inactiveLayers;
+    std::vector<int> subLadderVarSize;
+    std::vector<int> subModuleVarSize;
     std::vector<int> triggerTowers;
 };
 

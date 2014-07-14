@@ -3,6 +3,7 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTPattern.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HelperMath.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 using namespace slhcl1tt;
@@ -32,10 +33,18 @@ class PatternGenerator {
         chain_ = new TChain("ntupler/tree");
 
         layerMap_ = getLayerMergingMap(nLayers_);
+
+        // Decide on the size of superstrip
+        if (!po.subLadderVarSize.empty() && !po.subModuleVarSize.empty())
+            superstripArbiter_ = new SuperstripArbiter(6, po.subLadderVarSize, po.subModuleVarSize);
+        else
+            superstripArbiter_ = new SuperstripArbiter(6, po.subLadderSize, po.subModuleSize);
     }
 
     // Destructor
-    ~PatternGenerator() {}
+    ~PatternGenerator() {
+        delete superstripArbiter_;
+    }
 
 
     // Setters
@@ -100,6 +109,8 @@ class PatternGenerator {
 
     std::map<unsigned, std::vector<unsigned> > triggerTowerMap_;  // key: towerId, value: moduleIds in the tower
     std::map<unsigned, std::vector<unsigned> > triggerTowerReverseMap_;  // key: moduleId, value: towerIds containing the module
+
+    SuperstripArbiter* superstripArbiter_;
 };
 
 #endif

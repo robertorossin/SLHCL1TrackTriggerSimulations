@@ -1,4 +1,4 @@
-<Flags CXXFLAGS="-O0 -g -DDEBUG -Wno-error=unused-but-set-variable -Wno-error=unused-variable"/>
+<Flags CXXFLAGS="-Wno-error=unused-but-set-variable -Wno-error=unused-variable"/>
 <use   name="SLHCL1TrackTriggerSimulations/AMSimulationDataFormats"/>
 <use   name="root"/>
 <use   name="rootcore"/>

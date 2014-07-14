@@ -37,11 +37,27 @@ static const id_type iSubModuleMask_     = 0x1FF;   // 0-511 (full: 0-1023)
 static const id_type iSubLadderMask_     = 0x1F;    // 0-31
 static const id_type iModuleIdMask_      = 0x3FFFF; // 0-262143
 
+// Assign 3 fake superstrip ids using impossible values:
+// 2^32 - 1 = 4294967295
+// 2^32 - 2 = 4294967294
+// 2^32 - 3 = 4294967293
+static const addr_type fakeSuperstripId_ = -1;
+static const addr_type fakeSuperstripId1_ = -2;
+static const addr_type fakeSuperstripId2_ = -3;
+
 
 /// Functions
 inline id_type halfStripRound(float x) {
     static const float p = 10.;
     return floor((x*2)*p + 0.5)/p;
+}
+
+// Find the most significant bit for 32-bit word
+inline id_type msb(id_type v) {
+    id_type r = 0; // r will be lg(v)
+    while (v >>= 1) // unroll for more speed...
+        r++;
+    return r;
 }
 
 // Retrieve layer, ladder, module from a moduleId
@@ -50,7 +66,7 @@ inline id_type decodeLayer(id_type moduleId) {
 }
 
 inline id_type decodeLayer4bit(id_type moduleId) {
-    id_type lay = (moduleId / 10000) % 100;
+    id_type lay = decodeLayer(moduleId);
     if (5 <= lay && lay <= 10)
         return (lay - 5);
     if (11 <= lay && lay <= 15)
@@ -60,7 +76,23 @@ inline id_type decodeLayer4bit(id_type moduleId) {
     if (26 == lay)  // fake superstrip
         return 15;
     throw "Unexpected layer id";
-    return -1;
+    return 99;
+}
+
+// Layer number from innermost to outermost layers, used by SuperstripArbiter
+// Note that this is neither CMS layer, nor merged layer
+inline id_type decodeLayerArbiter(id_type moduleId) {
+    id_type lay = decodeLayer(moduleId);
+    if (5 <= lay && lay <= 10)
+        return (lay - 5);
+    if (11 <= lay && lay <= 15)
+        return (lay - 10);
+    if (18 <= lay && lay <= 22)
+        return (lay - 17);
+    if (26 == lay)  // fake superstrip
+        return 5;
+    throw "Unexpected layer id";
+    return 99;
 }
 
 inline id_type decodeLadder(id_type moduleId) {
@@ -69,6 +101,16 @@ inline id_type decodeLadder(id_type moduleId) {
 
 inline id_type decodeModule(id_type moduleId) {
     return (moduleId) % 100;
+}
+
+inline bool isPSModule(id_type moduleId) {
+    id_type lay = decodeLayer(moduleId);
+    if (5 <= lay && lay <= 7)
+        return true;
+    id_type lad = decodeLadder(moduleId);
+    if (11 <= lay && lay <= 22 && lad <= 9)
+        return true;
+    return false;
 }
 
 inline id_type encodeModuleId(id_type lay, id_type lad, id_type mod) {
@@ -144,20 +186,20 @@ inline void encodeDCBit(id_type nDCBits, addr_type& superstripId, bit_type& supe
 }
 
 inline addr_type encodeFakeSuperstripId() {
-    // An impossible value: 2^32 - 1 = 4294967295
-    return addr_type(-1);
+    return fakeSuperstripId_;
 }
 
 inline bool isFakeSuperstripId(addr_type superstripId) {
-    return (superstripId == encodeFakeSuperstripId());
+    return (superstripId == fakeSuperstripId_ || superstripId == fakeSuperstripId1_ || superstripId == fakeSuperstripId2_);
 }
 
 inline key_type hashSuperstripId(addr_type superstripId) {
     // A simple hash function to make superstripId distribute more or less uniformly
     // Hence we might prefer to keep the least significant bits
-    id_type lay = decodeSuperstripLayer4bit(superstripId);
-    id_type lad = decodeSuperstripLadder(superstripId);
-    id_type mod = decodeSuperstripModule(superstripId);
+    id_type moduleId = decodeSuperstripModuleId(superstripId);
+    id_type lay = decodeLayer4bit(moduleId);
+    id_type lad = decodeLadder(moduleId);
+    id_type mod = decodeModule(moduleId);
     id_type col = decodeSuperstripSubLadder(superstripId);
     id_type row = decodeSuperstripSubModule(superstripId);
     // Going from 32 bits (18 - 5 - 9) to 21 bits (4 - 4 - 7 - 1 - 5)
