@@ -1,0 +1,10 @@
+<!-- Copy fas.xml to $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected/ -->
+<!-- Then, run "scram setup fas" -->
+  <tool name="fas" version="0.2.0-slhcl1tt">
+    <lib name="fas"/>
+    <client>
+      <environment name="FAS_BASE" default="/uscms_data/d2/jiafu/L1TrackTrigger/external/fromIvan/fas-slhcl1tt"/>
+      <environment name="LIBDIR" default="$FAS_BASE/lib"/>
+      <environment name="INCLUDE" default="$FAS_BASE/include"/>
+    </client>
+  </tool>
