@@ -5,6 +5,7 @@
 #endif
 
 static const unsigned MIN_NGOODSTUBS = 3;
+static const unsigned MAX_NGOODSTUBS = 8;
 
 bool sortByFloat(const std::pair<unsigned, float>& lhs, const std::pair<unsigned, float>& rhs) {
     return lhs.second < rhs.second;
@@ -58,8 +59,6 @@ int StubCleaner::cleanStubs(TString out) {
     std::vector<float> *          vb_coordx     = 0;
     std::vector<float> *          vb_coordy     = 0;
     std::vector<float> *          vb_roughPt    = 0;
-    std::vector<unsigned> *       vb_iModCols   = 0;
-    std::vector<unsigned> *       vb_iModRows   = 0;
     std::vector<unsigned> *       vb_modId      = 0;
     std::vector<unsigned> *       vb_nhits      = 0;
     std::vector<float> *          vb_simPt      = 0;
@@ -76,8 +75,6 @@ int StubCleaner::cleanStubs(TString out) {
     chain_->SetBranchStatus("TTStubs_coordx"    , 1);
     chain_->SetBranchStatus("TTStubs_coordy"    , 1);
     chain_->SetBranchStatus("TTStubs_roughPt"   , 1);
-    chain_->SetBranchStatus("TTStubs_iModCols"  , 1);
-    chain_->SetBranchStatus("TTStubs_iModRows"  , 1);
     chain_->SetBranchStatus("TTStubs_modId"     , 1);
     chain_->SetBranchStatus("TTStubs_nhits"     , 1);
     chain_->SetBranchStatus("TTStubs_simPt"     , 1);
@@ -93,8 +90,6 @@ int StubCleaner::cleanStubs(TString out) {
     chain_->SetBranchAddress("TTStubs_coordx"   , &(vb_coordx));
     chain_->SetBranchAddress("TTStubs_coordy"   , &(vb_coordy));
     chain_->SetBranchAddress("TTStubs_roughPt"  , &(vb_roughPt));
-    chain_->SetBranchAddress("TTStubs_iModCols" , &(vb_iModCols));
-    chain_->SetBranchAddress("TTStubs_iModRows" , &(vb_iModRows));
     chain_->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
     chain_->SetBranchAddress("TTStubs_nhits"    , &(vb_nhits));
     chain_->SetBranchAddress("TTStubs_simPt"    , &(vb_simPt));
@@ -125,6 +120,7 @@ int StubCleaner::cleanStubs(TString out) {
     int nPassed = 0;
     int nKept = 0;
     int curTree = chain_->GetTreeNumber();
+
     for (int ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
@@ -144,6 +140,13 @@ int StubCleaner::cleanStubs(TString out) {
             continue;
         }
 
+        if (nstubs > 100000) {
+            std::cout << Error() << "Way too many stubs: " << nstubs << std::endl;
+            return 1;
+        }
+
+        // _____________________________________________________________________
+        // Start cleaning
         bool keep = true;
 
         // Check event selection
@@ -159,6 +162,7 @@ int StubCleaner::cleanStubs(TString out) {
         // Check sim info
         // Take the sim-matched particle info from the outermost stub
         const int good_trkId = 1;
+        const int unmatch_trkId = -1;
         float simPt = vb_simPt->back();
         float simEta = vb_simEta->back();
         float simPhi = vb_simPhi->back();
@@ -172,6 +176,7 @@ int StubCleaner::cleanStubs(TString out) {
                 break;
             }
         }
+        float simTheta = simPt > 0.0 ? (2.0 * std::atan(std::exp(-simEta)) ) : (simEta >= 0 ? 0 : M_PI);
 
         // Apply pt, eta, phi requirements
         bool sim = (po.minPt  <= simPt  && simPt  <= po.maxPt  &&
@@ -184,44 +189,41 @@ int StubCleaner::cleanStubs(TString out) {
 
         // _____________________________________________________________________
         // Remove multiple stubs in one layer
-        std::vector<std::pair<unsigned, float> > vec_index_minDEta;
+        std::vector<std::pair<unsigned, float> > vec_index_dZ;
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
             int trkId = vb_trkId->at(l);  // check sim info
-            if (trkId == good_trkId) {
-                float stub_eta = ROOT::Math::Impl::Eta_FromRhoZ(vb_r->at(l), vb_z->at(l));
-                //float stub_phi = std::atan2(vb_y->at(l), vb_x->at(l));
-                float dEta = std::abs(simEta - stub_eta);
-                vec_index_minDEta.push_back(std::make_pair(l, dEta));
+            if (trkId == good_trkId || trkId == unmatch_trkId) {  // also catch stubs that fail to find a matched simTrack
+                //float stub_eta = ROOT::Math::Impl::Eta_FromRhoZ(vb_r->at(l), vb_z->at(l));
+                //float dEta = std::abs(simEta - stub_eta);
+                //if (dEta > 0.8)  // way too far
+                //    continue;
+                float dZ = std::abs(vb_r->at(l) / std::tan(simTheta) - vb_z->at(l));
+                vec_index_dZ.push_back(std::make_pair(l, dZ));
             }
         }
 
-        // Sort: smallest deltaEta to largest
-        std::sort(vec_index_minDEta.begin(), vec_index_minDEta.end(), sortByFloat);
+        // Sort: smallest dZ to largest
+        std::sort(vec_index_dZ.begin(), vec_index_dZ.end(), sortByFloat);
 
-        std::vector<unsigned> goodLayerStubs(nLayers_, 999999);
-        for (std::vector<std::pair<unsigned, float> >::const_iterator it=vec_index_minDEta.begin();
-             it!=vec_index_minDEta.end(); ++it) {
+        std::vector<unsigned> goodLayerStubs(16, 999999);
+        for (std::vector<std::pair<unsigned, float> >::const_iterator it=vec_index_dZ.begin();
+             it!=vec_index_dZ.end(); ++it) {
             unsigned l = it->first;
-            float dEta = it->second;
+            float dZ = it->second;
 
             unsigned moduleId = vb_modId->at(l);
-            unsigned layer = decodeLayer(moduleId);
-            unsigned mlayer = layerMap_.at(layer);  // mapping of layer --> mlayer must exist
+            unsigned layer4bit = decodeLayer4bit(moduleId);
 
-            if (goodLayerStubs.at(mlayer) == 999999) {
-                goodLayerStubs.at(mlayer) = l;  // for each mlayer, takes the stub with minDEta to simTrack
-            } else {
-                unsigned l_old = goodLayerStubs.at(mlayer);
-                unsigned moduleId_old = vb_modId->at(l_old);
-                unsigned layer_old = decodeLayer(moduleId_old);
-                if (layer > layer_old && dEta < 0.1) {
-                    // in case of layer merging, take the stub further away in z,
-                    // as it provides larger lever arm. However, endcap provides
-                    // worse resolution
-                    goodLayerStubs.at(mlayer) = l;
-                }
+            // For each layer, takes the stub with min dZ to simTrack
+            if (goodLayerStubs.at(layer4bit) == 999999 && dZ < 26.0) {  // gets rid of stubs due to loopers
+                goodLayerStubs.at(layer4bit) = l;
             }
         }
+
+        //if (keep && goodLayerStubs.at(0) == 999999)
+        //    std::cout << Warning() << "... evt: " << ievt << " no stub in the first layer of the barrel!" << std::endl;
+        if (keep && goodLayerStubs.at(6) != 999999 && goodLayerStubs.at(11) != 999999)
+            std::cout << Warning() << "... evt: " << ievt << " found stubs in the first layers of both positive and negative endcaps!" << std::endl;
 
         // _____________________________________________________________________
         // Now make keep-or-ignore decision per stub
@@ -234,6 +236,7 @@ int StubCleaner::cleanStubs(TString out) {
             assert(nhits > 0);
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
 
+            // Check whether the index l was stored as a good stub
             unsigned count = std::count(goodLayerStubs.begin(), goodLayerStubs.end(), l);
             if (!count)  // do not keep even if filter_ is false
                 keepstub = false;
@@ -248,8 +251,6 @@ int StubCleaner::cleanStubs(TString out) {
                 vb_coordx->at(ngoodstubs)     = vb_coordx->at(l);
                 vb_coordy->at(ngoodstubs)     = vb_coordy->at(l);
                 vb_roughPt->at(ngoodstubs)    = vb_roughPt->at(l);
-                vb_iModCols->at(ngoodstubs)   = vb_iModCols->at(l);
-                vb_iModRows->at(ngoodstubs)   = vb_iModRows->at(l);
                 vb_modId->at(ngoodstubs)      = vb_modId->at(l);
                 vb_nhits->at(ngoodstubs)      = vb_nhits->at(l);
                 vb_simPt->at(ngoodstubs)      = vb_simPt->at(l);
@@ -261,6 +262,9 @@ int StubCleaner::cleanStubs(TString out) {
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " keep? " << keepstub << std::endl;
         }
 
+        // _____________________________________________________________________
+        // Now make keep-or-ignore decision per event
+
         // Check again min # of layers
         require = (ngoodstubs >= MIN_NGOODSTUBS);
         if (!require && filter_)
@@ -270,6 +274,18 @@ int StubCleaner::cleanStubs(TString out) {
             ++nPassed;
         else //  do not keep any stub
             ngoodstubs = 0;
+
+        if (keep && ngoodstubs > MAX_NGOODSTUBS) {
+            std::cout << Warning() << "... evt: " << ievt << " simPt: " << simPt << " simEta: " << simEta << " simPhi: " << simPhi << std::endl;
+            for (unsigned l=0; (l<ngoodstubs) && keep; ++l) {
+                float stub_eta = ROOT::Math::Impl::Eta_FromRhoZ(vb_r->at(l), vb_z->at(l));
+                float dEta = std::abs(simEta - stub_eta);
+                float stub_phi = vb_phi->at(l);
+                float dPhi = deltaPhi(simPhi, stub_phi);
+                float dZ = std::abs(vb_r->at(l) / std::tan(simTheta) - vb_z->at(l));
+                std::cout << "... ... stub: " << l << " moduleId: " << vb_modId->at(l) << " trkId: " << vb_trkId->at(l) << " r,phi,z: " << vb_r->at(l) << "," << vb_phi->at(l) << "," << vb_z->at(l) << " dPhi,dEta,dZ: " << dPhi << "," << dEta << "," << dZ << std::endl;
+            }
+        }
 
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " keep? " << keep << std::endl;
 
@@ -281,8 +297,6 @@ int StubCleaner::cleanStubs(TString out) {
         vb_coordx   ->resize(ngoodstubs);
         vb_coordy   ->resize(ngoodstubs);
         vb_roughPt  ->resize(ngoodstubs);
-        vb_iModCols ->resize(ngoodstubs);
-        vb_iModRows ->resize(ngoodstubs);
         vb_modId    ->resize(ngoodstubs);
         vb_nhits    ->resize(ngoodstubs);
         vb_simPt    ->resize(ngoodstubs);
