@@ -29,11 +29,13 @@
 //#pragma link C++ class std::vector<std::vector<Long64_t> >+;
 //#pragma link C++ class std::vector<std::vector<ULong64_t> >+;
 //#pragma link C++ class std::pair<unsigned, std::vector<unsigned> >+;
-#pragma link C++ class std::map<unsigned, std::vector<unsigned> >+;
+//#pragma link C++ class std::map<unsigned, std::vector<unsigned> >+;
 #pragma link C++ function quadsum(double, double);
 #pragma link C++ function quadsum(float, float);
 #pragma link C++ function deltaPhi(double, double);
 #pragma link C++ function deltaPhi(float, float);
 #pragma link C++ function deltaR(double, double, double, double);
 #pragma link C++ function deltaR(float, float, float, float);
+#pragma link C++ function etaFromTheta(float);
+#pragma link C++ function etaFromRhoZ(float, float);
 #endif

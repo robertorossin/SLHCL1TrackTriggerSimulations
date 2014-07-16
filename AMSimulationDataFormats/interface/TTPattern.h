@@ -4,15 +4,10 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTSuperstrip.h"
 
 #include <iosfwd>
-//#include <array>
-#include <tr1/array>
 #include <vector>
 
 
 namespace slhcl1tt {
-
-typedef std::tr1::array<addr_type,8> pattern_type;  // maximum number of superstrips in a pattern set to 8 due to hardware design
-typedef std::tr1::array<bit_type,8>  pattern_bit_type;  // one DC bit for one superstrip
 
 // TTPattern is a collection of 8 TTSuperstrips
 // A POD type is used to reduce memory consumption.

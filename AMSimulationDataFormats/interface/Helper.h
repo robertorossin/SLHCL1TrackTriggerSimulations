@@ -4,7 +4,8 @@
 #include <cmath>
 #include <map>
 #include <stdint.h>  // consistent with DataFormats/DetId/interface/DetId.h
-
+#include <array>
+//#include <tr1/array>
 
 namespace slhcl1tt {
 
@@ -15,6 +16,9 @@ typedef uint16_t bit_type;   // for DC bits: 0 - 2^16 (=65536 max for nDCBits_=4
 typedef uint32_t id_type;    // generic
 typedef uint32_t addr_type;  // for full superstrip id, now reduced to 32-bit (from 64-bit) and is therefore the same as id_type
 typedef uint32_t key_type;   // for key used in the pattern matching map, now increased to 32-bit (from 16-bit) and is therefore the same as id_type
+
+typedef std::array<addr_type,8> pattern_type;  // maximum number of superstrips in a pattern set to 8 due to hardware design
+typedef std::array<bit_type,8>  pattern_bit_type;  // one DC bit for one superstrip
 
 
 // The following need to be hidden from dictionary generation
