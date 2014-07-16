@@ -41,9 +41,9 @@ static const id_type iModuleIdMask_      = 0x3FFFF; // 0-262143
 // 2^32 - 1 = 4294967295
 // 2^32 - 2 = 4294967294
 // 2^32 - 3 = 4294967293
-static const addr_type fakeSuperstripId_ = -1;
-static const addr_type fakeSuperstripId1_ = -2;
-static const addr_type fakeSuperstripId2_ = -3;
+static const addr_type fakeSuperstripId_  = 0xffffffff;
+static const addr_type fakeSuperstripId1_ = 0xfffffffe;
+static const addr_type fakeSuperstripId2_ = 0xfffffffd;
 
 
 /// Functions
@@ -79,22 +79,6 @@ inline id_type decodeLayer4bit(id_type moduleId) {
     return 99;
 }
 
-// Layer number from innermost to outermost layers, used by SuperstripArbiter
-// Note that this is neither CMS layer, nor merged layer
-inline id_type decodeLayerArbiter(id_type moduleId) {
-    id_type lay = decodeLayer(moduleId);
-    if (5 <= lay && lay <= 10)
-        return (lay - 5);
-    if (11 <= lay && lay <= 15)
-        return (lay - 10);
-    if (18 <= lay && lay <= 22)
-        return (lay - 17);
-    if (26 == lay)  // fake superstrip
-        return 5;
-    throw "Unexpected layer id";
-    return 99;
-}
-
 inline id_type decodeLadder(id_type moduleId) {
     return (moduleId / 100) % 100;
 }
@@ -108,7 +92,14 @@ inline bool isPSModule(id_type moduleId) {
     if (5 <= lay && lay <= 7)
         return true;
     id_type lad = decodeLadder(moduleId);
-    if (11 <= lay && lay <= 22 && lad <= 9)
+    if (11 <= lay && lay <= 22 && lad <= 8)
+        return true;
+    return false;
+}
+
+inline bool isBarrelModule(id_type moduleId) {
+    id_type lay = decodeLayer(moduleId);
+    if (5 <= lay && lay <= 10)
         return true;
     return false;
 }
@@ -175,13 +166,13 @@ inline void encodeDCBit(id_type nDCBits, addr_type& superstripId, bit_type& supe
     id_type row = decodeSuperstripSubModule(superstripId);
 
     // Only do the submodule, since there's only one DC bit
-    //id_type col_mod_n = col % (1 << nDCBits);
-    id_type row_mod_n = row % (1 << nDCBits);
-    //col /= (1 << nDCBits);
-    row /= (1 << nDCBits);
+    //id_type col_mod_n = col % (1U << nDCBits);
+    id_type row_mod_n = row % (1U << nDCBits);
+    //col /= (1U << nDCBits);
+    row /= (1U << nDCBits);
 
     superstripId = encodeSuperstripId(moduleId, col, row);
-    superstripBit = (1 << row_mod_n);
+    superstripBit = (1U << row_mod_n);
     return;
 }
 

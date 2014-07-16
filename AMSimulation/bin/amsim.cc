@@ -83,9 +83,11 @@ int main(int argc, char **argv) {
         ("bank_nFakeSuperstrips"   , po::value<int>(&bankOption.nFakeSuperstrips)->default_value(0), "Specify # of fake superstrips")
         ("bank_nDCBits"            , po::value<int>(&bankOption.nDCBits)->default_value(0), "Specify # of DC bits")
         ("bank_requireTriggerTower", po::value<bool>(&bankOption.requireTriggerTower)->default_value(false), "Apply trigger tower requirement")
-        ("bank_subLadderVarSize"   , po::value<std::vector<int> >(&bankOption.subLadderVarSize), "Specify the variable size of a subladder per layer (takes precedence over --bank_subLadderSize)")
-        ("bank_subModuleVarSize"   , po::value<std::vector<int> >(&bankOption.subModuleVarSize), "Specify the variable size of a submodule per layer (takes precedence over --bank_subModuleSize)")
-        ("bank_triggerTowers"      , po::value<std::vector<int> >(&bankOption.triggerTowers), "Specify trigger towers (NOT IMPLEMENTED)")
+        ("bank_subLadderVarSize"   , po::value<std::vector<unsigned> >(&bankOption.subLadderVarSize), "Specify the variable size of a subladder per layer (takes precedence over --bank_subLadderSize)")
+        ("bank_subModuleVarSize"   , po::value<std::vector<unsigned> >(&bankOption.subModuleVarSize), "Specify the variable size of a submodule per layer (takes precedence over --bank_subModuleSize)")
+        ("bank_subLadderECVarSize" , po::value<std::vector<unsigned> >(&bankOption.subLadderECVarSize), "Specify the variable size of a subladder per endcap ring (takes precedence over --bank_subLadderSize)")
+        ("bank_subModuleECVarSize" , po::value<std::vector<unsigned> >(&bankOption.subModuleECVarSize), "Specify the variable size of a submodule per endcap ring (takes precedence over --bank_subModuleSize)")
+        ("bank_triggerTowers"      , po::value<std::vector<unsigned> >(&bankOption.triggerTowers), "Specify trigger towers (NOT IMPLEMENTED)")
 
         // Specifically for a track fitter
         ("fit_pqType"              , po::value<int>(&fitOption.pqType)->default_value(0), "Specify choice of variables for p,q")
@@ -170,10 +172,25 @@ int main(int argc, char **argv) {
     bankOption.nDCBits          = std::min(std::max(0, bankOption.nDCBits), 4);
     if (!bankOption.subLadderVarSize.empty())
         for (unsigned i=0; i<bankOption.subLadderVarSize.size(); ++i)
-            bankOption.subLadderVarSize.at(i) = std::min(std::max(1, bankOption.subLadderVarSize.at(i)), 32);
+            bankOption.subLadderVarSize.at(i) = std::min(std::max(1U, bankOption.subLadderVarSize.at(i)), 32U);
     if (!bankOption.subModuleVarSize.empty())
         for (unsigned i=0; i<bankOption.subModuleVarSize.size(); ++i)
-            bankOption.subModuleVarSize.at(i) = std::min(std::max(2, bankOption.subModuleVarSize.at(i)), 1024);
+            bankOption.subModuleVarSize.at(i) = std::min(std::max(2U, bankOption.subModuleVarSize.at(i)), 1024U);
+    if (!bankOption.subLadderECVarSize.empty())
+        for (unsigned i=0; i<bankOption.subLadderECVarSize.size(); ++i)
+            bankOption.subLadderECVarSize.at(i) = std::min(std::max(1U, bankOption.subLadderECVarSize.at(i)), 32U);
+    if (!bankOption.subModuleECVarSize.empty())
+        for (unsigned i=0; i<bankOption.subModuleECVarSize.size(); ++i)
+            bankOption.subModuleECVarSize.at(i) = std::min(std::max(2U, bankOption.subModuleECVarSize.at(i)), 1024U);
+    // Check if all variable sizes are set at the same time
+    if (!bankOption.subLadderVarSize.empty() || !bankOption.subModuleVarSize.empty() ||
+        !bankOption.subLadderECVarSize.empty() || !bankOption.subModuleECVarSize.empty()) {
+        if (!bankOption.subLadderVarSize.empty() + !bankOption.subModuleVarSize.empty() +
+            !bankOption.subLadderECVarSize.empty() + !bankOption.subModuleECVarSize.empty() != 4)
+            std::cout << Warning() << "Not all variable sizes are set at the same time. Ignoring all variable sizes." << std::endl;
+        bankOption.subLadderVarSize.clear(); bankOption.subModuleVarSize.clear();
+        bankOption.subLadderECVarSize.clear(); bankOption.subModuleECVarSize.clear();
+    }
 
     // Protection against conflict in nSubModules vs. nDCBits
     if (bankOption.subModuleSize == 1024 && bankOption.nDCBits > 0) {
@@ -191,13 +208,6 @@ int main(int argc, char **argv) {
     if (!bankOption.subModuleVarSize.empty() && bankOption.nDCBits > 0) {
         std::cout << Warning() << "Requested variable subModuleSizes, # of DC bits: " << bankOption.nDCBits << " --> " << 0 << std::endl;
         bankOption.nDCBits = 0;
-    }
-
-    // Set default values for subLadderVarSize if only subModuleVarSize is given
-    if (!bankOption.subModuleVarSize.empty() && bankOption.subLadderVarSize.empty()) {
-        for (unsigned i=0; i<bankOption.subModuleVarSize.size(); ++i) {
-            bankOption.subLadderVarSize.push_back(1);
-        }
     }
 
     // _________________________________________________________________________

@@ -1,12 +1,19 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripHasher.h"
+using namespace slhcl1tt;
 
 #include <iostream>
-#include <iterator>
 
-
-namespace slhcl1tt {
 
 void SuperstripHasher::init() {
+    if (subLadderNBits_ > (iModuleIdStartBit_ - iSubLadderStartBit_)) {
+        std::cerr << "Incorrect subLadderNBits is given: " << subLadderNBits_ << std::endl;
+        return;
+    }
+    if (subModuleNBits_ > (iSubLadderStartBit_ - iSubModuleStartBit_)) {
+        std::cerr << "Incorrect subModuleNBits is given: " << subModuleNBits_ << std::endl;
+        return;
+    }
+
     id_type barrel_z_divisions[6] = {
         63, 55, 54, 24, 24, 24
     };
@@ -55,7 +62,7 @@ void SuperstripHasher::init() {
     endcap_ring_divisions_.assign(endcap_ring_divisions, endcap_ring_divisions+15);
     endcap_ring_offsets_.assign(endcap_ring_offsets, endcap_ring_offsets+16);
 
-    fake_superstrip_hash_ = 15428;
+    fakeSuperstripHash_ = 15428;
 }
 
 
@@ -78,7 +85,7 @@ key_type SuperstripHasher::hashModule(id_type moduleId) const {
             + mod;
     }
 
-    if (h > fake_superstrip_hash_) {
+    if (h > fakeSuperstripHash_) {
         std::cout << "ERROR: Unexpected moduleId hash: " << h << std::endl;
     }
 
@@ -92,15 +99,17 @@ key_type SuperstripHasher::hash(addr_type superstripId) const {
 
     key_type h = 0;
     if (isFakeSuperstripId(superstripId)) {
-        h = fake_superstrip_hash_;
+        h = fakeSuperstripHash_;
+        col = 0;
+        row = row & 0x3;
     } else {
         h = hashModule(moduleId);
     }
 
-    if (col > (id_type) 1 << subLadderNBits_) {
+    if (col > 1U << subLadderNBits_) {
         std::cout << "ERROR: Unexpected subLadder col: " << col << std::endl;
     }
-    if (row > (id_type) 1 << subModuleNBits_) {
+    if (row > 1U << subModuleNBits_) {
         std::cout << "ERROR: Unexpected subModule row: " << row << std::endl;
     }
 
@@ -113,7 +122,6 @@ key_type SuperstripHasher::hash(addr_type superstripId) const {
 }
 
 void SuperstripHasher::print() {
-    std::cout << "subLadderNBits, subModuleNBits, maxHashModule: " << subLadderNBits_ << ", " << subModuleNBits_ << ", " << fake_superstrip_hash_ << std::endl;
+    std::cout << "subLadderNBits, subModuleNBits, maxHashModule: " << subLadderNBits_ << ", " << subModuleNBits_ << ", " << fakeSuperstripHash_ << std::endl;
 }
 
-}
