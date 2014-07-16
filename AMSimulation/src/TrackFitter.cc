@@ -59,13 +59,13 @@ int TrackFitter::makeTracks() {
 
     allTracks_.clear();
     int nPassed = 0;
-    for (int ievt=0; ievt<nEvents_; ++ievt) {
+    for (long long ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
 
         unsigned nroads = vr_patternIds->size();
-        if (verbose_>1 && ievt%1000==0)  std::cout << Debug() << Form("... Processing event: %7i, fitting: %7i", ievt, nPassed) << std::endl;
+        if (verbose_>1 && ievt%1000==0)  std::cout << Debug() << Form("... Processing event: %7lld, fitting: %7i", ievt, nPassed) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # roads: " << nroads << " [# tracks: " << allTracks_.size() << "]" << std::endl;
 
         if (!nroads) {  // skip if no road
@@ -168,7 +168,7 @@ int TrackFitter::writeTracks(TString out) {
         return 1;
     }
 
-    const unsigned nentries = allTracks_.size();
+    const long long nentries = allTracks_.size();
     if (verbose_)  std::cout << Info() << "Recreating " << out << " with " << nentries << " events." << std::endl;
     TFile* tfile = TFile::Open(out, "RECREATE");
     tfile->mkdir("ntupler")->cd();
@@ -204,8 +204,8 @@ int TrackFitter::writeTracks(TString out) {
 
     // _________________________________________________________________________
     // Loop over all tracks
-    for (unsigned ievt=0; ievt<nentries; ++ievt) {
-        if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7u", ievt) << std::endl;
+    for (long long ievt=0; ievt<nentries; ++ievt) {
+        if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
 
         vt_px              ->clear();
         vt_py              ->clear();
@@ -248,7 +248,7 @@ int TrackFitter::writeTracks(TString out) {
 
         ttree->Fill();
     }
-    assert(ttree->GetEntries() == (int) nentries);
+    assert(ttree->GetEntries() == nentries);
 
     tfile->Write();
     delete ttree;

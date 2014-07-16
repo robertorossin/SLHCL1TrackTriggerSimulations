@@ -38,7 +38,8 @@ int main(int argc, char **argv) {
     // Declare a group of options that will be allowed both on command line
     // and in config file
     std::string input, output, layout, bankfile, roadfile, trackfile;
-    int maxEvents, minFrequency, maxPatterns, maxRoads, maxHits, maxTracks;
+    long long maxEvents;
+    int minFrequency, maxPatterns, maxRoads, maxHits, maxTracks;
     bool nofilter, notrim;
     PatternBankOption bankOption;
     TrackFitterOption fitOption;
@@ -46,7 +47,7 @@ int main(int argc, char **argv) {
     config.add_options()
         ("input,i"      , po::value<std::string>(&input)->required(), "Specify input files")
         ("output,o"     , po::value<std::string>(&output)->required(), "Specify output file")
-        ("maxEvents,n"  , po::value<int>(&maxEvents)->default_value(-1), "Specfiy max number of events")
+        ("maxEvents,n"  , po::value<long long>(&maxEvents)->default_value(-1), "Specfiy max number of events")
 
         // Only for stub filtering
         ("no-filter"    , po::bool_switch(&nofilter)->default_value(false), "Do not apply filtering")
@@ -218,8 +219,8 @@ int main(int argc, char **argv) {
         std::cout << Color("magenta") << "Start stub cleaning..." << EndColor() << std::endl;
 
         StubCleaner cleaner(bankOption);
-        cleaner.setFilter(!nofilter);
         cleaner.setNEvents(maxEvents);
+        cleaner.setFilter(!nofilter);
         cleaner.setVerbosity(verbose);
         int exitcode = cleaner.run(output, input);
         if (exitcode) {
@@ -293,8 +294,8 @@ int main(int argc, char **argv) {
         std::cout << Color("magenta") << "Start writing full ntuple..." << EndColor() << std::endl;
 
         NTupleMaker writer;
-        writer.setTrim(!notrim);
         writer.setNEvents(maxEvents);
+        writer.setTrim(!notrim);
         writer.setVerbosity(verbose);
         int exitcode = writer.run(output, input, roadfile, trackfile);
         if (exitcode) {

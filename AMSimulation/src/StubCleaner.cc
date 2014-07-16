@@ -40,13 +40,13 @@ int StubCleaner::cleanStubs(TString out) {
     }
 
     // Do not do GetEntries() as it conflicts with CloneTree() when reading from XROOTD
-    //Long64_t nentries = chain_->GetEntries();
+    //long long nentries = chain_->GetEntries();
     //if (nentries <= 0) {
     //    std::cout << Error() << "Input source has zero entry." << std::endl;
     //    return 1;
     //}
     //
-    //if (nEvents_ > (int) nentries)
+    //if (nEvents_ > nentries)
     //    nEvents_ = nentries;
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events; recreating " << out << " after stub cleaning." << std::endl;
 
@@ -121,7 +121,7 @@ int StubCleaner::cleanStubs(TString out) {
     int nKept = 0;
     int curTree = chain_->GetTreeNumber();
 
-    for (int ievt=0; ievt<nEvents_; ++ievt) {
+    for (long long ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         if (chain_->GetTreeNumber() != curTree) {  // for TTreeFormula
@@ -131,7 +131,7 @@ int StubCleaner::cleanStubs(TString out) {
         chain_->GetEntry(ievt);
 
         unsigned nstubs = vb_modId->size();
-        if (verbose_>1 && ievt%20000==0)  std::cout << Debug() << Form("... Processing event: %7i, keeping: %7i", ievt, nKept) << std::endl;
+        if (verbose_>1 && ievt%20000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i", ievt, nKept) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " [# passed: " << nPassed << "]" << std::endl;
 
         if (!nstubs) {  // skip if no stub

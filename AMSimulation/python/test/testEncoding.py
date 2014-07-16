@@ -1,5 +1,6 @@
 import unittest
 import sys
+from itertools import izip
 from ROOT import TFile, TTree, gROOT, gSystem, vector
 
 
@@ -32,8 +33,9 @@ class TestAMSim(unittest.TestCase):
         addresses1 = []
         for ievt in tree:
             addresses1_inner = []
-            for moduleId, col, row in zip(ievt.TTStubs_modId, ievt.TTStubs_hitCols, ievt.TTStubs_hitRows):
-                addresses1_inner.append((moduleId, col[0], row[0]/2))
+            for moduleId, col, row in izip(ievt.TTStubs_modId, ievt.TTStubs_coordy, ievt.TTStubs_coordx):
+                col, row = int(col), int(row)
+                addresses1_inner.append((moduleId, col, row/2))
             addresses1.append(addresses1_inner)
 
         addresses2 = []
@@ -48,10 +50,10 @@ class TestAMSim(unittest.TestCase):
         def encode(x):
             return (x[0]<<14) | (x[1]<<9) | (x[2])
         def decode(x):
-            return ((x>>14) & 262143, (x>>9) & 31, (x>>0) & 511)
+            return ((x>>14) & (1<<18 - 1), (x>>9) & (1<<5 - 1), (x>>0) & (1<<9 - 1))
 
         n = 0
-        for addr1, addr2 in zip(addresses1, addresses2):
+        for addr1, addr2 in izip(addresses1, addresses2):
             if n > 100:  break
             #print n, addr1, addr2
             if len(addr2):

@@ -25,8 +25,8 @@ class StubCleaner {
     // Constructor
     StubCleaner(PatternBankOption option)
     : po(option),
-      filter_(true),
-      nEvents_(999999999), verbose_(1) {
+      nEvents_(999999999), filter_(true),
+      verbose_(1) {
 
         chain_ = new TChain("ntupler/tree");
 
@@ -38,9 +38,9 @@ class StubCleaner {
 
 
     // Setters
-    void setFilter(bool b=true)     { filter_ = b; }
-    void setNEvents(int n)          { if (n != -1)  nEvents_ = std::max(0, n); }
-    void setVerbosity(int n)        { verbose_ = n; }
+    void setNEvents(long long n)    { if (n != -1)  nEvents_ = n > 0 ? n : 0; }
+    void setFilter(bool b)          { filter_ = b; }
+    void setVerbosity(int v)        { verbose_ = v; }
 
     // Getters
     // none
@@ -60,8 +60,8 @@ class StubCleaner {
 
   private:
     // Program options
+    long long nEvents_;
     bool filter_;
-    int nEvents_;
     int verbose_;
 
     // Event selection
