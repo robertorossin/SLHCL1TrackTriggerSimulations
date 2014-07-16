@@ -3,6 +3,8 @@ using namespace slhcl1tt;
 
 #include <iostream>
 
+static const unsigned MAX_NLAYERS = pattern_type().size();
+
 
 void SuperstripStitcher::init() {
     if (!(6 <= nLayers_ && nLayers_ <= 8)) {
@@ -73,40 +75,32 @@ void SuperstripStitcher::init() {
 }
 
 
-std::vector<std::vector<addr_type> > SuperstripStitcher::stitch(const std::vector<addr_type>& superstrips) {
+std::vector<pattern_type> SuperstripStitcher::stitch(const std::vector<addr_type>& superstrips) {
     ret_.clear();
-
-    if (nLayers_ >  superstrips.size() + nFakeSuperstrips_)  // nFakeSuperstrips is not enough
+    if (nLayers_ >  superstrips.size() + nFakeSuperstrips_)  // nFakeSuperstrips is not enough, return empty vector
         return ret_;
 
-    ret_.push_back(superstrips);
+    // Copy up to 8 superstrips
+    ret_.resize(1);
+    std::copy(superstrips.begin(),
+              superstrips.begin() + (MAX_NLAYERS < superstrips.size() ? MAX_NLAYERS : superstrips.size()),
+              ret_.back().begin() );
+
+    // Case 0: Exact size
     if (nLayers_ == superstrips.size())
         return ret_;
 
-    if (nLayers_ >  superstrips.size()) {          // lack of 1 - 3 superstrips
-        ret_.back().push_back(fakeSuperstripId_);  // add 1st fake superstrip
-        if (nLayers_ == ret_.back().size())
-            return ret_;
-
-        ret_.back().push_back(fakeSuperstripId1_); // add 2nd fake superstrip
-        if (nLayers_ == ret_.back().size())
-            return ret_;
-
-        ret_.back().push_back(fakeSuperstripId2_); // add 3rd fake superstrip
-        if (nLayers_ == ret_.back().size())
-            return ret_;
-
-        std::cerr << "Require more than 3 fake superstrips needed! Added only 3" << std::endl;
+    // Case 1: Need fake superstrips
+    unsigned i = superstrips.size(), j = 0;
+    while (nLayers_ > i) {  // lack of 1 - 3 superstrips
+        ret_.back().at(i) = fakeSuperstripId_ - (i - superstrips.size());
+        i++;
+    }
+    if (nLayers_ == i)
         return ret_;
-    }
 
-    ret2_.clear();
-    if (superstrips.size() > 8) {
-        std::cerr << "Given more than 8 superstrips! Use only first 8" << std::endl;
-        ret_.back().resize(8);
-    }
-
-    // Hardcoded for the cases of nLayers = 6, 7, 8
+    // Case 2: Need to do all combinations
+    // The combinations are hardcoded for nLayers = 6, 7, 8
     std::vector<unsigned>* n_choose_k_ptr = 0;
     if (superstrips.size() == 7 && nLayers_ == 6) {
         n_choose_k_ptr = &seven_choose_six_;
@@ -119,16 +113,16 @@ std::vector<std::vector<addr_type> > SuperstripStitcher::stitch(const std::vecto
         return ret_;
     }
 
+    ret2_.clear();
     ret2_.resize(n_choose_k_ptr -> size() / nLayers_);
-    unsigned i, j;
-    for (i=0; i<ret2_.size(); ++i) {
-        for (j=0; j<nLayers_; ++j) {
-            ret2_.at(i).push_back(ret_.back().at(n_choose_k_ptr -> at(i * nLayers_ + j)) );
+    for (i=0; i<ret2_.size(); i++) {
+        for (j=0; j<nLayers_; j++) {
+            ret2_.at(i).at(j) = ret_.back().at(n_choose_k_ptr -> at(i * nLayers_ + j));
         }
     }
     return ret2_;
 }
 
 void SuperstripStitcher::print() {
-    std::cout << "nLayers: " << nLayers_ << std::endl;
+    std::cout << "nLayers: " << nLayers_ << " nFakeSuperstrips: " << nFakeSuperstrips_ << std::endl;
 }

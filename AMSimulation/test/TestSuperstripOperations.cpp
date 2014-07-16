@@ -5,25 +5,21 @@ using namespace slhcl1tt;
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <map>
-#include <vector>
 
 // Code taken from https://docs.python.org/2/library/itertools.html#itertools.combinations
-static std::vector<std::vector<unsigned> > combinations(const std::vector<unsigned>& pool, int k) {
+static std::vector<std::array<unsigned,8> > combinations(const std::vector<unsigned>& pool, int k) {
     unsigned n = pool.size();
     int i, j;
     std::vector<unsigned> indices;
     for (i=0; i<k; ++i)
         indices.push_back(i);
 
-    std::vector<std::vector<unsigned> > ret;
+    std::vector<std::array<unsigned,8> > ret;
+    std::array<unsigned,8> ret_inner;
     while (true) {
-        std::vector<unsigned> ret_inner;
+        ret_inner.fill(0);
         for (i=0; i<k; ++i) {
-            ret_inner.push_back(pool.at(indices[i]));
+            ret_inner.at(i) = pool.at(indices[i]);
         }
         ret.push_back(ret_inner);
 
@@ -210,26 +206,26 @@ public:
 
     void testStitch() {
         std::vector<addr_type> input;
-        std::vector<std::vector<addr_type> > output;
+        std::vector<pattern_type> output;
 
         output.clear(); output.resize(1);
-        input     = {11, 22, 33};
-        output[0] = {11, 22, 33, fakeSuperstripId_, fakeSuperstripId1_, fakeSuperstripId2_};
+        input     =  {11, 22, 33};
+        output[0] = {{11, 22, 33, fakeSuperstripId_, fakeSuperstripId1_, fakeSuperstripId2_}};  // can use single brace pair only in GCC 4.8
         CPPUNIT_ASSERT(output == stitcher_->stitch(input));
 
         output.clear(); output.resize(1);
-        input     = {11, 22, 33, 44};
-        output[0] = {11, 22, 33, 44, fakeSuperstripId_, fakeSuperstripId1_};
+        input     =  {11, 22, 33, 44};
+        output[0] = {{11, 22, 33, 44, fakeSuperstripId_, fakeSuperstripId1_}};
         CPPUNIT_ASSERT(output == stitcher_->stitch(input));
 
         output.clear(); output.resize(1);
-        input     = {11, 22, 33, 44, 55};
-        output[0] = {11, 22, 33, 44, 55, fakeSuperstripId_};
+        input     =  {11, 22, 33, 44, 55};
+        output[0] = {{11, 22, 33, 44, 55, fakeSuperstripId_}};
         CPPUNIT_ASSERT(output == stitcher_->stitch(input));
 
         output.clear(); output.resize(1);
-        input     = {11, 22, 33, 44, 55, 66};
-        output[0] = {11, 22, 33, 44, 55, 66};
+        input     =  {11, 22, 33, 44, 55, 66};
+        output[0] = {{11, 22, 33, 44, 55, 66}};
         CPPUNIT_ASSERT(output == stitcher_->stitch(input));
 
         input     = {11, 22, 33, 44, 55, 66, 77};
