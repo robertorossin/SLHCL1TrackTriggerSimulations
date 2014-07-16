@@ -2,11 +2,14 @@
 #define AMSimulation_PatternGenerator_h_
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTPattern.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HelperMath.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripStitcher.h"
 using namespace slhcl1tt;
+
+#include "fas/lean_table.h"
+using namespace fas;
 
 #include "TFile.h"
 #include "TFileCollection.h"
@@ -24,6 +27,7 @@ class PatternGenerator {
     // Constructor
     PatternGenerator(PatternBankOption option)
     : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits), nFakeSuperstrips_(po.nFakeSuperstrips),
+      bankName_("patternBank"),
       nEvents_(999999999), minFrequency_(1), verbose_(1) {
 
         assert(3 <= nLayers_ && nLayers_ <= 8);
@@ -35,55 +39,47 @@ class PatternGenerator {
         layerMap_ = getLayerMergingMap(nLayers_);
 
         // Decide on the size of superstrip
-        if (!po.subLadderVarSize.empty() && !po.subModuleVarSize.empty())
-            superstripArbiter_ = new SuperstripArbiter(6, po.subLadderVarSize, po.subModuleVarSize);
+        if (po.useSuperstripVarSize)
+            arbiter_ = new SuperstripArbiter(po.subLadderVarSize, po.subModuleVarSize, po.subLadderECVarSize, po.subModuleECVarSize);
         else
-            superstripArbiter_ = new SuperstripArbiter(6, po.subLadderSize, po.subModuleSize);
+            arbiter_ = new SuperstripArbiter(po.subLadderSize, po.subModuleSize);
+
+        // Build a pattern from a given list of superstrips
+        stitcher_ = new SuperstripStitcher(nLayers_, nFakeSuperstrips_);
     }
 
     // Destructor
     ~PatternGenerator() {
-        delete superstripArbiter_;
+        delete arbiter_;
+        delete stitcher_;
     }
 
 
     // Setters
-    //void setNLayers(int n)          { nLayers_ = n; }
-    //void setNDCBits(int n)          { nDCBits_ = n; }
-    //void setNFakeSuperstrips(int n) { nFakeSuperstrips_ = n; }
-
-    void setNEvents(int n)          { if (n != -1)  nEvents_ = std::max(0, n); }
-    void setMinFrequency(int n)     { minFrequency_ = std::max(1, minFrequency_); }
-    void setVerbosity(int n)        { verbose_ = n; }
+    void setNEvents(long long n)    { if (n != -1)  nEvents_ = n > 0 ? n : 0; }
+    void setMinFrequency(int n)     { minFrequency_ = n > 1 ? n : 1; }
+    void setVerbosity(int v)        { verbose_ = v; }
 
     // Getters
-    int getNLayers()          const { return nLayers_; }
-    int getNDCBits()          const { return nDCBits_; }
-    int getNFakeSuperstrips() const { return nFakeSuperstrips_; }
+    // none
 
     // Functions
     int readTriggerTowerFile(TString src);
 
     int readFile(TString src);
 
-    int makePatterns();
+    int makePatterns_map();
+    int writePatterns_map(TString out);
 
+    int makePatterns();
     int writePatterns(TString out);
 
     // Main driver
     int run(TString out, TString src, TString layout);
 
   private:
-    void addFakeSuperstrips(const std::vector<TTSuperstrip>& goodSuperstrips,
-                            std::vector<TTSuperstrip>& goodAndFakeSuperstrips);
-
-    void uniquifyPatterns();
-
-    void uniquifyPatternsUsingStdMap();  // simpler, but need more memory (also slower)
-
-    void erasePatternsNotWithinTriggerTowers();
-
-    bool isNotWithinTriggerTower(const TTPattern& patt);
+    // Private functions
+    bool isWithinTriggerTower(const pattern_type& patt);
 
 
   public:
@@ -93,24 +89,30 @@ class PatternGenerator {
   private:
     // Configurations
     const int nLayers_;
-    const int nDCBits_;
+    const int nDCBits_;  // UNUSED
     const int nFakeSuperstrips_;
+    const TString bankName_;
 
     // Program options
-    int nEvents_;
+    long long nEvents_;
     int minFrequency_;  // min frequency of a pattern to be valid
     int verbose_;
 
     // Containers
     TChain * chain_;
-    std::vector<TTPattern> allPatterns_;
+    std::map<pattern_type, count_type> allPatterns_map_;    // using std::map approach
+    std::vector<std::pair<pattern_type, count_type> > allPatterns_map_pairs_;
+    fas::lean_table allPatterns_;                           // using fas::lean_table approach
 
-    std::map<unsigned, unsigned> layerMap_;  // defines layer merging
+    // Maps
+    std::map<unsigned, unsigned> layerMap_;  // UNUSED: defines layer merging
 
-    std::map<unsigned, std::vector<unsigned> > triggerTowerMap_;  // key: towerId, value: moduleIds in the tower
-    std::map<unsigned, std::vector<unsigned> > triggerTowerReverseMap_;  // key: moduleId, value: towerIds containing the module
+    std::map<unsigned, std::vector<unsigned> > triggerTowerMap_;        // key: towerId, value: moduleIds in the tower
+    std::map<unsigned, std::vector<unsigned> > triggerTowerReverseMap_; // key: moduleId, value: towerIds containing the module
 
-    SuperstripArbiter* superstripArbiter_;
+    // Operators
+    SuperstripArbiter* arbiter_;
+    SuperstripStitcher* stitcher_;
 };
 
 #endif
