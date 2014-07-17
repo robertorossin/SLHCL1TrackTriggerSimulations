@@ -44,15 +44,6 @@ struct TTHit {
     float v()                       const { return y / (x*x + y*y); }
 };
 
-// _____________________________________________________________________________
-// Functions
-
-// Construct a TTSuperstrip from a superstrip id and a DC bit
-void constructSuperstrip(addr_type id, bit_type bit, TTSuperstrip& superstrip);
-
-// Construct a TTHit from the global coordinates, charge and pt
-void constructHit(float x, float y, float z, float xerr, float yerr, float zerr, int charge, float pt, addr_type ssId, bit_type ssBit, TTHit& hit);
-
 
 // _____________________________________________________________________________
 // Output streams
