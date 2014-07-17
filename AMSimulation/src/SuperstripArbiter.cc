@@ -25,12 +25,12 @@ void SuperstripArbiter::init() {
 
     // Only division by a power of two (2, 4, 8, 16, ...) is safe, as it corresponds to bit shifting
     for (unsigned i=0; i<nLayers_; ++i) {
-        subLadderSize_.at(i) = 1U << msb(subLadderSize_.at(i));
-        subModuleSize_.at(i) = 1U << msb(subModuleSize_.at(i));
+        subLadderSize_.at(i) = 1u << mostSigBit(subLadderSize_.at(i));
+        subModuleSize_.at(i) = 1u << mostSigBit(subModuleSize_.at(i));
     }
     for (unsigned i=0; i<nRings_; ++i) {
-        subLadderECSize_.at(i) = 1U << msb(subLadderECSize_.at(i));
-        subModuleECSize_.at(i) = 1U << msb(subModuleECSize_.at(i));
+        subLadderECSize_.at(i) = 1u << mostSigBit(subLadderECSize_.at(i));
+        subModuleECSize_.at(i) = 1u << mostSigBit(subModuleECSize_.at(i));
     }
 }
 

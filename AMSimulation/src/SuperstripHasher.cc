@@ -106,10 +106,10 @@ key_type SuperstripHasher::hash(addr_type superstripId) const {
         h = hashModule(moduleId);
     }
 
-    if (col > 1U << subLadderNBits_) {
+    if (col > 1u << subLadderNBits_) {
         std::cout << "ERROR: Unexpected subLadder col: " << col << std::endl;
     }
-    if (row > 1U << subModuleNBits_) {
+    if (row > 1u << subModuleNBits_) {
         std::cout << "ERROR: Unexpected subModule row: " << row << std::endl;
     }
 

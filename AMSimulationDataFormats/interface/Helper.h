@@ -6,6 +6,7 @@
 #include <stdint.h>  // consistent with DataFormats/DetId/interface/DetId.h
 #include <array>
 //#include <tr1/array>
+#include <stdexcept>
 
 namespace slhcl1tt {
 
@@ -57,7 +58,7 @@ inline id_type halfStripRound(float x) {
 }
 
 // Find the most significant bit for 32-bit word
-inline id_type msb(id_type v) {
+inline id_type mostSigBit(id_type v) {
     id_type r = 0; // r will be lg(v)
     while (v >>= 1) // unroll for more speed...
         r++;
@@ -66,7 +67,8 @@ inline id_type msb(id_type v) {
 
 // Retrieve layer, ladder, module from a moduleId
 inline id_type decodeLayer(id_type moduleId) {
-    return (moduleId / 10000) % 100;
+    //return (moduleId / 10000) % 100;
+    return (moduleId / 10000);
 }
 
 inline id_type decodeLayer4bit(id_type moduleId) {
@@ -79,7 +81,7 @@ inline id_type decodeLayer4bit(id_type moduleId) {
         return (lay - 7);
     if (26 == lay)  // fake superstrip
         return 15;
-    throw "Unexpected layer id";
+    throw std::out_of_range("Unexpected layer id");
     return 99;
 }
 
@@ -170,13 +172,13 @@ inline void encodeDCBit(id_type nDCBits, addr_type& superstripId, bit_type& supe
     id_type row = decodeSuperstripSubModule(superstripId);
 
     // Only do the submodule, since there's only one DC bit
-    //id_type col_mod_n = col % (1U << nDCBits);
-    id_type row_mod_n = row % (1U << nDCBits);
-    //col /= (1U << nDCBits);
-    row /= (1U << nDCBits);
+    //id_type col_mod_n = col % (1u << nDCBits);
+    id_type row_mod_n = row % (1u << nDCBits);
+    //col /= (1u << nDCBits);
+    row /= (1u << nDCBits);
 
     superstripId = encodeSuperstripId(moduleId, col, row);
-    superstripBit = (1U << row_mod_n);
+    superstripBit = (1u << row_mod_n);
     return;
 }
 
