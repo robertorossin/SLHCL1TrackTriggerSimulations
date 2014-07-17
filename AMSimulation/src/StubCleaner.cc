@@ -117,8 +117,7 @@ int StubCleaner::cleanStubs(TString out) {
 
     // _________________________________________________________________________
     // Loop over all events
-    int nPassed = 0;
-    int nKept = 0;
+    int nPassed = 0, nKept = 0;
     int curTree = chain_->GetTreeNumber();
 
     for (long long ievt=0; ievt<nEvents_; ++ievt) {

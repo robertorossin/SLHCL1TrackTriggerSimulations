@@ -102,53 +102,53 @@ int PatternGenerator::makePatterns_map() {
     if (nEvents_ > nentries)
         nEvents_ = nentries;
 
-    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
+    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events." << std::endl;
 
     // For reading
-    std::vector<float> *          vb_x          = 0;
-    std::vector<float> *          vb_y          = 0;
-    std::vector<float> *          vb_z          = 0;
-    std::vector<float> *          vb_r          = 0;
-    std::vector<float> *          vb_phi        = 0;
+    //std::vector<float> *          vb_x          = 0;
+    //std::vector<float> *          vb_y          = 0;
+    //std::vector<float> *          vb_z          = 0;
+    //std::vector<float> *          vb_r          = 0;
+    //std::vector<float> *          vb_phi        = 0;
     std::vector<float> *          vb_coordx     = 0;
     std::vector<float> *          vb_coordy     = 0;
     std::vector<float> *          vb_roughPt    = 0;
     std::vector<unsigned> *       vb_modId      = 0;
     std::vector<unsigned> *       vb_nhits      = 0;
-    std::vector<float> *          vb_simPt      = 0;
-    std::vector<float> *          vb_simEta     = 0;
-    std::vector<float> *          vb_simPhi     = 0;
+    //std::vector<float> *          vb_simPt      = 0;
+    //std::vector<float> *          vb_simEta     = 0;
+    //std::vector<float> *          vb_simPhi     = 0;
     std::vector<int> *            vb_trkId      = 0;
 
     chain_->SetBranchStatus("*"                 , 0);
-    chain_->SetBranchStatus("TTStubs_x"         , 1);
-    chain_->SetBranchStatus("TTStubs_y"         , 1);
-    chain_->SetBranchStatus("TTStubs_z"         , 1);
-    chain_->SetBranchStatus("TTStubs_r"         , 1);
-    chain_->SetBranchStatus("TTStubs_phi"       , 1);
+    //chain_->SetBranchStatus("TTStubs_x"         , 1);
+    //chain_->SetBranchStatus("TTStubs_y"         , 1);
+    //chain_->SetBranchStatus("TTStubs_z"         , 1);
+    //chain_->SetBranchStatus("TTStubs_r"         , 1);
+    //chain_->SetBranchStatus("TTStubs_phi"       , 1);
     chain_->SetBranchStatus("TTStubs_coordx"    , 1);
     chain_->SetBranchStatus("TTStubs_coordy"    , 1);
     chain_->SetBranchStatus("TTStubs_roughPt"   , 1);
     chain_->SetBranchStatus("TTStubs_modId"     , 1);
     chain_->SetBranchStatus("TTStubs_nhits"     , 1);
-    chain_->SetBranchStatus("TTStubs_simPt"     , 1);
-    chain_->SetBranchStatus("TTStubs_simEta"    , 1);
-    chain_->SetBranchStatus("TTStubs_simPhi"    , 1);
+    //chain_->SetBranchStatus("TTStubs_simPt"     , 1);
+    //chain_->SetBranchStatus("TTStubs_simEta"    , 1);
+    //chain_->SetBranchStatus("TTStubs_simPhi"    , 1);
     chain_->SetBranchStatus("TTStubs_trkId"     , 1);
 
-    chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
-    chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
-    chain_->SetBranchAddress("TTStubs_z"        , &(vb_z));
-    chain_->SetBranchAddress("TTStubs_r"        , &(vb_r));
-    chain_->SetBranchAddress("TTStubs_phi"      , &(vb_phi));
+    //chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
+    //chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
+    //chain_->SetBranchAddress("TTStubs_z"        , &(vb_z));
+    //chain_->SetBranchAddress("TTStubs_r"        , &(vb_r));
+    //chain_->SetBranchAddress("TTStubs_phi"      , &(vb_phi));
     chain_->SetBranchAddress("TTStubs_coordx"   , &(vb_coordx));
     chain_->SetBranchAddress("TTStubs_coordy"   , &(vb_coordy));
     chain_->SetBranchAddress("TTStubs_roughPt"  , &(vb_roughPt));
     chain_->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
     chain_->SetBranchAddress("TTStubs_nhits"    , &(vb_nhits));
-    chain_->SetBranchAddress("TTStubs_simPt"    , &(vb_simPt));
-    chain_->SetBranchAddress("TTStubs_simEta"   , &(vb_simEta));
-    chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
+    //chain_->SetBranchAddress("TTStubs_simPt"    , &(vb_simPt));
+    //chain_->SetBranchAddress("TTStubs_simEta"   , &(vb_simEta));
+    //chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
     chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
 
     allPatterns_map_.clear();
@@ -270,7 +270,7 @@ int PatternGenerator::makePatterns_map() {
     allPatterns_map_.swap(emptyMap);
 
     // Sort by frequency
-    std::sort(allPatterns_map_pairs_.begin(), allPatterns_map_pairs_.end(),
+    std::stable_sort(allPatterns_map_pairs_.begin(), allPatterns_map_pairs_.end(),
               [=](const std::pair<pattern_type, count_type>& lhs, const std::pair<pattern_type, count_type>& rhs) {
                   return lhs.second > rhs.second;
               } );
@@ -278,7 +278,7 @@ int PatternGenerator::makePatterns_map() {
     if (verbose_>2) {
         unsigned i=0;
         for (auto it : allPatterns_map_pairs_) {
-            std::cout << Debug() << "... patt: " << i << "  " << it.first << "  freq: " << (unsigned) it.second << std::endl;
+            std::cout << Debug() << "... patt: " << i << "  " << it.first << " freq: " << (unsigned) it.second << std::endl;
             ++i;
         }
     }
@@ -302,7 +302,7 @@ int PatternGenerator::writePatterns_map(TString out) {
     TFile* tfile = TFile::Open(out, "RECREATE");
     TTree* ttree = new TTree(bankName_, "");
 
-    typedef unsigned char unsigned8;
+    typedef unsigned char  unsigned8;
     std::auto_ptr<unsigned8>                  frequency       (new unsigned8(0));
     std::auto_ptr<std::vector<unsigned> >     superstripIds   (new std::vector<unsigned>());
 

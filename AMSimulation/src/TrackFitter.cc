@@ -26,7 +26,10 @@ int TrackFitter::makeTracks() {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
 
     // For reading
+    typedef unsigned char  unsigned8;
     typedef unsigned short unsigned16;
+    std::vector<unsigned8> *                vr_nHitLayers        = 0;
+    std::vector<unsigned> *                 vr_bankIndex         = 0;
     std::vector<std::vector<unsigned> > *   vr_patternIds        = 0;
     std::vector<std::vector<float> > *      vr_hitXs             = 0;
     std::vector<std::vector<float> > *      vr_hitYs             = 0;
@@ -41,6 +44,8 @@ int TrackFitter::makeTracks() {
 
     //chain_->SetBranchStatus("*", 1);
 
+    chain_->SetBranchAddress(prefixRoad_ + "nHitLayers"        + suffix_, &(vr_nHitLayers));
+    chain_->SetBranchAddress(prefixRoad_ + "bankIndex"         + suffix_, &(vr_bankIndex));
     chain_->SetBranchAddress(prefixRoad_ + "patternIds"        + suffix_, &(vr_patternIds));
     chain_->SetBranchAddress(prefixRoad_ + "hitXs"             + suffix_, &(vr_hitXs));
     chain_->SetBranchAddress(prefixRoad_ + "hitYs"             + suffix_, &(vr_hitYs));
@@ -90,12 +95,11 @@ int TrackFitter::makeTracks() {
             //    return 1;
             //}
 
-            TTHit hit;
             std::vector<TTHit> hits;
             std::vector<ZR> hitsViewZR;
             std::vector<UV> hitsViewUV;
             for (unsigned j=0; j<nhits; ++j) {
-                constructHit(
+                hits.emplace_back(TTHit{
                     vr_hitXs->at(i).at(j),
                     vr_hitYs->at(i).at(j),
                     vr_hitZs->at(i).at(j),
@@ -105,21 +109,20 @@ int TrackFitter::makeTracks() {
                     vr_hitCharges->at(i).at(j),
                     vr_hitPts->at(i).at(j),
                     vr_hitSuperstripIds->at(i).at(j),
-                    vr_hitSuperstripBits->at(i).at(j),
-                    hit);
-                hits.push_back(hit);
+                    vr_hitSuperstripBits->at(i).at(j)
+                });
 
                 // In R-Z plane, a track is a straight line
-                ZR hitViewZR(hit.rho(), hit.z);
+                ZR hitViewZR(hits.back().rho(), hits.back().z);
                 hitsViewZR.push_back(hitViewZR);
 
                 // In X-Y plane, a track is a circle
                 // Under conformal transfromation XY --> UV, a track becomes a straight line
-                UV hitViewUV(hit.u(), hit.v());
+                UV hitViewUV(hits.back().u(), hits.back().v());
                 hitsViewUV.push_back(hitViewUV);
             }
 
-            TTRoad road(patternId, hits);
+            TTRoad road(vr_nHitLayers->at(i), vr_bankIndex->at(i), patternId, hits);
 
             // Fitting starts here
             RetinaTrackFitterAlgo<ZR> retinaZR(po.pqType, po.pbins, po.qbins, po.pmin, po.qmin, po.pmax, po.qmax, po.sigma, po.minWeight);

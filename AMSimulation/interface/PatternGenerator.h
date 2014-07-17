@@ -28,7 +28,8 @@ class PatternGenerator {
     PatternGenerator(PatternBankOption option)
     : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits), nFakeSuperstrips_(po.nFakeSuperstrips),
       bankName_("patternBank"),
-      nEvents_(999999999), minFrequency_(1), verbose_(1) {
+      nEvents_(999999999), minFrequency_(1),
+      verbose_(1) {
 
         assert(3 <= nLayers_ && nLayers_ <= 8);
         assert(0 <= nDCBits_ && nDCBits_ <= 4);
