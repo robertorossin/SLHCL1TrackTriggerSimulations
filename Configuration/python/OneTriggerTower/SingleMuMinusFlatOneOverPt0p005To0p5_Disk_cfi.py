@@ -15,7 +15,7 @@ generator = cms.EDProducer("FlatRandomOneOverPtGunProducer",
         ZFlatSpread = cms.double(150.), ## in mm
     ),
     Verbosity = cms.untracked.int32(0),
-    psethack = cms.string('single mu- 1/pt 0.005 to 0.5'),
+    psethack = cms.string('single mu- 1/pt 0.005 to 0.5 tower 43'),
     AddAntiParticle = cms.bool(False),
     firstRun = cms.untracked.uint32(1)
 )
