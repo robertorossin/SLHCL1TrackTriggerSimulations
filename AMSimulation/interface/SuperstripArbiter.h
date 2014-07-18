@@ -29,6 +29,7 @@ class SuperstripArbiter {
     // Destructor
     ~SuperstripArbiter() {}
 
+
     // Operators
     // Return the superstrip addresses (subladder, submodule) given the
     // strip addresses (col, row)
@@ -37,30 +38,15 @@ class SuperstripArbiter {
     id_type submodule(id_type moduleId, id_type row, bool isHalfStrip=true) const;
 
     // Functions
-    id_type minSubLadderSize() const {
-        // Only check barrel
-        id_type min = 9999;
-        for (unsigned i=0; i<nLayers_; ++i) {
-            if (min > subLadderSize_.at(i))
-                min = subLadderSize_.at(i);
-        }
-        return min;
-    }
+    id_type minSubLadderSize() const;
 
-    id_type minSubModuleSize() const {
-        // Only check barrel
-        id_type min = 9999;
-        for (unsigned i=0; i<nLayers_; ++i) {
-            if (min > subModuleSize_.at(i))
-                min = subModuleSize_.at(i);
-        }
-        return min;
-    }
+    id_type minSubModuleSize() const;
 
     // Debug
     void print();
 
   private:
+    // Initialize
     void init();
 
   private:

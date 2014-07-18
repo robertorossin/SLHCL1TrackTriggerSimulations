@@ -19,15 +19,17 @@ class SuperstripStitcher {
     // Destructor
     ~SuperstripStitcher() {}
 
+
     // Operators
     // Return a vector of possible patterns given a vector of superstrips
     // Input superstrips are assumed to be sorted
-    std::vector<pattern_type> stitch(const std::vector<addr_type>& superstrips);
+    std::vector<pattern_type> stitch(const std::vector<addr_type>& superstrips) const;
 
     // Debug
     void print();
 
   private:
+    // Initialize
     void init();
 
   private:
@@ -39,10 +41,6 @@ class SuperstripStitcher {
     std::vector<unsigned> seven_choose_six_;
     std::vector<unsigned> eight_choose_six_;
     std::vector<unsigned> eight_choose_seven_;
-
-    // Static container
-    std::vector<pattern_type> ret_;
-    std::vector<pattern_type> ret2_;
 };
 
 }  // namespace slhcl1tt
