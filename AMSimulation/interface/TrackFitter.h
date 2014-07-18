@@ -21,10 +21,9 @@ using namespace slhcl1tt;
 // INPUT   : Roads
 // OUTPUT  : Tracks
 
-
 class TrackFitter {
   public:
-
+    // Constructor
     TrackFitter(TrackFitterOption option)
     : po(option), nLayers_(po.nLayers),
       prefixRoad_("AMTTRoads_"), prefixTrack_("AMTTTracks_"), suffix_(""),
@@ -36,10 +35,12 @@ class TrackFitter {
         chain_ = new TChain("ntupler/tree");
     }
 
+    // Destructor
     ~TrackFitter() {}
 
+
     // Setters
-    void setNEvents(long long n)  { if (n != -1)  nEvents_ = n > 0 ? n : 0; }
+    void setNEvents(long long n)  { if (n != -1)  nEvents_   = n > 0 ? n : 0; }
     void setMaxTracks(int n)      { if (n != -1)  maxTracks_ = n > 0 ? n : 0; }
     void setVerbosity(int v)      { verbose_ = v; }
 
@@ -70,7 +71,7 @@ class TrackFitter {
 
     // Program options
     long long nEvents_;
-    int maxTracks_;
+    int maxTracks_;  // max number of tracks per event
     int verbose_;
 
     // Containers

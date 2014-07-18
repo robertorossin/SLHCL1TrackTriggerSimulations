@@ -37,7 +37,7 @@ class PatternGenerator {
 
         chain_ = new TChain("ntupler/tree");
 
-        layerMap_ = getLayerMergingMap(nLayers_);
+        //layerMap_ = getLayerMergingMap(nLayers_);
 
         // Decide on the size of superstrip
         if (po.useSuperstripVarSize)
@@ -99,21 +99,21 @@ class PatternGenerator {
     int minFrequency_;  // min frequency of a pattern to be valid
     int verbose_;
 
+    // Operators
+    SuperstripArbiter* arbiter_;
+    SuperstripStitcher* stitcher_;
+
     // Containers
     TChain * chain_;
-    std::map<pattern_type, count_type> allPatterns_map_;    // using std::map approach
-    std::vector<std::pair<pattern_type, count_type> > allPatterns_map_pairs_;
-    fas::lean_table allPatterns_;                           // using fas::lean_table approach
+    std::map<pattern_type, unsigned> allPatterns_map_;  // using std::map approach
+    std::vector<std::pair<pattern_type, unsigned> > allPatterns_map_pairs_;
+    fas::lean_table allPatterns_;                       // using fas::lean_table approach
 
     // Maps
     std::map<unsigned, unsigned> layerMap_;  // UNUSED: defines layer merging
 
     std::map<unsigned, std::vector<unsigned> > triggerTowerMap_;        // key: towerId, value: moduleIds in the tower
     std::map<unsigned, std::vector<unsigned> > triggerTowerReverseMap_; // key: moduleId, value: towerIds containing the module
-
-    // Operators
-    SuperstripArbiter* arbiter_;
-    SuperstripStitcher* stitcher_;
 };
 
 #endif

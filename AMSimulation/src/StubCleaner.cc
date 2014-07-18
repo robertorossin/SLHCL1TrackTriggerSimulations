@@ -30,6 +30,7 @@ int StubCleaner::readFile(TString src) {
     return 1;
 }
 
+
 // _____________________________________________________________________________
 // Select one stub per layer, one hit per stub.
 // If an event fails selection, all stubs are removed
@@ -45,9 +46,9 @@ int StubCleaner::cleanStubs(TString out) {
     //    std::cout << Error() << "Input source has zero entry." << std::endl;
     //    return 1;
     //}
-    //
     //if (nEvents_ > nentries)
     //    nEvents_ = nentries;
+
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events; recreating " << out << " after stub cleaning." << std::endl;
 
     // For reading
@@ -98,9 +99,10 @@ int StubCleaner::cleanStubs(TString out) {
     chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
 
     // In addition, keep genParticle info
-    chain_->SetBranchStatus("genParts_pt"       , 1);
-    chain_->SetBranchStatus("genParts_eta"      , 1);
-    chain_->SetBranchStatus("genParts_phi"      , 1);
+    //chain_->SetBranchStatus("genParts_pt"       , 1);
+    //chain_->SetBranchStatus("genParts_eta"      , 1);
+    //chain_->SetBranchStatus("genParts_phi"      , 1);
+    //chain_->SetBranchStatus("genParts_charge"   , 1);
 
     // Set up TTreeFormula for event selection
     TTreeFormula* ttf_event = new TTreeFormula("ttf_event", eventSelect_, chain_);
@@ -117,8 +119,11 @@ int StubCleaner::cleanStubs(TString out) {
 
     // _________________________________________________________________________
     // Loop over all events
-    int nPassed = 0, nKept = 0;
+
+    const int good_trkId    =  1;
+    const int unmatch_trkId = -1;
     int curTree = chain_->GetTreeNumber();
+    int nPassed = 0, nKept = 0;
 
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
@@ -130,8 +135,8 @@ int StubCleaner::cleanStubs(TString out) {
         chain_->GetEntry(ievt);
 
         unsigned nstubs = vb_modId->size();
-        if (verbose_>1 && ievt%20000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i", ievt, nKept) << std::endl;
-        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " [# passed: " << nPassed << "]" << std::endl;
+        if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, passing: %7i", ievt, nKept, nPassed) << std::endl;
+        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
         if (!nstubs) {  // skip if no stub
             ++nKept;
@@ -160,14 +165,13 @@ int StubCleaner::cleanStubs(TString out) {
 
         // Check sim info
         // Take the sim-matched particle info from the outermost stub
-        const int good_trkId = 1;
-        const int unmatch_trkId = -1;
-        float simPt = vb_simPt->back();
+        int   trkId  = vb_trkId ->back();
+        float simPt  = vb_simPt ->back();
         float simEta = vb_simEta->back();
         float simPhi = vb_simPhi->back();
-        for (unsigned l=0; (l<nstubs) && keep; ++l) {
-            unsigned ll = (nstubs-1) - l;  // reverse iteration order
-            int trkId = vb_trkId->at(ll);
+        for (unsigned l=0, ll=0; (l<nstubs) && keep; ++l) {
+            ll = (nstubs-1) - l;  // reverse iteration order
+            trkId = vb_trkId->at(ll);
             if (trkId == good_trkId) {
                 simPt = vb_simPt->at(ll);
                 simEta = vb_simEta->at(ll);
@@ -190,7 +194,7 @@ int StubCleaner::cleanStubs(TString out) {
         // Remove multiple stubs in one layer
         std::vector<std::pair<unsigned, float> > vec_index_dZ;
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
-            int trkId = vb_trkId->at(l);  // check sim info
+            trkId = vb_trkId->at(l);  // check sim info
             if (trkId == good_trkId || trkId == unmatch_trkId) {  // also catch stubs that fail to find a matched simTrack
                 //float stub_eta = ROOT::Math::Impl::Eta_FromRhoZ(vb_r->at(l), vb_z->at(l));
                 //float dEta = std::abs(simEta - stub_eta);
@@ -204,18 +208,18 @@ int StubCleaner::cleanStubs(TString out) {
         // Sort: smallest dZ to largest
         std::sort(vec_index_dZ.begin(), vec_index_dZ.end(), sortByFloat);
 
-        std::vector<unsigned> goodLayerStubs(16, 999999);
-        for (std::vector<std::pair<unsigned, float> >::const_iterator it=vec_index_dZ.begin();
-             it!=vec_index_dZ.end(); ++it) {
+        std::vector<unsigned> goodLayerStubs(1u << 4, 999999);
+        for (std::vector<std::pair<unsigned, float> >::const_iterator it = vec_index_dZ.begin();
+             (it != vec_index_dZ.end()) && keep; ++it) {
             unsigned l = it->first;
             float dZ = it->second;
 
             unsigned moduleId = vb_modId->at(l);
-            unsigned layer4bit = decodeLayer4bit(moduleId);
+            unsigned layer4b = decodeLayer4bit(moduleId);
 
             // For each layer, takes the stub with min dZ to simTrack
-            if (goodLayerStubs.at(layer4bit) == 999999 && dZ < 26.0) {  // gets rid of stubs due to loopers
-                goodLayerStubs.at(layer4bit) = l;
+            if (goodLayerStubs.at(layer4b) == 999999 && dZ < 26.0) {  // CUIDADO: gets rid of stubs due to loopers
+                goodLayerStubs.at(layer4b) = l;
             }
         }
 
@@ -276,10 +280,11 @@ int StubCleaner::cleanStubs(TString out) {
 
         if (keep && ngoodstubs > MAX_NGOODSTUBS) {
             std::cout << Warning() << "... evt: " << ievt << " simPt: " << simPt << " simEta: " << simEta << " simPhi: " << simPhi << std::endl;
+
             for (unsigned l=0; (l<ngoodstubs) && keep; ++l) {
                 float stub_eta = ROOT::Math::Impl::Eta_FromRhoZ(vb_r->at(l), vb_z->at(l));
-                float dEta = std::abs(simEta - stub_eta);
                 float stub_phi = vb_phi->at(l);
+                float dEta = std::abs(simEta - stub_eta);
                 float dPhi = deltaPhi(simPhi, stub_phi);
                 float dZ = std::abs(vb_r->at(l) / std::tan(simTheta) - vb_z->at(l));
                 std::cout << "... ... stub: " << l << " moduleId: " << vb_modId->at(l) << " trkId: " << vb_trkId->at(l) << " r,phi,z: " << vb_r->at(l) << "," << vb_phi->at(l) << "," << vb_z->at(l) << " dPhi,dEta,dZ: " << dPhi << "," << dEta << "," << dZ << std::endl;
@@ -306,7 +311,7 @@ int StubCleaner::cleanStubs(TString out) {
         ++nKept;
         ttree->Fill();
     }
-    if (verbose_)  std::cout << Info() << "Processed " << nEvents_ << " events, kept " << nKept << ", passed " << nPassed << std::endl;
+    if (verbose_)  std::cout << Info() << "Processed and kept " << nKept << " events, " << ", passed " << nPassed << std::endl;
 
     assert(ttree->GetEntries() == nKept);
     tfile->Write();

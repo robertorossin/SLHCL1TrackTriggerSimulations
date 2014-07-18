@@ -70,7 +70,7 @@ int TrackFitter::makeTracks() {
         chain_->GetEntry(ievt);
 
         unsigned nroads = vr_patternIds->size();
-        if (verbose_>1 && ievt%1000==0)  std::cout << Debug() << Form("... Processing event: %7lld, fitting: %7i", ievt, nPassed) << std::endl;
+        if (verbose_>1 && ievt%5000==0)  std::cout << Debug() << Form("... Processing event: %7lld, fitting: %7i", ievt, nPassed) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # roads: " << nroads << " [# tracks: " << allTracks_.size() << "]" << std::endl;
 
         if (!nroads) {  // skip if no road
@@ -208,7 +208,7 @@ int TrackFitter::writeTracks(TString out) {
     // _________________________________________________________________________
     // Loop over all tracks
     for (long long ievt=0; ievt<nentries; ++ievt) {
-        if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
+        if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
 
         vt_px              ->clear();
         vt_py              ->clear();

@@ -61,7 +61,7 @@ class StubCleaner {
   private:
     // Program options
     long long nEvents_;
-    bool filter_;
+    bool filter_;  // throw away events with stubs?
     int verbose_;
 
     // Event selection

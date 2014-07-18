@@ -37,8 +37,8 @@ int PatternMatcher::readPatterns_vector(TString src) {
 
         // For reading
         typedef unsigned char  unsigned8;
-        unsigned8 frequency;
-        std::vector<unsigned>   * superstripIds  = 0;
+        unsigned8                 frequency;
+        std::vector<unsigned> *   superstripIds  = 0;
 
         ttree->SetBranchAddress("frequency"    , &frequency);
         ttree->SetBranchAddress("superstripIds", &superstripIds);
@@ -146,20 +146,23 @@ int PatternMatcher::makeRoads_vector() {
     std::vector<float> *          vp_pt         = 0;
     std::vector<float> *          vp_eta        = 0;
     std::vector<float> *          vp_phi        = 0;
+    std::vector<int> *            vp_charge     = 0;
 
     chain_->SetBranchStatus("genParts_pt"       , 1);
     chain_->SetBranchStatus("genParts_eta"      , 1);
     chain_->SetBranchStatus("genParts_phi"      , 1);
+    chain_->SetBranchStatus("genParts_charge"   , 1);
 
     chain_->SetBranchAddress("genParts_pt"      , &(vp_pt));
     chain_->SetBranchAddress("genParts_eta"     , &(vp_eta));
     chain_->SetBranchAddress("genParts_phi"     , &(vp_phi));
+    chain_->SetBranchAddress("genParts_charge"  , &(vp_charge));
 
     allRoads_.clear();
     allGenParts_.clear();
 
     // Make sure the map has already been set up
-    assert(!inputPatterns_vector_.empty());
+    assert(! inputPatterns_vector_.empty());
     assert(std::is_pod<TTSuperstrip>::value && std::is_pod<TTPattern>::value && std::is_pod<TTHit>::value);
 
 
@@ -167,15 +170,18 @@ int PatternMatcher::makeRoads_vector() {
     // Loop over all events
 
     std::map<addr_type, std::vector<TTHit> > superstripHits;  // key: superstrip id, values: vector of hits
+    std::vector<TTHit> hits;
+    std::vector<std::vector<TTHit> > hitses;  // just like hits, but before serialized
 
     int nPassed = 0, nKept = 0;
+
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
 
         unsigned nstubs = vb_modId->size();
-        if (verbose_>1 && ievt%1000==0)  std::cout << Debug() << Form("... Processing event: %7lld, triggering: %7i", ievt, nPassed) << std::endl;
+        if (verbose_>1 && ievt%5000==0)  std::cout << Debug() << Form("... Processing event: %7lld, triggering: %7i", ievt, nPassed) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " [# roads: " << allRoads_.size() << "]" << std::endl;
 
         if (!nstubs) {  // skip if no stub
@@ -192,8 +198,6 @@ int PatternMatcher::makeRoads_vector() {
         // Loop over reconstructed stubs
         for (unsigned l=0; l<nstubs; ++l) {
             unsigned moduleId = vb_modId->at(l);
-            unsigned nhits = vb_nhits->at(l);
-            assert(nhits > 0);
             float coordx = vb_coordx->at(l);
             float coordy = vb_coordy->at(l);
 
@@ -219,16 +223,15 @@ int PatternMatcher::makeRoads_vector() {
             //superstripHits[ssId].emplace_back(TTHit{x, y, z, 0., 0., 0., -1, pt, ssId, 1});  // POD type constructor
             superstripHits[hash].emplace_back(TTHit{x, y, z, 0., 0., 0., -1, pt, ssId, 1});  // POD type constructor
 
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << " trkId: " << vb_trkId->at(l) << std::endl;
         }
 
         // _____________________________________________________________________
         // Create roads
         std::vector<TTRoad> roadsInThisEvent;
-        std::vector<TTHit> hits;
-        std::vector<std::vector<TTHit> > hitses;  // just like hits, but before serialized
 
         std::map<addr_type, std::vector<TTHit> >::iterator found;
+
         for (std::vector<pattern_type>::const_iterator itv = inputPatterns_vector_.begin();
              itv != inputPatterns_vector_.end(); ++itv) {
             hitses.clear();
@@ -261,14 +264,17 @@ int PatternMatcher::makeRoads_vector() {
         if (! roadsInThisEvent.empty())
             ++nPassed;
 
+        // _____________________________________________________________________
         // In addition, keep genParticle info
+
         unsigned nparts = vp_pt->size();
         std::vector<genPart> genPartsInThisEvent;
         for (unsigned l=0; l<nparts; ++l) {
             genPart part;
-            part.pt  = vp_pt->at(l);
-            part.eta = vp_eta->at(l);
-            part.phi = vp_phi->at(l);
+            part.pt     = vp_pt->at(l);
+            part.eta    = vp_eta->at(l);
+            part.phi    = vp_phi->at(l);
+            part.charge = vp_charge->at(l);
             genPartsInThisEvent.push_back(part);
         }
 
@@ -347,16 +353,18 @@ int PatternMatcher::writeRoads_vector(TString out) {
     std::auto_ptr<std::vector<float> > vp_pt    (new std::vector<float>());
     std::auto_ptr<std::vector<float> > vp_eta   (new std::vector<float>());
     std::auto_ptr<std::vector<float> > vp_phi   (new std::vector<float>());
+    std::auto_ptr<std::vector<int> >   vp_charge(new std::vector<int>());
 
-    ttree->Branch("genParts_pt" , &(*vp_pt));
-    ttree->Branch("genParts_eta", &(*vp_pt));
-    ttree->Branch("genParts_phi", &(*vp_pt));
+    ttree->Branch("genParts_pt"    , &(*vp_pt));
+    ttree->Branch("genParts_eta"   , &(*vp_eta));
+    ttree->Branch("genParts_phi"   , &(*vp_phi));
+    ttree->Branch("genParts_charge", &(*vp_charge));
 
 
     // _________________________________________________________________________
     // Loop over all roads
     for (long long ievt=0; ievt<nentries; ++ievt) {
-        if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
+        if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
         vr_nHitLayers       ->clear();
         vr_bankIndex        ->clear();
         //
@@ -375,6 +383,7 @@ int PatternMatcher::writeRoads_vector(TString out) {
         vp_pt               ->clear();
         vp_eta              ->clear();
         vp_phi              ->clear();
+        vp_charge           ->clear();
 
         const std::vector<TTRoad>& roadsInThisEvent = allRoads_.at(ievt);
         unsigned nroads = roadsInThisEvent.size();
@@ -436,9 +445,11 @@ int PatternMatcher::writeRoads_vector(TString out) {
         unsigned nparts = genPartsInThisEvent.size();
 
         for (unsigned i=0; i<nparts; ++i) {
-            vp_pt ->push_back(genPartsInThisEvent.at(i).pt);
-            vp_eta->push_back(genPartsInThisEvent.at(i).eta);
-            vp_phi->push_back(genPartsInThisEvent.at(i).phi);
+            const genPart& part = genPartsInThisEvent.at(i);
+            vp_pt ->push_back(part.pt);
+            vp_eta->push_back(part.eta);
+            vp_phi->push_back(part.phi);
+            vp_charge->push_back(part.charge);
         }
 
         ttree->Fill();

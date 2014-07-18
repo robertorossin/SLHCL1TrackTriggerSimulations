@@ -3,6 +3,10 @@
 static const unsigned MIN_NGOODSTUBS = 3;
 static const unsigned MAX_NTOWERS = 6 * 8;
 
+bool sortByFrequency(const std::pair<pattern_type, unsigned>& lhs, const std::pair<pattern_type, unsigned>& rhs) {
+    return lhs.second > rhs.second;
+}
+
 
 // _____________________________________________________________________________
 // Read and parse the trigger tower csv file
@@ -160,20 +164,26 @@ int PatternGenerator::makePatterns_map() {
     // _________________________________________________________________________
     // Loop over all events
 
-    // Containers are declared outside the event loop to reduce memory allocations
+    // Containers are declared outside the event loop to avoid memory allocations
     std::vector<id_type> superstripLayers;
     std::vector<addr_type> superstrips;
     std::vector<pattern_type> patterns;
 
     int nRead = 0, nKept = 0;
+    float bankSize_f = 0., bankOldSize_f = -5000.;
+
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
 
         unsigned nstubs = vb_modId->size();
-        if (verbose_>1 && ievt%1000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i", ievt, nKept) << std::endl;
-        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " [# patterns: " << allPatterns_map_.size() << "]" << std::endl;
+        if (verbose_>1 && ievt%5000==0) {
+            bankSize_f = allPatterns_map_.size();
+            std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, # patterns: %7.0f, coverage: %7.5f", ievt, nKept, bankSize_f, 1.0 - (bankSize_f - bankOldSize_f) / 5000.) << std::endl;
+            bankOldSize_f = bankSize_f;
+        }
+        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
         if (!nstubs) {  // skip if no stub
             continue;
@@ -209,8 +219,6 @@ int PatternGenerator::makePatterns_map() {
             }
             superstripLayers.push_back(lay);
 
-            unsigned nhits = vb_nhits->at(l);
-            assert(nhits > 0);
             float coordx = vb_coordx->at(l);
             float coordy = vb_coordy->at(l);
 
@@ -225,12 +233,13 @@ int PatternGenerator::makePatterns_map() {
 
             superstrips.push_back(ssId);
 
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << " trkId: " << vb_trkId->at(l) << std::endl;
         }
 
+        // _____________________________________________________________________
         // Build the patterns
         if (!superstrips.empty()) {
-            std::sort(superstrips.begin(), superstrips.end(), std::less<addr_type>());
+            std::sort(superstrips.begin(), superstrips.end(), std::less<addr_type>());  // sort first
             patterns = stitcher_ -> stitch(superstrips);
 
             // Remove patterns that are not within any trigger tower
@@ -265,15 +274,12 @@ int PatternGenerator::makePatterns_map() {
         allPatterns_map_pairs_.push_back(it);
 
     // Clear the map and release memory
-    std::map<pattern_type, count_type> emptyMap;
+    std::map<pattern_type, unsigned> emptyMap;
     allPatterns_map_.clear();
     allPatterns_map_.swap(emptyMap);
 
     // Sort by frequency
-    std::stable_sort(allPatterns_map_pairs_.begin(), allPatterns_map_pairs_.end(),
-              [=](const std::pair<pattern_type, count_type>& lhs, const std::pair<pattern_type, count_type>& rhs) {
-                  return lhs.second > rhs.second;
-              } );
+    std::stable_sort(allPatterns_map_pairs_.begin(), allPatterns_map_pairs_.end(), sortByFrequency);
 
     if (verbose_>2) {
         unsigned i=0;
@@ -311,13 +317,17 @@ int PatternGenerator::writePatterns_map(TString out) {
 
     // _________________________________________________________________________
     // Loop over all patterns
+    count_type oldFrequency = 255u;
     for (long long ievt=0; ievt<nentries; ++ievt) {
-        if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
+        if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
         superstripIds->clear();
 
-        *frequency = allPatterns_map_pairs_.at(ievt).second;
+        *frequency = (allPatterns_map_pairs_.at(ievt).second < 255u ? allPatterns_map_pairs_.at(ievt).second : 255u);
 
-        // Assume patterns are sorted by frequency
+        // make sure it is indeed sorted
+        assert(oldFrequency >= (count_type) *frequency);
+        oldFrequency = *frequency;
+
         if (*frequency < minFrequency_)
             break;
 

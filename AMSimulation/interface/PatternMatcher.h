@@ -26,6 +26,7 @@ struct genPart {
     float pt;
     float eta;
     float phi;
+    int charge;
 };
 
 class PatternMatcher {
@@ -62,10 +63,10 @@ class PatternMatcher {
 
 
     // Setters
-    void setNEvents(long long n)    { if (n != -1)  nEvents_ = n > 0 ? n : 0; }
+    void setNEvents(long long n)    { if (n != -1)  nEvents_     = n > 0 ? n : 0; }
     void setMaxPatterns(int n)      { if (n != -1)  maxPatterns_ = n > 0 ? n : 0; }
-    void setMaxRoads(int n)         { if (n != -1)  maxRoads_ = n > 0 ? n : 0; }
-    void setMaxHits(int n)          { if (n != -1)  maxHits_ = n > 0 ? n : 0; }
+    void setMaxRoads(int n)         { if (n != -1)  maxRoads_    = n > 0 ? n : 0; }
+    void setMaxHits(int n)          { if (n != -1)  maxHits_     = n > 0 ? n : 0; }
     void setVerbosity(int v)        { verbose_ = v; }
 
     // Getters
@@ -109,6 +110,10 @@ class PatternMatcher {
     int maxHits_;   // max number of hits per superstrip
     int verbose_;
 
+    // Operators
+    SuperstripArbiter* arbiter_;
+    SuperstripHasher*  hasher_;
+
     // Containers
     TChain * chain_;
     std::vector<std::vector<TTRoad> > allRoads_;
@@ -116,10 +121,6 @@ class PatternMatcher {
 
     std::vector<pattern_type> inputPatterns_vector_;
     fas::lean_lut inputPatterns_;
-
-    // Operators
-    SuperstripArbiter* arbiter_;
-    SuperstripHasher*  hasher_;
 };
 
 #endif
