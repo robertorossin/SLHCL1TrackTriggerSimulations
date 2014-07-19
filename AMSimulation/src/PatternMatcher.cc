@@ -4,6 +4,65 @@
 
 static const unsigned MAX_NLAYERS = pattern_type().size();  // ought to be 8
 
+struct genPart {
+    float pt;
+    float eta;
+    float phi;
+    int charge;
+};
+
+class TTRoadWriter {
+  public:
+    TTRoadWriter(TString out, TString prefix, TString suffix);
+    ~TTRoadWriter();
+
+    void fill(const std::vector<TTRoad>& roads, const std::vector<genPart>& genParts);
+    long long write();
+
+  private:
+    void init(TString out, TString prefix, TString suffix);
+
+    TFile* tfile;
+    TTree* ttree;
+
+    // Roads
+    typedef unsigned char  unsigned8;
+    typedef unsigned short unsigned16;
+    std::auto_ptr<std::vector<unsigned8> >                vr_nHitLayers;
+    std::auto_ptr<std::vector<unsigned> >                 vr_bankIndex;
+    //
+    std::auto_ptr<std::vector<std::vector<unsigned> > >   vr_patternIds; // now these are the hashes of the superstripIds
+    std::auto_ptr<std::vector<std::vector<float> > >      vr_hitXs;
+    std::auto_ptr<std::vector<std::vector<float> > >      vr_hitYs;
+    std::auto_ptr<std::vector<std::vector<float> > >      vr_hitZs;
+    std::auto_ptr<std::vector<std::vector<float> > >      vr_hitXErrors;
+    std::auto_ptr<std::vector<std::vector<float> > >      vr_hitYErrors;
+    std::auto_ptr<std::vector<std::vector<float> > >      vr_hitZErrors;
+    std::auto_ptr<std::vector<std::vector<int> > >        vr_hitCharges;
+    std::auto_ptr<std::vector<std::vector<float> > >      vr_hitPts;
+    std::auto_ptr<std::vector<std::vector<unsigned> > >   vr_hitSuperstripIds;
+    std::auto_ptr<std::vector<std::vector<unsigned16> > > vr_hitSuperstripBits;
+
+    // Roads (inner vectors)
+    std::vector<unsigned>   patternIds;
+    std::vector<float>      hitXs;
+    std::vector<float>      hitYs;
+    std::vector<float>      hitZs;
+    std::vector<float>      hitXErrors;
+    std::vector<float>      hitYErrors;
+    std::vector<float>      hitZErrors;
+    std::vector<int>        hitCharges;
+    std::vector<float>      hitPts;
+    std::vector<unsigned>   hitSuperstripIds;
+    std::vector<unsigned16> hitSuperstripBits;
+
+    // In addition, keep genParticle info
+    std::auto_ptr<std::vector<float> > vp_pt;
+    std::auto_ptr<std::vector<float> > vp_eta;
+    std::auto_ptr<std::vector<float> > vp_phi;
+    std::auto_ptr<std::vector<int> >   vp_charge;
+};
+
 
 // _____________________________________________________________________________
 // Read the input ntuples
@@ -59,6 +118,9 @@ int PatternMatcher::readPatterns_vector(TString src) {
 
         for (long long ievt=0; ievt<nentries; ++ievt) {
             ttree->GetEntry(ievt);
+            if (frequency < minFrequency_)
+                break;
+
             assert(superstripIds->size() == MAX_NLAYERS);
 
             // Convert each ssId to a hash key
@@ -92,10 +154,15 @@ int PatternMatcher::readPatterns_vector(TString src) {
 
 // _____________________________________________________________________________
 // Do pattern recognition
-int PatternMatcher::makeRoads_vector() {
-    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
+int PatternMatcher::makeRoads_vector(TString out) {
+
+    // Make sure the map has already been set up
+    assert(! inputPatterns_vector_.empty());
+    assert(std::is_pod<TTSuperstrip>::value && std::is_pod<TTPattern>::value && std::is_pod<TTHit>::value);
 
     // For reading
+    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
+
     std::vector<float> *          vb_x          = 0;
     std::vector<float> *          vb_y          = 0;
     std::vector<float> *          vb_z          = 0;
@@ -158,12 +225,9 @@ int PatternMatcher::makeRoads_vector() {
     chain_->SetBranchAddress("genParts_phi"     , &(vp_phi));
     chain_->SetBranchAddress("genParts_charge"  , &(vp_charge));
 
-    allRoads_.clear();
-    allGenParts_.clear();
-
-    // Make sure the map has already been set up
-    assert(! inputPatterns_vector_.empty());
-    assert(std::is_pod<TTSuperstrip>::value && std::is_pod<TTPattern>::value && std::is_pod<TTHit>::value);
+    // For writing
+    if (verbose_)  std::cout << Info() << "Recreating " << out << std::endl;
+    TTRoadWriter writer(out, prefixRoad_, suffix_);
 
 
     // _________________________________________________________________________
@@ -174,19 +238,17 @@ int PatternMatcher::makeRoads_vector() {
     std::vector<std::vector<TTHit> > hitses;  // just like hits, but before serialized
 
     int nPassed = 0, nKept = 0;
-
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
 
         unsigned nstubs = vb_modId->size();
-        if (verbose_>1 && ievt%5000==0)  std::cout << Debug() << Form("... Processing event: %7lld, triggering: %7i", ievt, nPassed) << std::endl;
-        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " [# roads: " << allRoads_.size() << "]" << std::endl;
+        if (verbose_>1 && ievt%5000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, triggering: %7i", ievt, nKept, nPassed) << std::endl;
+        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
         if (!nstubs) {  // skip if no stub
-            allRoads_.push_back(std::vector<TTRoad>());
-            allGenParts_.push_back(std::vector<genPart>());
+            writer.fill(std::vector<TTRoad>(), std::vector<genPart>());
             ++nKept;
             continue;
         }
@@ -228,7 +290,8 @@ int PatternMatcher::makeRoads_vector() {
 
         // _____________________________________________________________________
         // Create roads
-        std::vector<TTRoad> roadsInThisEvent;
+        std::vector<TTRoad> roads;
+        roads.reserve(200);
 
         std::map<addr_type, std::vector<TTHit> >::iterator found;
 
@@ -255,218 +318,208 @@ int PatternMatcher::makeRoads_vector() {
                 for (unsigned i=0; i<hitses.size(); ++i) {
                     hits.insert(hits.end(), hitses.at(i).begin(), hitses.at(i).end());
                 }
-                roadsInThisEvent.emplace_back(hitses.size(), itv - inputPatterns_vector_.begin(), *itv, hits);
+                roads.emplace_back(hitses.size(), itv - inputPatterns_vector_.begin(), *itv, hits);
 
-                if (verbose_>2)  std::cout << Debug() << "... ... road: " << roadsInThisEvent.size() - 1 << " " << roadsInThisEvent.back() << std::endl;
+                if (verbose_>2)  std::cout << Debug() << "... ... road: " << roads.size() - 1 << " " << roads.back() << std::endl;
             }
+
+            if ((int) roads.size() >= maxRoads_)
+                break;
         }
 
-        if (! roadsInThisEvent.empty())
+        if (! roads.empty())
             ++nPassed;
 
         // _____________________________________________________________________
         // In addition, keep genParticle info
 
         unsigned nparts = vp_pt->size();
-        std::vector<genPart> genPartsInThisEvent;
+        std::vector<genPart> genParts;
+        genParts.reserve(50);
         for (unsigned l=0; l<nparts; ++l) {
             genPart part;
             part.pt     = vp_pt->at(l);
             part.eta    = vp_eta->at(l);
             part.phi    = vp_phi->at(l);
             part.charge = vp_charge->at(l);
-            genPartsInThisEvent.push_back(part);
+            genParts.push_back(part);
         }
 
-        allRoads_.push_back(roadsInThisEvent);
-        allGenParts_.push_back(genPartsInThisEvent);
+        writer.fill(roads, genParts);
         ++nKept;
     }
-    assert((size_t) nKept == allRoads_.size());
-    assert(allRoads_.size() == allGenParts_.size());
 
-    if (verbose_)  std::cout << Info() << "Processed " << nEvents_ << " events, kept " << nKept << ", triggered on " << nPassed << " events." << std::endl;
+    if (verbose_)  std::cout << Info() << "Processed " << nEvents_ << " events, kept " << nKept << ", triggered on " << nPassed << std::endl;
+
+    long long nentries = writer.write();
+    assert(nentries == nKept);
 
     return 0;
 }
 
-
-// _____________________________________________________________________________
-// Output roads into a TTree
-int PatternMatcher::writeRoads_vector(TString out) {
-    if (!out.EndsWith(".root")) {
-        std::cout << Error() << "Output filename must be .root" << std::endl;
-        return 1;
-    }
-
-    const long long nentries = allRoads_.size();
-    if (verbose_)  std::cout << Info() << "Recreating " << out << " with " << nentries << " events." << std::endl;
-    TFile* tfile = TFile::Open(out, "RECREATE");
-    tfile->mkdir("ntupler")->cd();
-    TTree* ttree = new TTree("tree", "");
-
-    typedef unsigned char  unsigned8;
-    typedef unsigned short unsigned16;
-    std::auto_ptr<std::vector<unsigned8> >                vr_nHitLayers       (new std::vector<unsigned8>());
-    std::auto_ptr<std::vector<unsigned> >                 vr_bankIndex        (new std::vector<unsigned>());
-    //
-    std::auto_ptr<std::vector<std::vector<unsigned> > >   vr_patternIds       (new std::vector<std::vector<unsigned> >());  // now these are the hashes of the superstripIds
-    std::auto_ptr<std::vector<std::vector<float> > >      vr_hitXs            (new std::vector<std::vector<float> >());
-    std::auto_ptr<std::vector<std::vector<float> > >      vr_hitYs            (new std::vector<std::vector<float> >());
-    std::auto_ptr<std::vector<std::vector<float> > >      vr_hitZs            (new std::vector<std::vector<float> >());
-    std::auto_ptr<std::vector<std::vector<float> > >      vr_hitXErrors       (new std::vector<std::vector<float> >());
-    std::auto_ptr<std::vector<std::vector<float> > >      vr_hitYErrors       (new std::vector<std::vector<float> >());
-    std::auto_ptr<std::vector<std::vector<float> > >      vr_hitZErrors       (new std::vector<std::vector<float> >());
-    std::auto_ptr<std::vector<std::vector<int> > >        vr_hitCharges       (new std::vector<std::vector<int> >());
-    std::auto_ptr<std::vector<std::vector<float> > >      vr_hitPts           (new std::vector<std::vector<float> >());
-    std::auto_ptr<std::vector<std::vector<unsigned> > >   vr_hitSuperstripIds (new std::vector<std::vector<unsigned> >());
-    std::auto_ptr<std::vector<std::vector<unsigned16> > > vr_hitSuperstripBits(new std::vector<std::vector<unsigned16> >());
-
-    ttree->Branch(prefixRoad_ + "nHitLayers"        + suffix_, &(*vr_nHitLayers));
-    ttree->Branch(prefixRoad_ + "bankIndex"         + suffix_, &(*vr_bankIndex));
-    //
-    ttree->Branch(prefixRoad_ + "patternIds"        + suffix_, &(*vr_patternIds));
-    ttree->Branch(prefixRoad_ + "hitXs"             + suffix_, &(*vr_hitXs));
-    ttree->Branch(prefixRoad_ + "hitYs"             + suffix_, &(*vr_hitYs));
-    ttree->Branch(prefixRoad_ + "hitZs"             + suffix_, &(*vr_hitZs));
-    ttree->Branch(prefixRoad_ + "hitXErrors"        + suffix_, &(*vr_hitXErrors));
-    ttree->Branch(prefixRoad_ + "hitYErrors"        + suffix_, &(*vr_hitYErrors));
-    ttree->Branch(prefixRoad_ + "hitZErrors"        + suffix_, &(*vr_hitZErrors));
-    ttree->Branch(prefixRoad_ + "hitCharges"        + suffix_, &(*vr_hitCharges));
-    ttree->Branch(prefixRoad_ + "hitPts"            + suffix_, &(*vr_hitPts));
-    ttree->Branch(prefixRoad_ + "hitSuperstripIds"  + suffix_, &(*vr_hitSuperstripIds));
-    ttree->Branch(prefixRoad_ + "hitSuperstripBits" + suffix_, &(*vr_hitSuperstripBits));
-
-    std::vector<unsigned>   patternIds;
-    std::vector<float>      hitXs;
-    std::vector<float>      hitYs;
-    std::vector<float>      hitZs;
-    std::vector<float>      hitXErrors;
-    std::vector<float>      hitYErrors;
-    std::vector<float>      hitZErrors;
-    std::vector<int>        hitCharges;
-    std::vector<float>      hitPts;
-    std::vector<unsigned>   hitSuperstripIds;
-    std::vector<unsigned16> hitSuperstripBits;
-
-    // In addition, keep genParticle info
-    std::auto_ptr<std::vector<float> > vp_pt    (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vp_eta   (new std::vector<float>());
-    std::auto_ptr<std::vector<float> > vp_phi   (new std::vector<float>());
-    std::auto_ptr<std::vector<int> >   vp_charge(new std::vector<int>());
-
-    ttree->Branch("genParts_pt"    , &(*vp_pt));
-    ttree->Branch("genParts_eta"   , &(*vp_eta));
-    ttree->Branch("genParts_phi"   , &(*vp_phi));
-    ttree->Branch("genParts_charge", &(*vp_charge));
-
-
-    // _________________________________________________________________________
-    // Loop over all roads
-    for (long long ievt=0; ievt<nentries; ++ievt) {
-        if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
-        vr_nHitLayers       ->clear();
-        vr_bankIndex        ->clear();
-        //
-        vr_patternIds       ->clear();
-        vr_hitXs            ->clear();
-        vr_hitYs            ->clear();
-        vr_hitZs            ->clear();
-        vr_hitXErrors       ->clear();
-        vr_hitYErrors       ->clear();
-        vr_hitZErrors       ->clear();
-        vr_hitCharges       ->clear();
-        vr_hitPts           ->clear();
-        vr_hitSuperstripIds ->clear();
-        vr_hitSuperstripBits->clear();
-
-        vp_pt               ->clear();
-        vp_eta              ->clear();
-        vp_phi              ->clear();
-        vp_charge           ->clear();
-
-        const std::vector<TTRoad>& roadsInThisEvent = allRoads_.at(ievt);
-        unsigned nroads = roadsInThisEvent.size();
-
-        for (unsigned i=0; i<nroads; ++i) {
-            if ((int) i >= maxRoads_)  break;
-
-            patternIds       .clear();
-            hitXs            .clear();
-            hitYs            .clear();
-            hitZs            .clear();
-            hitXErrors       .clear();
-            hitYErrors       .clear();
-            hitZErrors       .clear();
-            hitCharges       .clear();
-            hitPts           .clear();
-            hitSuperstripIds .clear();
-            hitSuperstripBits.clear();
-
-            const TTRoad& road = roadsInThisEvent.at(i);
-            const pattern_type&       patt = road.patternId();
-            const std::vector<TTHit>& hits = road.getHits();
-
-            for (unsigned j=0; j<patt.size(); ++j) {
-                patternIds.push_back(patt.at(j));
-            }
-
-            for (unsigned j=0; j<hits.size(); ++j) {
-                const TTHit& hit = hits.at(j);
-                hitXs.push_back(hit.x);
-                hitYs.push_back(hit.y);
-                hitZs.push_back(hit.z);
-                hitXErrors.push_back(hit.xError);
-                hitYErrors.push_back(hit.yError);
-                hitZErrors.push_back(hit.zError);
-                hitCharges.push_back(hit.charge);
-                hitPts.push_back(hit.pt);
-                hitSuperstripIds.push_back(hit.superstripId);
-                hitSuperstripBits.push_back(hit.superstripBit);
-            }
-
-            vr_nHitLayers       ->push_back(road.nHitLayers());
-            vr_bankIndex        ->push_back(road.bankIndex());
-            //
-            vr_patternIds       ->push_back(patternIds);
-            vr_hitXs            ->push_back(hitXs);
-            vr_hitYs            ->push_back(hitYs);
-            vr_hitZs            ->push_back(hitZs);
-            vr_hitXErrors       ->push_back(hitXErrors);
-            vr_hitYErrors       ->push_back(hitYErrors);
-            vr_hitZErrors       ->push_back(hitZErrors);
-            vr_hitCharges       ->push_back(hitCharges);
-            vr_hitPts           ->push_back(hitPts);
-            vr_hitSuperstripIds ->push_back(hitSuperstripIds);
-            vr_hitSuperstripBits->push_back(hitSuperstripBits);
-        }
-
-        const std::vector<genPart>& genPartsInThisEvent = allGenParts_.at(ievt);
-        unsigned nparts = genPartsInThisEvent.size();
-
-        for (unsigned i=0; i<nparts; ++i) {
-            const genPart& part = genPartsInThisEvent.at(i);
-            vp_pt ->push_back(part.pt);
-            vp_eta->push_back(part.eta);
-            vp_phi->push_back(part.phi);
-            vp_charge->push_back(part.charge);
-        }
-
-        ttree->Fill();
-        assert(vr_hitXs->size() == nroads);
-        assert(vp_pt->size() == nparts);
-    }
-    assert(ttree->GetEntries() == nentries);
-
-    tfile->Write();
-    delete ttree;
-    delete tfile;
-    return 0;
-}
 
 // _____________________________________________________________________________
 // Private functions
 // none
+
+
+// _____________________________________________________________________________
+// TTRoadWriter
+
+TTRoadWriter::TTRoadWriter(TString out, TString prefix, TString suffix)
+: vr_nHitLayers       (new std::vector<unsigned8>()),
+  vr_bankIndex        (new std::vector<unsigned>()),
+  //
+  vr_patternIds       (new std::vector<std::vector<unsigned> >()),
+  vr_hitXs            (new std::vector<std::vector<float> >()),
+  vr_hitYs            (new std::vector<std::vector<float> >()),
+  vr_hitZs            (new std::vector<std::vector<float> >()),
+  vr_hitXErrors       (new std::vector<std::vector<float> >()),
+  vr_hitYErrors       (new std::vector<std::vector<float> >()),
+  vr_hitZErrors       (new std::vector<std::vector<float> >()),
+  vr_hitCharges       (new std::vector<std::vector<int> >()),
+  vr_hitPts           (new std::vector<std::vector<float> >()),
+  vr_hitSuperstripIds (new std::vector<std::vector<unsigned> >()),
+  vr_hitSuperstripBits(new std::vector<std::vector<unsigned16> >()),
+  //
+  vp_pt               (new std::vector<float>()),
+  vp_eta              (new std::vector<float>()),
+  vp_phi              (new std::vector<float>()),
+  vp_charge           (new std::vector<int>()) {
+
+    init(out, prefix, suffix);
+}
+
+TTRoadWriter::~TTRoadWriter() {
+    if (ttree)  delete ttree;
+    if (tfile)  delete tfile;
+}
+
+void TTRoadWriter::init(TString out, TString prefix, TString suffix) {
+    if (!out.EndsWith(".root"))
+        throw std::invalid_argument("Output filename must be .root.");
+
+    tfile = TFile::Open(out, "RECREATE");
+    if (tfile == 0)
+        throw std::runtime_error("Cannot recreate output file.");
+
+    tfile->mkdir("ntupler")->cd();
+    ttree = new TTree("tree", "");
+
+    ttree->Branch(prefix + "nHitLayers"        + suffix, &(*vr_nHitLayers));
+    ttree->Branch(prefix + "bankIndex"         + suffix, &(*vr_bankIndex));
+    //
+    ttree->Branch(prefix + "patternIds"        + suffix, &(*vr_patternIds));
+    ttree->Branch(prefix + "hitXs"             + suffix, &(*vr_hitXs));
+    ttree->Branch(prefix + "hitYs"             + suffix, &(*vr_hitYs));
+    ttree->Branch(prefix + "hitZs"             + suffix, &(*vr_hitZs));
+    ttree->Branch(prefix + "hitXErrors"        + suffix, &(*vr_hitXErrors));
+    ttree->Branch(prefix + "hitYErrors"        + suffix, &(*vr_hitYErrors));
+    ttree->Branch(prefix + "hitZErrors"        + suffix, &(*vr_hitZErrors));
+    ttree->Branch(prefix + "hitCharges"        + suffix, &(*vr_hitCharges));
+    ttree->Branch(prefix + "hitPts"            + suffix, &(*vr_hitPts));
+    ttree->Branch(prefix + "hitSuperstripIds"  + suffix, &(*vr_hitSuperstripIds));
+    ttree->Branch(prefix + "hitSuperstripBits" + suffix, &(*vr_hitSuperstripBits));
+    //
+    ttree->Branch("genParts_pt"    , &(*vp_pt));
+    ttree->Branch("genParts_eta"   , &(*vp_eta));
+    ttree->Branch("genParts_phi"   , &(*vp_phi));
+    ttree->Branch("genParts_charge", &(*vp_charge));
+}
+
+void TTRoadWriter::fill(const std::vector<TTRoad>& roads, const std::vector<genPart>& genParts) {
+    vr_nHitLayers       ->clear();
+    vr_bankIndex        ->clear();
+    //
+    vr_patternIds       ->clear();
+    vr_hitXs            ->clear();
+    vr_hitYs            ->clear();
+    vr_hitZs            ->clear();
+    vr_hitXErrors       ->clear();
+    vr_hitYErrors       ->clear();
+    vr_hitZErrors       ->clear();
+    vr_hitCharges       ->clear();
+    vr_hitPts           ->clear();
+    vr_hitSuperstripIds ->clear();
+    vr_hitSuperstripBits->clear();
+    //
+    vp_pt               ->clear();
+    vp_eta              ->clear();
+    vp_phi              ->clear();
+    vp_charge           ->clear();
+
+    const unsigned nroads = roads.size();
+    for (unsigned i=0, j=0; i<nroads; ++i) {
+        patternIds       .clear();
+        hitXs            .clear();
+        hitYs            .clear();
+        hitZs            .clear();
+        hitXErrors       .clear();
+        hitYErrors       .clear();
+        hitZErrors       .clear();
+        hitCharges       .clear();
+        hitPts           .clear();
+        hitSuperstripIds .clear();
+        hitSuperstripBits.clear();
+
+        const TTRoad&             road = roads.at(i);
+        const pattern_type&       patt = road.patternId();
+        const std::vector<TTHit>& hits = road.getHits();
+
+        for (j=0; j<patt.size(); ++j) {
+            patternIds.push_back(patt.at(j));
+        }
+
+        for (j=0; j<hits.size(); ++j) {
+            const TTHit& hit = hits.at(j);
+            hitXs.push_back(hit.x);
+            hitYs.push_back(hit.y);
+            hitZs.push_back(hit.z);
+            hitXErrors.push_back(hit.xError);
+            hitYErrors.push_back(hit.yError);
+            hitZErrors.push_back(hit.zError);
+            hitCharges.push_back(hit.charge);
+            hitPts.push_back(hit.pt);
+            hitSuperstripIds.push_back(hit.superstripId);
+            hitSuperstripBits.push_back(hit.superstripBit);
+        }
+
+        vr_nHitLayers       ->push_back(road.nHitLayers());
+        vr_bankIndex        ->push_back(road.bankIndex());
+        //
+        vr_patternIds       ->push_back(patternIds);
+        vr_hitXs            ->push_back(hitXs);
+        vr_hitYs            ->push_back(hitYs);
+        vr_hitZs            ->push_back(hitZs);
+        vr_hitXErrors       ->push_back(hitXErrors);
+        vr_hitYErrors       ->push_back(hitYErrors);
+        vr_hitZErrors       ->push_back(hitZErrors);
+        vr_hitCharges       ->push_back(hitCharges);
+        vr_hitPts           ->push_back(hitPts);
+        vr_hitSuperstripIds ->push_back(hitSuperstripIds);
+        vr_hitSuperstripBits->push_back(hitSuperstripBits);
+    }
+
+    const unsigned nparts = genParts.size();
+    for (unsigned i=0; i<nparts; ++i) {
+        const genPart& part = genParts.at(i);
+        vp_pt    ->push_back(part.pt);
+        vp_eta   ->push_back(part.eta);
+        vp_phi   ->push_back(part.phi);
+        vp_charge->push_back(part.charge);
+    }
+
+    ttree->Fill();
+    assert(vr_hitXs->size() == nroads);
+    assert(vp_pt->size() == nparts);
+}
+
+long long TTRoadWriter::write() {
+    long long nentries = ttree->GetEntries();
+    tfile->Write();
+    //tfile->Close();
+    return nentries;
+}
 
 
 // _____________________________________________________________________________
@@ -485,11 +538,7 @@ int PatternMatcher::run(TString out, TString src, TString bank) {
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = makeRoads_vector();
-    if (exitcode)  return exitcode;
-    Timing();
-
-    exitcode = writeRoads_vector(out);
+    exitcode = makeRoads_vector(out);
     if (exitcode)  return exitcode;
     Timing();
 

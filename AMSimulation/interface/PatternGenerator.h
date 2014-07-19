@@ -72,7 +72,7 @@ class PatternGenerator {
     int makePatterns_map();
     int writePatterns_map(TString out);
 
-    int makePatterns();
+    int makePatterns();  // CUIDADO: not implemented
     int writePatterns(TString out);
 
     // Main driver

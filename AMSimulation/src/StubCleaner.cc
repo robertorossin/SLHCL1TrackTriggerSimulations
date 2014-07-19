@@ -49,9 +49,9 @@ int StubCleaner::cleanStubs(TString out) {
     //if (nEvents_ > nentries)
     //    nEvents_ = nentries;
 
+    // For reading
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events; recreating " << out << " after stub cleaning." << std::endl;
 
-    // For reading
     std::vector<float> *          vb_x          = 0;
     std::vector<float> *          vb_y          = 0;
     std::vector<float> *          vb_z          = 0;
@@ -311,7 +311,7 @@ int StubCleaner::cleanStubs(TString out) {
         ++nKept;
         ttree->Fill();
     }
-    if (verbose_)  std::cout << Info() << "Processed and kept " << nKept << " events, " << ", passed " << nPassed << std::endl;
+    if (verbose_)  std::cout << Info() << "Processed and kept " << nKept << " events, passed " << nPassed << std::endl;
 
     assert(ttree->GetEntries() == nKept);
     tfile->Write();

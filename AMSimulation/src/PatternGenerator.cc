@@ -270,6 +270,7 @@ int PatternGenerator::makePatterns_map() {
     }
     if (verbose_)  std::cout << Info() << Form("Read: %7i, kept: %7i, # patterns: %7lu", nRead, nKept, allPatterns_map_.size()) << std::endl;
 
+    allPatterns_map_pairs_.reserve(allPatterns_map_.size());
     for (auto it: allPatterns_map_)
         allPatterns_map_pairs_.push_back(it);
 

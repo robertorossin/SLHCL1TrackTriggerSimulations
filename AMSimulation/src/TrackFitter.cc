@@ -1,5 +1,35 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitter.h"
 
+class TTTrackWriter {
+  public:
+    TTTrackWriter(TString out, TString prefix, TString suffix);
+    ~TTTrackWriter();
+
+    void fill(const std::vector<TTTrack>& tracks);
+    long long write();
+
+  private:
+    void init(TString out, TString prefix, TString suffix);
+
+    TFile* tfile;
+    TTree* ttree;
+
+    // Tracks
+    std::auto_ptr<std::vector<float> >              vt_px;
+    std::auto_ptr<std::vector<float> >              vt_py;
+    std::auto_ptr<std::vector<float> >              vt_pz;
+    std::auto_ptr<std::vector<float> >              vt_pt;
+    std::auto_ptr<std::vector<float> >              vt_eta;
+    std::auto_ptr<std::vector<float> >              vt_phi;
+    std::auto_ptr<std::vector<float> >              vt_vx;
+    std::auto_ptr<std::vector<float> >              vt_vy;
+    std::auto_ptr<std::vector<float> >              vt_vz;
+    std::auto_ptr<std::vector<float> >              vt_rinv;
+    std::auto_ptr<std::vector<float> >              vt_chi2;
+    std::auto_ptr<std::vector<float> >              vt_ptconsistency;
+    std::auto_ptr<std::vector<unsigned> >           vt_nstubs;
+};
+
 
 // _____________________________________________________________________________
 // Read the input ntuples
@@ -22,10 +52,11 @@ int TrackFitter::readFile(TString src) {
 
 // _____________________________________________________________________________
 // Do track fitting
-int TrackFitter::makeTracks() {
-    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
+int TrackFitter::makeTracks(TString out) {
 
     // For reading
+    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
+
     typedef unsigned char  unsigned8;
     typedef unsigned short unsigned16;
     std::vector<unsigned8> *                vr_nHitLayers        = 0;
@@ -58,27 +89,33 @@ int TrackFitter::makeTracks() {
     chain_->SetBranchAddress(prefixRoad_ + "hitSuperstripIds"  + suffix_, &(vr_hitSuperstripIds));
     chain_->SetBranchAddress(prefixRoad_ + "hitSuperstripBits" + suffix_, &(vr_hitSuperstripBits));
 
+    // For writing
+    if (verbose_)  std::cout << Info() << "Recreating " << out << std::endl;
+    TTTrackWriter writer(out, prefixTrack_, suffix_);
+
 
     // _________________________________________________________________________
     // Loop over all events
 
-    allTracks_.clear();
-    int nPassed = 0;
+    int nPassed = 0, nKept = 0;
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
 
         unsigned nroads = vr_patternIds->size();
-        if (verbose_>1 && ievt%5000==0)  std::cout << Debug() << Form("... Processing event: %7lld, fitting: %7i", ievt, nPassed) << std::endl;
-        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # roads: " << nroads << " [# tracks: " << allTracks_.size() << "]" << std::endl;
+        if (verbose_>1 && ievt%5000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, fitting: %7i", ievt, nKept, nPassed) << std::endl;
+        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # roads: " << nroads << std::endl;
 
         if (!nroads) {  // skip if no road
-            allTracks_.push_back(std::vector<TTTrack>());
+            writer.fill(std::vector<TTTrack>());
+            ++nKept;
             continue;
         }
 
-        std::vector<TTTrack> tracksInThisEvent;
+        std::vector<TTTrack> tracks;
+        tracks.reserve(200);
+
         for (unsigned i=0; i<nroads; ++i) {
             pattern_type patternId;
 
@@ -151,114 +188,131 @@ int TrackFitter::makeTracks() {
                 track.setPOCA(gp);
                 track.setChi2(p.chi2);
             }
-            tracksInThisEvent.push_back(track);
+            tracks.push_back(track);
+
+            if ((int) tracks.size() >= maxTracks_)
+                break;
         }
 
-        allTracks_.push_back(tracksInThisEvent);
-        ++nPassed;
+        if (! tracks.empty())
+            ++nPassed;
+
+        writer.fill(tracks);
+        ++nKept;
     }
 
-    if (verbose_)  std::cout << Info() << "Processed " << nEvents_ << " events, fit " << nPassed << " events." << std::endl;
+    if (verbose_)  std::cout << Info() << "Processed " << nEvents_ << " events, kept " << nKept << ", fitted " << nPassed << std::endl;
+
+    long long nentries = writer.write();
+    assert(nentries == nKept);
+
     return 0;
 }
 
 
 // _____________________________________________________________________________
-// Output tracks into a TTree
-int TrackFitter::writeTracks(TString out) {
-    if (!out.EndsWith(".root")) {
-        std::cout << Error() << "Output filename must be .root" << std::endl;
-        return 1;
-    }
+// Private functions
+// none
 
-    const long long nentries = allTracks_.size();
-    if (verbose_)  std::cout << Info() << "Recreating " << out << " with " << nentries << " events." << std::endl;
-    TFile* tfile = TFile::Open(out, "RECREATE");
-    tfile->mkdir("ntupler")->cd();
-    TTree* ttree = new TTree("tree", "");
 
-    std::auto_ptr<std::vector<float> >              vt_px               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_py               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_pz               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_pt               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_eta              (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_phi              (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_vx               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_vy               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_vz               (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_rinv             (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_chi2             (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >              vt_ptconsistency    (new std::vector<float>());
-    std::auto_ptr<std::vector<unsigned> >           vt_nstubs           (new std::vector<unsigned>());
+// _____________________________________________________________________________
+// TTTrackWriter
 
-    ttree->Branch(prefixTrack_ + "px"             + suffix_, &(*vt_px));
-    ttree->Branch(prefixTrack_ + "py"             + suffix_, &(*vt_py));
-    ttree->Branch(prefixTrack_ + "pz"             + suffix_, &(*vt_pz));
-    ttree->Branch(prefixTrack_ + "pt"             + suffix_, &(*vt_pt));
-    ttree->Branch(prefixTrack_ + "eta"            + suffix_, &(*vt_eta));
-    ttree->Branch(prefixTrack_ + "phi"            + suffix_, &(*vt_phi));
-    ttree->Branch(prefixTrack_ + "vx"             + suffix_, &(*vt_vx));
-    ttree->Branch(prefixTrack_ + "vy"             + suffix_, &(*vt_vy));
-    ttree->Branch(prefixTrack_ + "vz"             + suffix_, &(*vt_vz));
-    ttree->Branch(prefixTrack_ + "rinv"           + suffix_, &(*vt_rinv));
-    ttree->Branch(prefixTrack_ + "chi2"           + suffix_, &(*vt_chi2));
-    ttree->Branch(prefixTrack_ + "ptconsistency"  + suffix_, &(*vt_ptconsistency));
-    ttree->Branch(prefixTrack_ + "nstubs"         + suffix_, &(*vt_nstubs));
+TTTrackWriter::TTTrackWriter(TString out, TString prefix, TString suffix)
+: vt_px           (new std::vector<float>()),
+  vt_py           (new std::vector<float>()),
+  vt_pz           (new std::vector<float>()),
+  vt_pt           (new std::vector<float>()),
+  vt_eta          (new std::vector<float>()),
+  vt_phi          (new std::vector<float>()),
+  vt_vx           (new std::vector<float>()),
+  vt_vy           (new std::vector<float>()),
+  vt_vz           (new std::vector<float>()),
+  vt_rinv         (new std::vector<float>()),
+  vt_chi2         (new std::vector<float>()),
+  vt_ptconsistency(new std::vector<float>()),
+  vt_nstubs       (new std::vector<unsigned>()) {
 
-    // _________________________________________________________________________
-    // Loop over all tracks
-    for (long long ievt=0; ievt<nentries; ++ievt) {
-        if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
-
-        vt_px              ->clear();
-        vt_py              ->clear();
-        vt_pz              ->clear();
-        vt_pt              ->clear();
-        vt_eta             ->clear();
-        vt_phi             ->clear();
-        vt_vx              ->clear();
-        vt_vy              ->clear();
-        vt_vz              ->clear();
-        vt_rinv            ->clear();
-        vt_chi2            ->clear();
-        vt_ptconsistency   ->clear();
-        vt_nstubs          ->clear();
-
-        const std::vector<TTTrack>& tracksInThisEvent = allTracks_.at(ievt);
-        unsigned ntracks = tracksInThisEvent.size();
-
-        for (unsigned i=0; i<ntracks; ++i) {
-            if ((int) i >= maxTracks_)  break;
-
-            const TTTrack& track = tracksInThisEvent.at(i);
-            const GlobalVector& momentum = track.getMomentum();
-            const GlobalPoint&  poca = track.getPOCA();
-
-            vt_px              ->push_back(momentum.x());
-            vt_py              ->push_back(momentum.y());
-            vt_pz              ->push_back(momentum.z());
-            vt_pt              ->push_back(std::sqrt(momentum.perp2()));
-            vt_eta             ->push_back(momentum.eta());
-            vt_phi             ->push_back(momentum.phi());
-            vt_vx              ->push_back(poca.x());
-            vt_vy              ->push_back(poca.y());
-            vt_vz              ->push_back(poca.z());
-            vt_rinv            ->push_back(track.getRInv());
-            vt_chi2            ->push_back(track.getChi2());
-            vt_ptconsistency   ->push_back(track.getStubPtConsistency());
-            vt_nstubs          ->push_back(track.getStubRefs().size());
-        }
-
-        ttree->Fill();
-    }
-    assert(ttree->GetEntries() == nentries);
-
-    tfile->Write();
-    delete ttree;
-    delete tfile;
-    return 0;
+    init(out, prefix, suffix);
 }
 
+TTTrackWriter::~TTTrackWriter() {
+    if (ttree)  delete ttree;
+    if (tfile)  delete tfile;
+}
+
+void TTTrackWriter::init(TString out, TString prefix, TString suffix) {
+    if (!out.EndsWith(".root"))
+        throw std::invalid_argument("Output filename must be .root.");
+
+    tfile = TFile::Open(out, "RECREATE");
+    if (tfile == 0)
+        throw std::runtime_error("Cannot recreate output file.");
+
+    tfile->mkdir("ntupler")->cd();
+    ttree = new TTree("tree", "");
+
+    ttree->Branch(prefix + "px"             + suffix, &(*vt_px));
+    ttree->Branch(prefix + "py"             + suffix, &(*vt_py));
+    ttree->Branch(prefix + "pz"             + suffix, &(*vt_pz));
+    ttree->Branch(prefix + "pt"             + suffix, &(*vt_pt));
+    ttree->Branch(prefix + "eta"            + suffix, &(*vt_eta));
+    ttree->Branch(prefix + "phi"            + suffix, &(*vt_phi));
+    ttree->Branch(prefix + "vx"             + suffix, &(*vt_vx));
+    ttree->Branch(prefix + "vy"             + suffix, &(*vt_vy));
+    ttree->Branch(prefix + "vz"             + suffix, &(*vt_vz));
+    ttree->Branch(prefix + "rinv"           + suffix, &(*vt_rinv));
+    ttree->Branch(prefix + "chi2"           + suffix, &(*vt_chi2));
+    ttree->Branch(prefix + "ptconsistency"  + suffix, &(*vt_ptconsistency));
+    ttree->Branch(prefix + "nstubs"         + suffix, &(*vt_nstubs));
+}
+
+void TTTrackWriter::fill(const std::vector<TTTrack>& tracks) {
+    vt_px              ->clear();
+    vt_py              ->clear();
+    vt_pz              ->clear();
+    vt_pt              ->clear();
+    vt_eta             ->clear();
+    vt_phi             ->clear();
+    vt_vx              ->clear();
+    vt_vy              ->clear();
+    vt_vz              ->clear();
+    vt_rinv            ->clear();
+    vt_chi2            ->clear();
+    vt_ptconsistency   ->clear();
+    vt_nstubs          ->clear();
+
+    const unsigned ntracks = tracks.size();
+    for (unsigned i=0; i<ntracks; ++i) {
+        const TTTrack& track = tracks.at(i);
+        const GlobalVector& momentum = track.getMomentum();
+        const GlobalPoint&  poca = track.getPOCA();
+
+        vt_px              ->push_back(momentum.x());
+        vt_py              ->push_back(momentum.y());
+        vt_pz              ->push_back(momentum.z());
+        vt_pt              ->push_back(std::sqrt(momentum.perp2()));
+        vt_eta             ->push_back(momentum.eta());
+        vt_phi             ->push_back(momentum.phi());
+        vt_vx              ->push_back(poca.x());
+        vt_vy              ->push_back(poca.y());
+        vt_vz              ->push_back(poca.z());
+        vt_rinv            ->push_back(track.getRInv());
+        vt_chi2            ->push_back(track.getChi2());
+        vt_ptconsistency   ->push_back(track.getStubPtConsistency());
+        vt_nstubs          ->push_back(track.getStubRefs().size());
+    }
+
+    ttree->Fill();
+    assert(vt_px->size() == ntracks);
+}
+
+long long TTTrackWriter::write() {
+    long long nentries = ttree->GetEntries();
+    tfile->Write();
+    //tfile->Close();
+    return nentries;
+}
 
 // _____________________________________________________________________________
 // Main driver
@@ -272,11 +326,7 @@ int TrackFitter::run(TString out, TString src) {
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = makeTracks();
-    if (exitcode)  return exitcode;
-    Timing();
-
-    exitcode = writeTracks(out);
+    exitcode = makeTracks(out);
     if (exitcode)  return exitcode;
     Timing();
 

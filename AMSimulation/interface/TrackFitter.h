@@ -50,9 +50,7 @@ class TrackFitter {
     // Functions
     int readFile(TString src);
 
-    int makeTracks();
-
-    int writeTracks(TString out);
+    int makeTracks(TString out);
 
     // Main driver
     int run(TString out, TString src);
@@ -76,8 +74,6 @@ class TrackFitter {
 
     // Containers
     TChain * chain_;
-    std::vector<std::vector<TTTrack> > allTracks_;
-    //std::vector<std::vector<TTTrack> > goodTracks_;
 };
 
 #endif

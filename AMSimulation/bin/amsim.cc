@@ -279,6 +279,7 @@ int main(int argc, char **argv) {
 
         PatternMatcher matcher(bankOption);
         matcher.setNEvents(maxEvents);
+        matcher.setMinFrequency(minFrequency);
         matcher.setMaxPatterns(maxPatterns);
         matcher.setMaxRoads(maxRoads);
         matcher.setMaxHits(maxHits);
