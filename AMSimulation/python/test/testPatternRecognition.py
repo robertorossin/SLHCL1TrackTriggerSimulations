@@ -45,7 +45,7 @@ class TestAMSim(unittest.TestCase):
         tree = self.ttree
         for ievt in tree:
             for iroad in ievt.AMTTRoads_nHitLayers:
-                self.assertEqual(ord(iroad), 6)
+                self.assertEqual(iroad, 6)
 
     def test_bankIndex(self):
         tree = self.ttree

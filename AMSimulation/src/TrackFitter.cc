@@ -57,9 +57,8 @@ int TrackFitter::makeTracks(TString out) {
     // For reading
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
 
-    typedef unsigned char  unsigned8;
     typedef unsigned short unsigned16;
-    std::vector<unsigned8> *                vr_nHitLayers        = 0;
+    std::vector<unsigned16> *               vr_nHitLayers        = 0;
     std::vector<unsigned> *                 vr_bankIndex         = 0;
     std::vector<std::vector<unsigned> > *   vr_patternIds        = 0;
     std::vector<std::vector<float> > *      vr_hitXs             = 0;

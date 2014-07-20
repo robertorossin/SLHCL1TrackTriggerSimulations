@@ -2,6 +2,7 @@
 
 static const unsigned MIN_NGOODSTUBS = 3;
 static const unsigned MAX_NTOWERS = 6 * 8;
+static const unsigned MAX_FREQUENCY = 0xffff;  // 65535
 
 bool sortByFrequency(const std::pair<pattern_type, unsigned>& lhs, const std::pair<pattern_type, unsigned>& rhs) {
     return lhs.second > rhs.second;
@@ -281,16 +282,17 @@ int PatternGenerator::makePatterns_map() {
 
     // Sort by frequency
     std::stable_sort(allPatterns_map_pairs_.begin(), allPatterns_map_pairs_.end(), sortByFrequency);
+    assert(allPatterns_map_pairs_.front().second <= MAX_FREQUENCY);
 
     if (verbose_>2) {
         unsigned i=0;
         for (auto it : allPatterns_map_pairs_) {
-            std::cout << Debug() << "... patt: " << i << "  " << it.first << " freq: " << (unsigned) it.second << std::endl;
+            std::cout << Debug() << "... patt: " << i << "  " << it.first << " freq: " << it.second << std::endl;
             ++i;
         }
     }
 
-    if (verbose_)  std::cout << Info() << "Generated " << allPatterns_map_pairs_.size() << " patterns, highest freq: " << (unsigned) allPatterns_map_pairs_.front().second << std::endl;
+    if (verbose_)  std::cout << Info() << "Generated " << allPatterns_map_pairs_.size() << " patterns, highest freq: " << allPatterns_map_pairs_.front().second << std::endl;
 
     return 0;
 }
@@ -309,24 +311,23 @@ int PatternGenerator::writePatterns_map(TString out) {
     TFile* tfile = TFile::Open(out, "RECREATE");
     TTree* ttree = new TTree(bankName_, "");
 
-    typedef unsigned char  unsigned8;
-    std::auto_ptr<unsigned8>                  frequency       (new unsigned8(0));
-    std::auto_ptr<std::vector<unsigned> >     superstripIds   (new std::vector<unsigned>());
+    std::auto_ptr<count_type>                 frequency       (new count_type(0));
+    std::auto_ptr<std::vector<addr_type> >    superstripIds   (new std::vector<addr_type>());
 
     ttree->Branch("frequency"       , &(*frequency));
     ttree->Branch("superstripIds"   , &(*superstripIds));
 
     // _________________________________________________________________________
     // Loop over all patterns
-    count_type oldFrequency = 255u;
+    count_type oldFrequency = MAX_FREQUENCY;
     for (long long ievt=0; ievt<nentries; ++ievt) {
         if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
         superstripIds->clear();
 
-        *frequency = (allPatterns_map_pairs_.at(ievt).second < 255u ? allPatterns_map_pairs_.at(ievt).second : 255u);
+        *frequency = allPatterns_map_pairs_.at(ievt).second;
 
         // make sure it is indeed sorted
-        assert(oldFrequency >= (count_type) *frequency);
+        assert(oldFrequency >= *frequency);
         oldFrequency = *frequency;
 
         if (*frequency < minFrequency_)

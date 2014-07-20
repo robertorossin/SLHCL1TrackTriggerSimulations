@@ -26,9 +26,8 @@ class TTRoadWriter {
     TTree* ttree;
 
     // Roads
-    typedef unsigned char  unsigned8;
     typedef unsigned short unsigned16;
-    std::auto_ptr<std::vector<unsigned8> >                vr_nHitLayers;
+    std::auto_ptr<std::vector<unsigned16> >               vr_nHitLayers;
     std::auto_ptr<std::vector<unsigned> >                 vr_bankIndex;
     //
     std::auto_ptr<std::vector<std::vector<unsigned> > >   vr_patternIds; // now these are the hashes of the superstripIds
@@ -95,9 +94,8 @@ int PatternMatcher::readPatterns_vector(TString src) {
         }
 
         // For reading
-        typedef unsigned char  unsigned8;
-        unsigned8                 frequency;
-        std::vector<unsigned> *   superstripIds  = 0;
+        count_type               frequency;
+        std::vector<addr_type> * superstripIds  = 0;
 
         ttree->SetBranchAddress("frequency"    , &frequency);
         ttree->SetBranchAddress("superstripIds", &superstripIds);
@@ -367,7 +365,7 @@ int PatternMatcher::makeRoads_vector(TString out) {
 // TTRoadWriter
 
 TTRoadWriter::TTRoadWriter(TString out, TString prefix, TString suffix)
-: vr_nHitLayers       (new std::vector<unsigned8>()),
+: vr_nHitLayers       (new std::vector<unsigned16>()),
   vr_bankIndex        (new std::vector<unsigned>()),
   //
   vr_patternIds       (new std::vector<std::vector<unsigned> >()),
