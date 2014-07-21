@@ -1,12 +1,16 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripHasher.h"
+using namespace slhcl1tt;
 
 #include <iostream>
-#include <iterator>
 
-
-namespace slhcl1tt {
 
 void SuperstripHasher::init() {
+    if (subLadderNBits_ > (iModuleIdStartBit_ - iSubLadderStartBit_))
+        throw std::invalid_argument("Incorrect subLadderNBits is given.");
+
+    if (subModuleNBits_ > (iSubLadderStartBit_ - iSubModuleStartBit_))
+        throw std::invalid_argument("Incorrect subModuleNBits is given.");
+
     id_type barrel_z_divisions[6] = {
         63, 55, 54, 24, 24, 24
     };
@@ -55,53 +59,59 @@ void SuperstripHasher::init() {
     endcap_ring_divisions_.assign(endcap_ring_divisions, endcap_ring_divisions+15);
     endcap_ring_offsets_.assign(endcap_ring_offsets, endcap_ring_offsets+16);
 
-    fake_superstrip_hash_ = 15428;
+    fakeSuperstripHash_ = 15428;
 }
 
-
+static id_type lay, lad, mod;
+static key_type h;
 key_type SuperstripHasher::hashModule(id_type moduleId) const {
-    id_type lay = decodeLayer4bit(moduleId);
-    id_type lad = decodeLadder(moduleId);
-    id_type mod = decodeModule(moduleId);
+    lay = decodeLayer4bit(moduleId);
+    lad = decodeLadder(moduleId);
+    mod = decodeModule(moduleId);
 
-    key_type h = 0;
     if (lay < 6) {  // in barrel
         h = barrel_layer_offsets_.at(lay)
-            + mod * barrel_phi_divisions_.at(lay)
-            + lad;
+          + mod * barrel_phi_divisions_.at(lay)
+          + lad;
 
     } else {  // in endcap
         lay -= 6;
         h = barrel_layer_offsets_.at(6)  // after all barrel layers
-            + lay * endcap_ring_offsets_.at(15)  // after all previous endcap rings
-            + endcap_ring_offsets_.at(lad)
-            + mod;
+          + lay * endcap_ring_offsets_.at(15)  // after all previous endcap rings
+          + endcap_ring_offsets_.at(lad)
+          + mod;
     }
 
-    if (h > fake_superstrip_hash_) {
+    if (h > fakeSuperstripHash_) {
         std::cout << "ERROR: Unexpected moduleId hash: " << h << std::endl;
+        throw std::logic_error("Unexpected moduleId hash.");
     }
 
     return h;
 }
 
+static id_type moduleId, col, row;
 key_type SuperstripHasher::hash(addr_type superstripId) const {
-    id_type moduleId = decodeSuperstripModuleId(superstripId);
-    id_type col = decodeSuperstripSubLadder(superstripId);
-    id_type row = decodeSuperstripSubModule(superstripId);
+    moduleId = decodeSuperstripModuleId(superstripId);
+    col = decodeSuperstripSubLadder(superstripId);
+    row = decodeSuperstripSubModule(superstripId);
 
-    key_type h = 0;
     if (isFakeSuperstripId(superstripId)) {
-        h = fake_superstrip_hash_;
+        h = fakeSuperstripHash_;
+        col = 0;
+        row = row & 0x3;
+
     } else {
         h = hashModule(moduleId);
     }
 
-    if (col > (id_type) 1 << subLadderNBits_) {
-        std::cout << "ERROR: Unexpected subLadder col: " << col << std::endl;
+    if (col > 1u << subLadderNBits_) {
+        std::cout << "ERROR: Unexpected subladder col: " << col << std::endl;
+        throw std::logic_error("Unexpected subladder col");
     }
-    if (row > (id_type) 1 << subModuleNBits_) {
-        std::cout << "ERROR: Unexpected subModule row: " << row << std::endl;
+    if (row > 1u << subModuleNBits_) {
+        std::cout << "ERROR: Unexpected submodule row: " << row << std::endl;
+        throw std::logic_error("Unexpected submodule row");
     }
 
     // Finally
@@ -113,7 +123,5 @@ key_type SuperstripHasher::hash(addr_type superstripId) const {
 }
 
 void SuperstripHasher::print() {
-    std::cout << "subLadderNBits, subModuleNBits, maxHashModule: " << subLadderNBits_ << ", " << subModuleNBits_ << ", " << fake_superstrip_hash_ << std::endl;
-}
-
+    std::cout << "subLadderNBits: " << subLadderNBits_ << " subModuleNBits: " << subModuleNBits_ << " maxHashModule: " << fakeSuperstripHash_ << std::endl;
 }

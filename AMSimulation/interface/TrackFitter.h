@@ -3,9 +3,9 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTPattern.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTTrack.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgo.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterOption.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgo.h"
 using namespace slhcl1tt;
 
 #include "TFile.h"
@@ -21,10 +21,9 @@ using namespace slhcl1tt;
 // INPUT   : Roads
 // OUTPUT  : Tracks
 
-
 class TrackFitter {
   public:
-
+    // Constructor
     TrackFitter(TrackFitterOption option)
     : po(option), nLayers_(po.nLayers),
       prefixRoad_("AMTTRoads_"), prefixTrack_("AMTTTracks_"), suffix_(""),
@@ -36,24 +35,22 @@ class TrackFitter {
         chain_ = new TChain("ntupler/tree");
     }
 
+    // Destructor
     ~TrackFitter() {}
 
-    // Setters
-    //void setNLayers(int n)        { nLayers_ = n; }
 
-    void setNEvents(int n)        { if (n != -1)  nEvents_ = std::max(0, n); }
-    void setMaxTracks(int n)      { if (n != -1)  maxTracks_ = std::max(0, n); }
-    void setVerbosity(int n)      { verbose_ = n; }
+    // Setters
+    void setNEvents(long long n)  { if (n != -1)  nEvents_   = n > 0 ? n : 0; }
+    void setMaxTracks(int n)      { if (n != -1)  maxTracks_ = n > 0 ? n : 0; }
+    void setVerbosity(int v)      { verbose_ = v; }
 
     // Getters
-    int getNLayers()        const { return nLayers_; }
+    // none
 
     // Functions
     int readFile(TString src);
 
-    int makeTracks();
-
-    int writeTracks(TString out);
+    int makeTracks(TString out);
 
     // Main driver
     int run(TString out, TString src);
@@ -71,15 +68,12 @@ class TrackFitter {
     const TString suffix_;
 
     // Program options
-    int nEvents_;
-    int maxTracks_;
+    long long nEvents_;
+    int maxTracks_;  // max number of tracks per event
     int verbose_;
 
     // Containers
     TChain * chain_;
-    std::vector<std::vector<TTTrack> > allTracks_;
-    //std::vector<std::vector<TTTrack> > goodTracks_;
-
 };
 
 #endif

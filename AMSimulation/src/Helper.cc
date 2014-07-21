@@ -81,7 +81,9 @@ void Timing(bool start) {
         if (start) {
             timer.Start();
         } else {
-            timer.Stop(); timer.Print(); timer.Continue();
+            timer.Stop();
+            std::cout << Info(); timer.Print();
+            timer.Continue();
         }
     }
 }

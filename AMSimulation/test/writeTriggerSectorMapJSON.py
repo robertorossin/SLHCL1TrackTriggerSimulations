@@ -18,5 +18,17 @@ with open("../data/trigger_sector_map.csv", "r") as f:
 
 assert(len(mymap) == 6*8)
 
+#for k in sorted(mymap.keys()):
+#    print "Tower", k, "has", len(mymap[k]), "modules."
+#
+#from collections import defaultdict
+#reversemap = defaultdict(list)
+#for k, v in mymap.iteritems():
+#    for e in v:
+#        reversemap[e].append(k)
+#
+#for k in sorted(reversemap.keys()):
+#    print "Module", k, "is in", len(reversemap[k]), "towers."
+
 json.dump(mymap, open("../data/trigger_sector_map.json", "w"), sort_keys=True)
 

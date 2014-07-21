@@ -62,6 +62,8 @@ int NTupleMaker::writeTree(TString out) {
 
     if (trim_) {
         chain_->SetBranchStatus("TTClusters_*"   , 0);
+        chain_->SetBranchStatus("trkVertices_*"  , 0);
+        chain_->SetBranchStatus("simVertices_*"  , 0);
         chain_->SetBranchStatus("simPixelDigis_*", 0);
         chain_->SetBranchStatus("simBeamSpot_*"  , 0);
     }
@@ -87,7 +89,7 @@ int NTupleMaker::writeTree(TString out) {
 
     // _________________________________________________________________________
     // Loop over all events
-    for (int ievt=0; ievt<nEvents_; ++ievt) {
+    for (long long ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
@@ -98,7 +100,7 @@ int NTupleMaker::writeTree(TString out) {
         //assert(chain_tracks_->LoadTree(ievt) >= 0);
         //chain_tracks_->GetEntry(ievt);
 
-        if (verbose_>1 && ievt%10000==0)  std::cout << Debug() << Form("... Writing event: %7i", ievt) << std::endl;
+        if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
 
         ttree->Fill();
     }

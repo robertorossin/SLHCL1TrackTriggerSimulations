@@ -4,15 +4,10 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTSuperstrip.h"
 
 #include <iosfwd>
-//#include <array>
-#include <tr1/array>
 #include <vector>
 
 
 namespace slhcl1tt {
-
-typedef std::tr1::array<addr_type,8> pattern_type;  // maximum number of superstrips in a pattern set to 8 due to hardware design
-typedef std::tr1::array<bit_type,8>  pattern_bit_type;  // one DC bit for one superstrip
 
 // TTPattern is a collection of 8 TTSuperstrips
 // A POD type is used to reduce memory consumption.
@@ -20,23 +15,6 @@ struct TTPattern {
     count_type frequency;
     pattern_type id;
     pattern_bit_type bit;
-
-    // Functions
-    std::vector<TTSuperstrip> getSuperstrips() const {
-        std::vector<TTSuperstrip> superstrips;
-        for (unsigned i=0; i<id.size(); ++i) {
-            TTSuperstrip ss;
-            constructSuperstrip(id.at(i), bit.at(i), ss);
-            superstrips.push_back(ss);
-        }
-        return superstrips;
-    }
-
-    TTSuperstrip getSuperstrip(int l)          const {
-        TTSuperstrip ss;
-        constructSuperstrip(id.at(l), bit.at(l), ss);
-        return ss;
-    }
 };
 
 
@@ -48,53 +26,42 @@ class TTRoad {
   public:
     // Constructors
     TTRoad()
-    : patternId_(), hits_() {}
+    : nHitLayers_(0), bankIndex_(0), patternId_(), hits_() {}
 
-    TTRoad(const pattern_type& patternId, const std::vector<TTHit>& hits)
-    : patternId_(patternId), hits_(hits) {}
+    TTRoad(count_type nHitLayers, addr_type bankIndex, const pattern_type& patternId, const std::vector<TTHit>& hits)
+    : nHitLayers_(nHitLayers), bankIndex_(bankIndex), patternId_(patternId), hits_(hits) {}
 
     TTRoad(const TTRoad& rhs)
-    : patternId_(rhs.patternId_), hits_(rhs.hits_) {}
+    : nHitLayers_(rhs.nHitLayers_), bankIndex_(rhs.bankIndex_), patternId_(rhs.patternId_), hits_(rhs.hits_) {}
 
     // Destructor
     ~TTRoad() {}
 
     // Setters
-    // None allowed
+    // none
 
     // Getters
-    std::vector<TTHit> getHits()    const { return hits_; }
-    TTHit getHit(int l)             const { return hits_.at(l); }
+    count_type nHitLayers()         const { return nHitLayers_; }
+
+    addr_type bankIndex()           const { return bankIndex_; }
 
     pattern_type patternId()        const { return patternId_; }
 
+    std::vector<TTHit> getHits()    const { return hits_; }
+    TTHit getHit(int l)             const { return hits_.at(l); }
+
+
   private:
+    count_type nHitLayers_;
+    addr_type bankIndex_;
     pattern_type patternId_;
     std::vector<TTHit> hits_;
 };
 
 
 // _____________________________________________________________________________
-// Functions
-
-// Construct a TTPattern from a vector of TTSuperstrip
-void constructPattern(const std::vector<TTSuperstrip>& superstrips, TTPattern& pattern);
-
-// Merge an input TTPattern into an existing TTPattern
-void unionPattern(const TTPattern& inputPattern, TTPattern& outputPattern);
-
-// Compare two patterns using superstrip id (for uniquifying)
-bool isEqualPatternId(const TTPattern& lhs, const TTPattern& rhs);
-
-// Compare two patterns using superstrip id (for sorting)
-bool isLesserPatternId(const TTPattern& lhs, const TTPattern& rhs);
-
-// Compare two patterns using frequency (for sorting)
-bool isHigherPatternFrequency(const TTPattern& lhs, const TTPattern& rhs);
-
-// _____________________________________________________________________________
 // Output streams
-std::ostream& operator<<(std::ostream& o, const pattern_type& pattId);
+std::ostream& operator<<(std::ostream& o, const pattern_type& patt);
 
 std::ostream& operator<<(std::ostream& o, const TTPattern& patt);
 

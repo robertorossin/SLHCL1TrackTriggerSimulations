@@ -46,5 +46,20 @@ inline float deltaR(float eta1, float phi1, float eta2, float phi2) {
   return std::sqrt(deta*deta + dphi*dphi);
 }
 
+
+inline float etaFromTheta(float theta) {
+  if (theta < 0.)  theta += M_PI;
+  float tanThetaOver2 = std::tan(theta / 2.0);
+  if (tanThetaOver2 == 0.0) return 999999.0;
+  return -std::log(tanThetaOver2);
+}
+
+inline float etaFromRhoZ(float rho, float z) {
+  if (rho == 0.0 && z == 0.0) return 0.0;
+  if (rho == 0.0) return 999999.0;
+  float theta = std::atan2(rho, z);
+  return etaFromTheta(theta);
+}
+
 #endif
 

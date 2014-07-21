@@ -19,10 +19,13 @@ struct PatternBankOption {
     int nMisses;
     int nFakeSuperstrips;
     int nDCBits;
+    bool useSuperstripVarSize;
     bool requireTriggerTower;
-    std::vector<int> subLadderVarSize;
-    std::vector<int> subModuleVarSize;
-    std::vector<int> triggerTowers;
+    std::vector<unsigned> subLadderVarSize;
+    std::vector<unsigned> subModuleVarSize;
+    std::vector<unsigned> subLadderECVarSize;
+    std::vector<unsigned> subModuleECVarSize;
+    std::vector<unsigned> triggerTowers;
 };
 
 std::ostream& operator<<(std::ostream& o, const PatternBankOption& po);

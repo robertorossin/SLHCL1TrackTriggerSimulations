@@ -10,9 +10,9 @@ using namespace slhcl1tt;
 #include "TTree.h"
 #include "TString.h"
 
+
 // Reimplemented from SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleMaker.h
 // without EDM structure
-
 
 class NTupleMaker {
   public:
@@ -28,24 +28,31 @@ class NTupleMaker {
         NumLeafTypes
     };
 
+    // Constructor
     NTupleMaker()
-    : trim_(true),
-      nEvents_(999999999), verbose_(1) {
+    : nEvents_(999999999), trim_(true),
+      verbose_(1) {
 
-        chain_ = new TChain("ntupler/tree");
+        chain_        = new TChain("ntupler/tree");
         chain_roads_  = new TChain("ntupler/tree");
         chain_tracks_ = new TChain("ntupler/tree");
 
         makeLeafMap();
     }
 
+    // Destructor
     ~NTupleMaker() {}
 
-    // Setters
-    void setTrim(bool b=true)     { trim_ = b; }
-    void setNEvents(int n)        { if (n != -1)  nEvents_ = std::max(0, n); }
-    void setVerbosity(int n)      { verbose_ = n; }
 
+    // Setters
+    void setNEvents(long long n)  { if (n != -1)  nEvents_ = n > 0 ? n : 0; }
+    void setTrim(bool b)          { trim_ = b; }
+    void setVerbosity(int v)      { verbose_ = v; }
+
+    // Getters
+    // none
+
+    // Functions
     int readRoads(TString src);
 
     int readTracks(TString src);
@@ -78,14 +85,15 @@ class NTupleMaker {
         T* ptr_object_;
     };
 
+    // Private functions
     void makeLeafMap();
     void makeConnector(const TBranch*, TTree*);
 
 
   private:
     // Program options
+    long long nEvents_;
     bool trim_;  // do not keep every branch
-    int nEvents_;
     int verbose_;
 
     // Containers

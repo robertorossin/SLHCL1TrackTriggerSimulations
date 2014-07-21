@@ -11,90 +11,52 @@ namespace slhcl1tt {
 class SuperstripArbiter {
   public:
     // Constructors
-    // subLadderSize and subModuleSize are expressed as if each module has 1024 subLadders and 32 subModules
-    SuperstripArbiter(unsigned n, id_type subLadderSize, id_type subModuleSize)
-    : n_(n), subLadderSize_(n,subLadderSize), subModuleSize_(n,subModuleSize) {
+    // subLadderSize, subModuleSize, subLadderECSize, subModuleECSize are
+    // expressed as if each module has 32 subLadders and 1024 subModules
+    SuperstripArbiter(id_type subLadderSize, id_type subModuleSize)
+    : nLayers_(6), nRings_(15), subLadderSize_(nLayers_,subLadderSize), subModuleSize_(nLayers_,subModuleSize),
+      subLadderECSize_(nRings_,subLadderSize), subModuleECSize_(nRings_,subModuleSize) {
         init();
     }
 
-    SuperstripArbiter(unsigned n, const std::vector<id_type>& subLadderVarSize, const std::vector<id_type>& subModuleVarSize)
-    : n_(n), subLadderSize_(subLadderVarSize), subModuleSize_(subModuleVarSize) {
-        init();
-    }
-
-    SuperstripArbiter(unsigned n, const std::vector<int>& subLadderVarSize, const std::vector<int>& subModuleVarSize)
-    : n_(n), subLadderSize_(n,0), subModuleSize_(n,0) {
-        for (unsigned i=0; i<n_; ++i) {
-            subLadderSize_.at(i) = (id_type) subLadderVarSize.at(i);
-            subModuleSize_.at(i) = (id_type) subModuleVarSize.at(i);
-        }
+    SuperstripArbiter(const std::vector<id_type>& subLadderVarSize, const std::vector<id_type>& subModuleVarSize,
+                      const std::vector<id_type>& subLadderECVarSize, const std::vector<id_type>& subModuleECVarSize)
+    : nLayers_(6), nRings_(15), subLadderSize_(subLadderVarSize), subModuleSize_(subModuleVarSize),
+      subLadderECSize_(subLadderECVarSize), subModuleECSize_(subModuleECVarSize) {
         init();
     }
 
     // Destructor
     ~SuperstripArbiter() {}
 
-    // Operators
-    id_type subladder(id_type moduleId, id_type col, bool isHalfStrip=true) const {
-        if (isHalfStrip)
-            col /= 2;
-        id_type alayer = decodeLayerArbiter(moduleId);
-        if (isPSModule(moduleId))
-            col /= subLadderSize_.at(alayer);
-        else
-            col = col * 16 / subLadderSize_.at(alayer);
-        return col;
-    }
 
-    id_type submodule(id_type moduleId, id_type row, bool isHalfStrip=true) const {
-        if (isHalfStrip)
-            row /= 2;
-        id_type alayer = decodeLayerArbiter(moduleId);
-        row /= subModuleSize_.at(alayer);
-        return row;
-    }
+    // Operators
+    // Return the superstrip addresses (subladder, submodule) given the
+    // strip addresses (col, row)
+    id_type subladder(id_type moduleId, id_type col, bool isHalfStrip=true) const;
+
+    id_type submodule(id_type moduleId, id_type row, bool isHalfStrip=true) const;
 
     // Functions
-    id_type minSubLadderSize() const {
-        id_type min = 9999;
-        for (unsigned i=0; i<n_; ++i) {
-            if (min > subLadderSize_.at(i))
-                min = subLadderSize_.at(i);
-        }
-        return min;
-    }
+    id_type minSubLadderSize() const;
 
-    id_type minSubModuleSize() const {
-        id_type min = 9999;
-        for (unsigned i=0; i<n_; ++i) {
-            if (min > subModuleSize_.at(i))
-                min = subModuleSize_.at(i);
-        }
-        return min;
-    }
+    id_type minSubModuleSize() const;
 
     // Debug
     void print();
 
   private:
-    void init() {
-        if (subLadderSize_.size() != n_)
-            throw "Incorrect subLadderVarSize is given";
-        if (subModuleSize_.size() != n_)
-            throw "Incorrect subModuleVarSize is given";
-
-        // Only division by a power of two (2, 4, 8, 16, ...) is safe, as it corresponds to bit shifting
-        for (unsigned i=0; i<n_; ++i) {
-            subLadderSize_.at(i) = 1 << msb(subLadderSize_.at(i));
-            subModuleSize_.at(i) = 1 << msb(subModuleSize_.at(i));
-        }
-    }
+    // Initialize
+    void init();
 
   private:
     // Member data
-    unsigned n_;
+    const unsigned nLayers_;
+    const unsigned nRings_;
     std::vector<id_type> subLadderSize_;
     std::vector<id_type> subModuleSize_;
+    std::vector<id_type> subLadderECSize_;
+    std::vector<id_type> subModuleECSize_;
 };
 
 }  // namespace slhcl1tt

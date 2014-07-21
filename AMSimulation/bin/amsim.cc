@@ -12,6 +12,15 @@
 #include <memory>
 #include <string>
 
+// To print default vectors
+namespace boost {
+template<class T>
+std::ostream& operator<<(std::ostream& o, const std::vector<T>& v) {
+    std::copy(v.begin(), v.end(), std::ostream_iterator<T>(o, " "));
+    return o;
+}
+}
+
 
 // _____________________________________________________________________________
 int main(int argc, char **argv) {
@@ -38,15 +47,23 @@ int main(int argc, char **argv) {
     // Declare a group of options that will be allowed both on command line
     // and in config file
     std::string input, output, layout, bankfile, roadfile, trackfile;
-    int maxEvents, minFrequency, maxPatterns, maxRoads, maxHits, maxTracks;
+    long long maxEvents;
+    int minFrequency, maxPatterns, maxRoads, maxHits, maxTracks;
     bool nofilter, notrim;
     PatternBankOption bankOption;
     TrackFitterOption fitOption;
+
+    std::vector<unsigned> dv_subLadderVarSize = {8, 16, 32, 16, 16, 32};
+    std::vector<unsigned> dv_subModuleVarSize = {256, 256, 256, 256, 512, 512};
+    std::vector<unsigned> dv_subLadderECVarSize = {8, 8, 8, 16, 16, 16, 16, 32, 32, 16, 16, 16, 16, 32, 32};
+    std::vector<unsigned> dv_subModuleECVarSize = {256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 512, 512, 512, 512};
+    std::vector<unsigned> dv_triggerTowers = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47};
+
     po::options_description config("Configuration");
     config.add_options()
         ("input,i"      , po::value<std::string>(&input)->required(), "Specify input files")
         ("output,o"     , po::value<std::string>(&output)->required(), "Specify output file")
-        ("maxEvents,n"  , po::value<int>(&maxEvents)->default_value(-1), "Specfiy max number of events")
+        ("maxEvents,n"  , po::value<long long>(&maxEvents)->default_value(-1), "Specfiy max number of events")
 
         // Only for stub filtering
         ("no-filter"    , po::bool_switch(&nofilter)->default_value(false), "Do not apply filtering")
@@ -70,33 +87,36 @@ int main(int argc, char **argv) {
         ("tracks"       , po::value<std::string>(&trackfile), "Specify file containing the tracks")
 
         // Specifically for a pattern bank
-        ("bank_minPt"              , po::value<float>(&bankOption.minPt)->default_value(   2.0), "Specify min pt")
-        ("bank_maxPt"              , po::value<float>(&bankOption.maxPt)->default_value(9999.0), "Specify max pt")
-        ("bank_minEta"             , po::value<float>(&bankOption.minEta)->default_value(-2.5), "Specify min eta (signed)")
-        ("bank_maxEta"             , po::value<float>(&bankOption.maxEta)->default_value( 2.5), "Specify max eta (signed)")
-        ("bank_minPhi"             , po::value<float>(&bankOption.minPhi)->default_value(-M_PI), "Specify min phi (from -pi to pi)")
-        ("bank_maxPhi"             , po::value<float>(&bankOption.maxPhi)->default_value( M_PI), "Specify max phi (from -pi to pi)")
-        ("bank_subLadderSize"      , po::value<int>(&bankOption.subLadderSize)->default_value(4), "Specify the size of a subladder (a.k.a. segment)")
-        ("bank_subModuleSize"      , po::value<int>(&bankOption.subModuleSize)->default_value(8), "Specify the size of a submodule (a.k.a. superstrip)")
-        ("bank_nLayers"            , po::value<int>(&bankOption.nLayers)->default_value(6), "Specify # of layers")
-        ("bank_nMisses"            , po::value<int>(&bankOption.nMisses)->default_value(0), "Specify # of allowed misses")
-        ("bank_nFakeSuperstrips"   , po::value<int>(&bankOption.nFakeSuperstrips)->default_value(0), "Specify # of fake superstrips")
-        ("bank_nDCBits"            , po::value<int>(&bankOption.nDCBits)->default_value(0), "Specify # of DC bits")
-        ("bank_requireTriggerTower", po::value<bool>(&bankOption.requireTriggerTower)->default_value(false), "Apply trigger tower requirement")
-        ("bank_subLadderVarSize"   , po::value<std::vector<int> >(&bankOption.subLadderVarSize), "Specify the variable size of a subladder per layer (takes precedence over --bank_subLadderSize)")
-        ("bank_subModuleVarSize"   , po::value<std::vector<int> >(&bankOption.subModuleVarSize), "Specify the variable size of a submodule per layer (takes precedence over --bank_subModuleSize)")
-        ("bank_triggerTowers"      , po::value<std::vector<int> >(&bankOption.triggerTowers), "Specify trigger towers (NOT IMPLEMENTED)")
+        ("bank_minPt"               , po::value<float>(&bankOption.minPt)->default_value(     2.0), "Specify min pt")
+        ("bank_maxPt"               , po::value<float>(&bankOption.maxPt)->default_value(999999.0), "Specify max pt")
+        ("bank_minEta"              , po::value<float>(&bankOption.minEta)->default_value(-2.5), "Specify min eta (signed)")
+        ("bank_maxEta"              , po::value<float>(&bankOption.maxEta)->default_value( 2.5), "Specify max eta (signed)")
+        ("bank_minPhi"              , po::value<float>(&bankOption.minPhi)->default_value(-M_PI), "Specify min phi (from -pi to pi)")
+        ("bank_maxPhi"              , po::value<float>(&bankOption.maxPhi)->default_value( M_PI), "Specify max phi (from -pi to pi)")
+        ("bank_subLadderSize"       , po::value<int>(&bankOption.subLadderSize)->default_value(4), "Specify the size of a subladder (a.k.a. segment)")
+        ("bank_subModuleSize"       , po::value<int>(&bankOption.subModuleSize)->default_value(8), "Specify the size of a submodule (a.k.a. superstrip)")
+        ("bank_nLayers"             , po::value<int>(&bankOption.nLayers)->default_value(6), "Specify # of layers")
+        ("bank_nMisses"             , po::value<int>(&bankOption.nMisses)->default_value(0), "Specify # of allowed misses")
+        ("bank_nFakeSuperstrips"    , po::value<int>(&bankOption.nFakeSuperstrips)->default_value(0), "Specify # of fake superstrips")
+        ("bank_nDCBits"             , po::value<int>(&bankOption.nDCBits)->default_value(0), "Specify # of DC bits")
+        ("bank_useSuperstripVarSize", po::value<bool>(&bankOption.useSuperstripVarSize)->default_value(false), "Apply variable superstrip size")
+        ("bank_requireTriggerTower" , po::value<bool>(&bankOption.requireTriggerTower)->default_value(false), "Apply trigger tower requirement")
+        ("bank_subLadderVarSize"    , po::value<std::vector<unsigned> >(&bankOption.subLadderVarSize)->default_value(dv_subLadderVarSize), "Specify the variable size of a subladder per layer")
+        ("bank_subModuleVarSize"    , po::value<std::vector<unsigned> >(&bankOption.subModuleVarSize)->default_value(dv_subModuleVarSize), "Specify the variable size of a submodule per layer")
+        ("bank_subLadderECVarSize"  , po::value<std::vector<unsigned> >(&bankOption.subLadderECVarSize)->default_value(dv_subLadderECVarSize), "Specify the variable size of a subladder per endcap ring")
+        ("bank_subModuleECVarSize"  , po::value<std::vector<unsigned> >(&bankOption.subModuleECVarSize)->default_value(dv_subModuleECVarSize), "Specify the variable size of a submodule per endcap ring")
+        ("bank_triggerTowers"       , po::value<std::vector<unsigned> >(&bankOption.triggerTowers)->default_value(dv_triggerTowers), "Specify the trigger towers")
 
         // Specifically for a track fitter
-        ("fit_pqType"              , po::value<int>(&fitOption.pqType)->default_value(0), "Specify choice of variables for p,q")
-        ("fit_pbins"               , po::value<int>(&fitOption.pbins)->default_value(100), "Specify # of bins for p")
-        ("fit_qbins"               , po::value<int>(&fitOption.qbins)->default_value(100), "Specify # of bins for q")
-        ("fit_pmin"                , po::value<float>(&fitOption.pmin)->default_value(-1), "Specify min value for p")
-        ("fit_qmin"                , po::value<float>(&fitOption.qmin)->default_value(-1), "Specify min value for q")
-        ("fit_pmax"                , po::value<float>(&fitOption.pmax)->default_value(1), "Specify max value for p")
-        ("fit_qmax"                , po::value<float>(&fitOption.qmax)->default_value(1), "Specify max value for q")
-        ("fit_sigma"               , po::value<float>(&fitOption.sigma)->default_value(3), "Specify resolution for the distance parameter")
-        ("fit_minWeight"           , po::value<float>(&fitOption.minWeight)->default_value(0.1), "Specify minimum weight to create a track")
+        ("fit_pqType"               , po::value<int>(&fitOption.pqType)->default_value(0), "Specify choice of variables for p,q")
+        ("fit_pbins"                , po::value<int>(&fitOption.pbins)->default_value(100), "Specify # of bins for p")
+        ("fit_qbins"                , po::value<int>(&fitOption.qbins)->default_value(100), "Specify # of bins for q")
+        ("fit_pmin"                 , po::value<float>(&fitOption.pmin)->default_value(-1), "Specify min value for p")
+        ("fit_qmin"                 , po::value<float>(&fitOption.qmin)->default_value(-1), "Specify min value for q")
+        ("fit_pmax"                 , po::value<float>(&fitOption.pmax)->default_value(1), "Specify max value for p")
+        ("fit_qmax"                 , po::value<float>(&fitOption.qmax)->default_value(1), "Specify max value for q")
+        ("fit_sigma"                , po::value<float>(&fitOption.sigma)->default_value(3), "Specify resolution for the distance parameter")
+        ("fit_minWeight"            , po::value<float>(&fitOption.minWeight)->default_value(0.1), "Specify minimum weight to create a track")
         ;
 
     // Hidden options, will be allowed both on command line and in config file,
@@ -170,10 +190,26 @@ int main(int argc, char **argv) {
     bankOption.nDCBits          = std::min(std::max(0, bankOption.nDCBits), 4);
     if (!bankOption.subLadderVarSize.empty())
         for (unsigned i=0; i<bankOption.subLadderVarSize.size(); ++i)
-            bankOption.subLadderVarSize.at(i) = std::min(std::max(1, bankOption.subLadderVarSize.at(i)), 32);
+            bankOption.subLadderVarSize.at(i) = std::min(std::max(1U, bankOption.subLadderVarSize.at(i)), 32U);
     if (!bankOption.subModuleVarSize.empty())
         for (unsigned i=0; i<bankOption.subModuleVarSize.size(); ++i)
-            bankOption.subModuleVarSize.at(i) = std::min(std::max(2, bankOption.subModuleVarSize.at(i)), 1024);
+            bankOption.subModuleVarSize.at(i) = std::min(std::max(2U, bankOption.subModuleVarSize.at(i)), 1024U);
+    if (!bankOption.subLadderECVarSize.empty())
+        for (unsigned i=0; i<bankOption.subLadderECVarSize.size(); ++i)
+            bankOption.subLadderECVarSize.at(i) = std::min(std::max(1U, bankOption.subLadderECVarSize.at(i)), 32U);
+    if (!bankOption.subModuleECVarSize.empty())
+        for (unsigned i=0; i<bankOption.subModuleECVarSize.size(); ++i)
+            bankOption.subModuleECVarSize.at(i) = std::min(std::max(2U, bankOption.subModuleECVarSize.at(i)), 1024U);
+    // Check if all variable sizes are set at the same time
+    if (!bankOption.subLadderVarSize.empty() || !bankOption.subModuleVarSize.empty() ||
+        !bankOption.subLadderECVarSize.empty() || !bankOption.subModuleECVarSize.empty()) {
+        if (bankOption.subLadderVarSize.empty() || bankOption.subModuleVarSize.empty() ||
+            bankOption.subLadderECVarSize.empty() || bankOption.subModuleECVarSize.empty()) {
+            std::cout << Warning() << "Not all variable sizes are set at the same time. Ignoring all variable sizes." << std::endl;
+            bankOption.subLadderVarSize.clear(); bankOption.subModuleVarSize.clear();
+            bankOption.subLadderECVarSize.clear(); bankOption.subModuleECVarSize.clear();
+        }
+    }
 
     // Protection against conflict in nSubModules vs. nDCBits
     if (bankOption.subModuleSize == 1024 && bankOption.nDCBits > 0) {
@@ -193,13 +229,6 @@ int main(int argc, char **argv) {
         bankOption.nDCBits = 0;
     }
 
-    // Set default values for subLadderVarSize if only subModuleVarSize is given
-    if (!bankOption.subModuleVarSize.empty() && bankOption.subLadderVarSize.empty()) {
-        for (unsigned i=0; i<bankOption.subModuleVarSize.size(); ++i) {
-            bankOption.subLadderVarSize.push_back(1);
-        }
-    }
-
     // _________________________________________________________________________
     // Calling main functions
     if (vm.count("cleanStubs")) {
@@ -208,8 +237,8 @@ int main(int argc, char **argv) {
         std::cout << Color("magenta") << "Start stub cleaning..." << EndColor() << std::endl;
 
         StubCleaner cleaner(bankOption);
-        cleaner.setFilter(!nofilter);
         cleaner.setNEvents(maxEvents);
+        cleaner.setFilter(!nofilter);
         cleaner.setVerbosity(verbose);
         int exitcode = cleaner.run(output, input);
         if (exitcode) {
@@ -250,6 +279,7 @@ int main(int argc, char **argv) {
 
         PatternMatcher matcher(bankOption);
         matcher.setNEvents(maxEvents);
+        matcher.setMinFrequency(minFrequency);
         matcher.setMaxPatterns(maxPatterns);
         matcher.setMaxRoads(maxRoads);
         matcher.setMaxHits(maxHits);
@@ -283,8 +313,8 @@ int main(int argc, char **argv) {
         std::cout << Color("magenta") << "Start writing full ntuple..." << EndColor() << std::endl;
 
         NTupleMaker writer;
-        writer.setTrim(!notrim);
         writer.setNEvents(maxEvents);
+        writer.setTrim(!notrim);
         writer.setVerbosity(verbose);
         int exitcode = writer.run(output, input, roadfile, trackfile);
         if (exitcode) {

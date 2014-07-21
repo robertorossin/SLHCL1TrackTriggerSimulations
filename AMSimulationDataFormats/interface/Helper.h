@@ -4,17 +4,22 @@
 #include <cmath>
 #include <map>
 #include <stdint.h>  // consistent with DataFormats/DetId/interface/DetId.h
-
+#include <array>
+//#include <tr1/array>
+#include <stdexcept>
 
 namespace slhcl1tt {
 
 // Typically, short is 16 bits, int is 32 bits, long is 32 bits and long long is 64 bits
 // But we need to guarantee on the size of the integer
-typedef uint8_t  count_type; // for frequency: 0 - 255
-typedef uint16_t bit_type;   // for DC bits: 0 - 2^16 (=65536 max for nDCBits_=4)
+typedef uint16_t count_type; // for frequency: 0 - 2^16-1 (=65535 max)
+typedef uint16_t bit_type;   // for DC bits: 0 - 2^16-1 (=65535 max for nDCBits_=4)
 typedef uint32_t id_type;    // generic
 typedef uint32_t addr_type;  // for full superstrip id, now reduced to 32-bit (from 64-bit) and is therefore the same as id_type
 typedef uint32_t key_type;   // for key used in the pattern matching map, now increased to 32-bit (from 16-bit) and is therefore the same as id_type
+
+typedef std::array<addr_type,8> pattern_type;  // maximum number of superstrips in a pattern set to 8 due to hardware design
+typedef std::array<bit_type,8>  pattern_bit_type;  // one DC bit for one superstrip
 
 
 // The following need to be hidden from dictionary generation
@@ -41,9 +46,9 @@ static const id_type iModuleIdMask_      = 0x3FFFF; // 0-262143
 // 2^32 - 1 = 4294967295
 // 2^32 - 2 = 4294967294
 // 2^32 - 3 = 4294967293
-static const addr_type fakeSuperstripId_ = -1;
-static const addr_type fakeSuperstripId1_ = -2;
-static const addr_type fakeSuperstripId2_ = -3;
+static const addr_type fakeSuperstripId_  = 0xffffffff;
+static const addr_type fakeSuperstripId1_ = 0xfffffffe;
+static const addr_type fakeSuperstripId2_ = 0xfffffffd;
 
 
 /// Functions
@@ -53,7 +58,7 @@ inline id_type halfStripRound(float x) {
 }
 
 // Find the most significant bit for 32-bit word
-inline id_type msb(id_type v) {
+inline id_type mostSigBit(id_type v) {
     id_type r = 0; // r will be lg(v)
     while (v >>= 1) // unroll for more speed...
         r++;
@@ -62,7 +67,8 @@ inline id_type msb(id_type v) {
 
 // Retrieve layer, ladder, module from a moduleId
 inline id_type decodeLayer(id_type moduleId) {
-    return (moduleId / 10000) % 100;
+    //return (moduleId / 10000) % 100;
+    return (moduleId / 10000);
 }
 
 inline id_type decodeLayer4bit(id_type moduleId) {
@@ -75,23 +81,7 @@ inline id_type decodeLayer4bit(id_type moduleId) {
         return (lay - 7);
     if (26 == lay)  // fake superstrip
         return 15;
-    throw "Unexpected layer id";
-    return 99;
-}
-
-// Layer number from innermost to outermost layers, used by SuperstripArbiter
-// Note that this is neither CMS layer, nor merged layer
-inline id_type decodeLayerArbiter(id_type moduleId) {
-    id_type lay = decodeLayer(moduleId);
-    if (5 <= lay && lay <= 10)
-        return (lay - 5);
-    if (11 <= lay && lay <= 15)
-        return (lay - 10);
-    if (18 <= lay && lay <= 22)
-        return (lay - 17);
-    if (26 == lay)  // fake superstrip
-        return 5;
-    throw "Unexpected layer id";
+    throw std::out_of_range("Unexpected layer id");
     return 99;
 }
 
@@ -108,7 +98,14 @@ inline bool isPSModule(id_type moduleId) {
     if (5 <= lay && lay <= 7)
         return true;
     id_type lad = decodeLadder(moduleId);
-    if (11 <= lay && lay <= 22 && lad <= 9)
+    if (11 <= lay && lay <= 22 && lad <= 8)
+        return true;
+    return false;
+}
+
+inline bool isBarrelModule(id_type moduleId) {
+    id_type lay = decodeLayer(moduleId);
+    if (5 <= lay && lay <= 10)
         return true;
     return false;
 }
@@ -175,13 +172,13 @@ inline void encodeDCBit(id_type nDCBits, addr_type& superstripId, bit_type& supe
     id_type row = decodeSuperstripSubModule(superstripId);
 
     // Only do the submodule, since there's only one DC bit
-    //id_type col_mod_n = col % (1 << nDCBits);
-    id_type row_mod_n = row % (1 << nDCBits);
-    //col /= (1 << nDCBits);
-    row /= (1 << nDCBits);
+    //id_type col_mod_n = col % (1u << nDCBits);
+    id_type row_mod_n = row % (1u << nDCBits);
+    //col /= (1u << nDCBits);
+    row /= (1u << nDCBits);
 
     superstripId = encodeSuperstripId(moduleId, col, row);
-    superstripBit = (1 << row_mod_n);
+    superstripBit = (1u << row_mod_n);
     return;
 }
 

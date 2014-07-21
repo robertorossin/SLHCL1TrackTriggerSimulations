@@ -1,5 +1,7 @@
 import unittest
 import sys
+from itertools import izip
+from math import pi
 from ROOT import TFile, TTree, gROOT, gSystem, vector
 
 
@@ -29,6 +31,22 @@ class TestAMSim(unittest.TestCase):
                 layer = modId/10000
                 self.assertTrue(layer in [5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22])
 
+    def test_trkId(self):
+        tree = self.ttree
+        for ievt in tree:
+            for trkId, simPt, simEta, simPhi in izip(ievt.TTStubs_trkId, ievt.TTStubs_simPt, ievt.TTStubs_simEta, ievt.TTStubs_simPhi):
+                self.assertTrue(trkId == 1 or trkId == -1)
+                if trkId == 1:
+                    self.assertTrue(2.0 <= simPt and simPt <= 999999.0)
+                    self.assertTrue(-2.5 <= simEta and simEta <= 2.5)
+                    self.assertTrue(-pi <= simPhi and simPhi <= pi)
+
+    def test_nhits(self):
+        tree = self.ttree
+        for ievt in tree:
+            for nhits in ievt.TTStubs_nhits:
+                self.assertTrue(nhits > 0)
+
     def test_nstubs(self):
         tree = self.ttree
         for ievt in tree:
@@ -43,46 +61,25 @@ class TestAMSim(unittest.TestCase):
                 self.assertEqual(trkId, 1)
 
             nstubs = ievt.TTStubs_modId.size()
-            self.assertTrue(nstubs <= 6)
+            self.assertTrue(nstubs <= 8)
 
     def test_count(self):
         tree = self.ttree
         countA = 0
-        count0 = 0
-        count1 = 0
-        count2 = 0
-        count3 = 0
-        count4 = 0
-        count5 = 0
-        count6 = 0
+        countB = 0
+        countsA = [0] * 9
         for ievt in tree:
-            for modId in ievt.TTStubs_modId:
+            for modId, trkId in izip(ievt.TTStubs_modId, ievt.TTStubs_trkId):
                 countA += 1
+                if trkId == 1:
+                    countB += 1
             nstubs = ievt.TTStubs_modId.size()
-            if nstubs == 0:
-                count0 += 1
-            elif nstubs == 1:
-                count1 += 1
-            elif nstubs == 2:
-                count2 += 1
-            elif nstubs == 3:
-                count3 += 1
-            elif nstubs == 4:
-                count4 += 1
-            elif nstubs == 5:
-                count5 += 1
-            elif nstubs == 6:
-                count6 += 1
-        self.assertEqual(countA, 571)
-        self.assertEqual(count0, 0)
-        self.assertEqual(count1, 0)
-        self.assertEqual(count2, 0)
-        self.assertEqual(count3, 0)
-        self.assertEqual(count4, 6)
-        self.assertEqual(count5, 17)
-        self.assertEqual(count6, 77)
-        self.assertEqual(count0+count1+count2+count3+count4+count5+count6, 100)
-        self.assertEqual(1*count1+2*count2+3*count3+4*count4+5*count5+6*count6, countA)
+            countsA[nstubs] += 1
+        self.assertEqual(countA, 583)
+        self.assertEqual(countB, 583)
+        self.assertEqual(countsA, [1,0,0,0,5,16,63,15,0])
+        self.assertEqual(sum(countsA), 100)
+        self.assertEqual(sum([i * cnt for i,cnt in enumerate(countsA)]), countA)
 
 
 if __name__ == "__main__":

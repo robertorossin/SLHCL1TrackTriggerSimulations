@@ -2,9 +2,9 @@
 #define AMSimulation_StubCleaner_h_
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/Helper.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HelperMath.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HelperMath.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
 using namespace slhcl1tt;
 
 #include "TFile.h"
@@ -24,17 +24,13 @@ class StubCleaner {
   public:
     // Constructor
     StubCleaner(PatternBankOption option)
-    : po(option), nLayers_(po.nLayers),
-      filter_(true),
-      nEvents_(999999999), verbose_(1) {
-
-        assert(3 <= nLayers_ && nLayers_ <= 8);
+    : po(option),
+      nEvents_(999999999), filter_(true),
+      verbose_(1) {
 
         chain_ = new TChain("ntupler/tree");
 
         eventSelect_ = "(1)";  // always on
-
-        layerMap_ = getLayerMergingMap(nLayers_);
     }
 
     // Destructor
@@ -42,14 +38,12 @@ class StubCleaner {
 
 
     // Setters
-    //void setNLayers(int n)          { nLayers_ = n; }
-
-    void setFilter(bool b=true)     { filter_ = b; }
-    void setNEvents(int n)          { if (n != -1)  nEvents_ = std::max(0, n); }
-    void setVerbosity(int n)        { verbose_ = n; }
+    void setNEvents(long long n)    { if (n != -1)  nEvents_ = n > 0 ? n : 0; }
+    void setFilter(bool b)          { filter_ = b; }
+    void setVerbosity(int v)        { verbose_ = v; }
 
     // Getters
-    int getNLayers()          const { return nLayers_; }
+    // none
 
     // Functions
     int readFile(TString src);
@@ -65,12 +59,9 @@ class StubCleaner {
     const PatternBankOption po;
 
   private:
-    // Configurations
-    const int nLayers_;
-
     // Program options
-    bool filter_;
-    int nEvents_;
+    long long nEvents_;
+    bool filter_;  // throw away events with stubs?
     int verbose_;
 
     // Event selection
@@ -78,8 +69,6 @@ class StubCleaner {
 
     // Containers
     TChain * chain_;
-
-    std::map<unsigned, unsigned> layerMap_;  // defines layer merging
 };
 
 #endif

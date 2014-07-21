@@ -28,8 +28,8 @@ class TestAMSim(unittest.TestCase):
         for ievt in tree:
             for iroad in ievt.AMTTRoads_hitXs:
                 n += 1
-            self.assertTrue(ievt.AMTTRoads_hitXs.size() == 0 or ievt.AMTTRoads_hitXs.size() == 1)
-        self.assertEqual(n, 77)
+            self.assertTrue(ievt.AMTTRoads_hitXs.size() in [0, 1, 7, 28])
+        self.assertEqual(n, 63 + 15 * 7 + 0 * 28)
 
     def test_nhits(self):
         tree = self.ttree
@@ -38,15 +38,22 @@ class TestAMSim(unittest.TestCase):
             for iroad in ievt.AMTTRoads_hitXs:
                 for ihit in iroad:
                     n += 1
-                self.assertTrue(iroad.size() == 0 or iroad.size() >= 6)
-        self.assertEqual(n, 464)
+                self.assertTrue(iroad.size() in [0, 6, 7])
+        self.assertEqual(n, 1031)
 
-    def test_charge(self):
+    def test_nHitLayers(self):
         tree = self.ttree
         for ievt in tree:
-            for iroad in ievt.AMTTRoads_hitCharges:
-                for ihit in iroad:
-                    self.assertEqual(ihit, -1)
+            for iroad in ievt.AMTTRoads_nHitLayers:
+                self.assertEqual(iroad, 6)
+
+    def test_bankIndex(self):
+        tree = self.ttree
+        bankIndices = {}
+        for ievt in tree:
+            for iroad in ievt.AMTTRoads_bankIndex:
+                self.assertTrue(iroad not in bankIndices)
+                bankIndices[iroad] = 0
 
     def test_patternId(self):
         tree = self.ttree
@@ -54,6 +61,25 @@ class TestAMSim(unittest.TestCase):
             for iroad in ievt.AMTTRoads_patternIds:
                 for ihit in iroad[:6]:
                     self.assertNotEqual(ihit, 0)
+
+    def test_charges(self):
+        tree = self.ttree
+        for ievt in tree:
+            for iroad in ievt.AMTTRoads_hitCharges:
+                for ihit in iroad:
+                    self.assertEqual(ihit, -1)
+
+    #def test_superstripIds(self):
+    #    tree = self.ttree
+    #    for ievt in tree:
+    #        ssIds = []
+    #        for iroad in ievt.AMTTRoads_patternIds:
+    #            for ihit in iroad[:6]:
+    #                ssIds.append(ihit)
+
+    #        for iroad in ievt.AMTTRoads_hitSuperstripIds:
+    #            for ihit in iroad:
+    #                self.assertTrue(ihit in ssIds)
 
 
 if __name__ == "__main__":

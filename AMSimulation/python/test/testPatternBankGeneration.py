@@ -20,7 +20,7 @@ class TestAMSim(unittest.TestCase):
         pass
 
     def test_nevents(self):
-        self.assertEqual(self.nevents, 77)
+        self.assertEqual(self.nevents, 63 + 15 * 7 + 0 * 28)
 
     def test_superstripIds(self):
         tree = self.ttree
@@ -35,18 +35,10 @@ class TestAMSim(unittest.TestCase):
 
             self.assertTrue(ievt.superstripIds.size() == 8)
 
-    def test_superstripBits(self):
-        tree = self.ttree
-        for ievt in tree:
-            for ssBit in ievt.superstripBits:
-                self.assertEqual(ssBit, 1)
-
-            self.assertTrue(ievt.superstripBits.size() == 8)
-
     def test_frequency(self):
         tree = self.ttree
         for ievt in tree:
-            self.assertEqual(ord(ievt.frequency), 1)
+            self.assertEqual(ievt.frequency, 1)
 
 
 if __name__ == "__main__":
