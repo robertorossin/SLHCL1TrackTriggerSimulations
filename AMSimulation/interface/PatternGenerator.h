@@ -8,7 +8,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripStitcher.h"
 using namespace slhcl1tt;
 
-#include "fas/lean_table.h"
+#include "fas/lean_table2.h"
 using namespace fas;
 
 #include "TFile.h"
@@ -72,8 +72,8 @@ class PatternGenerator {
     int makePatterns_map();
     int writePatterns_map(TString out);
 
-    int makePatterns();  // CUIDADO: not implemented
-    int writePatterns(TString out);
+    int makePatterns_fas();
+    int writePatterns_fas(TString out);
 
     // Main driver
     int run(TString out, TString src, TString layout);
@@ -100,14 +100,14 @@ class PatternGenerator {
     int verbose_;
 
     // Operators
-    SuperstripArbiter* arbiter_;
-    SuperstripStitcher* stitcher_;
+    SuperstripArbiter  * arbiter_;
+    SuperstripStitcher * stitcher_;
 
     // Containers
     TChain * chain_;
     std::map<pattern_type, unsigned> allPatterns_map_;  // using std::map approach
     std::vector<std::pair<pattern_type, unsigned> > allPatterns_map_pairs_;
-    fas::lean_table allPatterns_;                       // using fas::lean_table approach
+    fas::lean_table2 allPatterns_fas_;                  // using fas::lean_table2 approach
 
     // Maps
     std::map<unsigned, unsigned> layerMap_;  // UNUSED: defines layer merging
