@@ -130,7 +130,7 @@ int PatternMatcher::readPatterns_vector(TString src) {
             //std::copy(superstripIds->begin(), superstripIds->end(), inputPatterns_vector_.at(ievt).begin());
             std::copy(superstripHashes.begin(), superstripHashes.end(), inputPatterns_vector_.at(ievt).begin());
 
-            if (verbose_>2)  std::cout << Debug() << "... patt: " << ievt << "  " << inputPatterns_vector_.at(ievt) << " freq: " << (unsigned) frequency << std::endl;
+            if (verbose_>3)  std::cout << Debug() << "... patt: " << ievt << "  " << inputPatterns_vector_.at(ievt) << " freq: " << (unsigned) frequency << std::endl;
         }
 
         if ((size_t) nentries != inputPatterns_vector_.size()) {
@@ -235,6 +235,11 @@ int PatternMatcher::makeRoads_vector(TString out) {
     std::vector<TTHit> hits;
     std::vector<std::vector<TTHit> > hitses;  // just like hits, but before serialized
 
+    std::vector<TTRoad> roads;
+    roads.reserve(200);
+    std::vector<genPart> genParts;
+    genParts.reserve(50);
+
     int nPassed = 0, nKept = 0;
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
@@ -288,30 +293,41 @@ int PatternMatcher::makeRoads_vector(TString out) {
 
         // _____________________________________________________________________
         // Create roads
-        std::vector<TTRoad> roads;
-        roads.reserve(200);
+        roads.clear();
 
         std::map<addr_type, std::vector<TTHit> >::iterator found;
+        int nMisses = 0;
 
         for (std::vector<pattern_type>::const_iterator itv = inputPatterns_vector_.begin();
              itv != inputPatterns_vector_.end(); ++itv) {
             hitses.clear();
+            nMisses = 0;
 
-            for (pattern_type::const_iterator it = itv->begin(); it != itv->end(); ++it) {
-                if (isFakeSuperstripId(*it)) {
-                    hitses.push_back(std::vector<TTHit>());
 
-                } else {
+            for (pattern_type::const_iterator it = itv->begin(); it != itv->begin() + nLayers_; ++it) {
+                //assert(*it != 0);
+                if (! isFakeSuperstripId(*it)) {
                     found = superstripHits.find(*it);
                     if (found != superstripHits.end()) {
                         if ((int) found -> second.size() > maxHits_)
                             found -> second.resize(maxHits_);
                         hitses.push_back(found -> second);
+                    } else {
+                        ++nMisses;
                     }
+                } else {
+                    // Fake superstrip
+                    hitses.push_back(std::vector<TTHit>());
                 }
+
+                // if number of allowed misses more than the requirement
+                if (nMisses > po.nMisses)
+                    break;
             }
 
-            if ((int) hitses.size() >= (nLayers_ - po.nMisses)) {  // if number of hits more than the requirement
+            if (verbose_>2 && (int) hitses.size()==po.nLayers)  std::cout << Debug() << "... # hitses: " << hitses.size() << " # misses: " << nMisses << std::endl;
+
+            if (nMisses <= po.nMisses) {
                 hits.clear();
                 for (unsigned i=0; i<hitses.size(); ++i) {
                     hits.insert(hits.end(), hitses.at(i).begin(), hitses.at(i).end());
@@ -330,10 +346,9 @@ int PatternMatcher::makeRoads_vector(TString out) {
 
         // _____________________________________________________________________
         // In addition, keep genParticle info
+        genParts.clear();
 
         unsigned nparts = vp_pt->size();
-        std::vector<genPart> genParts;
-        genParts.reserve(50);
         for (unsigned l=0; l<nparts; ++l) {
             genPart part;
             part.pt     = vp_pt->at(l);
