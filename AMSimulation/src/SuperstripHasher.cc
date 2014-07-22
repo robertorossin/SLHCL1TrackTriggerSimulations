@@ -96,13 +96,16 @@ key_type SuperstripHasher::hash(addr_type superstripId) const {
     col = decodeSuperstripSubLadder(superstripId);
     row = decodeSuperstripSubModule(superstripId);
 
-    if (isFakeSuperstripId(superstripId)) {
-        h = fakeSuperstripHash_;
-        col = 0;
-        row = row & 0x3;
+    if (! isFakeSuperstripId(superstripId)) {
+        h = hashModule(moduleId);
 
     } else {
-        h = hashModule(moduleId);
+        // Fake superstrip
+        h = fakeSuperstripHash_;
+        col = 0;
+        row = row & 0x1;
+        if (subModuleNBits_ == 0)
+            row = 0;
     }
 
     if (col > 1u << subLadderNBits_) {

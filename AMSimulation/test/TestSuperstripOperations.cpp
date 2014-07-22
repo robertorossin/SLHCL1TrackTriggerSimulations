@@ -199,8 +199,8 @@ public:
         CPPUNIT_ASSERT_EQUAL(307494U, hasher_->hash(1337147910));
         CPPUNIT_ASSERT_EQUAL(397154U, hasher_->hash(1509196290));
         CPPUNIT_ASSERT_EQUAL(505306U, hasher_->hash(1682866202));
-        CPPUNIT_ASSERT_EQUAL(987395U, hasher_->hash(fakeSuperstripId_));
-        CPPUNIT_ASSERT_EQUAL(987394U, hasher_->hash(fakeSuperstripId1_));
+        CPPUNIT_ASSERT_EQUAL(987393U, hasher_->hash(fakeSuperstripId_));
+        CPPUNIT_ASSERT_EQUAL(987392U, hasher_->hash(fakeSuperstripId1_));
         CPPUNIT_ASSERT_EQUAL(987393U, hasher_->hash(fakeSuperstripId2_));
     }
 
