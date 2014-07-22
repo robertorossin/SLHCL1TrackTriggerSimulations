@@ -209,34 +209,6 @@ inline key_type hashSuperstripId(addr_type superstripId) {
     return h;
 }
 
-// Make a map to merge layers in barrel and in endcap
-inline std::map<unsigned, unsigned> getLayerMergingMap(int n) {
-    // Hardcoded layer information
-    if (n <= 6) {
-        std::map<unsigned, unsigned> thismap {
-            {5,0}, {6,1}, {7,2}, {8,3}, {9,4}, {10,5},
-            {11,5}, {12,4}, {13,3}, {14,2}, {15,1},
-            {18,5}, {19,4}, {20,3}, {21,2}, {22,1}
-        };
-        return thismap;
-
-    } else if (n == 7) {
-        std::map<unsigned, unsigned> thismap {
-            {5,0}, {6,1}, {7,2}, {8,3}, {9,4}, {10,5},
-            {11,6}, {12,5}, {13,4}, {14,3}, {15,2},
-            {18,6}, {19,5}, {20,4}, {21,3}, {22,2}
-        };
-        return thismap;
-
-    } else {  // >= 8
-        std::map<unsigned, unsigned> thismap {
-            {5,0}, {6,1}, {7,2}, {8,3}, {9,4}, {10,5},
-            {11,7}, {12,6}, {13,5}, {14,4}, {15,3},
-            {18,7}, {19,6}, {20,5}, {21,4}, {22,3}
-        };
-        return thismap;
-    }
-}
 #endif  // if not defined __GCCXML__
 
 }  // namespace slhcl1tt
