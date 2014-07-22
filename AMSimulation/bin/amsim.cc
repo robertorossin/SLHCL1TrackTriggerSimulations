@@ -99,6 +99,7 @@ int main(int argc, char **argv) {
         ("bank_nMisses"             , po::value<int>(&bankOption.nMisses)->default_value(0), "Specify # of allowed misses")
         ("bank_nFakeSuperstrips"    , po::value<int>(&bankOption.nFakeSuperstrips)->default_value(0), "Specify # of fake superstrips")
         ("bank_nDCBits"             , po::value<int>(&bankOption.nDCBits)->default_value(0), "Specify # of DC bits")
+        ("bank_excessStrategy"      , po::value<int>(&bankOption.excessStrategy)->default_value(0), "Specify strategy to make a pattern when # of layers < # of superstrips")
         ("bank_useSuperstripVarSize", po::value<bool>(&bankOption.useSuperstripVarSize)->default_value(false), "Apply variable superstrip size")
         ("bank_requireTriggerTower" , po::value<bool>(&bankOption.requireTriggerTower)->default_value(false), "Apply trigger tower requirement")
         ("bank_subLadderVarSize"    , po::value<std::vector<unsigned> >(&bankOption.subLadderVarSize)->default_value(dv_subLadderVarSize), "Specify the variable size of a subladder per layer")

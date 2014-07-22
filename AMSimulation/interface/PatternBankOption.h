@@ -19,6 +19,7 @@ struct PatternBankOption {
     int nMisses;
     int nFakeSuperstrips;
     int nDCBits;
+    int excessStrategy;
     bool useSuperstripVarSize;
     bool requireTriggerTower;
     std::vector<unsigned> subLadderVarSize;

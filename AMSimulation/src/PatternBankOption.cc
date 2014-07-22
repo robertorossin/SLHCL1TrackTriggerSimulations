@@ -8,7 +8,7 @@ namespace slhcl1tt {
 
 std::ostream& operator<<(std::ostream& o, const PatternBankOption& po) {
     o << "minPt: " << po.minPt << "  maxPt: " << po.maxPt << "  minEta: " << po.minEta << "  maxEta: " << po.maxEta << "  minPhi: " << po.minPhi << "  maxPhi: " << po.maxPhi << std::endl;
-    o << "subLadderSize: " << po.subLadderSize << "  subModuleSize: " << po.subModuleSize << "  nLayers: " << po.nLayers << "  nMisses: " << po.nMisses << "  nFakeSuperstrips: " << po.nFakeSuperstrips << "  nDCBits: " << po.nDCBits << "  useSuperstripVarSize: " << po.useSuperstripVarSize << "  requireTriggerTower: " << po.requireTriggerTower << std::endl;
+    o << "subLadderSize: " << po.subLadderSize << "  subModuleSize: " << po.subModuleSize << "  nLayers: " << po.nLayers << "  nMisses: " << po.nMisses << "  nFakeSuperstrips: " << po.nFakeSuperstrips << "  nDCBits: " << po.nDCBits << "  excessStrategy: " << po.excessStrategy << "  useSuperstripVarSize: " << po.useSuperstripVarSize << "  requireTriggerTower: " << po.requireTriggerTower << std::endl;
     o << "subLadderVarSize: ";
     std::copy(po.subLadderVarSize.begin(), po.subLadderVarSize.end(), std::ostream_iterator<unsigned>(o, " "));
     o << std::endl;

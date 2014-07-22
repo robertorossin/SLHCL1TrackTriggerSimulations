@@ -78,7 +78,7 @@ public:
         hasher_ = new SuperstripHasher(subLadderNBits, subModuleNBits);
         //hasher_->print();
 
-        stitcher_ = new SuperstripStitcher(nLayers, nFakeSuperstrips);
+        stitcher_ = new SuperstripStitcher(nLayers, nFakeSuperstrips, 1);
 
         // Read module ids
         unsigned i = 0, j = 0;

@@ -46,7 +46,7 @@ class PatternGenerator {
             arbiter_ = new SuperstripArbiter(po.subLadderSize, po.subModuleSize);
 
         // Build a pattern from a given list of superstrips
-        stitcher_ = new SuperstripStitcher(nLayers_, nFakeSuperstrips_);
+        stitcher_ = new SuperstripStitcher(nLayers_, nFakeSuperstrips_, po.excessStrategy);
     }
 
     // Destructor
