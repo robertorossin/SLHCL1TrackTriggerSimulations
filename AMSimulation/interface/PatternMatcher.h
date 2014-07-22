@@ -8,7 +8,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripHasher.h"
 using namespace slhcl1tt;
 
-#include "fas/lean_lut.h"
+#include "fas/lean_lut2.h"
 using namespace fas;
 
 #include "TFile.h"
@@ -73,8 +73,8 @@ class PatternMatcher {
     int readPatterns_vector(TString src);
     int makeRoads_vector(TString out);
 
-    int readPatterns(TString src);  // CUIDADO: not implemented
-    int makeRoads(TString out);
+    int readPatterns_fas(TString src);
+    int makeRoads_fas(TString out);
 
     // Main driver
     int run(TString out, TString src, TString bank);
@@ -105,14 +105,14 @@ class PatternMatcher {
     int verbose_;
 
     // Operators
-    SuperstripArbiter* arbiter_;
-    SuperstripHasher*  hasher_;
+    SuperstripArbiter * arbiter_;
+    SuperstripHasher  * hasher_;
 
     // Containers
     TChain * chain_;
 
-    std::vector<pattern_type> inputPatterns_vector_;
-    fas::lean_lut inputPatterns_;
+    std::vector<pattern_type> inputPatterns_vector_;  // using std::vector approach
+    fas::lean_lut2 inputPatterns_fas_;                // using fas::lean_lut2 approach
 };
 
 #endif
