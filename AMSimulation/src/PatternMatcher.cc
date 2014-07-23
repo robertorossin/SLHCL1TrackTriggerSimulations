@@ -281,11 +281,12 @@ int PatternMatcher::makeRoads_vector(TString out) {
     std::vector<TTHit> hits;
     std::vector<std::vector<TTHit> > hitses;  // just like hits, but before serialized
 
-    std::vector<bool> superstripBooleans;
-    superstripBooleans.resize(hasher_ -> hash(fakeSuperstripId_) + 1);
-
     key_type fakeSuperstripHash = hasher_ -> hash(fakeSuperstripId_);
     key_type fakeSuperstripHash1 = hasher_ -> hash(fakeSuperstripId1_);
+    key_type nSuperstripHashes = ((fakeSuperstripHash+1) % 2) == 0 ? fakeSuperstripHash+1 : fakeSuperstripHash+2;  // use power of 2
+
+    std::vector<bool> superstripBooleans;
+    superstripBooleans.resize(nSuperstripHashes);
 
     std::vector<TTRoad> roads;
     roads.reserve(200);
@@ -463,7 +464,9 @@ int PatternMatcher::readPatterns_fas(TString src) {
         // Set K = number of values associated to a key
         //     N = number of distinct keus
         //     M = number of distinct values
-        inputPatterns_fas_.init(MAX_NLAYERS, nentries, hasher_ -> hash(fakeSuperstripId_) + 1);
+        key_type fakeSuperstripHash = hasher_ -> hash(fakeSuperstripId_);
+        key_type nSuperstripHashes = ((fakeSuperstripHash+1) % 2) == 0 ? fakeSuperstripHash+1 : fakeSuperstripHash+2;  // use power of 2
+        inputPatterns_fas_.init(MAX_NLAYERS, nentries, nSuperstripHashes);
 
         std::vector<key_type> superstripHashes;
         superstripHashes.resize(MAX_NLAYERS);

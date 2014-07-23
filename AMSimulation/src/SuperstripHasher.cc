@@ -62,12 +62,11 @@ void SuperstripHasher::init() {
     fakeSuperstripHash_ = 15428;
 }
 
-static id_type lay, lad, mod;
-static key_type h;
 key_type SuperstripHasher::hashModule(id_type moduleId) const {
-    lay = decodeLayer4bit(moduleId);
-    lad = decodeLadder(moduleId);
-    mod = decodeModule(moduleId);
+    id_type lay = decodeLayer4bit(moduleId);
+    id_type lad = decodeLadder(moduleId);
+    id_type mod = decodeModule(moduleId);
+    key_type h;
 
     if (lay < 6) {  // in barrel
         h = barrel_layer_offsets_.at(lay)
@@ -90,11 +89,11 @@ key_type SuperstripHasher::hashModule(id_type moduleId) const {
     return h;
 }
 
-static id_type moduleId, col, row;
 key_type SuperstripHasher::hash(addr_type superstripId) const {
-    moduleId = decodeSuperstripModuleId(superstripId);
-    col = decodeSuperstripSubLadder(superstripId);
-    row = decodeSuperstripSubModule(superstripId);
+    id_type moduleId = decodeSuperstripModuleId(superstripId);
+    id_type col = decodeSuperstripSubLadder(superstripId);
+    id_type row = decodeSuperstripSubModule(superstripId);
+    key_type h;
 
     if (! isFakeSuperstripId(superstripId)) {
         h = hashModule(moduleId);

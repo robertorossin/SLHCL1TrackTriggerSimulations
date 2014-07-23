@@ -271,10 +271,15 @@ int PatternGenerator::makePatterns_map() {
     }
     if (verbose_)  std::cout << Info() << Form("Read: %7i, kept: %7i, # patterns: %7lu", nRead, nKept, allPatterns_map_.size()) << std::endl;
 
-    allPatterns_map_pairs_.reserve(allPatterns_map_.size());  // can cause bad alloc
-    //for (auto it: allPatterns_map_)
-    //    allPatterns_map_pairs_.push_back(it);
+    allPatterns_map_pairs_.reserve(allPatterns_map_.size());  // can cause bad_alloc
     allPatterns_map_pairs_.insert(allPatterns_map_pairs_.begin(), allPatterns_map_.begin(), allPatterns_map_.end());
+
+    //for (std::map<pattern_type, unsigned>::const_iterator it = allPatterns_map_.begin();
+    //     it != allPatterns_map_.end(); ) {
+    //    allPatterns_map_pairs_.push_back(*it);
+    //    it = allPatterns_map_.erase(it);
+    //}
+
 
     // Clear the map and release memory
     std::map<pattern_type, unsigned> emptyMap;
@@ -409,7 +414,9 @@ int PatternGenerator::makePatterns_fas() {
     //chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
     chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
 
-    unsigned allocation = nEvents_ > 50000000 ? nEvents_ : nEvents_ * 2;
+    unsigned allocation = nEvents_ * 2;
+    if (po.excessStrategy == 0)
+        allocation = nEvents_;
     allPatterns_fas_.reserve(allocation);
 
     // _________________________________________________________________________
