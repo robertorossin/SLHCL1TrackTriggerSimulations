@@ -1,4 +1,4 @@
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/StubCleaner.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Converter.h"
 
 #include "boost/program_options.hpp"
 #include <cstdlib>
@@ -29,13 +29,15 @@ int main(int argc, char **argv) {
 
     // Declare a group of options that will be allowed both on command line
     // and in config file
-    std::string input, output;
-    long long maxEvents;
+    std::string input, output, format;
+    long long maxEvents, skipEvents;
     po::options_description config("Configuration");
     config.add_options()
         ("input,i"      , po::value<std::string>(&input)->required(), "Specify input files")
         ("output,o"     , po::value<std::string>(&output)->required(), "Specify output file")
+        ("format"       , po::value<std::string>(&format)->default_value("x"), "Specify output format")
         ("maxEvents,n"  , po::value<long long>(&maxEvents)->default_value(-1), "Specfiy max number of events")
+        ("skipEvents,m" , po::value<long long>(&skipEvents)->default_value(-1), "Specfiy number of first events to skip")
         ;
 
     // Hidden options, will be allowed both on command line and in config file,
@@ -95,15 +97,19 @@ int main(int argc, char **argv) {
     // _________________________________________________________________________
     // Calling main functions
     if (vm.count("stubs")) {
-        std::cout << Color("magenta") << "Start converting..." << EndColor() << std::endl;
-
-        std::cout << "Conversion " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
+        std::cout << "NOT IMPLEMENTED" << std::endl;
 
     } else if (vm.count("bank")) {
-        std::cout << Color("magenta") << "Start converting..." << EndColor() << std::endl;
+        std::cout << Color("magenta") << "Start converting bank..." << EndColor() << std::endl;
 
-        std::cout << "Conversion " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
+        Converter converter;
+        converter.setNEvents(maxEvents);
+        converter.setSkipEvents(skipEvents);
+        converter.setVerbosity(verbose);
 
+        converter.bankToTxt(input, output, format);
+
+        std::cout << "Bank conversion " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
     }
 
     return EXIT_SUCCESS;
