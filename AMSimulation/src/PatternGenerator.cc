@@ -536,7 +536,7 @@ int PatternGenerator::makePatterns_fas() {
 
     if (verbose_>2) {
         for (unsigned i=0; i<allPatterns_fas_.size(); ++i) {
-            const fas::lean_table2::return_type& ret = allPatterns_fas_.at(i);
+            const fas::lean_table3::return_type& ret = allPatterns_fas_.at(i);
             std::cout << Debug() << "... patt: " << i << "  ";
             std::copy(ret.begin, ret.end, std::ostream_iterator<addr_type>(std::cout, " "));
             std::cout << " freq: " << ret.count << std::endl;
@@ -575,7 +575,7 @@ int PatternGenerator::writePatterns_fas(TString out) {
         if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
         superstripIds->clear();
 
-        const fas::lean_table2::return_type& ret = allPatterns_fas_.at(ievt);
+        const fas::lean_table3::return_type& ret = allPatterns_fas_.at(ievt);
         *frequency = ret.count;
 
         // make sure it is indeed sorted

@@ -30,7 +30,8 @@ class PatternMatcher {
     : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits),
       bankName_("patternBank"), prefixRoad_("AMTTRoads_"), suffix_(""),
       nEvents_(999999999), minFrequency_(1), maxPatterns_(999999999), maxRoads_(999999999), maxHits_(999999999),
-      verbose_(1) {
+      verbose_(1),
+      inputPatterns_fas_(0,0) {
 
         assert(3 <= nLayers_ && nLayers_ <= 8);
         assert(0 <= nDCBits_ && nDCBits_ <= 4);

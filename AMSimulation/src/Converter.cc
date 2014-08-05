@@ -60,11 +60,11 @@ int Converter::bankToTxt(TString src, TString out, TString fmt) {
 
         if (fmt == "i") {
             for (unsigned l=0; l<MAX_NLAYERS; ++l) {
-                fout << Form("%u", superstripIds->at(l)) << " ";
+                fout << superstripIds->at(l) << " ";
             }
         } else if (fmt == "x") {
             for (unsigned l=0; l<MAX_NLAYERS; ++l) {
-                fout << Form("%#x", superstripIds->at(l)) << " ";
+                fout << std::hex << superstripIds->at(l) << " ";
             }
         } else if (fmt == "b") {
             for (unsigned l=0; l<MAX_NLAYERS; ++l) {
