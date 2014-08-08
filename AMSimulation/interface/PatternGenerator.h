@@ -115,6 +115,9 @@ class PatternGenerator {
 
     std::map<unsigned, std::vector<unsigned> > triggerTowerMap_;        // key: towerId, value: moduleIds in the tower
     std::map<unsigned, std::vector<unsigned> > triggerTowerReverseMap_; // key: moduleId, value: towerIds containing the module
+
+    float coverage_;
+    float coverage_count_;
 };
 
 #endif

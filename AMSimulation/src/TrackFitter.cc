@@ -106,11 +106,11 @@ int TrackFitter::makeTracks(TString out) {
         if (verbose_>1 && ievt%5000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, fitting: %7i", ievt, nKept, nPassed) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # roads: " << nroads << std::endl;
 
-        if (!nroads) {  // skip if no road
+//FIXME        if (!nroads) {  // skip if no road
             writer.fill(std::vector<TTTrack>());
             ++nKept;
             continue;
-        }
+//FIXME        }
 
         std::vector<TTTrack> tracks;
         tracks.reserve(200);

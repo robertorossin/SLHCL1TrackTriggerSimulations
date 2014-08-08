@@ -171,7 +171,7 @@ int PatternGenerator::makePatterns_map() {
     std::vector<pattern_type> patterns;
 
     int nRead = 0, nKept = 0;
-    float bankSize_f = 0., bankOldSize_f = -5000.;
+    float bankSize_f = 0., bankOldSize_f = -100000.;
 
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
@@ -179,9 +179,10 @@ int PatternGenerator::makePatterns_map() {
         chain_->GetEntry(ievt);
 
         unsigned nstubs = vb_modId->size();
-        if (verbose_>1 && ievt%5000==0) {
+        if (verbose_>1 && ievt%100000==0) {
             bankSize_f = allPatterns_map_.size();
-            std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, # patterns: %7.0f, coverage: %7.5f", ievt, nKept, bankSize_f, 1.0 - (bankSize_f - bankOldSize_f) / 5000.) << std::endl;
+            coverage_ = 1.0 - (bankSize_f - bankOldSize_f) / 100000.;
+            std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, # patterns: %7.0f, coverage: %7.5f", ievt, nKept, bankSize_f, coverage_) << std::endl;
             bankOldSize_f = bankSize_f;
         }
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
@@ -270,6 +271,7 @@ int PatternGenerator::makePatterns_map() {
         ++nRead;
     }
     if (verbose_)  std::cout << Info() << Form("Read: %7i, kept: %7i, # patterns: %7lu", nRead, nKept, allPatterns_map_.size()) << std::endl;
+    coverage_count_ = nKept;
 
     allPatterns_map_pairs_.reserve(allPatterns_map_.size());  // can cause bad_alloc
     allPatterns_map_pairs_.insert(allPatterns_map_pairs_.begin(), allPatterns_map_.begin(), allPatterns_map_.end());
@@ -325,8 +327,14 @@ int PatternGenerator::writePatterns_map(TString out) {
     // _________________________________________________________________________
     // Loop over all patterns
     count_type oldFrequency = MAX_FREQUENCY;
+    unsigned int integralFrequency = 0;
+    float sortedCoverage = 0;
     for (long long ievt=0; ievt<nentries; ++ievt) {
-        if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
+        if (verbose_>1 && ievt%100000==0) {
+            sortedCoverage = float(integralFrequency) / coverage_count_ * coverage_;
+            std::cout << Debug() << Form("... Writing event: %7lld, sorted coverage: %7.5f", ievt, sortedCoverage) << std::endl;
+        }
+
         superstripIds->clear();
 
         *frequency = allPatterns_map_pairs_.at(ievt).second;
@@ -334,6 +342,7 @@ int PatternGenerator::writePatterns_map(TString out) {
         // make sure it is indeed sorted
         assert(oldFrequency >= *frequency);
         oldFrequency = *frequency;
+        integralFrequency += *(frequency);
 
         if (*frequency < minFrequency_)
             break;
@@ -429,7 +438,7 @@ int PatternGenerator::makePatterns_fas() {
     std::vector<pattern_type>::iterator itpatt;
 
     int nRead = 0, nKept = 0;
-    float bankSize_f = 0., bankOldSize_f = -5000.;
+    float bankSize_f = 0., bankOldSize_f = -100000.;
 
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
@@ -437,9 +446,10 @@ int PatternGenerator::makePatterns_fas() {
         chain_->GetEntry(ievt);
 
         unsigned nstubs = vb_modId->size();
-        if (verbose_>1 && ievt%5000==0) {
+        if (verbose_>1 && ievt%100000==0) {
             bankSize_f = allPatterns_fas_.size();
-            std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, # patterns: %7.0f, coverage: %7.5f", ievt, nKept, bankSize_f, 1.0 - (bankSize_f - bankOldSize_f) / 5000.) << std::endl;
+            coverage_ = 1.0 - (bankSize_f - bankOldSize_f) / 100000.;
+            std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, # patterns: %7.0f, coverage: %7.5f", ievt, nKept, bankSize_f, coverage_) << std::endl;
             bankOldSize_f = bankSize_f;
         }
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
@@ -529,6 +539,7 @@ int PatternGenerator::makePatterns_fas() {
         ++nRead;
     }
     if (verbose_)  std::cout << Info() << Form("Read: %7i, kept: %7i, # patterns: %7u", nRead, nKept, allPatterns_fas_.size()) << std::endl;
+    coverage_count_ = nKept;
 
     // Sort by frequency
     allPatterns_fas_.sort();
@@ -571,8 +582,14 @@ int PatternGenerator::writePatterns_fas(TString out) {
     // _________________________________________________________________________
     // Loop over all patterns
     count_type oldFrequency = MAX_FREQUENCY;
+    unsigned int integralFrequency = 0;
+    float sortedCoverage = 0;
     for (long long ievt=0; ievt<nentries; ++ievt) {
-        if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
+        if (verbose_>1 && ievt%100000==0) {
+            sortedCoverage = float(integralFrequency) / coverage_count_ * coverage_;
+            std::cout << Debug() << Form("... Writing event: %7lld, sorted coverage: %7.5f", ievt, sortedCoverage) << std::endl;
+        }
+
         superstripIds->clear();
 
         const fas::lean_table3::return_type& ret = allPatterns_fas_.at(ievt);
@@ -581,6 +598,7 @@ int PatternGenerator::writePatterns_fas(TString out) {
         // make sure it is indeed sorted
         assert(oldFrequency >= *frequency);
         oldFrequency = *frequency;
+        integralFrequency += *(frequency);
 
         if (*frequency < minFrequency_)
             break;
