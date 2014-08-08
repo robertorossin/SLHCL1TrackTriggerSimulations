@@ -171,7 +171,7 @@ int PatternGenerator::makePatterns_map() {
     std::vector<pattern_type> patterns;
 
     int nRead = 0, nKept = 0;
-    float bankSize_f = 0., bankOldSize_f = -5000.;
+    float bankSize_f = 0., bankOldSize_f = -100000.;
 
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
@@ -179,9 +179,10 @@ int PatternGenerator::makePatterns_map() {
         chain_->GetEntry(ievt);
 
         unsigned nstubs = vb_modId->size();
-        if (verbose_>1 && ievt%5000==0) {
+        if (verbose_>1 && ievt%100000==0) {
             bankSize_f = allPatterns_map_.size();
-            std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, # patterns: %7.0f, coverage: %7.5f", ievt, nKept, bankSize_f, 1.0 - (bankSize_f - bankOldSize_f) / 5000.) << std::endl;
+            coverage_ = 1.0 - (bankSize_f - bankOldSize_f) / 100000.;
+            std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, # patterns: %7.0f, coverage: %7.5f", ievt, nKept, bankSize_f, coverage_) << std::endl;
             bankOldSize_f = bankSize_f;
         }
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
@@ -270,10 +271,17 @@ int PatternGenerator::makePatterns_map() {
         ++nRead;
     }
     if (verbose_)  std::cout << Info() << Form("Read: %7i, kept: %7i, # patterns: %7lu", nRead, nKept, allPatterns_map_.size()) << std::endl;
+    coverage_count_ = nKept;
 
-    allPatterns_map_pairs_.reserve(allPatterns_map_.size());
-    for (auto it: allPatterns_map_)
-        allPatterns_map_pairs_.push_back(it);
+    allPatterns_map_pairs_.reserve(allPatterns_map_.size());  // can cause bad_alloc
+    allPatterns_map_pairs_.insert(allPatterns_map_pairs_.begin(), allPatterns_map_.begin(), allPatterns_map_.end());
+
+    //for (std::map<pattern_type, unsigned>::const_iterator it = allPatterns_map_.begin();
+    //     it != allPatterns_map_.end(); ) {
+    //    allPatterns_map_pairs_.push_back(*it);
+    //    it = allPatterns_map_.erase(it);
+    //}
+
 
     // Clear the map and release memory
     std::map<pattern_type, unsigned> emptyMap;
@@ -285,10 +293,9 @@ int PatternGenerator::makePatterns_map() {
     assert(allPatterns_map_pairs_.front().second <= MAX_FREQUENCY);
 
     if (verbose_>2) {
-        unsigned i=0;
-        for (auto it : allPatterns_map_pairs_) {
-            std::cout << Debug() << "... patt: " << i << "  " << it.first << " freq: " << it.second << std::endl;
-            ++i;
+        for (unsigned i=0; i<allPatterns_map_pairs_.size(); ++i) {
+            const auto& pair = allPatterns_map_pairs_.at(i);
+            std::cout << Debug() << "... patt: " << i << "  " << pair.first << " freq: " << pair.second << std::endl;
         }
     }
 
@@ -320,8 +327,14 @@ int PatternGenerator::writePatterns_map(TString out) {
     // _________________________________________________________________________
     // Loop over all patterns
     count_type oldFrequency = MAX_FREQUENCY;
+    unsigned int integralFrequency = 0;
+    float sortedCoverage = 0;
     for (long long ievt=0; ievt<nentries; ++ievt) {
-        if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
+        if (verbose_>1 && ievt%100000==0) {
+            sortedCoverage = float(integralFrequency) / coverage_count_ * coverage_;
+            std::cout << Debug() << Form("... Writing event: %7lld, sorted coverage: %7.5f", ievt, sortedCoverage) << std::endl;
+        }
+
         superstripIds->clear();
 
         *frequency = allPatterns_map_pairs_.at(ievt).second;
@@ -329,6 +342,7 @@ int PatternGenerator::writePatterns_map(TString out) {
         // make sure it is indeed sorted
         assert(oldFrequency >= *frequency);
         oldFrequency = *frequency;
+        integralFrequency += *(frequency);
 
         if (*frequency < minFrequency_)
             break;
@@ -336,6 +350,261 @@ int PatternGenerator::writePatterns_map(TString out) {
         const pattern_type& patt = allPatterns_map_pairs_.at(ievt).first;
         for (unsigned i=0; i<patt.size(); ++i) {
             superstripIds->push_back(patt.at(i));
+        }
+
+        ttree->Fill();
+    }
+    assert(ttree->GetEntries() == nentries);
+
+    tfile->Write();
+    delete ttree;
+    delete tfile;
+    return 0;
+}
+
+
+// _____________________________________________________________________________
+// Make the patterns
+int PatternGenerator::makePatterns_fas() {
+    long long nentries = chain_->GetEntries();
+    if (nentries <= 0) {
+        std::cout << Error() << "Input source has zero entry." << std::endl;
+        return 1;
+    }
+    if (nEvents_ > nentries)
+        nEvents_ = nentries;
+
+    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events." << std::endl;
+
+    // For reading
+    //std::vector<float> *          vb_x          = 0;
+    //std::vector<float> *          vb_y          = 0;
+    //std::vector<float> *          vb_z          = 0;
+    //std::vector<float> *          vb_r          = 0;
+    //std::vector<float> *          vb_phi        = 0;
+    std::vector<float> *          vb_coordx     = 0;
+    std::vector<float> *          vb_coordy     = 0;
+    std::vector<float> *          vb_roughPt    = 0;
+    std::vector<unsigned> *       vb_modId      = 0;
+    std::vector<unsigned> *       vb_nhits      = 0;
+    //std::vector<float> *          vb_simPt      = 0;
+    //std::vector<float> *          vb_simEta     = 0;
+    //std::vector<float> *          vb_simPhi     = 0;
+    std::vector<int> *            vb_trkId      = 0;
+
+    chain_->SetBranchStatus("*"                 , 0);
+    //chain_->SetBranchStatus("TTStubs_x"         , 1);
+    //chain_->SetBranchStatus("TTStubs_y"         , 1);
+    //chain_->SetBranchStatus("TTStubs_z"         , 1);
+    //chain_->SetBranchStatus("TTStubs_r"         , 1);
+    //chain_->SetBranchStatus("TTStubs_phi"       , 1);
+    chain_->SetBranchStatus("TTStubs_coordx"    , 1);
+    chain_->SetBranchStatus("TTStubs_coordy"    , 1);
+    chain_->SetBranchStatus("TTStubs_roughPt"   , 1);
+    chain_->SetBranchStatus("TTStubs_modId"     , 1);
+    chain_->SetBranchStatus("TTStubs_nhits"     , 1);
+    //chain_->SetBranchStatus("TTStubs_simPt"     , 1);
+    //chain_->SetBranchStatus("TTStubs_simEta"    , 1);
+    //chain_->SetBranchStatus("TTStubs_simPhi"    , 1);
+    chain_->SetBranchStatus("TTStubs_trkId"     , 1);
+
+    //chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
+    //chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
+    //chain_->SetBranchAddress("TTStubs_z"        , &(vb_z));
+    //chain_->SetBranchAddress("TTStubs_r"        , &(vb_r));
+    //chain_->SetBranchAddress("TTStubs_phi"      , &(vb_phi));
+    chain_->SetBranchAddress("TTStubs_coordx"   , &(vb_coordx));
+    chain_->SetBranchAddress("TTStubs_coordy"   , &(vb_coordy));
+    chain_->SetBranchAddress("TTStubs_roughPt"  , &(vb_roughPt));
+    chain_->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
+    chain_->SetBranchAddress("TTStubs_nhits"    , &(vb_nhits));
+    //chain_->SetBranchAddress("TTStubs_simPt"    , &(vb_simPt));
+    //chain_->SetBranchAddress("TTStubs_simEta"   , &(vb_simEta));
+    //chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
+    chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
+
+    unsigned allocation = nEvents_ * 2;
+    if (po.excessStrategy == 0)
+        allocation = nEvents_;
+    allPatterns_fas_.reserve(allocation);
+
+    // _________________________________________________________________________
+    // Loop over all events
+
+    // Containers are declared outside the event loop to avoid memory allocations
+    std::vector<id_type> superstripLayers;
+    std::vector<addr_type> superstrips;
+    std::vector<pattern_type> patterns;
+    std::vector<pattern_type>::iterator itpatt;
+
+    int nRead = 0, nKept = 0;
+    float bankSize_f = 0., bankOldSize_f = -100000.;
+
+    for (long long ievt=0; ievt<nEvents_; ++ievt) {
+        Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
+        if (local_entry < 0)  break;
+        chain_->GetEntry(ievt);
+
+        unsigned nstubs = vb_modId->size();
+        if (verbose_>1 && ievt%100000==0) {
+            bankSize_f = allPatterns_fas_.size();
+            coverage_ = 1.0 - (bankSize_f - bankOldSize_f) / 100000.;
+            std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, # patterns: %7.0f, coverage: %7.5f", ievt, nKept, bankSize_f, coverage_) << std::endl;
+            bankOldSize_f = bankSize_f;
+        }
+        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
+
+        if (!nstubs) {  // skip if no stub
+            continue;
+        }
+
+        // _____________________________________________________________________
+        // Start generating patterns
+        bool keep = true;
+
+        superstripLayers.clear();
+        superstrips.clear();
+        patterns.clear();
+
+        // Check min # of layers
+        bool require = (nstubs >= MIN_NGOODSTUBS);
+        if (!require)
+            keep = false;
+
+        // Loop over reconstructed stubs
+        for (unsigned l=0; (l<nstubs) && keep; ++l) {
+            unsigned moduleId = vb_modId->at(l);
+            // If there is a valid hit, but moduleId does not exist in any
+            // trigger tower (due to cables, connections, or just too forward),
+            // we drop them
+            if (po.requireTriggerTower && triggerTowerReverseMap_.find(moduleId) == triggerTowerReverseMap_.end())
+                continue;
+
+            unsigned lay = decodeLayer(moduleId);
+            unsigned count = std::count(superstripLayers.begin(), superstripLayers.end(), lay);
+            if (count != 0) {
+                std::cout << Error() << "There should be only one stub in any layer" << std::endl;
+                return 1;
+            }
+            superstripLayers.push_back(lay);
+
+            float coordx = vb_coordx->at(l);
+            float coordy = vb_coordy->at(l);
+
+            // Use half-strip unit
+            id_type col = halfStripRound(coordy);
+            id_type row = halfStripRound(coordx);
+
+            // Find superstrip address
+            col = arbiter_ -> subladder(moduleId, col);
+            row = arbiter_ -> submodule(moduleId, row);
+            addr_type ssId = encodeSuperstripId(moduleId, col, row);
+
+            superstrips.push_back(ssId);
+
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << " trkId: " << vb_trkId->at(l) << std::endl;
+        }
+
+        // _____________________________________________________________________
+        // Build the patterns
+        if (!superstrips.empty()) {
+            std::sort(superstrips.begin(), superstrips.end(), std::less<addr_type>());  // sort first
+            patterns = stitcher_ -> stitch(superstrips);
+
+            // Remove patterns that are not within any trigger tower
+            if (po.requireTriggerTower) {
+                pattern_type emptyPattern;
+                for (unsigned i=0; i<patterns.size(); ++i) {
+                    //assert(patterns.at(i) != emptyPattern);
+                    if (!isWithinTriggerTower(patterns.at(i)) )
+                        patterns.at(i).fill(0);
+                }
+                patterns.erase(std::remove(patterns.begin(), patterns.end(), emptyPattern));
+            }
+        }
+
+        if (patterns.empty())
+            keep = false;
+
+        if (keep) {
+            if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # patterns: " << patterns.size() << std::endl;
+
+            for (unsigned i=0; i<patterns.size(); ++i) {
+                itpatt = patterns.begin() + i;
+                allPatterns_fas_.insert(itpatt->data(), itpatt->data() + itpatt->size());
+                if (verbose_>2)  std::cout << Debug() << "... ... patt: " << i << "  " << patterns.at(i) << std::endl;
+            }
+            ++nKept;
+        }
+        ++nRead;
+    }
+    if (verbose_)  std::cout << Info() << Form("Read: %7i, kept: %7i, # patterns: %7u", nRead, nKept, allPatterns_fas_.size()) << std::endl;
+    coverage_count_ = nKept;
+
+    // Sort by frequency
+    allPatterns_fas_.sort();
+    //assert(allPatterns_fas_.at(0).count <= MAX_FREQUENCY);
+
+    if (verbose_>2) {
+        for (unsigned i=0; i<allPatterns_fas_.size(); ++i) {
+            const fas::lean_table3::return_type& ret = allPatterns_fas_.at(i);
+            std::cout << Debug() << "... patt: " << i << "  ";
+            std::copy(ret.begin, ret.end, std::ostream_iterator<addr_type>(std::cout, " "));
+            std::cout << " freq: " << ret.count << std::endl;
+        }
+    }
+
+    if (verbose_)  std::cout << Info() << "Generated " << allPatterns_fas_.size() << " patterns, highest freq: " << allPatterns_fas_.at(0).count << std::endl;
+
+    return 0;
+}
+
+
+// _____________________________________________________________________________
+// Output patterns into a TTree
+int PatternGenerator::writePatterns_fas(TString out) {
+    if (!out.EndsWith(".root")) {
+        std::cout << Error() << "Output filename must be .root" << std::endl;
+        return 1;
+    }
+
+    const long long nentries = allPatterns_fas_.size();
+    if (verbose_)  std::cout << Info() << "Recreating " << out << " with " << nentries << " patterns." << std::endl;
+    TFile* tfile = TFile::Open(out, "RECREATE");
+    TTree* ttree = new TTree(bankName_, "");
+
+    std::auto_ptr<count_type>                 frequency       (new count_type(0));
+    std::auto_ptr<std::vector<addr_type> >    superstripIds   (new std::vector<addr_type>());
+
+    ttree->Branch("frequency"       , &(*frequency));
+    ttree->Branch("superstripIds"   , &(*superstripIds));
+
+    // _________________________________________________________________________
+    // Loop over all patterns
+    count_type oldFrequency = MAX_FREQUENCY;
+    unsigned int integralFrequency = 0;
+    float sortedCoverage = 0;
+    for (long long ievt=0; ievt<nentries; ++ievt) {
+        if (verbose_>1 && ievt%100000==0) {
+            sortedCoverage = float(integralFrequency) / coverage_count_ * coverage_;
+            std::cout << Debug() << Form("... Writing event: %7lld, sorted coverage: %7.5f", ievt, sortedCoverage) << std::endl;
+        }
+
+        superstripIds->clear();
+
+        const fas::lean_table3::return_type& ret = allPatterns_fas_.at(ievt);
+        *frequency = ret.count;
+
+        // make sure it is indeed sorted
+        assert(oldFrequency >= *frequency);
+        oldFrequency = *frequency;
+        integralFrequency += *(frequency);
+
+        if (*frequency < minFrequency_)
+            break;
+
+        for (addr_type * it = ret.begin; it != ret.end; ++it) {
+            superstripIds->push_back(*it);
         }
 
         ttree->Fill();
@@ -376,13 +645,25 @@ int PatternGenerator::run(TString out, TString src, TString layout) {
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = makePatterns_map();
-    if (exitcode)  return exitcode;
-    Timing();
+    bool use_fas = true;
+    if (use_fas) {
+        exitcode = makePatterns_fas();
+        if (exitcode)  return exitcode;
+        Timing();
 
-    exitcode = writePatterns_map(out);
-    if (exitcode)  return exitcode;
-    Timing();
+        exitcode = writePatterns_fas(out);
+        if (exitcode)  return exitcode;
+        Timing();
+
+    } else {
+        exitcode = makePatterns_map();
+        if (exitcode)  return exitcode;
+        Timing();
+
+        exitcode = writePatterns_map(out);
+        if (exitcode)  return exitcode;
+        Timing();
+    }
 
     chain_->Reset();
     return exitcode;

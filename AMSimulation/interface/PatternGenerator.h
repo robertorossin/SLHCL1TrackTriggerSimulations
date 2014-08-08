@@ -8,7 +8,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripStitcher.h"
 using namespace slhcl1tt;
 
-#include "fas/lean_table.h"
+#include "fas/lean_table3.h"
 using namespace fas;
 
 #include "TFile.h"
@@ -29,7 +29,8 @@ class PatternGenerator {
     : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits), nFakeSuperstrips_(po.nFakeSuperstrips),
       bankName_("patternBank"),
       nEvents_(999999999), minFrequency_(1),
-      verbose_(1) {
+      verbose_(1),
+      allPatterns_fas_(0,0) {
 
         assert(3 <= nLayers_ && nLayers_ <= 8);
         assert(0 <= nDCBits_ && nDCBits_ <= 4);
@@ -46,7 +47,7 @@ class PatternGenerator {
             arbiter_ = new SuperstripArbiter(po.subLadderSize, po.subModuleSize);
 
         // Build a pattern from a given list of superstrips
-        stitcher_ = new SuperstripStitcher(nLayers_, nFakeSuperstrips_);
+        stitcher_ = new SuperstripStitcher(nLayers_, nFakeSuperstrips_, po.excessStrategy);
     }
 
     // Destructor
@@ -72,8 +73,8 @@ class PatternGenerator {
     int makePatterns_map();
     int writePatterns_map(TString out);
 
-    int makePatterns();  // CUIDADO: not implemented
-    int writePatterns(TString out);
+    int makePatterns_fas();
+    int writePatterns_fas(TString out);
 
     // Main driver
     int run(TString out, TString src, TString layout);
@@ -100,20 +101,23 @@ class PatternGenerator {
     int verbose_;
 
     // Operators
-    SuperstripArbiter* arbiter_;
-    SuperstripStitcher* stitcher_;
+    SuperstripArbiter  * arbiter_;
+    SuperstripStitcher * stitcher_;
 
     // Containers
     TChain * chain_;
     std::map<pattern_type, unsigned> allPatterns_map_;  // using std::map approach
     std::vector<std::pair<pattern_type, unsigned> > allPatterns_map_pairs_;
-    fas::lean_table allPatterns_;                       // using fas::lean_table approach
+    fas::lean_table3 allPatterns_fas_;                  // using fas::lean_table3 approach
 
     // Maps
     std::map<unsigned, unsigned> layerMap_;  // UNUSED: defines layer merging
 
     std::map<unsigned, std::vector<unsigned> > triggerTowerMap_;        // key: towerId, value: moduleIds in the tower
     std::map<unsigned, std::vector<unsigned> > triggerTowerReverseMap_; // key: moduleId, value: towerIds containing the module
+
+    float coverage_;
+    float coverage_count_;
 };
 
 #endif

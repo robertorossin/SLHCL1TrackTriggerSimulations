@@ -30,7 +30,6 @@ void SuperstripArbiter::init() {
     }
 }
 
-static id_type index;
 id_type SuperstripArbiter::subladder(id_type moduleId, id_type col, bool isHalfStrip) const {
     if (isHalfStrip)
         col /= 2;
@@ -38,10 +37,10 @@ id_type SuperstripArbiter::subladder(id_type moduleId, id_type col, bool isHalfS
         col *= 16;
 
     if (isBarrelModule(moduleId)) {
-        index = decodeLayer(moduleId) - 5;
+        id_type index = decodeLayer(moduleId) - 5;
         col /= subLadderSize_.at(index);
     } else {
-        index = decodeLadder(moduleId);
+        id_type index = decodeLadder(moduleId);
         col /= subLadderECSize_.at(index);
     }
     return col;
@@ -52,10 +51,10 @@ id_type SuperstripArbiter::submodule(id_type moduleId, id_type row, bool isHalfS
         row /= 2;
 
     if (isBarrelModule(moduleId)) {
-        index = decodeLayer(moduleId) - 5;
+        id_type index = decodeLayer(moduleId) - 5;
         row /= subModuleSize_.at(index);
     } else {
-        index = decodeLadder(moduleId);
+        id_type index = decodeLadder(moduleId);
         row /= subModuleECSize_.at(index);
     }
     return row;

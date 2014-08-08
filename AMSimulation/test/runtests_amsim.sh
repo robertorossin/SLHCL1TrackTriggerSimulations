@@ -25,3 +25,6 @@ PYTHONTEST=${CMSSW_BASE}/src/SLHCL1TrackTriggerSimulations/AMSimulation/python/t
 (amsim -W -i test_ntuple.txt -o results.root --roads roads.root --tracks tracks.root -n 100 --timing) || die 'Failure during ntuple writing' $?
 (python ${PYTHONTEST}/testWriting.py ${LOCAL_TOP_DIR}/results.root) || die 'Failure using testWriting.py' $?
 
+(amconvert -B -i patternBank.root -o patternBank.txt -n 100 --format x) || die 'Failure during bank conversion' $?
+CHARCOUNT=`wc -m < "${LOCAL_TOP_DIR}/patternBank.txt"`
+[ "${CHARCOUNT}" -eq 4602 ] || die 'Failure checking the character counts' $?

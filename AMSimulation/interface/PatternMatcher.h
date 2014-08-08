@@ -8,7 +8,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripHasher.h"
 using namespace slhcl1tt;
 
-#include "fas/lean_lut.h"
+#include "fas/lean_lut2.h"
 using namespace fas;
 
 #include "TFile.h"
@@ -30,7 +30,8 @@ class PatternMatcher {
     : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits),
       bankName_("patternBank"), prefixRoad_("AMTTRoads_"), suffix_(""),
       nEvents_(999999999), minFrequency_(1), maxPatterns_(999999999), maxRoads_(999999999), maxHits_(999999999),
-      verbose_(1) {
+      verbose_(1),
+      inputPatterns_fas_(0,0) {
 
         assert(3 <= nLayers_ && nLayers_ <= 8);
         assert(0 <= nDCBits_ && nDCBits_ <= 4);
@@ -73,8 +74,8 @@ class PatternMatcher {
     int readPatterns_vector(TString src);
     int makeRoads_vector(TString out);
 
-    int readPatterns(TString src);  // CUIDADO: not implemented
-    int makeRoads(TString out);
+    int readPatterns_fas(TString src);
+    int makeRoads_fas(TString out);
 
     // Main driver
     int run(TString out, TString src, TString bank);
@@ -105,14 +106,14 @@ class PatternMatcher {
     int verbose_;
 
     // Operators
-    SuperstripArbiter* arbiter_;
-    SuperstripHasher*  hasher_;
+    SuperstripArbiter * arbiter_;
+    SuperstripHasher  * hasher_;
 
     // Containers
     TChain * chain_;
 
-    std::vector<pattern_type> inputPatterns_vector_;
-    fas::lean_lut inputPatterns_;
+    std::vector<pattern_type> inputPatterns_vector_;  // using std::vector approach
+    fas::lean_lut2 inputPatterns_fas_;                // using fas::lean_lut2 approach
 };
 
 #endif

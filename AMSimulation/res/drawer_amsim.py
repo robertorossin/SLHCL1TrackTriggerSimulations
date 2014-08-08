@@ -6,7 +6,7 @@ import os
 # ______________________________________________________________________________
 # Global
 
-latex.SetTextSize(0.04)
+latex.SetTextSize(0.036)
 
 line1 = TLine()
 line1.SetLineColor(40)
@@ -16,39 +16,37 @@ line1.SetLineStyle(2)
 # Configurations
 
 sections = {}
-sections["coverage_vs_pt"] = True
-sections["coverage_vs_eta"] = True
-sections["coverage_vs_eta_phi"] = False
+sections["coverage_vs_pt"     ] = True
+sections["coverage_vs_eta"    ] = True
+sections["coverage_vs_eta_phi"] = True
 
 drawerInit = DrawerInit()
 chain = TChain("ntupler/tree", "")
 chain_val = TChain("ntupler/tree", "")
 
-EOS = "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC10_results/"
-RES = "SingleMuPlusMinus_OneOverPt_vz0_%s"
+EOS = "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_results/"
+RES = "SingleMuPlusMinus_sp16_%s"
 settings = [
-    ("ss128_20140601"     , 17551236),
-    ("ss64_20140601"      , 22013434),
-    ("ss32_20140601"      , 24416249),
-    ("ss16_20140601"      , 25350905),
-    ("ss8_20140601"       , 25642816),
-    ("ss32_f1_20140601"   , 27323696),
-    ("ss32_f2_20140601"   , 27477220),
-    ("ss32_d1_20140601"   , 22013434),
-    ("ss32_d2_20140601"   , 17551236),
-    ("ss32_d3_20140601"   , 11722132),
-    ("ss128_m1_20140601"  , 17551236),
-    ("ss64_m1_20140601"   , 22013434),
-    ("ss32_m1_20140601"   , 24416249),
-    ("ss16_m1_20140601"   , 25350905),
-    ("ss8_m1_20140601"    , 25642816),
-    ("ss32_f1_m1_20140601", 27323696),
-    ("ss32_f2_m1_20140601", 27477220),
-    ("ss32_d1_m1_20140601", 22013434),
-    ("ss32_d2_m1_20140601", 17551236),
-    ("ss32_d3_m1_20140601", 11722132),
-    ("ss32_m2_20140601"   , 24416249),
+    ("ss1024_20140714"    ,   8246923),
+    ("ss512_20140714"     ,  17990289),
+    ("ss256_20140714"     ,  39435020),
+    ("ss128_20140714"     ,  76364339),
+    ("ss64_20140714"      , 125888937),
+    ("ss32_20140714"      , 178122282),
 ]
+
+RES_barrel = "SingleMuMinus_Barrel_sp16_%s"
+settings_barrel = [
+    ("ss1024_20140714"    ,   404111),
+    ("ss512_20140714"     ,   868186),
+    ("ss256_20140714"     ,  1991642),
+    ("ss128_20140714"     ,  4679628),
+    ("ss64_20140714"      , 10033316),
+    ("ss32_20140714"      , 19229845),
+]
+
+RES = RES_barrel
+settings = settings_barrel
 
 imgdir = "figures_amsim/"
 if not imgdir.endswith("/"):  imgdir += "/"
@@ -125,8 +123,8 @@ if sections["coverage_vs_pt"]:
         tree = chain
 
         tree.Project("prof0", "(@AMTTRoads_patternIds.size()!=0 && Alt$(AMTTRoads_patternIds[0],-1)>0):genParts_pt[0]", "abs(genParts_eta[0])<0.8", "prof goff")
-        tree.Project("prof1", "(@AMTTRoads_patternIds.size()!=0 && Alt$(AMTTRoads_patternIds[0],-1)>0):genParts_pt[0]", "abs(genParts_eta[0])<1.3", "prof goff")
-        tree.Project("prof2", "(@AMTTRoads_patternIds.size()!=0 && Alt$(AMTTRoads_patternIds[0],-1)>0):genParts_pt[0]", "abs(genParts_eta[0])<2.2", "prof goff")
+        tree.Project("prof1", "(@AMTTRoads_patternIds.size()!=0 && Alt$(AMTTRoads_patternIds[0],-1)>0):genParts_pt[0]", "0.8<=abs(genParts_eta[0]) && abs(genParts_eta[0])<1.5", "prof goff")
+        tree.Project("prof2", "(@AMTTRoads_patternIds.size()!=0 && Alt$(AMTTRoads_patternIds[0],-1)>0):genParts_pt[0]", "1.5<=abs(genParts_eta[0]) && abs(genParts_eta[0])<2.2", "prof goff")
 
         # Validation
         EOS_val = EOS.replace("_results","_results_val")
@@ -138,16 +136,16 @@ if sections["coverage_vs_pt"]:
 
         drawProf()
 
-        leg1 = TLegend(0.18,0.78,0.60,0.92)
+        leg1 = TLegend(0.42,0.22,0.93,0.39)
         leg1.SetFillStyle(0); leg1.SetLineColor(0); leg1.SetShadowColor(0); leg1.SetBorderSize(0)
-        leg1.AddEntry(histos["prof0"], "Single muon |#eta| < 0.8", "lp")
-        leg1.AddEntry(histos["prof1"], "Single muon |#eta| < 1.3", "lp")
-        leg1.AddEntry(histos["prof2"], "Single muon |#eta| < 2.2", "lp")
+        leg1.AddEntry(histos["prof0"], "Single muon 0.0 #leq |#eta| < 0.8", "lp")
+        leg1.AddEntry(histos["prof1"], "Single muon 0.8 #leq |#eta| < 1.5", "lp")
+        leg1.AddEntry(histos["prof2"], "Single muon 1.5 #leq |#eta| < 2.2", "lp")
         leg1.Draw()
 
-        latex.DrawLatex(0.2, 0.74, "%s [%.1fM bank]" % (sett[:-9].replace("_", " "),1e-6*sett1))
+        latex.DrawLatex(0.55, 0.185, "%s [%.1fM bank]" % (sett[:-9].replace("_", " "),1e-6*sett1))
 
-        save(imgdir, "coverage_vs_pt_%s" % sett)
+        save(imgdir, "coverage_vs_pt_%s" % (RES % sett))
 
 
 if sections["coverage_vs_eta"]:
@@ -166,9 +164,9 @@ if sections["coverage_vs_eta"]:
             chain.Add(f)
         tree = chain
 
-        tree.Project("prof0", "(@AMTTRoads_patternIds.size()!=0 && Alt$(AMTTRoads_patternIds[0],-1)>0):genParts_eta[0]", "genParts_pt[0]>20", "prof goff")
-        tree.Project("prof1", "(@AMTTRoads_patternIds.size()!=0 && Alt$(AMTTRoads_patternIds[0],-1)>0):genParts_eta[0]", "genParts_pt[0]>5", "prof goff")
-        tree.Project("prof2", "(@AMTTRoads_patternIds.size()!=0 && Alt$(AMTTRoads_patternIds[0],-1)>0):genParts_eta[0]", "genParts_pt[0]>2", "prof goff")
+        tree.Project("prof0", "(@AMTTRoads_patternIds.size()!=0 && Alt$(AMTTRoads_patternIds[0],-1)>0):genParts_eta[0]", "20<=genParts_pt[0]", "prof goff")
+        tree.Project("prof1", "(@AMTTRoads_patternIds.size()!=0 && Alt$(AMTTRoads_patternIds[0],-1)>0):genParts_eta[0]", "5<=genParts_pt[0] && genParts_pt[0]<20", "prof goff")
+        tree.Project("prof2", "(@AMTTRoads_patternIds.size()!=0 && Alt$(AMTTRoads_patternIds[0],-1)>0):genParts_eta[0]", "2<=genParts_pt[0] && genParts_pt[0]<5", "prof goff")
 
         # Validation
         EOS_val = EOS.replace("_results","_results_val")
@@ -176,20 +174,20 @@ if sections["coverage_vs_eta"]:
         for f in infiles_val:
             chain_val.Add(f)
         tree_val = chain_val
-        tree_val.Project("prof00", "(@AMTTRoads_patternIds.size()!=0 && Alt$(AMTTRoads_patternIds[0],-1)>0):genParts_eta[0]", "genParts_pt[0]>20", "prof goff")
+        tree_val.Project("prof00", "(@AMTTRoads_patternIds.size()!=0 && Alt$(AMTTRoads_patternIds[0],-1)>0):genParts_eta[0]", "20<=genParts_pt[0]", "prof goff")
 
         drawProf()
 
-        leg1 = TLegend(0.18,0.78,0.60,0.92)
+        leg1 = TLegend(0.42,0.22,0.93,0.39)
         leg1.SetFillStyle(0); leg1.SetLineColor(0); leg1.SetShadowColor(0); leg1.SetBorderSize(0)
-        leg1.AddEntry(histos["prof0"], "Single muon p_{T} > 20", "lp")
-        leg1.AddEntry(histos["prof1"], "Single muon p_{T} > 5", "lp")
-        leg1.AddEntry(histos["prof2"], "Single muon p_{T} > 2", "lp")
+        leg1.AddEntry(histos["prof0"], "Single muon 20 #leq p_{T} < #infty GeV", "lp")
+        leg1.AddEntry(histos["prof1"], "Single muon   5 #leq p_{T} < 20 GeV", "lp")
+        leg1.AddEntry(histos["prof2"], "Single muon   2 #leq p_{T} <   5 GeV", "lp")
         leg1.Draw()
 
-        latex.DrawLatex(0.2, 0.74, "%s [%.1fM bank]" % (sett[:-9].replace("_", " "),1e-6*sett1))
+        latex.DrawLatex(0.55, 0.185, "%s [%.1fM bank]" % (sett[:-9].replace("_", " "),1e-6*sett1))
 
-        save(imgdir, "coverage_vs_eta_%s" % sett)
+        save(imgdir, "coverage_vs_eta_%s" % (RES % sett))
 
 # ______________________________________________________________________________
 # Coverage (2D)
@@ -220,7 +218,7 @@ if sections["coverage_vs_eta_phi"]:
         h.SetMinimum(0)
         draw2D([h], stats=False)
 
-        latex.DrawLatex(0.2, 0.78, "Single muon p_{T} > 20")
-        latex.DrawLatex(0.2, 0.74, "%s [%.1fM bank]" % (sett[:-9].replace("_", " "),1e-6*sett1))
+        latex.DrawLatex(0.55, 0.22, "Single muon p_{T} > 20 GeV")
+        latex.DrawLatex(0.55, 0.185, "%s [%.1fM bank]" % (sett[:-9].replace("_", " "),1e-6*sett1))
 
-        save(imgdir, "coverage_vs_eta_phi_%s" % sett)
+        save(imgdir, "coverage_vs_eta_phi_%s" % (RES % sett))

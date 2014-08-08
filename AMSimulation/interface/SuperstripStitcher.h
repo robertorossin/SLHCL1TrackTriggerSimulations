@@ -11,8 +11,8 @@ namespace slhcl1tt {
 class SuperstripStitcher {
   public:
     // Constructors
-    SuperstripStitcher(int nLayers, int nFakeSuperstrips)
-    : nLayers_(nLayers), nFakeSuperstrips_(nFakeSuperstrips) {
+    SuperstripStitcher(int nLayers, int nFakeSuperstrips, int strategy)
+    : nLayers_(nLayers), nFakeSuperstrips_(nFakeSuperstrips), strategy_(strategy) {
         init();
     }
 
@@ -36,11 +36,15 @@ class SuperstripStitcher {
     // Member data
     const unsigned nLayers_;
     const unsigned nFakeSuperstrips_;
+    const unsigned strategy_;
 
     // Precomputed values
     std::vector<unsigned> seven_choose_six_;
     std::vector<unsigned> eight_choose_six_;
     std::vector<unsigned> eight_choose_seven_;
+
+    // Make a map to merge layers in barrel and in endcap
+    std::map<unsigned, unsigned> layer_map_;
 };
 
 }  // namespace slhcl1tt
