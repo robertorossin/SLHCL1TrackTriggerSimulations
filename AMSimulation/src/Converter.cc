@@ -74,9 +74,9 @@ int Converter::bankToTxt(TString src, TString out, TString fmt) {
             unsigned ssId, moduleId, col, row;
             for (unsigned l=0; l<MAX_NLAYERS; ++l) {
                 ssId = superstripIds->at(l);
-                moduleId = (ssId >> 14) & 0x3FFFF;
-                col      = (ssId >> 9 ) & 0x1F;
-                row      = (ssId >> 0 ) & 0x1FF;
+                moduleId = (ssId >> 10) & 0x3FFF;
+                col      = (ssId >>  7) & 0x7;
+                row      = (ssId >>  0) & 0x7F;
 
                 fout << Form("(%6u,%2u,%4u)", moduleId, col, row) << " ";
             }

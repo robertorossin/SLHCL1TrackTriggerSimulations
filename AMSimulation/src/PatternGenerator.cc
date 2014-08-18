@@ -426,10 +426,8 @@ int PatternGenerator::makePatterns_fas() {
     //chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
     chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
 
-    unsigned allocation = nEvents_ * 2;
-    if (po.excessStrategy == 0)
-        allocation = nEvents_;
-    allPatterns_fas_.reserve(allocation);
+    // Allocate memory
+    allPatterns_fas_.reserve(nEvents_);
 
     // _________________________________________________________________________
     // Loop over all events
@@ -474,16 +472,17 @@ int PatternGenerator::makePatterns_fas() {
         if (!require)
             keep = false;
 
-        // Loop over reconstructed stubs
+        // Quick loop over reconstructed stubs
+        id_type moduleId, lay, lad, mod, col, row;  // declare the usual suspects
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
-            id_type moduleId = vb_modId->at(l);
-            // If there is a valid hit, but moduleId does not exist in any
+            moduleId = vb_modId->at(l);
+            // If there is a valid stub, but moduleId does not exist in any
             // trigger tower (due to cables, connections, or just too forward),
-            // we drop them
+            // we drop it
             if (po.requireTriggerTower && triggerTowerReverseMap_.find(moduleId) == triggerTowerReverseMap_.end())
                 continue;
 
-            unsigned lay = decodeLayer(moduleId);
+            lay = decodeLayer(moduleId);
             unsigned count = std::count(stubLayers.begin(), stubLayers.end(), lay);
             if (count != 0) {
                 std::cout << Error() << "There should be only one stub in any layer" << std::endl;
@@ -495,6 +494,7 @@ int PatternGenerator::makePatterns_fas() {
         // Decide how to lay out the pattern
         //const std::vector<unsigned>& indices = stitcher_ -> stitch(stubLayers);
         const std::vector<unsigned>& indices = stitcher_ -> stitch_layermap(stubLayers);
+
         if (indices.empty())
             keep = false;
 
@@ -507,34 +507,37 @@ int PatternGenerator::makePatterns_fas() {
         }
         assert(!keep || indices.size() == nLayers_);
 
+        // Loop over reconstructed stubs
+        // Superstrips are encoded here
         for (unsigned k=0; (k<nLayers_) && keep; ++k) {
-            // Fake superstrips
+            // Fake superstrip
             if (indices.at(k) == 999999) {
-                patt.at(k) = fakeSuperstripId_;
+                // Arbitrarily put fake superstrip in layer 27
+                patt.at(k) = arbiter_ -> superstrip(27, 0, 0, 0, 0);
                 continue;
             }
 
-            assert(k < nstubs);
+            // Real superstrip
+            assert(k < nstubs && indices.at(k) < nstubs);
             unsigned l = indices.at(k);
 
-            id_type moduleId = vb_modId->at(l);
-            float coordx = vb_coordx->at(l);
-            float coordy = vb_coordy->at(l);
+            // Break moduleId into lay, lad, mod
+            moduleId = vb_modId->at(l);
+            lay = decodeLayer(moduleId);
+            lad = decodeLadder(moduleId);
+            mod = decodeModule(moduleId);
 
-            // Use half-strip unit
-            id_type col = halfStripRound(coordy);
-            id_type row = halfStripRound(coordx);
+            // col <-- coordy, row <-- coordx
+            // use half-strip unit
+            col = halfStripRound(vb_coordy->at(l));
+            row = halfStripRound(vb_coordx->at(l));
 
             // Find superstrip address
-            col = arbiter_ -> subladder(moduleId, col);
-            row = arbiter_ -> submodule(moduleId, row);
-            addr_type ssId = encodeSuperstripId(moduleId, col, row);
+            addr_type ssId = arbiter_ -> superstrip(lay, lad, mod, col, row);
             patt.at(k) = ssId;
 
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << " trkId: " << vb_trkId->at(l) << std::endl;
         }
-
-        assert (!keep || patt != pattEmpty);
 
         if (keep && po.requireTriggerTower) {
             // Remove patterns that are not within any trigger tower
@@ -542,13 +545,15 @@ int PatternGenerator::makePatterns_fas() {
                 keep = false;
         }
 
+        assert (!keep || patt != pattEmpty);
+
         // _____________________________________________________________________
         // Insert pattern
         if (keep) {
-            if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " patt: " << patt << std::endl;
-
             allPatterns_fas_.insert(patt.data(), patt.data() + patt.size());
             ++nKept;
+
+            if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " patt: " << patt << std::endl;
         }
         ++nRead;
     }
@@ -625,7 +630,18 @@ int PatternGenerator::writePatterns_fas(TString out) {
     }
     assert(ttree->GetEntries() == nentries);
 
+    // _________________________________________________________________________
+    // Also save the trigger tower maps
+    TTree* ttree2 = new TTree("triggerTower", "");
+    std::map<unsigned, std::vector<unsigned> > * ptr_map1 = &triggerTowerMap_;
+    std::map<unsigned, std::vector<unsigned> > * ptr_map2 = &triggerTowerReverseMap_;
+    ttree2->Branch("triggerTowerMap", ptr_map1);
+    ttree2->Branch("triggerTowerReverseMap", ptr_map2);
+    ttree2->Fill();
+    assert(ttree2->GetEntries() == 1);
+
     tfile->Write();
+    delete ttree2;
     delete ttree;
     delete tfile;
     return 0;
@@ -649,11 +665,9 @@ int PatternGenerator::run(TString out, TString src, TString layout) {
     int exitcode = 0;
     Timing(1);
 
-    if (po.requireTriggerTower) {
-        exitcode = readTriggerTowerFile(layout);
-        if (exitcode)  return exitcode;
-        Timing();
-    }
+    exitcode = readTriggerTowerFile(layout);
+    if (exitcode)  return exitcode;
+    Timing();
 
     exitcode = readFile(src);
     if (exitcode)  return exitcode;

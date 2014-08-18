@@ -1,5 +1,4 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripHasher.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripStitcher.h"
 using namespace slhcl1tt;
 

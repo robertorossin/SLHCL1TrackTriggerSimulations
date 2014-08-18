@@ -4,7 +4,6 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/Helper.h"
 
 #include <vector>
-#include <iosfwd>
 
 namespace slhcl1tt {
 
@@ -13,16 +12,18 @@ class SuperstripArbiter {
     // Constructors
     // subLadderSize, subModuleSize, subLadderECSize, subModuleECSize are
     // expressed as if each module has 32 subLadders and 1024 subModules
-    SuperstripArbiter(id_type subLadderSize, id_type subModuleSize)
-    : nLayers_(6), nRings_(15), subLadderSize_(nLayers_,subLadderSize), subModuleSize_(nLayers_,subModuleSize),
-      subLadderECSize_(nRings_,subLadderSize), subModuleECSize_(nRings_,subModuleSize) {
+    SuperstripArbiter(unsigned subladder, unsigned submodule)
+    : barrel_n_(6), endcap_n_(15),
+      barrel_subladder_sizes_(barrel_n_, subladder), barrel_submodule_sizes_(barrel_n_, submodule),
+      endcap_subladder_sizes_(endcap_n_, subladder), endcap_submodule_sizes_(endcap_n_, submodule) {
         init();
     }
 
-    SuperstripArbiter(const std::vector<id_type>& subLadderVarSize, const std::vector<id_type>& subModuleVarSize,
-                      const std::vector<id_type>& subLadderECVarSize, const std::vector<id_type>& subModuleECVarSize)
-    : nLayers_(6), nRings_(15), subLadderSize_(subLadderVarSize), subModuleSize_(subModuleVarSize),
-      subLadderECSize_(subLadderECVarSize), subModuleECSize_(subModuleECVarSize) {
+    SuperstripArbiter(const std::vector<unsigned>& b_subladders, const std::vector<unsigned>& b_submodules,
+                      const std::vector<unsigned>& e_subladders, const std::vector<unsigned>& e_submodules)
+    : barrel_n_(6), endcap_n_(15),
+      barrel_subladder_sizes_(b_subladders), barrel_submodule_sizes_(b_submodules),
+      endcap_subladder_sizes_(e_subladders), endcap_submodule_sizes_(e_submodules) {
         init();
     }
 
@@ -31,16 +32,9 @@ class SuperstripArbiter {
 
 
     // Operators
-    // Return the superstrip addresses (subladder, submodule) given the
-    // strip addresses (col, row)
-    id_type subladder(id_type moduleId, id_type col, bool isHalfStrip=true) const;
-
-    id_type submodule(id_type moduleId, id_type row, bool isHalfStrip=true) const;
-
-    // Functions
-    id_type minSubLadderSize() const;
-
-    id_type minSubModuleSize() const;
+    // Return the superstrip address given the strip address
+    unsigned superstripLayer(const unsigned& lay) const;
+    unsigned superstrip(unsigned lay, unsigned lad, unsigned mod, unsigned col, unsigned row, bool isHalfStrip=true) const;
 
     // Debug
     void print();
@@ -51,12 +45,27 @@ class SuperstripArbiter {
 
   private:
     // Member data
-    const unsigned nLayers_;
-    const unsigned nRings_;
-    std::vector<id_type> subLadderSize_;
-    std::vector<id_type> subModuleSize_;
-    std::vector<id_type> subLadderECSize_;
-    std::vector<id_type> subModuleECSize_;
+    const unsigned barrel_n_;
+    const unsigned endcap_n_;
+
+    // Variable size
+    std::vector<unsigned> barrel_subladder_sizes_;
+    std::vector<unsigned> barrel_submodule_sizes_;
+    std::vector<unsigned> endcap_subladder_sizes_;
+    std::vector<unsigned> endcap_submodule_sizes_;
+
+    // Compress using geometry knowledge
+    std::vector<unsigned> barrel_z_divisions_;
+    std::vector<unsigned> barrel_phi_divisions_;
+    std::vector<unsigned> barrel_layer_offsets_;
+    std::vector<unsigned> endcap_ring_divisions_;
+    std::vector<unsigned> endcap_ring_offsets_;
+    std::vector<unsigned> calo_offsets_;
+    std::vector<unsigned> muon_offsets_;
+    std::vector<unsigned> fake_offsets_;
+
+    unsigned max_subladder_bits_;
+    unsigned max_submodule_bits_;
 };
 
 }  // namespace slhcl1tt
