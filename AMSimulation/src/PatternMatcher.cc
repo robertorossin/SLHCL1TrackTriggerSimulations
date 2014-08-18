@@ -169,6 +169,7 @@ int PatternMatcher::readPatterns_vector(TString src) {
 
             // Convert each ssId to a hash key
             for (unsigned i=0; i<superstripIds->size(); ++i) {
+                //FIXME: layers 7 & 8 has hash = 0!
                 if (superstripIds->at(i) != 0)
                     superstripHashes.at(i) = hasher_ -> hash(superstripIds->at(i));
             }
@@ -307,6 +308,11 @@ int PatternMatcher::makeRoads_vector(TString out) {
             writer.fill(std::vector<TTRoad>(), std::vector<genPart>());
             ++nKept;
             continue;
+        }
+
+        if (nstubs > 100000) {
+            std::cout << Error() << "Way too many stubs: " << nstubs << std::endl;
+            return 1;
         }
 
         // _____________________________________________________________________
@@ -669,6 +675,7 @@ int PatternMatcher::makeRoads_fas(TString out) {
         std::map<key_type, std::vector<TTHit> >::const_iterator itmap = superstripHits.begin();
         key_type * itval = 0;
 
+        //FIXME: Need to trigger fake superstrips
         for (; itmap != superstripHits.end(); ++itmap) {
             const fas::lean_lut2::return_type& ret = inputPatterns_fas_.at(itmap -> first);
 

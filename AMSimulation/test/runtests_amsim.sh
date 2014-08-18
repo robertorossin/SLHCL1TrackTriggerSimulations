@@ -27,4 +27,7 @@ PYTHONTEST=${CMSSW_BASE}/src/SLHCL1TrackTriggerSimulations/AMSimulation/python/t
 
 (amconvert -B -i patternBank.root -o patternBank.txt -n 100 --format x) || die 'Failure during bank conversion' $?
 CHARCOUNT=`wc -m < "${LOCAL_TOP_DIR}/patternBank.txt"`
-[ "${CHARCOUNT}" -eq 4602 ] || die 'Failure checking the character counts' $?
+# 4602 = 59 * 78
+#[ "${CHARCOUNT}" -eq 4602 ] || die 'Failure checking the character counts' $?
+# 4543 = 59 * 77
+[ "${CHARCOUNT}" -eq 4543 ] || die 'Failure checking the character counts' $?

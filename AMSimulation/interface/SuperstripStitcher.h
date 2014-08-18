@@ -1,50 +1,48 @@
 #ifndef AMSimulation_SuperstripStitcher_h_
 #define AMSimulation_SuperstripStitcher_h_
 
-#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/Helper.h"
-
+#include <random>
 #include <vector>
-#include <iosfwd>
+#include <map>
 
 namespace slhcl1tt {
 
 class SuperstripStitcher {
   public:
     // Constructors
-    SuperstripStitcher(int nLayers, int nFakeSuperstrips, int strategy)
-    : nLayers_(nLayers), nFakeSuperstrips_(nFakeSuperstrips), strategy_(strategy) {
-        init();
-    }
+    SuperstripStitcher(unsigned nLayers, unsigned nFakers);
 
     // Destructor
     ~SuperstripStitcher() {}
 
 
     // Operators
-    // Return a vector of possible patterns given a vector of superstrips
-    // Input superstrips are assumed to be sorted
-    std::vector<pattern_type> stitch(const std::vector<addr_type>& superstrips) const;
+    // Return a vector of indices given a vector of module ids
+    // Input module ids are assumed to be sorted
+    std::vector<unsigned> stitch(const std::vector<unsigned>& layers);
+    std::vector<unsigned> stitch_layermap(const std::vector<unsigned>& layers);
 
     // Debug
     void print();
 
-  private:
-    // Initialize
-    void init();
 
   private:
     // Member data
     const unsigned nLayers_;
-    const unsigned nFakeSuperstrips_;
-    const unsigned strategy_;
+    const unsigned nFakers_;
 
-    // Precomputed values
+    // Random number engine (C++11)
+    //std::default_random_engine randEngine_;
+    std::mt19937 randEngine_;
+    std::uniform_int_distribution<unsigned> randNumber_;
+
+    // Make a list of combinations to choose the indices
     std::vector<unsigned> seven_choose_six_;
     std::vector<unsigned> eight_choose_six_;
     std::vector<unsigned> eight_choose_seven_;
 
     // Make a map to merge layers in barrel and in endcap
-    std::map<unsigned, unsigned> layer_map_;
+    std::map<unsigned, unsigned> layermap_;
 };
 
 }  // namespace slhcl1tt

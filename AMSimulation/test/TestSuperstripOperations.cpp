@@ -5,7 +5,7 @@ using namespace slhcl1tt;
 
 #include <cppunit/extensions/HelperMacros.h>
 
-
+/*
 // Code taken from https://docs.python.org/2/library/itertools.html#itertools.combinations
 static std::vector<std::array<unsigned,8> > combinations(const std::vector<unsigned>& pool, int k) {
     unsigned n = pool.size();
@@ -239,3 +239,4 @@ public:
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(TestSuperstripOperations);
+*/

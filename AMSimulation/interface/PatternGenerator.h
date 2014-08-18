@@ -33,12 +33,10 @@ class PatternGenerator {
       allPatterns_fas_(0,0) {
 
         assert(3 <= nLayers_ && nLayers_ <= 8);
-        assert(0 <= nDCBits_ && nDCBits_ <= 4);
-        assert(0 <= nFakeSuperstrips_ && nFakeSuperstrips_ <= 3);
+        assert(nDCBits_ <= 4);
+        assert(nFakeSuperstrips_ <= 3);
 
         chain_ = new TChain("ntupler/tree");
-
-        //layerMap_ = getLayerMergingMap(nLayers_);
 
         // Decide on the size of superstrip
         if (po.useSuperstripVarSize)
@@ -47,7 +45,7 @@ class PatternGenerator {
             arbiter_ = new SuperstripArbiter(po.subLadderSize, po.subModuleSize);
 
         // Build a pattern from a given list of superstrips
-        stitcher_ = new SuperstripStitcher(nLayers_, nFakeSuperstrips_, po.excessStrategy);
+        stitcher_ = new SuperstripStitcher(nLayers_, nFakeSuperstrips_);
     }
 
     // Destructor
@@ -90,9 +88,9 @@ class PatternGenerator {
 
   private:
     // Configurations
-    const int nLayers_;
-    const int nDCBits_;  // UNUSED
-    const int nFakeSuperstrips_;
+    const unsigned nLayers_;
+    const unsigned nDCBits_;  // UNUSED
+    const unsigned nFakeSuperstrips_;
     const TString bankName_;
 
     // Program options
@@ -111,8 +109,6 @@ class PatternGenerator {
     fas::lean_table3 allPatterns_fas_;                  // using fas::lean_table3 approach
 
     // Maps
-    std::map<unsigned, unsigned> layerMap_;  // UNUSED: defines layer merging
-
     std::map<unsigned, std::vector<unsigned> > triggerTowerMap_;        // key: towerId, value: moduleIds in the tower
     std::map<unsigned, std::vector<unsigned> > triggerTowerReverseMap_; // key: moduleId, value: towerIds containing the module
 

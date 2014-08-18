@@ -99,6 +99,7 @@ int PatternGenerator::readFile(TString src) {
 // _____________________________________________________________________________
 // Make the patterns
 int PatternGenerator::makePatterns_map() {
+/*
     long long nentries = chain_->GetEntries();
     if (nentries <= 0) {
         std::cout << Error() << "Input source has zero entry." << std::endl;
@@ -300,7 +301,7 @@ int PatternGenerator::makePatterns_map() {
     }
 
     if (verbose_)  std::cout << Info() << "Generated " << allPatterns_map_pairs_.size() << " patterns, highest freq: " << allPatterns_map_pairs_.front().second << std::endl;
-
+*/
     return 0;
 }
 
@@ -308,6 +309,7 @@ int PatternGenerator::makePatterns_map() {
 // _____________________________________________________________________________
 // Output patterns into a TTree
 int PatternGenerator::writePatterns_map(TString out) {
+/*
     if (!out.EndsWith(".root")) {
         std::cout << Error() << "Output filename must be .root" << std::endl;
         return 1;
@@ -359,6 +361,7 @@ int PatternGenerator::writePatterns_map(TString out) {
     tfile->Write();
     delete ttree;
     delete tfile;
+*/
     return 0;
 }
 
@@ -432,10 +435,9 @@ int PatternGenerator::makePatterns_fas() {
     // Loop over all events
 
     // Containers are declared outside the event loop to avoid memory allocations
-    std::vector<id_type> superstripLayers;
-    std::vector<addr_type> superstrips;
-    std::vector<pattern_type> patterns;
-    std::vector<pattern_type>::iterator itpatt;
+    std::vector<id_type> stubLayers;
+    pattern_type patt;
+    pattern_type pattEmpty;  // for sanity check
 
     int nRead = 0, nKept = 0;
     float bankSize_f = 0., bankOldSize_f = -100000.;
@@ -447,6 +449,7 @@ int PatternGenerator::makePatterns_fas() {
 
         unsigned nstubs = vb_modId->size();
         if (verbose_>1 && ievt%100000==0) {
+            // Coverage info
             bankSize_f = allPatterns_fas_.size();
             coverage_ = 1.0 - (bankSize_f - bankOldSize_f) / 100000.;
             std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, # patterns: %7.0f, coverage: %7.5f", ievt, nKept, bankSize_f, coverage_) << std::endl;
@@ -455,6 +458,7 @@ int PatternGenerator::makePatterns_fas() {
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
         if (!nstubs) {  // skip if no stub
+            ++nRead;
             continue;
         }
 
@@ -462,9 +466,8 @@ int PatternGenerator::makePatterns_fas() {
         // Start generating patterns
         bool keep = true;
 
-        superstripLayers.clear();
-        superstrips.clear();
-        patterns.clear();
+        stubLayers.clear();
+        patt.fill(0);
 
         // Check min # of layers
         bool require = (nstubs >= MIN_NGOODSTUBS);
@@ -473,7 +476,7 @@ int PatternGenerator::makePatterns_fas() {
 
         // Loop over reconstructed stubs
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
-            unsigned moduleId = vb_modId->at(l);
+            id_type moduleId = vb_modId->at(l);
             // If there is a valid hit, but moduleId does not exist in any
             // trigger tower (due to cables, connections, or just too forward),
             // we drop them
@@ -481,13 +484,40 @@ int PatternGenerator::makePatterns_fas() {
                 continue;
 
             unsigned lay = decodeLayer(moduleId);
-            unsigned count = std::count(superstripLayers.begin(), superstripLayers.end(), lay);
+            unsigned count = std::count(stubLayers.begin(), stubLayers.end(), lay);
             if (count != 0) {
                 std::cout << Error() << "There should be only one stub in any layer" << std::endl;
                 return 1;
             }
-            superstripLayers.push_back(lay);
+            stubLayers.push_back(lay);
+        }
 
+        // Decide how to lay out the pattern
+        //const std::vector<unsigned>& indices = stitcher_ -> stitch(stubLayers);
+        const std::vector<unsigned>& indices = stitcher_ -> stitch_layermap(stubLayers);
+        if (indices.empty())
+            keep = false;
+
+        if (verbose_>2) {
+            std::cout << Debug() << "... evt: " << ievt << " moduleIds: ";
+            std::copy(stubLayers.begin(), stubLayers.end(), std::ostream_iterator<unsigned>(std::cout, " "));
+            std::cout << "  indices: ";
+            std::copy(indices.begin(), indices.end(), std::ostream_iterator<unsigned>(std::cout, " "));
+            std::cout << std::endl;
+        }
+        assert(!keep || indices.size() == nLayers_);
+
+        for (unsigned k=0; (k<nLayers_) && keep; ++k) {
+            // Fake superstrips
+            if (indices.at(k) == 999999) {
+                patt.at(k) = fakeSuperstripId_;
+                continue;
+            }
+
+            assert(k < nstubs);
+            unsigned l = indices.at(k);
+
+            id_type moduleId = vb_modId->at(l);
             float coordx = vb_coordx->at(l);
             float coordy = vb_coordy->at(l);
 
@@ -499,41 +529,25 @@ int PatternGenerator::makePatterns_fas() {
             col = arbiter_ -> subladder(moduleId, col);
             row = arbiter_ -> submodule(moduleId, row);
             addr_type ssId = encodeSuperstripId(moduleId, col, row);
-
-            superstrips.push_back(ssId);
+            patt.at(k) = ssId;
 
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << " trkId: " << vb_trkId->at(l) << std::endl;
         }
 
-        // _____________________________________________________________________
-        // Build the patterns
-        if (!superstrips.empty()) {
-            std::sort(superstrips.begin(), superstrips.end(), std::less<addr_type>());  // sort first
-            patterns = stitcher_ -> stitch(superstrips);
+        assert (!keep || patt != pattEmpty);
 
+        if (keep && po.requireTriggerTower) {
             // Remove patterns that are not within any trigger tower
-            if (po.requireTriggerTower) {
-                pattern_type emptyPattern;
-                for (unsigned i=0; i<patterns.size(); ++i) {
-                    //assert(patterns.at(i) != emptyPattern);
-                    if (!isWithinTriggerTower(patterns.at(i)) )
-                        patterns.at(i).fill(0);
-                }
-                patterns.erase(std::remove(patterns.begin(), patterns.end(), emptyPattern));
-            }
+            if (!isWithinTriggerTower(patt) )
+                keep = false;
         }
 
-        if (patterns.empty())
-            keep = false;
-
+        // _____________________________________________________________________
+        // Insert pattern
         if (keep) {
-            if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # patterns: " << patterns.size() << std::endl;
+            if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " patt: " << patt << std::endl;
 
-            for (unsigned i=0; i<patterns.size(); ++i) {
-                itpatt = patterns.begin() + i;
-                allPatterns_fas_.insert(itpatt->data(), itpatt->data() + itpatt->size());
-                if (verbose_>2)  std::cout << Debug() << "... ... patt: " << i << "  " << patterns.at(i) << std::endl;
-            }
+            allPatterns_fas_.insert(patt.data(), patt.data() + patt.size());
             ++nKept;
         }
         ++nRead;
