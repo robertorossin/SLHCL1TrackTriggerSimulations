@@ -1,8 +1,6 @@
 #ifndef AMSimulation_SuperstripArbiter_h_
 #define AMSimulation_SuperstripArbiter_h_
 
-#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/Helper.h"
-
 #include <vector>
 
 namespace slhcl1tt {
@@ -10,8 +8,8 @@ namespace slhcl1tt {
 class SuperstripArbiter {
   public:
     // Constructors
-    // subLadderSize, subModuleSize, subLadderECSize, subModuleECSize are
-    // expressed as if each module has 32 subLadders and 1024 subModules
+    // subladder, submodule sizes are expressed as if each module has
+    // 32 pixels and 1024 strips, regardless of PS or 2S modules
     SuperstripArbiter(unsigned subladder, unsigned submodule)
     : barrel_n_(6), endcap_n_(15),
       barrel_subladder_sizes_(barrel_n_, subladder), barrel_submodule_sizes_(barrel_n_, submodule),
@@ -34,7 +32,9 @@ class SuperstripArbiter {
     // Operators
     // Return the superstrip address given the strip address
     unsigned superstripLayer(const unsigned& lay) const;
-    unsigned superstrip(unsigned lay, unsigned lad, unsigned mod, unsigned col, unsigned row, bool isHalfStrip=true) const;
+    unsigned superstrip(unsigned lay, unsigned lad, unsigned mod,
+                        unsigned col, unsigned row,
+                        const bool isHalfStrip=true) const;
 
     // Debug
     void print();
@@ -45,8 +45,8 @@ class SuperstripArbiter {
 
   private:
     // Member data
-    const unsigned barrel_n_;
-    const unsigned endcap_n_;
+    const unsigned barrel_n_;  // = 6 layers
+    const unsigned endcap_n_;  // = 15 rings
 
     // Variable size
     std::vector<unsigned> barrel_subladder_sizes_;
@@ -64,6 +64,7 @@ class SuperstripArbiter {
     std::vector<unsigned> muon_offsets_;
     std::vector<unsigned> fake_offsets_;
 
+    // Number of bits allocated
     unsigned max_subladder_bits_;
     unsigned max_submodule_bits_;
 };

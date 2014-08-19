@@ -1,10 +1,12 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/Helper.h"
 using namespace slhcl1tt;
 
 #include <algorithm>
 #include <cassert>
 #include <iterator>
 #include <iostream>
+#include <stdexcept>
 
 
 void SuperstripArbiter::init() {
@@ -113,20 +115,23 @@ unsigned SuperstripArbiter::superstripLayer(const unsigned& lay) const {
     return 255;
 }
 
-unsigned SuperstripArbiter::superstrip(unsigned lay, unsigned lad, unsigned mod, unsigned col, unsigned row, bool isHalfStrip) const {
-    lay = superstripLayer(lay);
+// Use 4-Byte integers everywhere as it's more native to machines
+unsigned SuperstripArbiter::superstrip(unsigned lay, unsigned lad, unsigned mod,
+                                       unsigned col, unsigned row,
+                                       const bool isHalfStrip) const {
+    lay = superstripLayer(lay);  // transform lay
 
-    if (isHalfStrip) {
+    if (isHalfStrip) {  // transform col and row
         col >>= 1;
         row >>= 1;
     }
 
     unsigned h = 0;
 
-    if (lay < 6) {  // in barrel
+    if (lay < 6) {          // in barrel
         h += barrel_layer_offsets_.at(lay);
         h += mod * barrel_phi_divisions_.at(lay);
-        h += lad;
+        h += lad;                                 // lad is the local phi coord
 
         col >>= barrel_subladder_sizes_.at(lay);
         row >>= barrel_submodule_sizes_.at(lay);
@@ -135,25 +140,25 @@ unsigned SuperstripArbiter::superstrip(unsigned lay, unsigned lad, unsigned mod,
 
     } else if (lay < 16) {  // in endcap
         lay -= 6;
-        h += barrel_layer_offsets_.at(6);  // after all barrel layers
+        h += barrel_layer_offsets_.at(6);        // after all barrel layers
         h += lay * endcap_ring_offsets_.at(15);  // after all previous endcap rings
         h += endcap_ring_offsets_.at(lad);
-        h += mod;
+        h += mod;                                // mod is the local phi coord
 
         col >>= endcap_subladder_sizes_.at(lad);
         row >>= endcap_submodule_sizes_.at(lad);
 
         h = (h << max_subladder_bits_) | (col << max_submodule_bits_) | row;
 
-    } else if (lay == 16) {
+    } else if (lay == 16) { // virtual calo layer
         h += calo_offsets_.at(0);
         h = (h << max_subladder_bits_);
 
-    } else if (lay == 17) {
+    } else if (lay == 17) { // virtual muon layer
         h += muon_offsets_.at(0);
         h = (h << max_subladder_bits_);
 
-    } else {
+    } else {                // fake superstrip
         h += fake_offsets_.at(0);
         h = (h << max_subladder_bits_);
 
@@ -163,16 +168,16 @@ unsigned SuperstripArbiter::superstrip(unsigned lay, unsigned lad, unsigned mod,
 
 void SuperstripArbiter::print() {
     std::cout << "barrel subladder size: ";
-    std::copy(barrel_subladder_sizes_.begin(), barrel_subladder_sizes_.end(), std::ostream_iterator<id_type>(std::cout, " "));
+    std::copy(barrel_subladder_sizes_.begin(), barrel_subladder_sizes_.end(), std::ostream_iterator<unsigned>(std::cout, " "));
     std::cout << std::endl;
     std::cout << "barrel submodule size: ";
-    std::copy(barrel_submodule_sizes_.begin(), barrel_submodule_sizes_.end(), std::ostream_iterator<id_type>(std::cout, " "));
+    std::copy(barrel_submodule_sizes_.begin(), barrel_submodule_sizes_.end(), std::ostream_iterator<unsigned>(std::cout, " "));
     std::cout << std::endl;
     std::cout << "endcap subladder size: ";
-    std::copy(endcap_subladder_sizes_.begin(), endcap_subladder_sizes_.end(), std::ostream_iterator<id_type>(std::cout, " "));
+    std::copy(endcap_subladder_sizes_.begin(), endcap_subladder_sizes_.end(), std::ostream_iterator<unsigned>(std::cout, " "));
     std::cout << std::endl;
     std::cout << "endcap submodule size: ";
-    std::copy(endcap_submodule_sizes_.begin(), endcap_submodule_sizes_.end(), std::ostream_iterator<id_type>(std::cout, " "));
+    std::copy(endcap_submodule_sizes_.begin(), endcap_submodule_sizes_.end(), std::ostream_iterator<unsigned>(std::cout, " "));
     std::cout << std::endl;
     std::cout << "subladder bits: " << max_subladder_bits_ << " submodule bits: " << max_submodule_bits_ << std::endl;
 }

@@ -7,7 +7,7 @@
 namespace slhcl1tt {
 
 struct TrackFitterOption {
-    int nLayers;  // FIXME: remove this?
+    unsigned nLayers;  // FIXME: remove this?
     int pqType;
     int pbins;
     int qbins;

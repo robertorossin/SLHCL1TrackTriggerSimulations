@@ -28,7 +28,7 @@ class SuperstripStitcher {
 
   private:
     // Member data
-    const unsigned nLayers_;
+    const unsigned nLayers_;  // = 6 tracker layers
     const unsigned nFakers_;
 
     // Random number engine (C++11)

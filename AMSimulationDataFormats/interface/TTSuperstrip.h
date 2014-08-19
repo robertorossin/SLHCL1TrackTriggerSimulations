@@ -3,7 +3,6 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/Helper.h"
 
-#include <cmath>
 #include <iosfwd>
 
 
@@ -13,7 +12,7 @@ namespace slhcl1tt {
 // Nominally, it corresponds to a physical region in the detector.
 // A POD type is used to reduce memory consumption.
 struct TTSuperstrip {
-    addr_type id;
+    id_type  id;
     bit_type bit;
 };
 
@@ -30,7 +29,7 @@ struct TTHit {
     float zError;
     int charge;
     float pt;
-    addr_type superstripId;
+    id_type  superstripId;
     bit_type superstripBit;
 
     // Functions

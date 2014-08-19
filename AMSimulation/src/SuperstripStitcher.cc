@@ -13,7 +13,6 @@ SuperstripStitcher::SuperstripStitcher(unsigned nLayers, unsigned nFakers)
 
     if (!(6 <= nLayers_ && nLayers_ <= 8))
         throw std::invalid_argument("Incorrect nLayers is given.");
-
     if (!(nFakers_ <= 3))
         throw std::invalid_argument("Incorrect nFakeSuperstrip is given.");
 
@@ -88,7 +87,6 @@ SuperstripStitcher::SuperstripStitcher(unsigned nLayers, unsigned nFakers)
         {18,7}, {19,6}, {20,5}, {21,4}, {22,3}
     };
 
-
     // Assign
     if (nLayers_ == 6)
         layermap_.swap(layermap_six);
@@ -102,10 +100,10 @@ SuperstripStitcher::SuperstripStitcher(unsigned nLayers, unsigned nFakers)
 static std::vector<unsigned> ret;
 std::vector<unsigned> SuperstripStitcher::stitch(const std::vector<unsigned>& layers) {
     // let n = nLayers_, f = nFakers_, k = # of input module ids
-    // Case 1:       k <  n-f, return an empty vector
-    // Case 2: n-f < k <= n  , return [0,1,...,k-1] + [999999] * (n-k)
-    // Case 3: n   < k <= 8  , return a randomly picked combination
-    // Case 4: 8   < k       , go to Case 3 using the first 8 module ids
+    // Case 1:        k <  n-f, return an empty vector
+    // Case 2: n-f <= k <= n  , return [0,1,...,k-1] + [999999] * (n-k)
+    // Case 3: n   <  k <= 8  , return a randomly picked combination
+    // Case 4: 8   <  k       , go to Case 3 using the first 8 module ids
 
     // Case 1
     ret.clear();
@@ -135,17 +133,18 @@ std::vector<unsigned> SuperstripStitcher::stitch(const std::vector<unsigned>& la
 
     unsigned ncombo = n_choose_k_ptr->size() / nLayers_;
     unsigned icombo = randNumber_(randEngine_) % ncombo;
-    for (unsigned i=0; i<nLayers_; ++i)
-        ret.push_back(n_choose_k_ptr->at(icombo * nLayers_ + i));
+    ret.insert(ret.end(), n_choose_k_ptr->at(icombo * nLayers_), n_choose_k_ptr->at((icombo+1) * nLayers_));
     return ret;
 }
 
 std::vector<unsigned> SuperstripStitcher::stitch_layermap(const std::vector<unsigned>& layers) {
     // let n = nLayers_, f = nFakers_, k = # of input module ids
-    // Case 1:       k <  n-f, return an empty vector
-    // Case 2: n-f < k       , return [a_0, a_1, ..., a_n]
+    // Case 1:        k <  n-f, return an empty vector
+    // Case 2: n-f <= k       , return [a_0, a_1, ..., a_n]
     //         where a_i is 999999 if no layers are in the layer
     //         or one of the randomly picked indices if there are >=1 layers
+    // Case 2.1: due to merging, final number of a_i == 999999 can be
+    //           greater than f. In which case, we treat it as Case 1
 
     // Case 1
     ret.clear();
@@ -167,6 +166,7 @@ std::vector<unsigned> SuperstripStitcher::stitch_layermap(const std::vector<unsi
         }
     }
 
+    // Case 2.1
     unsigned countFakers = std::count(ret.begin(), ret.end(), 999999);
     if (countFakers > nFakers_)
         ret.clear();

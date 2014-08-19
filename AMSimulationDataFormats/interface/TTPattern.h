@@ -28,7 +28,7 @@ class TTRoad {
     TTRoad()
     : nHitLayers_(0), bankIndex_(0), patternId_(), hits_() {}
 
-    TTRoad(count_type nHitLayers, addr_type bankIndex, const pattern_type& patternId, const std::vector<TTHit>& hits)
+    TTRoad(count_type nHitLayers, id_type bankIndex, const pattern_type& patternId, const std::vector<TTHit>& hits)
     : nHitLayers_(nHitLayers), bankIndex_(bankIndex), patternId_(patternId), hits_(hits) {}
 
     TTRoad(const TTRoad& rhs)
@@ -43,7 +43,7 @@ class TTRoad {
     // Getters
     count_type nHitLayers()         const { return nHitLayers_; }
 
-    addr_type bankIndex()           const { return bankIndex_; }
+    id_type bankIndex()             const { return bankIndex_; }
 
     pattern_type patternId()        const { return patternId_; }
 
@@ -53,7 +53,7 @@ class TTRoad {
 
   private:
     count_type nHitLayers_;
-    addr_type bankIndex_;
+    id_type bankIndex_;
     pattern_type patternId_;
     std::vector<TTHit> hits_;
 };

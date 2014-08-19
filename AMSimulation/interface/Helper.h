@@ -4,7 +4,6 @@
 #include <algorithm>
 //#include <functional>
 #include <cassert>
-//#include <cstdint>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -13,10 +12,10 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include "TROOT.h"
-#include "TString.h"
-#include "TStopwatch.h"
 
+#include "TROOT.h"  // for gROOT
+class TString;
+class TTree;
 
 namespace slhcl1tt {
 
@@ -32,12 +31,9 @@ TString Warning();
 TString Info();
 TString Debug();
 
-}  // namespace slhcl1tt
-
-
-#include "TTree.h"
-#include "TBranchElement.h"
 void ResetDeleteBranches(TTree* tree);
+
+}  // namespace slhcl1tt
 
 #endif
 
