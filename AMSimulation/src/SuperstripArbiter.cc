@@ -105,28 +105,17 @@ void SuperstripArbiter::init() {
     fake_offsets_[0] = muon_offsets_[1];
 }
 
-unsigned SuperstripArbiter::superstripLayer(const unsigned& lay) const {
-    if (lay <  5) return 255;
-    if (lay < 16) return lay-5;  // 5-10 = barrel, 11-15 = endcap +
-    if (lay < 18) return 255;
-    if (lay < 23) return lay-7;  // 18-22 = endcap -
-    if (lay < 25) return 255;
-    if (lay < 28) return lay-9;  // 25 = calo, 26 = muon, 27 = fake
-    return 255;
-}
-
 // Use 4-Byte integers everywhere as it's more native to machines
 unsigned SuperstripArbiter::superstrip(unsigned lay, unsigned lad, unsigned mod,
                                        unsigned col, unsigned row,
                                        const bool isHalfStrip) const {
-    lay = superstripLayer(lay);  // transform lay
+    unsigned h = 0;
+    lay = compressLayer(lay);  // transform lay
 
     if (isHalfStrip) {  // transform col and row
         col >>= 1;
         row >>= 1;
     }
-
-    unsigned h = 0;
 
     if (lay < 6) {          // in barrel
         h += barrel_layer_offsets_.at(lay);
@@ -158,11 +147,37 @@ unsigned SuperstripArbiter::superstrip(unsigned lay, unsigned lad, unsigned mod,
         h += muon_offsets_.at(0);
         h = (h << max_subladder_bits_);
 
-    } else {                // fake superstrip
+    } else if (lay == 18) { // fake superstrip
         h += fake_offsets_.at(0);
         h = (h << max_subladder_bits_);
 
+    } else {
+        h = 0xffffffff;
     }
+
+    return h;
+}
+
+unsigned SuperstripArbiter::module(unsigned lay, unsigned lad, unsigned mod) const {
+    unsigned h = 0;
+    lay = compressLayer(lay);  // transform lay
+
+    if (lay < 6) {          // in barrel
+        h += barrel_layer_offsets_.at(lay);
+        h += mod * barrel_phi_divisions_.at(lay);
+        h += lad;                                 // lad is the local phi coord
+
+    } else if (lay < 16) {  // in endcap
+        lay -= 6;
+        h += barrel_layer_offsets_.at(6);        // after all barrel layers
+        h += lay * endcap_ring_offsets_.at(15);  // after all previous endcap rings
+        h += endcap_ring_offsets_.at(lad);
+        h += mod;                                // mod is the local phi coord
+
+    } else {
+        h = 0xffffffff;
+    }
+
     return h;
 }
 

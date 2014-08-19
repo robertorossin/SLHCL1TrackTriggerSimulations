@@ -17,11 +17,10 @@ int PatternGenerator::readTriggerTowerFile(TString src) {
         if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
 
         unsigned i = 0;
-        std::string line;
+        std::string line, issline;
         std::ifstream ifs(src.Data());
         while (std::getline(ifs, line)) {
             std::istringstream iss(line);
-            std::string issline;
 
             while (std::getline(iss, issline, ',')) {  // split by commas
                 if (i != 0)  // skip the first line
@@ -72,7 +71,6 @@ int PatternGenerator::readTriggerTowerFile(TString src) {
 
     //for (auto it: triggerTowerReverseMap_)
     //    std::cout << "Module " << it.first << " is in " << it.second.size() << " towers." << std::endl;
-
     return 0;
 }
 
@@ -393,7 +391,7 @@ int PatternGenerator::makePatterns_fas() {
     //std::vector<float> *          vb_simPt      = 0;
     //std::vector<float> *          vb_simEta     = 0;
     //std::vector<float> *          vb_simPhi     = 0;
-    std::vector<int> *            vb_trkId      = 0;
+    //std::vector<int> *            vb_trkId      = 0;
 
     chain_->SetBranchStatus("*"                 , 0);
     //chain_->SetBranchStatus("TTStubs_x"         , 1);
@@ -409,7 +407,7 @@ int PatternGenerator::makePatterns_fas() {
     //chain_->SetBranchStatus("TTStubs_simPt"     , 1);
     //chain_->SetBranchStatus("TTStubs_simEta"    , 1);
     //chain_->SetBranchStatus("TTStubs_simPhi"    , 1);
-    chain_->SetBranchStatus("TTStubs_trkId"     , 1);
+    //chain_->SetBranchStatus("TTStubs_trkId"     , 1);
 
     //chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
     //chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
@@ -424,7 +422,7 @@ int PatternGenerator::makePatterns_fas() {
     //chain_->SetBranchAddress("TTStubs_simPt"    , &(vb_simPt));
     //chain_->SetBranchAddress("TTStubs_simEta"   , &(vb_simEta));
     //chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
-    chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
+    //chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
 
     // Allocate memory
     allPatterns_fas_.reserve(nEvents_);
@@ -437,22 +435,28 @@ int PatternGenerator::makePatterns_fas() {
     pattern_type patt;
     pattern_type pattEmpty;  // for sanity check
 
-    int nRead = 0, nKept = 0;
+    std::map<unsigned, unsigned> towerCountMap;
+
     float bankSize_f = 0., bankOldSize_f = -100000.;
 
-    for (long long ievt=0; ievt<nEvents_; ++ievt) {
+    int nRead = 0, nKept = 0;
+    unsigned ievt_step = 0;
+    for (long long ievt=0; ievt<nEvents_; ++ievt, ++ievt_step) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
 
         unsigned nstubs = vb_modId->size();
-        if (verbose_>1 && ievt%100000==0) {
+        if (verbose_>1 && ievt_step == 100000) {
             // Coverage info
             bankSize_f = allPatterns_fas_.size();
-            coverage_ = 1.0 - (bankSize_f - bankOldSize_f) / 100000.;
+            coverage_ = 1. - (bankSize_f - bankOldSize_f) / 100000.;
             std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, # patterns: %7.0f, coverage: %7.5f", ievt, nKept, bankSize_f, coverage_) << std::endl;
+
             bankOldSize_f = bankSize_f;
+            ievt_step -= 100000;
         }
+
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
         if (!nstubs) {  // skip if no stub
@@ -476,14 +480,15 @@ int PatternGenerator::makePatterns_fas() {
         id_type moduleId, lay, lad, mod, col, row;  // declare the usual suspects
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
             moduleId = vb_modId->at(l);
-            // If there is a valid stub, but moduleId does not exist in any
-            // trigger tower (due to cables, connections, or just too forward),
-            // we drop it
-            if (po.requireTriggerTower && triggerTowerReverseMap_.find(moduleId) == triggerTowerReverseMap_.end())
+
+            // Skip if moduleId not in any trigger tower
+            if (po.requireTriggerTower && triggerTowerReverseMap_.find(moduleId) == triggerTowerReverseMap_.end()) {
+                if (verbose_>2)  std::cout << Debug() << "... ... skip moduleId: " << moduleId << " not in any trigger tower." << std::endl;
                 continue;
+            }
 
             lay = decodeLayer(moduleId);
-            unsigned count = std::count(stubLayers.begin(), stubLayers.end(), lay);
+            const unsigned& count = std::count(stubLayers.begin(), stubLayers.end(), lay);
             if (count != 0) {
                 std::cout << Error() << "There should be only one stub in any layer" << std::endl;
                 return 1;
@@ -507,9 +512,12 @@ int PatternGenerator::makePatterns_fas() {
         }
         assert(!keep || indices.size() == nLayers_);
 
+        // _____________________________________________________________________
+        // Encode superstrip id
+        towerCountMap.clear();
+
         // Loop over reconstructed stubs
-        // Superstrips are encoded here
-        for (unsigned k=0; (k<nLayers_) && keep; ++k) {
+        for (unsigned k=0, l=0; (k<nLayers_) && keep; ++k) {
             // Fake superstrip
             if (indices.at(k) == 999999) {
                 // Arbitrarily put fake superstrip in layer 27
@@ -517,9 +525,9 @@ int PatternGenerator::makePatterns_fas() {
                 continue;
             }
 
-            // Real superstrip
+            // Real superstrip (tracker only)
             assert(k < nstubs && indices.at(k) < nstubs);
-            unsigned l = indices.at(k);
+            l = indices.at(k);
 
             // Break moduleId into lay, lad, mod
             moduleId = vb_modId->at(l);
@@ -533,16 +541,34 @@ int PatternGenerator::makePatterns_fas() {
             row = halfStripRound(vb_coordx->at(l));
 
             // Find superstrip address
-            addr_type ssId = arbiter_ -> superstrip(lay, lad, mod, col, row);
+            const id_type& ssId = arbiter_ -> superstrip(lay, lad, mod, col, row);
             patt.at(k) = ssId;
 
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << " trkId: " << vb_trkId->at(l) << std::endl;
+            // Find associated trigger towers
+            if (po.requireTriggerTower) {
+                const std::vector<unsigned>& towerIds = triggerTowerReverseMap_.at(moduleId);
+                for (unsigned i=0; i<towerIds.size(); ++i) {
+                    ++towerCountMap[towerIds.at(i)];
+                }
+                ++towerCountMap[999999];  // total count
+            }
+
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << std::endl;
         }
 
         if (keep && po.requireTriggerTower) {
-            // Remove patterns that are not within any trigger tower
-            if (!isWithinTriggerTower(patt) )
-                keep = false;
+            // Drop patterns that are not within any trigger tower
+            std::map<unsigned, unsigned>::const_iterator ittower;
+            const unsigned total = towerCountMap.at(999999);
+            towerCountMap.erase(999999);
+
+            keep = false;
+            for (ittower = towerCountMap.begin(); ittower != towerCountMap.end(); ++ittower) {
+                if (ittower->second == total) {
+                    keep = true;
+                    break;
+                }
+            }
         }
 
         assert (!keep || patt != pattEmpty);
@@ -551,6 +577,7 @@ int PatternGenerator::makePatterns_fas() {
         // Insert pattern
         if (keep) {
             allPatterns_fas_.insert(patt.data(), patt.data() + patt.size());
+            //allPatterns_fas_.insert_nosort(patt.data(), patt.data() + patt.size());
             ++nKept;
 
             if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " patt: " << patt << std::endl;
@@ -558,6 +585,8 @@ int PatternGenerator::makePatterns_fas() {
         ++nRead;
     }
     if (verbose_)  std::cout << Info() << Form("Read: %7i, kept: %7i, # patterns: %7u", nRead, nKept, allPatterns_fas_.size()) << std::endl;
+
+    // Keep this number to calculate sorted coverage
     coverage_count_ = nKept;
 
     // Sort by frequency
@@ -568,12 +597,13 @@ int PatternGenerator::makePatterns_fas() {
         for (unsigned i=0; i<allPatterns_fas_.size(); ++i) {
             const fas::lean_table3::return_type& ret = allPatterns_fas_.at(i);
             std::cout << Debug() << "... patt: " << i << "  ";
-            std::copy(ret.begin, ret.end, std::ostream_iterator<addr_type>(std::cout, " "));
+            std::copy(ret.begin, ret.end, std::ostream_iterator<id_type>(std::cout, " "));
             std::cout << " freq: " << ret.count << std::endl;
         }
     }
 
-    if (verbose_)  std::cout << Info() << "Generated " << allPatterns_fas_.size() << " patterns, highest freq: " << allPatterns_fas_.at(0).count << std::endl;
+    unsigned highest_freq = allPatterns_fas_.size() ? allPatterns_fas_.at(0).count : 0;
+    if (verbose_)  std::cout << Info() << "Generated " << allPatterns_fas_.size() << " patterns, highest freq: " << highest_freq << std::endl;
 
     return 0;
 }
@@ -592,24 +622,27 @@ int PatternGenerator::writePatterns_fas(TString out) {
     TFile* tfile = TFile::Open(out, "RECREATE");
     TTree* ttree = new TTree(bankName_, "");
 
-    std::auto_ptr<count_type>                 frequency       (new count_type(0));
-    std::auto_ptr<std::vector<addr_type> >    superstripIds   (new std::vector<addr_type>());
+    std::auto_ptr<count_type>             frequency       (new count_type(0));
+    std::auto_ptr<std::vector<id_type> >  superstripIds   (new std::vector<id_type>());
 
     ttree->Branch("frequency"       , &(*frequency));
     ttree->Branch("superstripIds"   , &(*superstripIds));
 
     // _________________________________________________________________________
     // Loop over all patterns
-    count_type oldFrequency = MAX_FREQUENCY;
-    unsigned int integralFrequency = 0;
+
+    unsigned integralFrequency = 0;
     float sortedCoverage = 0;
-    for (long long ievt=0; ievt<nentries; ++ievt) {
-        if (verbose_>1 && ievt%100000==0) {
+    count_type oldFrequency = MAX_FREQUENCY;
+
+    unsigned ievt_step = 0;
+    for (long long ievt=0; ievt<nentries; ++ievt, ++ievt_step) {
+        if (verbose_>1 && ievt_step == 100000) {
             sortedCoverage = float(integralFrequency) / coverage_count_ * coverage_;
             std::cout << Debug() << Form("... Writing event: %7lld, sorted coverage: %7.5f", ievt, sortedCoverage) << std::endl;
-        }
 
-        superstripIds->clear();
+            ievt_step -= 100000;
+        }
 
         const fas::lean_table3::return_type& ret = allPatterns_fas_.at(ievt);
         *frequency = ret.count;
@@ -619,10 +652,11 @@ int PatternGenerator::writePatterns_fas(TString out) {
         oldFrequency = *frequency;
         integralFrequency += *(frequency);
 
-        if (*frequency < minFrequency_)
+        if (*frequency < minFrequency_)  // cut off
             break;
 
-        for (addr_type * it = ret.begin; it != ret.end; ++it) {
+        superstripIds->clear();
+        for (id_type * it = ret.begin; it != ret.end; ++it) {
             superstripIds->push_back(*it);
         }
 
@@ -650,11 +684,7 @@ int PatternGenerator::writePatterns_fas(TString out) {
 
 // _____________________________________________________________________________
 // Private functions
-
-bool PatternGenerator::isWithinTriggerTower(const pattern_type& patt) {
-    // FIXME: implement this
-    return true;
-}
+// none
 
 
 // _____________________________________________________________________________

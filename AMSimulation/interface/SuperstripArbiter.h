@@ -31,10 +31,11 @@ class SuperstripArbiter {
 
     // Operators
     // Return the superstrip address given the strip address
-    unsigned superstripLayer(const unsigned& lay) const;
     unsigned superstrip(unsigned lay, unsigned lad, unsigned mod,
                         unsigned col, unsigned row,
                         const bool isHalfStrip=true) const;
+
+    unsigned module(unsigned lay, unsigned lad, unsigned mod) const;
 
     // Debug
     void print();

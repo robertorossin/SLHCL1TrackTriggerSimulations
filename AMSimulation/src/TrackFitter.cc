@@ -97,13 +97,17 @@ int TrackFitter::makeTracks(TString out) {
     // Loop over all events
 
     int nPassed = 0, nKept = 0;
-    for (long long ievt=0; ievt<nEvents_; ++ievt) {
+    unsigned ievt_step = 0;
+    for (long long ievt=0; ievt<nEvents_; ++ievt, ++ievt_step) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
 
         unsigned nroads = vr_patternIds->size();
-        if (verbose_>1 && ievt%5000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, fitting: %7i", ievt, nKept, nPassed) << std::endl;
+        if (verbose_>1 && ievt_step == 5000) {
+            std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, fitting: %7i", ievt, nKept, nPassed) << std::endl;
+            ievt_step -= 5000;
+        }
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # roads: " << nroads << std::endl;
 
 //FIXME        if (!nroads) {  // skip if no road
@@ -118,7 +122,7 @@ int TrackFitter::makeTracks(TString out) {
         for (unsigned i=0; i<nroads; ++i) {
             pattern_type patternId;
 
-            std::vector<addr_type> addresses;
+            std::vector<id_type> addresses;
             for (unsigned j=0; j<vr_patternIds->at(i).size(); ++j) {
                 addresses.push_back(vr_patternIds->at(i).at(j));
             }

@@ -7,14 +7,12 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
 using namespace slhcl1tt;
 
-#include "fas/lean_lut3.h"
-using namespace fas;
-
 #include "TFile.h"
 #include "TFileCollection.h"
 #include "TChain.h"
-#include "TTree.h"
 #include "TString.h"
+
+#include "fas/lean_lut3.h"
 
 
 // SETTINGS: Majority logic
@@ -38,7 +36,7 @@ class PatternMatcher {
         chain_ = new TChain("ntupler/tree");
 
         // Decide on the size of superstrip
-        if (po.useSuperstripVarSize)
+        if (po.useVariableSize)
             arbiter_ = new SuperstripArbiter(po.subLadderVarSize, po.subModuleVarSize, po.subLadderECVarSize, po.subModuleECVarSize);
         else
             arbiter_ = new SuperstripArbiter(po.subLadderSize, po.subModuleSize);

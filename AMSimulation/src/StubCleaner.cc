@@ -11,6 +11,18 @@ bool sortByFloat(const std::pair<unsigned, float>& lhs, const std::pair<unsigned
     return lhs.second < rhs.second;
 }
 
+template<typename RandomAccessIterator, typename Size, typename T>
+void insertSorted(RandomAccessIterator first, Size pos, Size len, const T value) {
+    first += len;
+    len -= pos;
+    while (len>0) {
+        *first = std::move(*(first-1));
+        --len;
+        --first;
+    }
+    *first = std::move(value);
+}
+
 
 // _____________________________________________________________________________
 // Read the input ntuples
@@ -122,10 +134,11 @@ int StubCleaner::cleanStubs(TString out) {
 
     const int good_trkId    =  1;
     const int unmatch_trkId = -1;
+
     int curTree = chain_->GetTreeNumber();
     int nPassed = 0, nKept = 0;
-
-    for (long long ievt=0; ievt<nEvents_; ++ievt) {
+    unsigned ievt_step = 0;
+    for (long long ievt=0; ievt<nEvents_; ++ievt, ++ievt_step) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         if (chain_->GetTreeNumber() != curTree) {  // for TTreeFormula
@@ -135,7 +148,10 @@ int StubCleaner::cleanStubs(TString out) {
         chain_->GetEntry(ievt);
 
         unsigned nstubs = vb_modId->size();
-        if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, passing: %7i", ievt, nKept, nPassed) << std::endl;
+        if (verbose_>1 && ievt_step == 50000) {
+            std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, passing: %7i", ievt, nKept, nPassed) << std::endl;
+            ievt_step -= 50000;
+        }
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
         if (!nstubs) {  // skip if no stub
@@ -169,9 +185,8 @@ int StubCleaner::cleanStubs(TString out) {
         float simPt  = vb_simPt ->back();
         float simEta = vb_simEta->back();
         float simPhi = vb_simPhi->back();
-        for (unsigned l=0, ll=0; (l<nstubs) && keep; ++l) {
-            ll = (nstubs-1) - l;  // reverse iteration order
-            trkId = vb_trkId->at(ll);
+        for (unsigned l=0, ll=nstubs-1; (l<nstubs) && keep; ++l, --ll) {
+            trkId = vb_trkId->at(ll);  // reverse iteration using ll
             if (trkId == good_trkId) {
                 simPt = vb_simPt->at(ll);
                 simEta = vb_simEta->at(ll);
@@ -208,35 +223,46 @@ int StubCleaner::cleanStubs(TString out) {
         // Sort: smallest dZ to largest
         std::sort(vec_index_dZ.begin(), vec_index_dZ.end(), sortByFloat);
 
-        std::vector<unsigned> goodLayerStubs(1u << 4, 999999);
-        for (std::vector<std::pair<unsigned, float> >::const_iterator it = vec_index_dZ.begin();
-             (it != vec_index_dZ.end()) && keep; ++it) {
-            unsigned l = it->first;
-            float dZ = it->second;
+        // Select only one stub per layer
+        std::vector<unsigned> goodLayerStubs(16, 999999);
+        {   // scoped to limit the scopes of variables
+            id_type moduleId, lay, lay16;
+            unsigned l;
+            float dZ;
+            for (unsigned ll=0; (ll<vec_index_dZ.size()) && keep; ++ll) {
+                l  = vec_index_dZ.at(ll).first;
+                dZ = vec_index_dZ.at(ll).second;
 
-            unsigned moduleId = vb_modId->at(l);
-            unsigned layer4b = decodeLayer4bit(moduleId);
+                moduleId = vb_modId->at(l);
+                lay      = decodeLayer(moduleId);
+                lay16    = compressLayer(lay);
+                //assert(lay16 < 16);
 
-            // For each layer, takes the stub with min dZ to simTrack
-            if (goodLayerStubs.at(layer4b) == 999999 && dZ < 26.0) {  // CUIDADO: gets rid of stubs due to loopers
-                goodLayerStubs.at(layer4b) = l;
+                // For each layer, takes the stub with min dZ to simTrack
+                if (goodLayerStubs.at(lay16) == 999999 && dZ < 26.0) {  // CUIDADO: gets rid of stubs due to loopers
+                    goodLayerStubs.at(lay16) = l;
+                }
             }
         }
 
         //if (keep && goodLayerStubs.at(0) == 999999)
         //    std::cout << Warning() << "... evt: " << ievt << " no stub in the first layer of the barrel!" << std::endl;
-        if (keep && goodLayerStubs.at(6) != 999999 && goodLayerStubs.at(11) != 999999)
-            std::cout << Warning() << "... evt: " << ievt << " found stubs in the first layers of both positive and negative endcaps!" << std::endl;
+        //if (keep && goodLayerStubs.at(6) != 999999 && goodLayerStubs.at(11) != 999999)
+        //    std::cout << Warning() << "... evt: " << ievt << " found stubs in the first layers of both positive and negative endcaps!" << std::endl;
+
 
         // _____________________________________________________________________
         // Now make keep-or-ignore decision per stub
         unsigned ngoodstubs = 0;
+        unsigned nhits;
+        id_type moduleId;
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
             bool keepstub = true;
 
-            unsigned moduleId = vb_modId->at(l);
-            unsigned nhits = vb_nhits->at(l);
+            nhits = vb_nhits->at(l);
             assert(nhits > 0);
+
+            moduleId = vb_modId->at(l);
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
 
             // Check whether the index l was stored as a good stub
@@ -245,25 +271,34 @@ int StubCleaner::cleanStubs(TString out) {
                 keepstub = false;
 
             if (keepstub) {
-                // Keep and move it to be the 'ngoodstubs' element
-                vb_x->at(ngoodstubs)          = vb_x->at(l);
-                vb_y->at(ngoodstubs)          = vb_y->at(l);
-                vb_z->at(ngoodstubs)          = vb_z->at(l);
-                vb_r->at(ngoodstubs)          = vb_r->at(l);
-                vb_phi->at(ngoodstubs)        = vb_phi->at(l);
-                vb_coordx->at(ngoodstubs)     = vb_coordx->at(l);
-                vb_coordy->at(ngoodstubs)     = vb_coordy->at(l);
-                vb_roughPt->at(ngoodstubs)    = vb_roughPt->at(l);
-                vb_modId->at(ngoodstubs)      = vb_modId->at(l);
-                vb_nhits->at(ngoodstubs)      = vb_nhits->at(l);
-                vb_simPt->at(ngoodstubs)      = vb_simPt->at(l);
-                vb_simEta->at(ngoodstubs)     = vb_simEta->at(l);
-                vb_simPhi->at(ngoodstubs)     = vb_simPhi->at(l);
-                vb_trkId->at(ngoodstubs)      = vb_trkId->at(l);
-                ++ngoodstubs;
+                // Keep and do something similar to insertion sort
+                // First, find the correct position to insert (according to moduleId)
+                std::vector<unsigned>::iterator pos = vb_modId->begin()+ngoodstubs;
+                unsigned ipos = ngoodstubs;
+                while (ipos != 0 && moduleId < *(--pos))  // start comparing from the tail
+                    --ipos;
+
+                // Insert, keeping only the 'ngoodstubs' elements
+                insertSorted(vb_x->begin()      , ipos, ngoodstubs, vb_x->at(l));
+                insertSorted(vb_y->begin()      , ipos, ngoodstubs, vb_y->at(l));
+                insertSorted(vb_z->begin()      , ipos, ngoodstubs, vb_z->at(l));
+                insertSorted(vb_r->begin()      , ipos, ngoodstubs, vb_r->at(l));
+                insertSorted(vb_phi->begin()    , ipos, ngoodstubs, vb_phi->at(l));
+                insertSorted(vb_coordx->begin() , ipos, ngoodstubs, vb_coordx->at(l));
+                insertSorted(vb_coordy->begin() , ipos, ngoodstubs, vb_coordy->at(l));
+                insertSorted(vb_roughPt->begin(), ipos, ngoodstubs, vb_roughPt->at(l));
+                insertSorted(vb_modId->begin()  , ipos, ngoodstubs, vb_modId->at(l));
+                insertSorted(vb_nhits->begin()  , ipos, ngoodstubs, vb_nhits->at(l));
+                insertSorted(vb_simPt->begin()  , ipos, ngoodstubs, vb_simPt->at(l));
+                insertSorted(vb_simEta->begin() , ipos, ngoodstubs, vb_simEta->at(l));
+                insertSorted(vb_simPhi->begin() , ipos, ngoodstubs, vb_simPhi->at(l));
+                insertSorted(vb_trkId->begin()  , ipos, ngoodstubs, vb_trkId->at(l));
+
+                ++ngoodstubs;  // remember to increment
             }
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " keep? " << keepstub << std::endl;
         }
+        assert(ngoodstubs <= nstubs);
 
         // _____________________________________________________________________
         // Now make keep-or-ignore decision per event
@@ -291,7 +326,7 @@ int StubCleaner::cleanStubs(TString out) {
             }
         }
 
-        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " keep? " << keep << std::endl;
+        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # good stubs: " << ngoodstubs << " keep? " << keep << std::endl;
 
         vb_x        ->resize(ngoodstubs);
         vb_y        ->resize(ngoodstubs);

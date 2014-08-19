@@ -14,7 +14,7 @@ SuperstripStitcher::SuperstripStitcher(unsigned nLayers, unsigned nFakers)
     if (!(6 <= nLayers_ && nLayers_ <= 8))
         throw std::invalid_argument("Incorrect nLayers is given.");
     if (!(nFakers_ <= 3))
-        throw std::invalid_argument("Incorrect nFakeSuperstrip is given.");
+        throw std::invalid_argument("Incorrect nFakers is given.");
 
 
     seven_choose_six_ = {  // 7 * 6 elements

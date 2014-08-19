@@ -8,14 +8,12 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripStitcher.h"
 using namespace slhcl1tt;
 
-#include "fas/lean_table3.h"
-using namespace fas;
-
 #include "TFile.h"
 #include "TFileCollection.h"
 #include "TChain.h"
-#include "TTree.h"
 #include "TString.h"
+
+#include "fas/lean_table3.h"
 
 
 // SETTINGS: Superstrip size, # of fake superstrips, # of DC bits
@@ -26,7 +24,7 @@ class PatternGenerator {
   public:
     // Constructor
     PatternGenerator(PatternBankOption option)
-    : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits), nFakeSuperstrips_(po.nFakeSuperstrips),
+    : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits), nFakers_(po.nFakers),
       bankName_("patternBank"),
       nEvents_(999999999), minFrequency_(1),
       verbose_(1),
@@ -34,18 +32,18 @@ class PatternGenerator {
 
         assert(3 <= nLayers_ && nLayers_ <= 8);
         assert(nDCBits_ <= 4);
-        assert(nFakeSuperstrips_ <= 3);
+        assert(nFakers_ <= 3);
 
         chain_ = new TChain("ntupler/tree");
 
         // Decide on the size of superstrip
-        if (po.useSuperstripVarSize)
+        if (po.useVariableSize)
             arbiter_ = new SuperstripArbiter(po.subLadderVarSize, po.subModuleVarSize, po.subLadderECVarSize, po.subModuleECVarSize);
         else
             arbiter_ = new SuperstripArbiter(po.subLadderSize, po.subModuleSize);
 
         // Build a pattern from a given list of superstrips
-        stitcher_ = new SuperstripStitcher(nLayers_, nFakeSuperstrips_);
+        stitcher_ = new SuperstripStitcher(nLayers_, nFakers_);
     }
 
     // Destructor
@@ -79,7 +77,7 @@ class PatternGenerator {
 
   private:
     // Private functions
-    bool isWithinTriggerTower(const pattern_type& patt);
+    // none
 
 
   public:
@@ -90,7 +88,7 @@ class PatternGenerator {
     // Configurations
     const unsigned nLayers_;
     const unsigned nDCBits_;  // UNUSED
-    const unsigned nFakeSuperstrips_;
+    const unsigned nFakers_;
     const TString bankName_;
 
     // Program options
