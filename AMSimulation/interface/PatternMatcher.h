@@ -5,17 +5,14 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripHasher.h"
 using namespace slhcl1tt;
-
-#include "fas/lean_lut2.h"
-using namespace fas;
 
 #include "TFile.h"
 #include "TFileCollection.h"
 #include "TChain.h"
-#include "TTree.h"
 #include "TString.h"
+
+#include "fas/lean_lut3.h"
 
 
 // SETTINGS: Majority logic
@@ -34,26 +31,20 @@ class PatternMatcher {
       inputPatterns_fas_(0,0) {
 
         assert(3 <= nLayers_ && nLayers_ <= 8);
-        assert(0 <= nDCBits_ && nDCBits_ <= 4);
+        assert(nDCBits_ <= 4);
 
         chain_ = new TChain("ntupler/tree");
 
         // Decide on the size of superstrip
-        if (po.useSuperstripVarSize)
+        if (po.useVariableSize)
             arbiter_ = new SuperstripArbiter(po.subLadderVarSize, po.subModuleVarSize, po.subLadderECVarSize, po.subModuleECVarSize);
         else
             arbiter_ = new SuperstripArbiter(po.subLadderSize, po.subModuleSize);
-
-        // Encoding for each module uses 32 subLadders and 1024 subModules
-        id_type subLadderNBits = mostSigBit(32/arbiter_->minSubLadderSize());
-        id_type subModuleNBits = mostSigBit(1024/arbiter_->minSubModuleSize());
-        hasher_ = new SuperstripHasher(subLadderNBits, subModuleNBits);
     }
 
     // Destructor
     ~PatternMatcher() {
         delete arbiter_;
-        delete hasher_;
     }
 
 
@@ -91,8 +82,8 @@ class PatternMatcher {
 
   private:
     // Configurations
-    const int nLayers_;
-    const int nDCBits_;  // UNUSED
+    const unsigned nLayers_;
+    const unsigned nDCBits_;  // UNUSED
     const TString bankName_;
     const TString prefixRoad_;
     const TString suffix_;
@@ -107,13 +98,16 @@ class PatternMatcher {
 
     // Operators
     SuperstripArbiter * arbiter_;
-    SuperstripHasher  * hasher_;
 
     // Containers
     TChain * chain_;
 
+    // Maps
+    std::map<unsigned, std::vector<unsigned> > triggerTowerMap_;        // key: towerId, value: moduleIds in the tower
+    std::map<unsigned, std::vector<unsigned> > triggerTowerReverseMap_; // key: moduleId, value: towerIds containing the module
+
     std::vector<pattern_type> inputPatterns_vector_;  // using std::vector approach
-    fas::lean_lut2 inputPatterns_fas_;                // using fas::lean_lut2 approach
+    fas::lean_lut3 inputPatterns_fas_;                // using fas::lean_lut3 approach
 };
 
 #endif

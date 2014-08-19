@@ -25,11 +25,12 @@ class TestAMSim(unittest.TestCase):
         self.assertEqual(self.nevents, 100)
 
     def test_moduleId(self):
+        allowed_layers = [5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22]
         tree = self.ttree
         for ievt in tree:
             for modId in ievt.TTStubs_modId:
-                layer = modId/10000
-                self.assertTrue(layer in [5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22])
+                lay = modId/10000
+                self.assertTrue(lay in allowed_layers)
 
     def test_trkId(self):
         tree = self.ttree

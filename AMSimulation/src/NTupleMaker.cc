@@ -92,7 +92,9 @@ int NTupleMaker::writeTree(TString out) {
 
     // _________________________________________________________________________
     // Loop over all events
-    for (long long ievt=0; ievt<nEvents_; ++ievt) {
+
+    unsigned ievt_step = 0;
+    for (long long ievt=0; ievt<nEvents_; ++ievt, ++ievt_step) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
@@ -103,7 +105,10 @@ int NTupleMaker::writeTree(TString out) {
         //assert(chain_tracks_->LoadTree(ievt) >= 0);
         //chain_tracks_->GetEntry(ievt);
 
-        if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
+        if (verbose_>1 && ievt_step == 50000) {
+            std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
+            ievt_step -= 50000;
+        }
 
         ttree->Fill();
     }
@@ -124,7 +129,7 @@ NTupleMaker::TypedBranchConnector<T>::TypedBranchConnector(TString s, TString t,
 : instanceName_(s) {
     ptr_object_ = &object_;
     if (t != "") {
-        tree->Branch(s, ptr_object_, s+"/"+t);  // raw type -- not implemented
+        tree->Branch(s, ptr_object_, s+"/"+t);  // raw type -- CUIDADO: not implemented!
     } else {
         tree->Branch(s, &ptr_object_);  // STL type
     }

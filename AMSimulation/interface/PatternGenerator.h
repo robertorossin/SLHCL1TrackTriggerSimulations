@@ -8,14 +8,12 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripStitcher.h"
 using namespace slhcl1tt;
 
-#include "fas/lean_table3.h"
-using namespace fas;
-
 #include "TFile.h"
 #include "TFileCollection.h"
 #include "TChain.h"
-#include "TTree.h"
 #include "TString.h"
+
+#include "fas/lean_table3.h"
 
 
 // SETTINGS: Superstrip size, # of fake superstrips, # of DC bits
@@ -26,28 +24,26 @@ class PatternGenerator {
   public:
     // Constructor
     PatternGenerator(PatternBankOption option)
-    : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits), nFakeSuperstrips_(po.nFakeSuperstrips),
+    : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits), nFakers_(po.nFakers),
       bankName_("patternBank"),
       nEvents_(999999999), minFrequency_(1),
       verbose_(1),
       allPatterns_fas_(0,0) {
 
         assert(3 <= nLayers_ && nLayers_ <= 8);
-        assert(0 <= nDCBits_ && nDCBits_ <= 4);
-        assert(0 <= nFakeSuperstrips_ && nFakeSuperstrips_ <= 3);
+        assert(nDCBits_ <= 4);
+        assert(nFakers_ <= 3);
 
         chain_ = new TChain("ntupler/tree");
 
-        //layerMap_ = getLayerMergingMap(nLayers_);
-
         // Decide on the size of superstrip
-        if (po.useSuperstripVarSize)
+        if (po.useVariableSize)
             arbiter_ = new SuperstripArbiter(po.subLadderVarSize, po.subModuleVarSize, po.subLadderECVarSize, po.subModuleECVarSize);
         else
             arbiter_ = new SuperstripArbiter(po.subLadderSize, po.subModuleSize);
 
         // Build a pattern from a given list of superstrips
-        stitcher_ = new SuperstripStitcher(nLayers_, nFakeSuperstrips_, po.excessStrategy);
+        stitcher_ = new SuperstripStitcher(nLayers_, nFakers_);
     }
 
     // Destructor
@@ -81,7 +77,7 @@ class PatternGenerator {
 
   private:
     // Private functions
-    bool isWithinTriggerTower(const pattern_type& patt);
+    // none
 
 
   public:
@@ -90,9 +86,9 @@ class PatternGenerator {
 
   private:
     // Configurations
-    const int nLayers_;
-    const int nDCBits_;  // UNUSED
-    const int nFakeSuperstrips_;
+    const unsigned nLayers_;
+    const unsigned nDCBits_;  // UNUSED
+    const unsigned nFakers_;
     const TString bankName_;
 
     // Program options
@@ -111,8 +107,6 @@ class PatternGenerator {
     fas::lean_table3 allPatterns_fas_;                  // using fas::lean_table3 approach
 
     // Maps
-    std::map<unsigned, unsigned> layerMap_;  // UNUSED: defines layer merging
-
     std::map<unsigned, std::vector<unsigned> > triggerTowerMap_;        // key: towerId, value: moduleIds in the tower
     std::map<unsigned, std::vector<unsigned> > triggerTowerReverseMap_; // key: moduleId, value: towerIds containing the module
 

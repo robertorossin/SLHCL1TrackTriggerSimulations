@@ -7,7 +7,6 @@ using namespace slhcl1tt;
 #include "TFile.h"
 #include "TFileCollection.h"
 #include "TChain.h"
-#include "TTree.h"
 #include "TString.h"
 
 

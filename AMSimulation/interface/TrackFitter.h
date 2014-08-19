@@ -11,7 +11,6 @@ using namespace slhcl1tt;
 #include "TFile.h"
 #include "TFileCollection.h"
 #include "TChain.h"
-#include "TTree.h"
 #include "TString.h"
 
 
@@ -62,7 +61,7 @@ class TrackFitter {
 
   private:
     // Configurations
-    const int nLayers_;
+    const unsigned nLayers_;
     const TString prefixRoad_;
     const TString prefixTrack_;
     const TString suffix_;

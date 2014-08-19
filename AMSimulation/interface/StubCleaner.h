@@ -10,7 +10,6 @@ using namespace slhcl1tt;
 #include "TFile.h"
 #include "TFileCollection.h"
 #include "TChain.h"
-#include "TTree.h"
 #include "TTreePlayer.h"
 #include "TTreeFormula.h"
 #include "TString.h"
@@ -18,7 +17,7 @@ using namespace slhcl1tt;
 
 // SETTINGS: none
 // INPUT   : TTree with moduleId, hitId, sim info
-// OUTPUT  : TTree with moduleId, hitId, sim info
+// OUTPUT  : TTree with moduleId, hitId, sim info (cleaned)
 
 class StubCleaner {
   public:

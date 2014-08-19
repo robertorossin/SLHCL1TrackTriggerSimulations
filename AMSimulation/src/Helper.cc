@@ -1,5 +1,9 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 
+#include "TStopwatch.h"
+#include "TString.h"
+#include "TTree.h"
+#include "TBranchElement.h"
 
 namespace slhcl1tt {
 
@@ -108,8 +112,6 @@ TString Debug() {
     return Color("gray") + "DEBUG" + Color("reset") + "  : ";
 }
 
-}  // namespace slhcl1tt
-
 void ResetDeleteBranches (TTree* tree) {
     TObjArray* branches = tree->GetListOfBranches();
     Int_t nb = branches->GetEntriesFast();
@@ -120,4 +122,6 @@ void ResetDeleteBranches (TTree* tree) {
         }
     }
 }
+
+}  // namespace slhcl1tt
 
