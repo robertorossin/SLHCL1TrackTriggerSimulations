@@ -85,7 +85,6 @@ int PatternMatcher::readFile(TString src) {
 // _____________________________________________________________________________
 // Read from the pattern bank
 int PatternMatcher::readPatterns_vector(TString src) {
-/*
     if (src.EndsWith(".root")) {
         if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
         TFile* tfile = TFile::Open(src);
@@ -95,8 +94,8 @@ int PatternMatcher::readPatterns_vector(TString src) {
         }
 
         // For reading
-        count_type               frequency;
-        std::vector<addr_type> * superstripIds  = 0;
+        count_type             frequency;
+        std::vector<id_type> * superstripIds  = 0;
 
         ttree->SetBranchAddress("frequency"    , &frequency);
         ttree->SetBranchAddress("superstripIds", &superstripIds);
@@ -113,9 +112,6 @@ int PatternMatcher::readPatterns_vector(TString src) {
         inputPatterns_vector_.clear();
         inputPatterns_vector_.resize(nentries);
 
-        std::vector<key_type> superstripHashes;
-        superstripHashes.resize(MAX_NLAYERS);
-
         for (long long ievt=0; ievt<nentries; ++ievt) {
             ttree->GetEntry(ievt);
             if (frequency < minFrequency_)
@@ -123,17 +119,17 @@ int PatternMatcher::readPatterns_vector(TString src) {
 
             assert(superstripIds->size() == MAX_NLAYERS);
 
-            // Convert each ssId to a hash key
-            for (unsigned i=0; i<superstripIds->size(); ++i) {
-                //FIXME: layers 7 & 8 has hash = 0!
-                if (superstripIds->at(i) != 0)
-                    superstripHashes.at(i) = hasher_ -> hash(superstripIds->at(i));
+            // Here we insert all superstrips including the virtual ones (calo, muon)
+            // When doing the matching, the virtual ones are not used
+            std::copy(superstripIds->begin(), superstripIds->end(), inputPatterns_vector_.at(ievt).begin());
+
+            if (verbose_>3) {
+                for (unsigned i=0; i<superstripIds->size(); ++i) {
+                    std::cout << Debug() << "... patt: " << i << "  ";
+                    std::copy(superstripIds->begin(), superstripIds->end(), std::ostream_iterator<id_type>(std::cout, " "));
+                    std::cout << " freq: " << (unsigned) frequency << std::endl;
+                }
             }
-
-            //std::copy(superstripIds->begin(), superstripIds->end(), inputPatterns_vector_.at(ievt).begin());
-            std::copy(superstripHashes.begin(), superstripHashes.end(), inputPatterns_vector_.at(ievt).begin());
-
-            if (verbose_>3)  std::cout << Debug() << "... patt: " << ievt << "  " << inputPatterns_vector_.at(ievt) << " freq: " << (unsigned) frequency << std::endl;
         }
 
         if ((size_t) nentries != inputPatterns_vector_.size()) {
@@ -141,15 +137,36 @@ int PatternMatcher::readPatterns_vector(TString src) {
             return 1;
         }
 
+        // _____________________________________________________________________
+        // Also get the trigger tower maps
+        TTree* ttree2 = (TTree*) tfile->Get("triggerTower");
+        if (ttree2 == 0) {
+            std::cout << Error() << "Unable to retrieve the TTree." << std::endl;
+        }
+
+        std::map<unsigned, std::vector<unsigned> > * ptr_map1 = 0;
+        std::map<unsigned, std::vector<unsigned> > * ptr_map2 = 0;
+        ttree2->SetBranchAddress("triggerTowerMap"       , &ptr_map1);
+        ttree2->SetBranchAddress("triggerTowerReverseMap", &ptr_map2);
+
+        ttree2->GetEntry(0);
+        triggerTowerMap_.swap(*ptr_map1);
+        triggerTowerReverseMap_.swap(*ptr_map2);
+
+        delete ttree2;
         delete ttree;
         delete tfile;
     }
 
-    if (inputPatterns_vector_.empty()) {
+    if (! inputPatterns_vector_.size()) {
         std::cout << Error() << "Pattern bank is empty." << std::endl;
         return 1;
     }
-*/
+    if (triggerTowerMap_.empty() || triggerTowerReverseMap_.empty()) {
+        std::cout << Error() << "Trigger tower map is empty." << std::endl;
+        return 1;
+    }
+
     return 0;
 }
 
@@ -157,9 +174,9 @@ int PatternMatcher::readPatterns_vector(TString src) {
 // _____________________________________________________________________________
 // Do pattern recognition
 int PatternMatcher::makeRoads_vector(TString out) {
-/*
+
     // Make sure the map has already been set up
-    assert(! inputPatterns_vector_.empty());
+    assert(inputPatterns_vector_.size());
     assert(std::is_pod<TTSuperstrip>::value && std::is_pod<TTPattern>::value && std::is_pod<TTHit>::value);
 
     // For reading
@@ -235,30 +252,35 @@ int PatternMatcher::makeRoads_vector(TString out) {
     // _________________________________________________________________________
     // Loop over all events
 
-    std::map<key_type, std::vector<TTHit> > superstripHits;  // key: superstrip hash, values: vector of hits
-    std::vector<TTHit> hits;
+    std::map<id_type, std::vector<id_type> > towerSuperstripsMap; // key: trigger tower id; values: vector of superstrip addr
+    std::map<id_type, std::vector<TTHit> >   superstripHitsMap;   // key: superstrip addr; values: vector of hits
     std::vector<std::vector<TTHit> > hitses;  // just like hits, but before serialized
+    std::vector<TTHit> hits;                  // after serialized
 
-    key_type fakeSuperstripHash = hasher_ -> hash(fakeSuperstripId_);
-    key_type fakeSuperstripHash1 = hasher_ -> hash(fakeSuperstripId1_);
-    key_type nSuperstripHashes = ((fakeSuperstripHash+1) % 2) == 0 ? fakeSuperstripHash+1 : fakeSuperstripHash+2;  // use power of 2
+    const id_type& fakeSuperstrip = arbiter_ -> superstrip(27, 0, 0, 0, 0);
+    id_type nvalues = fakeSuperstrip + 1;
+    if (nvalues & 1) nvalues += 1;  // if odd, make it even
 
-    std::vector<bool> superstripBooleans;
-    superstripBooleans.resize(nSuperstripHashes);
+    std::vector<bool> superstripBooleans;  // should be replaced by a bitmap
+    superstripBooleans.resize(nvalues);
 
     std::vector<TTRoad> roads;
-    roads.reserve(200);
+    roads.reserve(300);
     std::vector<genPart> genParts;
     genParts.reserve(50);
 
     int nPassed = 0, nKept = 0;
-    for (long long ievt=0; ievt<nEvents_; ++ievt) {
+    unsigned ievt_step = 0;
+    for (long long ievt=0; ievt<nEvents_; ++ievt, ++ievt_step) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
 
         unsigned nstubs = vb_modId->size();
-        if (verbose_>1 && ievt%5000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, triggering: %7i", ievt, nKept, nPassed) << std::endl;
+        if (verbose_>1 && ievt_step%5000==0) {
+            std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, triggering: %7i", ievt, nKept, nPassed) << std::endl;
+            ievt_step -= 5000;
+        }
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
         if (!nstubs) {  // skip if no stub
@@ -274,38 +296,60 @@ int PatternMatcher::makeRoads_vector(TString out) {
 
         // _____________________________________________________________________
         // Start pattern recognition
-        superstripHits.clear();
-        for (unsigned l=0; l<superstripBooleans.size(); ++l)
-            superstripBooleans.at(l) = false;
+        towerSuperstripsMap.clear();
+        superstripHitsMap.clear();
+        std::fill(superstripBooleans.begin(), superstripBooleans.end(), false);
 
         // Loop over reconstructed stubs
+        id_type moduleId, lay, lad, mod, col, row;  // declare the usual suspects
+        float stub_x, stub_y, stub_z, stub_pt;
         for (unsigned l=0; l<nstubs; ++l) {
-            unsigned moduleId = vb_modId->at(l);
-            float coordx = vb_coordx->at(l);
-            float coordy = vb_coordy->at(l);
 
-            // Use half-strip unit
-            id_type col = halfStripRound(coordy);
-            id_type row = halfStripRound(coordx);
+            // Break moduleId into lay, lad, mod
+            moduleId = vb_modId->at(l);
+            lay = decodeLayer(moduleId);
+            lad = decodeLadder(moduleId);
+            mod = decodeModule(moduleId);
+
+            // col <-- coordy, row <-- coordx
+            // use half-strip unit
+            col = halfStripRound(vb_coordy->at(l));
+            row = halfStripRound(vb_coordx->at(l));
+
+            // Skip if moduleId not in any trigger tower
+            if (po.requireTriggerTower && triggerTowerReverseMap_.find(moduleId) == triggerTowerReverseMap_.end()) {
+                if (verbose_>2)  std::cout << Debug() << "... ... skip moduleId: " << moduleId << " not in any trigger tower." << std::endl;
+                continue;
+            }
 
             // Find superstrip address
-            col = arbiter_ -> subladder(moduleId, col);
-            row = arbiter_ -> submodule(moduleId, row);
-            addr_type ssId = encodeSuperstripId(moduleId, col, row);
-
-            // Convert each ssId to a hash key
-            key_type hash = hasher_ -> hash(ssId);
+            const id_type& ssId = arbiter_ -> superstrip(lay, lad, mod, col, row);
 
             // Position and rough pt
-            float x = vb_x->at(l);
-            float y = vb_y->at(l);
-            float z = vb_z->at(l);
-            float pt = vb_roughPt->at(l);
+            stub_x = vb_x->at(l);
+            stub_y = vb_y->at(l);
+            stub_z = vb_z->at(l);
+            stub_pt = vb_roughPt->at(l);
 
             // Create a hit
-            //superstripHits[ssId].emplace_back(TTHit{x, y, z, 0., 0., 0., -1, pt, ssId, 1});  // POD type constructor
-            superstripHits[hash].emplace_back(TTHit{x, y, z, 0., 0., 0., -1, pt, ssId, 1});  // POD type constructor
-            superstripBooleans.at(hash) = true;
+            std::vector<TTHit>& ssHits = superstripHitsMap[ssId];  // this takes the address
+            ssHits.emplace_back(TTHit{stub_x, stub_y, stub_z, 0., 0., 0., -1, stub_pt, ssId, 1});  // POD type constructor
+
+            // Make a tick
+            superstripBooleans.at(ssId) = true;
+
+            if (ssHits.size() == 1) {  // First time this ssId shows up
+                // Find associated trigger towers
+                if (po.requireTriggerTower) {
+                    const std::vector<unsigned>& towerIds = triggerTowerReverseMap_.at(moduleId);
+                    for (unsigned i=0; i<towerIds.size(); ++i) {
+                        towerSuperstripsMap[towerIds.at(i)].push_back(ssId);
+                    }
+
+                } else {
+                    towerSuperstripsMap[0].push_back(ssId);
+                }
+            }
 
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << " trkId: " << vb_trkId->at(l) << std::endl;
         }
@@ -314,18 +358,21 @@ int PatternMatcher::makeRoads_vector(TString out) {
         // Create roads
         roads.clear();
 
-        std::map<key_type, std::vector<TTHit> >::iterator found;
-        int nMisses = 0;
+        hitses.clear();
+        hits.clear();
 
+        std::map<id_type, std::vector<TTHit> >::iterator found;
+        unsigned nMisses = 0;
+
+        //FIXME: do not correctly model the overlaps among trigger towers
         for (std::vector<pattern_type>::const_iterator itv = inputPatterns_vector_.begin();
              itv != inputPatterns_vector_.end(); ++itv) {
             nMisses = 0;
 
             for (pattern_type::const_iterator it = itv->begin(); it != itv->begin() + nLayers_; ++it) {
                 //assert(*it != 0);
-                if ((*it != fakeSuperstripHash)  &&
-                    (*it != fakeSuperstripHash1) &&
-                    (! superstripBooleans.at(*it)))
+                if ((*it != fakeSuperstrip)  &&
+                    (! superstripBooleans.at(*it)) )
                         ++nMisses;
 
                 // if number of allowed misses more than the requirement
@@ -333,24 +380,22 @@ int PatternMatcher::makeRoads_vector(TString out) {
                     break;
             }
 
-            if (verbose_>2 && (int) hitses.size() == po.nLayers)  std::cout << Debug() << "... ... # hitses: " << hitses.size() << " # misses: " << nMisses << std::endl;
+            //if (verbose_>2 && hitses.size() == po.nLayers)  std::cout << Debug() << "... ... # hitses: " << hitses.size() << " # misses: " << nMisses << std::endl;
 
             if (nMisses <= po.nMisses) {
-                hits.clear();
                 hitses.clear();
+                hits.clear();
 
                 for (pattern_type::const_iterator it = itv->begin(); it != itv->begin() + nLayers_; ++it) {
-                    if ((*it != fakeSuperstripHash)  &&
-                        (*it != fakeSuperstripHash1)) {
-                        found = superstripHits.find(*it);
-                        if (found != superstripHits.end()) {
+                    if (*it != fakeSuperstrip) {
+                        found = superstripHitsMap.find(*it);  //FIXME: cross check new impl
+                        if (found != superstripHitsMap.end()) {
                             hitses.push_back(found -> second);
                             if ((int) hitses.back().size() > maxHits_)
                                 hitses.back().resize(maxHits_);
                         }
 
-                    } else {
-                        // Fake superstrip
+                    } else {  // fake superstrip
                         hitses.push_back(std::vector<TTHit>());
                     }
                 }
@@ -392,7 +437,7 @@ int PatternMatcher::makeRoads_vector(TString out) {
 
     long long nentries = writer.write();
     assert(nentries == nKept);
-*/
+
     return 0;
 }
 
@@ -450,7 +495,7 @@ int PatternMatcher::readPatterns_fas(TString src) {
                 for (unsigned i=0; i<superstripIds->size(); ++i) {
                     std::cout << Debug() << "... patt: " << i << "  ";
                     std::copy(superstripIds->begin(), superstripIds->end(), std::ostream_iterator<id_type>(std::cout, " "));
-                    std::cout << " freq: " << frequency << std::endl;
+                    std::cout << " freq: " << (unsigned) frequency << std::endl;
                 }
             }
         }
@@ -716,7 +761,6 @@ int PatternMatcher::makeRoads_fas(TString out) {
                     for (unsigned i=0; i<hitses.size(); ++i) {
                         hits.insert(hits.end(), hitses.at(i).begin(), hitses.at(i).end());
                     }
-
                     roads.emplace_back(hitses.size(), (itpair -> key), patt, hits);
 
                     if (verbose_>2)  std::cout << Debug() << "... ... road: " << roads.size() - 1 << " " << roads.back() << std::endl;
