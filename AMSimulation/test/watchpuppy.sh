@@ -42,7 +42,8 @@ do
   if [ $cpuTime -gt $maxCpu ]; then maxCpu=$cpuTime; fi
   if [ $wallTime -gt $maxWall ]; then maxWall=$wallTime; fi
 
-  echo -e " $now\t$pid\t$maxRss\t$maxVsz\t$maxDisk\t$cpuTime\t$wallTime\t$cmd"
+  #echo -e " $now\t$pid\t$maxRss\t$maxVsz\t$maxDisk\t$cpuTime\t$wallTime\t$cmd"
+  echo -e " $now, $pid, $maxRss, $maxVsz, $cpuTime, $wallTime, $cmd"
 
   let iter=${iter}+1
   sleep 60

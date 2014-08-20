@@ -171,7 +171,7 @@ int PatternGenerator::makePatterns_map() {
 
     std::map<unsigned, unsigned> towerCountMap;
 
-    float bankSize_f = 0., bankOldSize_f = -100000.;
+    float bankSize_f = 0., bankOldSize_f = 0.;
 
     int nRead = 0, nKept = 0;
     unsigned ievt_step = 0;
@@ -204,6 +204,8 @@ int PatternGenerator::makePatterns_map() {
 
         stubLayers.clear();
         patt.fill(0);
+        patt.at(6) = arbiter_ -> superstrip(25, 0, 0, 0, 0);  // turn off for now
+        patt.at(7) = arbiter_ -> superstrip(26, 0, 0, 0, 0);  // turn off for now
 
         // Check min # of layers
         bool require = (nstubs >= MIN_NGOODSTUBS);
@@ -503,7 +505,7 @@ int PatternGenerator::makePatterns_fas() {
 
     std::map<unsigned, unsigned> towerCountMap;
 
-    float bankSize_f = 0., bankOldSize_f = -100000.;
+    float bankSize_f = 0., bankOldSize_f = 0.;
 
     int nRead = 0, nKept = 0;
     unsigned ievt_step = 0;
@@ -536,6 +538,8 @@ int PatternGenerator::makePatterns_fas() {
 
         stubLayers.clear();
         patt.fill(0);
+        patt.at(6) = arbiter_ -> superstrip(25, 0, 0, 0, 0);  // turn off for now
+        patt.at(7) = arbiter_ -> superstrip(26, 0, 0, 0, 0);  // turn off for now
 
         // Check min # of layers
         bool require = (nstubs >= MIN_NGOODSTUBS);
@@ -686,8 +690,20 @@ int PatternGenerator::writePatterns_fas(TString out) {
     const long long nentries = allPatterns_fas_.size();
     if (verbose_)  std::cout << Info() << "Recreating " << out << " with " << nentries << " patterns." << std::endl;
     TFile* tfile = TFile::Open(out, "RECREATE");
-    TTree* ttree = new TTree(bankName_, "");
 
+    // _________________________________________________________________________
+    // Save trigger tower maps
+    TTree* ttree2 = new TTree("triggerTower", "");
+    std::map<unsigned, std::vector<unsigned> > * ptr_map1 = &triggerTowerMap_;
+    std::map<unsigned, std::vector<unsigned> > * ptr_map2 = &triggerTowerReverseMap_;
+    ttree2->Branch("triggerTowerMap", ptr_map1);
+    ttree2->Branch("triggerTowerReverseMap", ptr_map2);
+    ttree2->Fill();
+    assert(ttree2->GetEntries() == 1);
+
+    // _________________________________________________________________________
+    // Save pattern bank
+    TTree* ttree = new TTree(bankName_, "");
     std::auto_ptr<count_type>             frequency       (new count_type(0));
     std::auto_ptr<std::vector<id_type> >  superstripIds   (new std::vector<id_type>());
 
@@ -730,15 +746,6 @@ int PatternGenerator::writePatterns_fas(TString out) {
     }
     assert(ttree->GetEntries() == nentries);
 
-    // _________________________________________________________________________
-    // Also save the trigger tower maps
-    TTree* ttree2 = new TTree("triggerTower", "");
-    std::map<unsigned, std::vector<unsigned> > * ptr_map1 = &triggerTowerMap_;
-    std::map<unsigned, std::vector<unsigned> > * ptr_map2 = &triggerTowerReverseMap_;
-    ttree2->Branch("triggerTowerMap", ptr_map1);
-    ttree2->Branch("triggerTowerReverseMap", ptr_map2);
-    ttree2->Fill();
-    assert(ttree2->GetEntries() == 1);
 
     tfile->Write();
     delete ttree2;

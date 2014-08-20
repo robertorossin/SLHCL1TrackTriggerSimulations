@@ -277,7 +277,7 @@ int PatternMatcher::makeRoads_vector(TString out) {
         chain_->GetEntry(ievt);
 
         unsigned nstubs = vb_modId->size();
-        if (verbose_>1 && ievt_step%5000==0) {
+        if (verbose_>1 && ievt_step == 5000) {
             std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, triggering: %7i", ievt, nKept, nPassed) << std::endl;
             ievt_step -= 5000;
         }
@@ -388,7 +388,7 @@ int PatternMatcher::makeRoads_vector(TString out) {
 
                 for (pattern_type::const_iterator it = itv->begin(); it != itv->begin() + nLayers_; ++it) {
                     if (*it != fakeSuperstrip) {
-                        found = superstripHitsMap.find(*it);  //FIXME: cross check new impl
+                        found = superstripHitsMap.find(*it);
                         if (found != superstripHitsMap.end()) {
                             hitses.push_back(found -> second);
                             if ((int) hitses.back().size() > maxHits_)
@@ -647,7 +647,7 @@ int PatternMatcher::makeRoads_fas(TString out) {
         chain_->GetEntry(ievt);
 
         unsigned nstubs = vb_modId->size();
-        if (verbose_>1 && ievt_step%5000==0) {
+        if (verbose_>1 && ievt_step == 5000) {
             std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, triggering: %7i", ievt, nKept, nPassed) << std::endl;
             ievt_step -= 5000;
         }
