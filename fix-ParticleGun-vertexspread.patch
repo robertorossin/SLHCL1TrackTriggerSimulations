@@ -1,14 +1,15 @@
 diff --git a/IOMC/ParticleGuns/interface/FlatRandomOneOverPtGunProducer.h b/IOMC/ParticleGuns/interface/FlatRandomOneOverPtGunProducer.h
-index d2c6bdc..ab2dcda 100644
+index d2c6bdc..09102f5 100644
 --- a/IOMC/ParticleGuns/interface/FlatRandomOneOverPtGunProducer.h
 +++ b/IOMC/ParticleGuns/interface/FlatRandomOneOverPtGunProducer.h
-@@ -26,6 +26,9 @@ namespace edm
+@@ -26,6 +26,10 @@ namespace edm
      
      double            fMinOneOverPt   ;
      double            fMaxOneOverPt   ;
 +    double            fXFlatSpread   ;
 +    double            fYFlatSpread   ;
 +    double            fZFlatSpread   ;
++    bool              fReallyFlat    ;
  
    };
  } 
@@ -27,20 +28,21 @@ index 5d0e022..4ee0410 100644
    };
  } 
 diff --git a/IOMC/ParticleGuns/src/FlatRandomOneOverPtGunProducer.cc b/IOMC/ParticleGuns/src/FlatRandomOneOverPtGunProducer.cc
-index ff29a0d..70f6cb0 100644
+index ff29a0d..7363193 100644
 --- a/IOMC/ParticleGuns/src/FlatRandomOneOverPtGunProducer.cc
 +++ b/IOMC/ParticleGuns/src/FlatRandomOneOverPtGunProducer.cc
-@@ -22,6 +22,9 @@ FlatRandomOneOverPtGunProducer::FlatRandomOneOverPtGunProducer(const edm::Parame
+@@ -22,6 +22,10 @@ FlatRandomOneOverPtGunProducer::FlatRandomOneOverPtGunProducer(const edm::Parame
    
    fMinOneOverPt = pgun_params.getParameter<double>("MinOneOverPt");
    fMaxOneOverPt = pgun_params.getParameter<double>("MaxOneOverPt");
 +  fXFlatSpread  = pgun_params.exists("XFlatSpread") ? pgun_params.getParameter<double>("XFlatSpread") : 0.;
 +  fYFlatSpread  = pgun_params.exists("YFlatSpread") ? pgun_params.getParameter<double>("YFlatSpread") : 0.;
 +  fZFlatSpread  = pgun_params.exists("ZFlatSpread") ? pgun_params.getParameter<double>("ZFlatSpread") : 0.;
++  fReallyFlat   = pgun_params.exists("ReallyFlat")  ? pgun_params.getParameter<bool>  ("ReallyFlat")  : false;
    
    produces<HepMCProduct>();
    produces<GenEventInfoProduct>();
-@@ -50,7 +53,10 @@ void FlatRandomOneOverPtGunProducer::produce(Event &e, const EventSetup& es) {
+@@ -50,7 +54,10 @@ void FlatRandomOneOverPtGunProducer::produce(Event &e, const EventSetup& es) {
    //
    // 1st, primary vertex
    //
@@ -52,6 +54,15 @@ index ff29a0d..70f6cb0 100644
  
    // loop over particles
    //
+@@ -60,6 +67,8 @@ void FlatRandomOneOverPtGunProducer::produce(Event &e, const EventSetup& es) {
+     double xx     = fRandomGenerator->fire(0.0,1.0);
+     double pt     = std::exp((1.-xx)*std::log(fMinOneOverPt)+
+ 			     xx*std::log(fMaxOneOverPt)) ;
++    if (fReallyFlat)
++           pt     = fMinOneOverPt + xx * (fMaxOneOverPt - fMinOneOverPt);
+     double eta    = fRandomGenerator->fire(fMinEta, fMaxEta) ;
+     double phi    = fRandomGenerator->fire(fMinPhi, fMaxPhi) ;
+     if (pt != 0) pt = 1./pt;
 diff --git a/IOMC/ParticleGuns/src/FlatRandomPtGunProducer.cc b/IOMC/ParticleGuns/src/FlatRandomPtGunProducer.cc
 index 7794763..8dbc826 100644
 --- a/IOMC/ParticleGuns/src/FlatRandomPtGunProducer.cc
