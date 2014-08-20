@@ -8,11 +8,15 @@
 <use   name="MagneticField/Records"/>
 <use   name="MagneticField/Engine"/>
 <use   name="CommonTools/UtilAlgos"/>
+<use   name="DataFormats/Common"/>
 <use   name="DataFormats/JetReco"/>
 <use   name="DataFormats/METReco"/>
 <use   name="DataFormats/L1TrackTrigger"/>
 <use   name="SimDataFormats/TrackingAnalysis"/>
+<use   name="DataFormats/StdDictionaries"/>
+<use   name="DataFormats/WrappedStdDictionaries"/>
 <!--use   name="clhep"/-->
-<export>
-  <lib   name="1"/>
-</export>
+<!--use   name="boost"/-->
+<!--use   name="root"/-->
+<!--use   name="rootrflx"/-->
+<flags   EDM_PLUGIN="1"/>
