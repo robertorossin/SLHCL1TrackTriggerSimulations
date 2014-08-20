@@ -277,8 +277,7 @@ class TestNTuple(unittest.TestCase):
         tree.SetBranchAddress("simPixelDigis_y", self.fvec2)
         tree.SetBranchAddress("simPixelDigis_z", self.fvec3)
         tree.SetBranchAddress("simPixelDigis_modId", self.uvec1)
-        tree.SetBranchAddress("simPixelDigis_col", self.ivec1)
-        tree.SetBranchAddress("simPixelDigis_row", self.ivec2)
+        tree.SetBranchAddress("simPixelDigis_chan", self.ivec1)
         for i in xrange(self.nevents):
             tree.GetEntry(i)
             n = getattr(tree, "simPixelDigis_size")
@@ -288,8 +287,7 @@ class TestNTuple(unittest.TestCase):
                 self.assertTrue(abs(self.fvec2[j]) < 110)
                 self.assertTrue(abs(self.fvec3[j]) < 300)
                 self.assertTrue(self.uvec1[j] < 230000)
-                self.assertTrue(self.ivec1[j] < 32)
-                self.assertTrue(self.ivec2[j] < 1024)
+                self.assertTrue(self.ivec1[j] < ((1023<<11)|31)+1)
             with self.assertRaises(IndexError):
                 print self.fvec1[n]
 
