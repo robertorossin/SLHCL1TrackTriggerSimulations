@@ -10,9 +10,10 @@ generator = cms.EDProducer("FlatRandomPtGunProducer",
         MaxPhi = cms.double(3.14159265359),
         MinEta = cms.double(-2.5),
         MinPhi = cms.double(-3.14159265359),
-        XFlatSpread = cms.double(1.5), ## in mm
-        YFlatSpread = cms.double(1.5), ## in mm
-        ZFlatSpread = cms.double(150.), ## in mm
+        #XFlatSpread = cms.double(1.5),  ## in mm
+        #YFlatSpread = cms.double(1.5),  ## in mm
+        #ZFlatSpread = cms.double(150.), ## in mm
+        #ReallyFlat = cms.bool(True),
     ),
     Verbosity = cms.untracked.int32(0),
     psethack = cms.string('single positron pt 1 to 100'),
