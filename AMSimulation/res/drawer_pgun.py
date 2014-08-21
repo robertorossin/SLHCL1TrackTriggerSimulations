@@ -15,34 +15,37 @@ sections["simTracks"  ] = False
 sections["simVertices"] = False
 sections["trkParts"   ] = False
 sections["trkVertices"] = False
-sections["eventInfo"  ] = False
-sections["clusters"   ] = True
-sections["stubs"      ] = True
+sections["eventInfo"  ] = True
+sections["clusters"   ] = False
+sections["stubs"      ] = False
 sections["fixme"      ] = False
 
 drawerInit = DrawerInit()
 
 # Muon gun
-infiles = ["/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/SingleMuMinus_20140714/ntuple_1_1_1TX.root"]
+#infiles = ["/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/SingleMuMinus_20140714/ntuple_1_1_1TX.root"]
+#infiles = ["/uscms_data/d2/jiafu/L1TrackTrigger/CRAB_amsim/ntuple_1_1_1TX_redux.root"]
+infiles = ["/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1/SingleMuMinus_Barrel_20140821/SingleMu_Barrel_E2023TTI_ntuple_1_1_Wll.root"]
+
 col  = TColor.GetColor("#1f78b4")  # Paired
 fcol = TColor.GetColor("#a6cee3")
 imgdir = "figures_pgun/"
 
 # Neutrino gun (140PU)
 if samples["nu140"]:
-    infiles = ["/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/Neutrino_Pt2to20_gun_20140627/ntuple_1_1_rW6.root", "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/Neutrino_Pt2to20_gun_20140627/ntuple_2_1_ZzV.root"]
+    infiles = ["/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/Neutrino_Pt2to20_gun_20140821/ntuple_1_1_9cK.root", "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/Neutrino_Pt2to20_gun_20140821/ntuple_2_1_HJw.root"]
     col  = TColor.GetColor("#e31a1c")  # Paired
     fcol = TColor.GetColor("#fb9a99")
     imgdir = "figures_pgun_nu140/"
 
 # Muon gun (140PU)
 if samples["mu140"]:
-    infiles = ["/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/SingleMuMinusFlatPt0p2To150_20140627/ntuple_1_1_gmA.root", "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/SingleMuMinusFlatPt0p2To150_20140627/ntuple_2_1_kWp.root"]
+    infiles = ["/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/SingleMuMinusFlatPt0p2To150_20140821/ntuple_1_1_dzk.root", "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/SingleMuMinusFlatPt0p2To150_20140821/ntuple_2_1_j6Z.root"]
     col  = TColor.GetColor("#6a3d9a")  # Paired
     fcol = TColor.GetColor("#cab2d6")
     imgdir = "figures_pgun_mu140/"
 
-
+#nentries = 100000
 nentries = 1000
 
 chain = TChain("ntupler/tree", "")
@@ -460,6 +463,10 @@ if sections["clusters"]:
         "Cluster global pos r [cm]", 60, 0, 120, col, fcol)
     histos = doit([p0], imgdir)
 
+    p0 = struct("TTClusters_eta", "TTClusters_eta", cut,
+        "Cluster global pos #eta", 60, -3, 3, col, fcol)
+    histos = doit([p0], imgdir)
+
     p0 = struct("TTClusters_phi", "TTClusters_phi", cut,
         "Cluster global pos phi [rad]", 64, -3.2, 3.2, col, fcol)
     histos = doit([p0], imgdir)
@@ -665,6 +672,10 @@ if sections["stubs"]:
 
     p0 = struct("TTStubs_r", "TTStubs_r", cut,
         "Stub global pos r [cm]", 60, 0, 120, col, fcol)
+    histos = doit([p0], imgdir)
+
+    p0 = struct("TTStubs_eta", "TTStubs_eta", cut,
+        "Stub global pos #eta", 60, -3, 3, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("TTStubs_phi", "TTStubs_phi", cut,

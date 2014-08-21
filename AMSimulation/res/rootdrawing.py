@@ -90,8 +90,9 @@ class HistView(_HistViewBase):
 class HistViewProf(_HistViewBase):
     def __init__(self, p):
         super(HistViewProf, self).__init__(p)
-        self.h = TH2F("hp1_%i" % randint(0,65535), "; %s; %s" % (p.xtitle, p.ytitle), p.nbinsx, p.xlow, p.xup, p.ylow, p.yup)
+        self.h = TProfile("hp1_%i" % randint(0,65535), "; %s; %s" % (p.xtitle, p.ytitle), p.nbinsx, p.xlow, p.xup, p.ylow, p.yup)
         self.randname = self.h.GetName()
+        p.markersize = 1.3
         self.style(p)
 
 class HistView2D(_HistViewBase):
@@ -170,14 +171,14 @@ def project(tree, histos, nentries=1000000000, normalize=-1, drawOverflow=True, 
         if drawUnderflow:  h.fixUnderflow()
     return
 
-def projectProf(tree, histos):
+def projectProf(tree, histos, nentries=1000000000):
     for i, h in enumerate(histos):
-        tree.Project(h.randname, h.var, h.cut, "prof goff")
+        tree.Project(h.randname, h.var, h.cut, "prof goff", nentries)
     return
 
-def project2D(tree, histos):
+def project2D(tree, histos, nentries=1000000000):
     for i, h in enumerate(histos):
-        tree.Project(h.randname, h.var, h.cut, "goff")
+        tree.Project(h.randname, h.var, h.cut, "goff", nentries)
     return
 
 # Draw
@@ -185,11 +186,10 @@ def draw(histos, ytitle="Events", logx=False, logy=False, stats=True, text=False
     if isinstance(histos[0], HistView):
         histos = [hv.h for hv in histos]
     h = histos[0]
-    if not stats:
-        h.SetStats(0)
+    if not stats:  h.SetStats(0)
     h.SetMaximum(h.GetMaximum() * 1.4)
     if not logy:  h.SetMinimum(0.)
-    h.GetYaxis().SetTitle(ytitle)
+    if ytitle:  h.GetYaxis().SetTitle(ytitle)
     h.Draw("hist")
     gPad.SetLogx(logx); gPad.SetLogy(logy)
     if text:
@@ -199,18 +199,33 @@ def draw(histos, ytitle="Events", logx=False, logy=False, stats=True, text=False
     return
 
 # Draw more than one
-def draws(histos, ytitle="Events", logx=False, logy=False, stats=True):
+def draws(histos, ytitle="Events", logx=False, logy=False, stats=False):
     if isinstance(histos[0], HistView):
         histos = [hv.h for hv in histos]
     h = histos[0]
-    if not stats:
-        h.SetStats(0)
+    if not stats:  h.SetStats(0)
+    h.SetMaximum(h.GetMaximum() * 1.4)
     if not logy:  h.SetMinimum(0.)
-    h.GetYaxis().SetTitle(ytitle)
+    if ytitle:  h.GetYaxis().SetTitle(ytitle)
     h.Draw("hist")
     gPad.SetLogx(logx); gPad.SetLogy(logy)
     for h in histos[1:]:
         h.Draw("same hist")
+    CMS_label()
+    return
+
+def drawsProf(histos, ytitle="", logx=False, logy=False, ymax=-1, stats=False):
+    if isinstance(histos[0], HistViewProf):
+        histos = [hv.h for hv in histos]
+    h = histos[0]
+    if not stats:  h.SetStats(0)
+    h.SetMaximum(h.GetMaximum() * 1.4)  if ymax == -1  else h.SetMaximum(ymax)
+    if not logy:  h.SetMinimum(0.)
+    if ytitle:  h.GetYaxis().SetTitle(ytitle)
+    h.Draw("hist p")
+    gPad.SetLogx(logx); gPad.SetLogy(logy)
+    for h in histos[1:]:
+        h.Draw("same hist p")
     CMS_label()
     return
 
