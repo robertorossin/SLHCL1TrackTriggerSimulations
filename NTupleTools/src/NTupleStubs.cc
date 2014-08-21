@@ -103,6 +103,7 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >                   (prefixClus_ + "y"              + suffix_);
     produces<std::vector<float> >                   (prefixClus_ + "z"              + suffix_);
     produces<std::vector<float> >                   (prefixClus_ + "r"              + suffix_);
+    produces<std::vector<float> >                   (prefixClus_ + "eta"            + suffix_);
     produces<std::vector<float> >                   (prefixClus_ + "phi"            + suffix_);
     produces<std::vector<float> >                   (prefixClus_ + "localx"         + suffix_);
     produces<std::vector<float> >                   (prefixClus_ + "localy"         + suffix_);
@@ -156,6 +157,7 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >                   (prefixStub_ + "y"              + suffix_);
     produces<std::vector<float> >                   (prefixStub_ + "z"              + suffix_);
     produces<std::vector<float> >                   (prefixStub_ + "r"              + suffix_);
+    produces<std::vector<float> >                   (prefixStub_ + "eta"            + suffix_);
     produces<std::vector<float> >                   (prefixStub_ + "phi"            + suffix_);
     produces<std::vector<float> >                   (prefixStub_ + "coordx"         + suffix_);
     produces<std::vector<float> >                   (prefixStub_ + "coordy"         + suffix_);
@@ -238,6 +240,7 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >                   (prefixDigi_ + "y"              + suffix_);
     produces<std::vector<float> >                   (prefixDigi_ + "z"              + suffix_);
     produces<std::vector<float> >                   (prefixDigi_ + "r"              + suffix_);
+    produces<std::vector<float> >                   (prefixDigi_ + "eta"            + suffix_);
     produces<std::vector<float> >                   (prefixDigi_ + "phi"            + suffix_);
     //produces<std::vector<bool> >                    (prefixDigi_ + "barrel"         + suffix_);
     //produces<std::vector<bool> >                    (prefixDigi_ + "psmodule"       + suffix_);
@@ -365,6 +368,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> >                  vc_y                (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  vc_z                (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  vc_r                (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vc_eta              (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  vc_phi              (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  vc_localx           (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  vc_localy           (new std::vector<float>());
@@ -418,6 +422,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> >                  vb_y                (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  vb_z                (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  vb_r                (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vb_eta              (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  vb_phi              (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  vb_coordx           (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  vb_coordy           (new std::vector<float>());
@@ -500,6 +505,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> >                  vd_y                (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  vd_z                (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  vd_r                (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >                  vd_eta              (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  vd_phi              (new std::vector<float>());
     //std::auto_ptr<std::vector<bool> >                   vd_barrel           (new std::vector<bool>());
     //std::auto_ptr<std::vector<bool> >                   vd_psmodule         (new std::vector<bool>());
@@ -663,6 +669,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vc_y->push_back(position.y());                  // sviret/HL_LHC: CLUS_y
                 vc_z->push_back(position.z());                  // sviret/HL_LHC: CLUS_z
                 vc_r->push_back(position.perp());
+                vc_eta->push_back(position.eta());
                 vc_phi->push_back(position.phi());
                 vc_localx->push_back(localposition.x());
                 vc_localy->push_back(localposition.y());
@@ -885,6 +892,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vb_y->push_back(position.y());                  // sviret/HL_LHC: STUB_y
                 vb_z->push_back(position.z());                  // sviret/HL_LHC: STUB_z
                 vb_r->push_back(position.perp());
+                vb_eta->push_back(position.eta());
                 vb_phi->push_back(position.phi());
                 vb_coordx->push_back(localcoord.x());           // sviret/HL_LHC: STUB_strip (in half-strip unit?)
                 vb_coordy->push_back(localcoord.y());           // sviret/HL_LHC: STUB_seg
@@ -1122,6 +1130,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 vd_y->push_back(position.y());
                 vd_z->push_back(position.z());
                 vd_r->push_back(position.perp());
+                vd_eta->push_back(position.eta());
                 vd_phi->push_back(position.phi());
                 //vd_barrel->push_back(isBarrel);
                 //vd_psmodule->push_back(isPSModule);
@@ -1152,6 +1161,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vc_y             , prefixClus_ + "y"              + suffix_);
     iEvent.put(vc_z             , prefixClus_ + "z"              + suffix_);
     iEvent.put(vc_r             , prefixClus_ + "r"              + suffix_);
+    iEvent.put(vc_eta           , prefixClus_ + "eta"            + suffix_);
     iEvent.put(vc_phi           , prefixClus_ + "phi"            + suffix_);
     iEvent.put(vc_localx        , prefixClus_ + "localx"         + suffix_);
     iEvent.put(vc_localy        , prefixClus_ + "localy"         + suffix_);
@@ -1205,6 +1215,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vb_y             , prefixStub_ + "y"              + suffix_);
     iEvent.put(vb_z             , prefixStub_ + "z"              + suffix_);
     iEvent.put(vb_r             , prefixStub_ + "r"              + suffix_);
+    iEvent.put(vb_eta           , prefixStub_ + "eta"            + suffix_);
     iEvent.put(vb_phi           , prefixStub_ + "phi"            + suffix_);
     iEvent.put(vb_coordx        , prefixStub_ + "coordx"         + suffix_);
     iEvent.put(vb_coordy        , prefixStub_ + "coordy"         + suffix_);
@@ -1287,6 +1298,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(vd_y             , prefixDigi_ + "y"              + suffix_);
     iEvent.put(vd_z             , prefixDigi_ + "z"              + suffix_);
     iEvent.put(vd_r             , prefixDigi_ + "r"              + suffix_);
+    iEvent.put(vd_eta           , prefixDigi_ + "eta"            + suffix_);
     iEvent.put(vd_phi           , prefixDigi_ + "phi"            + suffix_);
     //iEvent.put(vd_barrel        , prefixDigi_ + "barrel"         + suffix_);
     //iEvent.put(vd_psmodule      , prefixDigi_ + "psmodule"       + suffix_);
