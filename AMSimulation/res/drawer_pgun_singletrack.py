@@ -5,10 +5,6 @@ from rootdrawing import *
 # ______________________________________________________________________________
 # Configurations
 
-samples = {}
-samples["nu140"] = False
-samples["mu140"] = False
-
 sections = {}
 sections["genParts"   ] = False
 sections["simTracks"  ] = False
@@ -16,40 +12,19 @@ sections["simVertices"] = False
 sections["trkParts"   ] = False
 sections["trkVertices"] = False
 sections["eventInfo"  ] = False
-sections["clusters"   ] = True
-sections["stubs"      ] = True
-sections["fixme"      ] = False
+sections["clusters"   ] = False
+sections["stubs"      ] = False
+sections["fixme"      ] = True
 
 drawerInit = DrawerInit()
-
-# Muon gun
-infiles = ["/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/SingleMuMinus_20140714/ntuple_1_1_1TX.root"]
-col  = TColor.GetColor("#1f78b4")  # Paired
-fcol = TColor.GetColor("#a6cee3")
-imgdir = "figures_pgun/"
-
-# Neutrino gun (140PU)
-if samples["nu140"]:
-    infiles = ["/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/Neutrino_Pt2to20_gun_20140627/ntuple_1_1_rW6.root", "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/Neutrino_Pt2to20_gun_20140627/ntuple_2_1_ZzV.root"]
-    col  = TColor.GetColor("#e31a1c")  # Paired
-    fcol = TColor.GetColor("#fb9a99")
-    imgdir = "figures_pgun_nu140/"
-
-# Muon gun (140PU)
-if samples["mu140"]:
-    infiles = ["/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/SingleMuMinusFlatPt0p2To150_20140627/ntuple_1_1_gmA.root", "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/SingleMuMinusFlatPt0p2To150_20140627/ntuple_2_1_kWp.root"]
-    col  = TColor.GetColor("#6a3d9a")  # Paired
-    fcol = TColor.GetColor("#cab2d6")
-    imgdir = "figures_pgun_mu140/"
-
-
-nentries = 1000
+infiles = get_infiles("input.txt", fast=True)
 
 chain = TChain("ntupler/tree", "")
 for f in infiles:
     chain.Add(f)
 tree = chain
 
+imgdir = "figures_pgun/"
 if not imgdir.endswith("/"):  imgdir += "/"
 if gSystem.AccessPathName(imgdir):
     gSystem.mkdir(imgdir)
@@ -61,63 +36,65 @@ if gSystem.AccessPathName(imgdir):
 if sections["genParts"]:
     def doit(x, imgdir=None, logy=False):
         histos = book(x)
-        project(tree, histos, nentries=nentries)
+        project(tree, histos)
         draw(histos, logy=logy)
         if imgdir:  save(imgdir, x[0].name)
         return histos
 
     cut = ""
+    col = sBase03
+    fcol = ssBase3
 
     p0 = struct("genParts_size", "genParts_size" if not cut else "Sum$(%s)" % cut, "",
-        "# gen particles", 4, 0, 4, col, fcol)
+        "muon # gen particles", 4, 0, 4, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("genParts_pt", "genParts_pt", cut,
-        "gen p_{T} [GeV]", 50, 0, 200, col, fcol)
+        "muon gen p_{T} [GeV]", 50, 0, 100, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("genParts_oneoverpt", "1.0/genParts_pt", cut,
-        "gen 1/p_{T} [1/GeV]", 50, 0, 0.5, col, fcol)
+        "muon gen 1/p_{T} [1/GeV]", 50, 0, 1, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("genParts_eta", "genParts_eta", cut,
-        "gen #eta", 60, -3, 3, col, fcol)
+        "muon gen #eta", 60, -3, 3, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("genParts_phi", "genParts_phi", cut,
-        "gen #phi [rad]", 64, -3.2, 3.2, col, fcol)
+        "muon gen #phi [rad]", 64, -3.2, 3.2, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("genParts_E", "genParts_E", cut,
-        "gen energy [GeV]", 50, 0, 1500, col, fcol)
+        "muon gen energy [GeV]", 50, 0, 1000, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("genParts_M", "genParts_M", cut,
-        "gen mass [GeV]", 50, 0, 0.5, col, fcol)
+        "muon gen mass [GeV]", 50, 0, 1, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("genParts_vx", "genParts_vx", cut,
-        "gen vertex x_{0} [cm]", 50, -0.01, 0.01, col, fcol)
+        "muon gen vertex x_{0} [mm]", 60, -3, 3, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("genParts_vy", "genParts_vy", cut,
-        "gen vertex y_{0} [cm]", 50, -0.01, 0.01, col, fcol)
+        "muon gen vertex y_{0} [mm]", 60, -3, 3, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("genParts_vz", "genParts_vz", cut,
-        "gen vertex z_{0} [cm]", 60, -30, 30, col, fcol)
+        "muon gen vertex z_{0} [mm]", 60, -30, 30, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("genParts_pdgId", "genParts_pdgId", cut,
-        "gen PDG id", 50, -25, 25, col, fcol)
+        "muon gen PDG id", 50, -25, 25, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("genParts_charge", "genParts_charge", cut,
-        "gen charge", 8, -4, 4, col, fcol)
+        "muon gen charge", 8, -4, 4, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("genParts_status", "genParts_status", cut,
-        "gen status", 4, 0, 4, col, fcol)
+        "muon gen status", 4, 0, 4, col, fcol)
     histos = doit([p0], imgdir)
 
 
@@ -127,23 +104,26 @@ if sections["genParts"]:
 if sections["simTracks"]:
     def doit(x, imgdir=None, logy=False):
         histos = book(x)
-        project(tree, histos, nentries)
+        project(tree, histos)
         draw(histos, logy=logy)
         if imgdir:  save(imgdir, x[0].name)
         return histos
 
     cut = "simTracks_trkId==1"
+    col = sBase03
+    fcol = ssBase4
 
     p0 = struct("simTracks_size", "simTracks_size" if not cut else "Sum$(%s)" % cut, "",
         "# simTracks", 50, 0, 100, col, fcol)
     histos = doit([p0], imgdir)
+    # max = 1930, 1853, 1782
 
     p0 = struct("simTracks_pt", "simTracks_pt", cut,
-        "simTrack p_{T} [GeV]", 50, 0, 200, col, fcol)
+        "simTrack p_{T} [GeV]", 50, 0, 100, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("simTracks_oneoverpt", "simTracks_pt==0 ? 9999 : 1.0/simTracks_pt", cut,
-        "simTrack 1/p_{T} [1/GeV]", 50, 0, 0.5, col, fcol)
+        "simTrack 1/p_{T} [1/GeV]", 50, 0, 1, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("simTracks_eta", "simTracks_eta", cut,
@@ -189,31 +169,33 @@ if sections["simTracks"]:
 if sections["simVertices"]:
     def doit(x, imgdir=None, logy=False):
         histos = book(x)
-        project(tree, histos, nentries)
+        project(tree, histos)
         draw(histos, logy=logy)
         if imgdir:  save(imgdir, x[0].name)
         return histos
 
     cut = "simVertices_vtxId==0"
+    col = sBase03
+    fcol = ssBase4
 
     p0 = struct("simVertices_size", "simVertices_size" if not cut else "Sum$(%s)" % cut, "",
         "# simVertices", 50, 0, 100, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("simVertices_vx", "simVertices_vx", cut,
-        "simVertex x_{0} [cm]", 50, -0.01, 0.01, col, fcol)
+        "simVertex x_{0} [mm]", 60, -3, 3, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("simVertices_vy", "simVertices_vy", cut,
-        "simVertex y_{0} [cm]", 50, -0.01, 0.01, col, fcol)
+        "simVertex y_{0} [mm]", 60, -3, 3, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("simVertices_vz", "simVertices_vz", cut,
-        "simVertex z_{0} [cm]", 60, -30, 30, col, fcol)
+        "simVertex z_{0} [mm]", 60, -30, 30, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("simVertices_tof", "simVertices_tof", cut,
-        "simVertex time of flight [s]", 50, -5e-12, 5e-12, col, fcol)
+        "simVertex time of flight [s]", 50, -1e-7, 1e-7, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("simVertices_trkId", "simVertices_trkId", cut,
@@ -225,19 +207,19 @@ if sections["simVertices"]:
     histos = doit([p0], imgdir, logy=True)
 
     #p0 = struct("simBeamSpot_vx", "simBeamSpot_bx", cut,
-    #    "simBeamSpot x_{0} [cm]", 50, -0.01, 0.01, col, fcol)
+    #    "simBeamSpot x_{0} [mm]", 60, -3, 3, col, fcol)
     #histos = doit([p0], imgdir)
     #
     #p0 = struct("simBeamSpot_vy", "simBeamSpot_by", cut,
-    #    "simBeamSpot y_{0} [cm]", 50, -0.01, 0.01, col, fcol)
+    #    "simBeamSpot y_{0} [mm]", 60, -3, 3, col, fcol)
     #histos = doit([p0], imgdir)
     #
     #p0 = struct("simBeamSpot_vz", "simBeamSpot_bz", cut,
-    #    "simBeamSpot z_{0} [cm]", 60, -3, 3, col, fcol)
+    #    "simBeamSpot z_{0} [mm]", 60, -3, 3, col, fcol)
     #histos = doit([p0], imgdir)
     #
     #p0 = struct("simBeamSpot_sigmaZ", "simBeamSpot_sigmaZ", cut,
-    #    "simBeamSpot #sigma_{z} [cm]", 50, 0, 0.1, col, fcol)
+    #    "simBeamSpot #sigma_{z} [mm]", 50, 0, 0.1, col, fcol)
     #histos = doit([p0], imgdir)
 
 
@@ -245,27 +227,29 @@ if sections["simVertices"]:
 if sections["trkParts"]:
     def doit(x, imgdir=None, logy=False):
         histos = book(x)
-        project(tree, histos, nentries)
+        project(tree, histos)
         draw(histos, logy=logy)
         if imgdir:  save(imgdir, x[0].name)
         return histos
 
     cut = "trkParts_trkId==1"
+    col = sBase03
+    fcol = ssBase4
 
     p0 = struct("trkParts_size", "trkParts_size" if not cut else "Sum$(%s)" % cut, "",
         "# trkParticles", 50, 0, 100, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("trkParts_nSimTracks", "@trkParts_trkIds.size()", cut,
-        "trkParticle # simTracks", 30, 0, 30, col, fcol)
+        "trkParticle # simTracks", 20, 0, 20, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("trkParts_pt", "trkParts_pt", cut,
-        "trkParticle p_{T} [GeV]", 50, 0, 200, col, fcol)
+        "trkParticle p_{T} [GeV]", 50, 0, 100, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("trkParts_oneoverpt", "trkParts_pt==0 ? 9999 : 1.0/trkParts_pt", cut,
-        "trkParticle 1/p_{T} [1/GeV]", 50, 0, 0.5, col, fcol)
+        "trkParticle 1/p_{T} [1/GeV]", 50, 0, 1, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("trkParts_eta", "trkParts_eta", cut,
@@ -277,15 +261,15 @@ if sections["trkParts"]:
     histos = doit([p0], imgdir)
 
     p0 = struct("trkParts_vx", "trkParts_vx", cut,
-        "trkParticle x_{0} [cm]", 50, -0.01, 0.01, col, fcol)
+        "trkParticle x_{0} [mm]", 60, -3, 3, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("trkParts_vy", "trkParts_vy", cut,
-        "trkParticle y_{0} [cm]", 50, -0.01, 0.01, col, fcol)
+        "trkParticle y_{0} [mm]", 60, -3, 3, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("trkParts_vz", "trkParts_vz", cut,
-        "trkParticle z_{0} [cm]", 60, -30, 30, col, fcol)
+        "trkParticle z_{0} [mm]", 60, -30, 30, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("trkParts_pdgId", "trkParts_pdgId", cut,
@@ -335,45 +319,43 @@ if sections["trkParts"]:
 if sections["trkVertices"]:
     def doit(x, imgdir=None, logy=False):
         histos = book(x)
-        project(tree, histos, nentries)
+        project(tree, histos)
         draw(histos, logy=logy)
         if imgdir:  save(imgdir, x[0].name)
         return histos
 
     #cut = "trkVertices_vtxId==0"
     cut = "abs(trkVertices_vx)<1 && abs(trkVertices_vy)<1"
+    col = sBase03
+    fcol = ssBase4
 
     p0 = struct("trkVertices_size", "trkVertices_size" if not cut else "Sum$(%s)" % cut, "",
         "# trkVertices", 50, 0, 100, col, fcol)
     histos = doit([p0], imgdir)
 
-    #p0 = struct("trkVertices_nSimVertices", "@trkVertices_vtxIds.size()", cut,  # bugged
-    #    "trkVertex # simVertices", 20, 0, 20, col, fcol)
-    #histos = doit([p0], imgdir)
+    p0 = struct("trkVertices_nSimVertices", "@trkVertices_vtxIds.size()", cut,
+        "trkVertex # simVertices", 20, 0, 20, col, fcol)
+    histos = doit([p0], imgdir)
 
     p0 = struct("trkVertices_vx", "trkVertices_vx", cut,
-        "trkVertex x_{0} [cm]", 50, -0.01, 0.01, col, fcol)
+        "trkVertex x_{0} [mm]", 60, -3, 3, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("trkVertices_vy", "trkVertices_vy", cut,
-        "trkVertex y_{0} [cm]", 50, -0.01, 0.01, col, fcol)
+        "trkVertex y_{0} [mm]", 60, -3, 3, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("trkVertices_vz", "trkVertices_vz", cut,
-        "trkVertex z_{0} [cm]", 60, -30, 30, col, fcol)
+        "trkVertex z_{0} [mm]", 60, -30, 30, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("trkVertices_tof", "trkVertices_tof", cut,
-        "trkVertex time of flight [s]", 50, -5e-12, 5e-12, col, fcol)
+        "trkVertex time of flight [s]", 50, -1e-7, 1e-7, col, fcol)
     histos = doit([p0], imgdir)
 
-    p0 = struct("trkVertices_vtxId", "trkVertices_vtxId", cut,  # bugged ?
+    p0 = struct("trkVertices_vtxId", "trkVertices_vtxId", cut,
         "trkVertex simVertex id", 50, 0, 100, col, fcol)
     histos = doit([p0], imgdir, logy=True)
-
-    #p0 = struct("trkVertices_inVolume", "trkVertices_inVolume", cut,
-    #    "trkVertex simVertex inside tracker?", 4, 0, 4, col, fcol)
-    #histos = doit([p0], imgdir, logy=True)
 
     # Special attention
 
@@ -388,12 +370,14 @@ if sections["trkVertices"]:
 if sections["eventInfo"]:
     def doit(x, imgdir=None, logy=False):
         histos = book(x)
-        project(tree, histos, nentries)
+        project(tree, histos)
         draw(histos, logy=logy)
         if imgdir:  save(imgdir, x[0].name)
         return histos
 
     cut = ""
+    col = sBase03
+    fcol = ssBase3
 
     p0 = struct("event_run", "run", cut,
         "run number", 4, 0, 4, col, fcol)
@@ -408,23 +392,19 @@ if sections["eventInfo"]:
     histos = doit([p0], imgdir)
 
     p0 = struct("event_bx", "bx", cut,
-        "bunch crossing number", 4, -3, 1, col, fcol)
-    histos = doit([p0], imgdir)
-
-    p0 = struct("event_orbit", "orbit", cut,
-        "orbit number", 4, -3, 1, col, fcol)
+        "bunch crossing", 4, -3, 1, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("gen_nPV", "gen_nPV", cut,
-        "sim # PV", 50, 0, 200, col, fcol)
+        "sim # PV", 50, 0, 150, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("gen_trueNPV", "gen_trueNPV", cut,
-        "gen # PV", 50, 0, 200, col, fcol)
+        "gen # PV", 50, 0, 150, col, fcol)
     histos = doit([p0], imgdir)
 
-    p0 = struct("gen_seed", "gen_randomSeeds[0]", cut,
-        "generator seed", 64, 0, 4294967296., col, fcol)
+    p0 = struct("gen_randomSeed", "gen_randomSeed", cut,  # bugged
+        "generator seed", 50, 0, 100000, col, fcol)
     histos = doit([p0], imgdir)
 
 
@@ -432,13 +412,14 @@ if sections["eventInfo"]:
 if sections["clusters"]:
     def doit(x, imgdir=None, logy=False):
         histos = book(x)
-        project(tree, histos, nentries)
+        project(tree, histos)
         draw(histos, logy=logy)
         if imgdir:  save(imgdir, x[0].name)
         return histos
 
     cut = "TTClusters_trkId==1"
-    #cut = "TTClusters_isGenuine==1"
+    col = sBase03
+    fcol = ssBase4
 
     p0 = struct("TTClusters_size", "TTClusters_size" if not cut else "Sum$(%s)" % cut, "",
         "# clusters", 60, 0, 60, col, fcol)
@@ -473,7 +454,7 @@ if sections["clusters"]:
     histos = doit([p0], imgdir)
 
     p0 = struct("TTClusters_coordx", "TTClusters_coordx", cut,
-        "Cluster local coord x", 128, 0, 1024, col, fcol)
+        "Cluster local coord x", 129, 0, 1024+8, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("TTClusters_coordy", "TTClusters_coordy", cut,
@@ -494,11 +475,11 @@ if sections["clusters"]:
 
     ##
     p0 = struct("TTClusters_simPt", "TTClusters_simPt", cut,
-        "Cluster simTrack p_{T} [GeV]", 50, 0, 200, col, fcol)
+        "Cluster simTrack p_{T} [GeV]", 50, 0, 100, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("TTClusters_simOneoverpt", "TTClusters_simPt==0 ? 9999 : 1.0/TTClusters_simPt", cut,
-        "Cluster simTrack 1/p_{T} [1/GeV]", 50, 0, 0.5, col, fcol)
+        "Cluster simTrack 1/p_{T} [1/GeV]", 50, 0, 1, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("TTClusters_simEta", "TTClusters_simEta", cut,
@@ -534,20 +515,20 @@ if sections["clusters"]:
     histos = doit([p0], imgdir)
 
     p0 = struct("TTClusters_modId", "TTClusters_modId", cut,
-        "Cluster module id", 120, 0, 240000, col, fcol)
+        "Cluster module id", 120, 0, 300000, col, fcol)
     histos = doit([p0], imgdir)
 
-    #p0 = struct("TTClusters_iModLayer", "TTClusters_iModLayer", cut,
-    #    "Cluster layer number", 30, 0, 30, col, fcol)
-    #histos = doit([p0], imgdir)
+    p0 = struct("TTClusters_iModLayer", "TTClusters_iModLayer", cut,
+        "Cluster layer number", 30, 0, 30, col, fcol)
+    histos = doit([p0], imgdir)
 
-    #p0 = struct("TTClusters_iModLadder", "TTClusters_iModLadder", cut,
-    #    "Cluster ladder number", 100, 0, 100, col, fcol)
-    #histos = doit([p0], imgdir)
+    p0 = struct("TTClusters_iModLadder", "TTClusters_iModLadder", cut,
+        "Cluster ladder number", 100, 0, 100, col, fcol)
+    histos = doit([p0], imgdir)
 
-    #p0 = struct("TTClusters_iModModule", "TTClusters_iModModule", cut,
-    #    "Cluster module number", 100, 0, 200, col, fcol)
-    #histos = doit([p0], imgdir)
+    p0 = struct("TTClusters_iModModule", "TTClusters_iModModule", cut,
+        "Cluster module number", 100, 0, 200, col, fcol)
+    histos = doit([p0], imgdir)
 
     p0 = struct("TTClusters_iModPitchX", "TTClusters_iModPitchX", cut,
         "Cluster pitch x [unit?]", 10, 0, 10, col, fcol)
@@ -569,44 +550,28 @@ if sections["clusters"]:
         "Cluster # hits", 20, 0, 20, col, fcol)
     histos = doit([p0], imgdir)
 
-    p0 = struct("TTClusters_hitXs", "TTClusters_hitXs", cut,
-        "Cluster hit global pos x (for each hit) [cm]", 120, -120, 120, col, fcol)
-    histos = doit([p0], imgdir)
-
-    p0 = struct("TTClusters_hitYs", "TTClusters_hitYs", cut,
-        "Cluster hit global pos y (for each hit) [cm]", 120, -120, 120, col, fcol)
-    histos = doit([p0], imgdir)
-
-    p0 = struct("TTClusters_hitZs", "TTClusters_hitZs", cut,
-        "Cluster hit global pos z (for each hit) [cm]", 120, -300, 300, col, fcol)
-    histos = doit([p0], imgdir)
-
     p0 = struct("TTClusters_hitADCs", "TTClusters_hitADCs", cut,
-        "Cluster hit ADC count (for each hit)", 64, 0, 256, col, fcol)
+        "Cluster hit ADC count (for each hit)", 129, 0, 256+2, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("TTClusters_hitChans", "TTClusters_hitChans", cut,
-        "Cluster hit channel id (for each hit)", 60, 0, 2400000, col, fcol)
+        "Cluster hit channel id (for each hit)", 125, 0, 2500000, col, fcol)
     histos = doit([p0], imgdir)
 
-    #p0 = struct("TTClusters_hitCols", "TTClusters_hitCols", cut,
-    #    "Cluster hit column number (for each hit)", 33, 0, 32+1, col, fcol)
-    #histos = doit([p0], imgdir)
+    p0 = struct("TTClusters_hitCols", "TTClusters_hitCols", cut,
+        "Cluster hit column number (for each hit)", 33, 0, 32+1, col, fcol)
+    histos = doit([p0], imgdir)
 
-    #p0 = struct("TTClusters_hitRows", "TTClusters_hitRows", cut,
-    #    "Cluster hit row number (for each hit)", 128, 0, 1024, col, fcol)
-    #histos = doit([p0], imgdir)
+    p0 = struct("TTClusters_hitRows", "TTClusters_hitRows", cut,
+        "Cluster hit row number (for each hit)", 129, 0, 1024+8, col, fcol)
+    histos = doit([p0], imgdir)
 
-    #p0 = struct("TTClusters_hitFracs", "TTClusters_hitFracs", cut,
-    #    "Cluster hit charge fraction (for each hit)", 100, 0, 1, col, fcol)
-    #histos = doit([p0], imgdir)
+    p0 = struct("TTClusters_hitFracs", "TTClusters_hitFracs", cut,
+        "Cluster hit charge fraction (for each hit)", 100, 0, 1, col, fcol)
+    histos = doit([p0], imgdir)
 
     p0 = struct("TTClusters_hitTrkIds", "TTClusters_hitTrkIds", cut,
         "Cluster hit simTrack track id (for each hit)", 50, 0, 200, col, fcol)
-    histos = doit([p0], imgdir, logy=True)
-
-    p0 = struct("TTClusters_hitEvtIds", "TTClusters_hitEvtIds", cut,
-        "Cluster hit simTrack event id (for each hit)", 4, 0, 4, col, fcol)
     histos = doit([p0], imgdir, logy=True)
 
     p0 = struct("TTClusters_barrel", "TTClusters_barrel", cut,
@@ -639,13 +604,15 @@ if sections["clusters"]:
 if sections["stubs"]:
     def doit(x, imgdir=None, logy=False):
         histos = book(x)
-        project(tree, histos, nentries)
+        project(tree, histos)
         draw(histos, logy=logy)
         if imgdir:  save(imgdir, x[0].name)
         return histos
 
     cut = "TTStubs_trkId==1"
-    #cut = "TTStubs_isGenuine==1"
+    col = sBase03
+    fcol = ssBase4
+
 
     p0 = struct("TTStubs_size", "TTStubs_size" if not cut else "Sum$(%s)" % cut, "",
         "# stubs", 30, 0, 30, col, fcol)
@@ -687,21 +654,13 @@ if sections["stubs"]:
         "Stub 'rough' p_{T} [GeV]", 100, 0, 100, col, fcol)
     histos = doit([p0], imgdir)
 
-    p0 = struct("TTStubs_coordx", "TTStubs_coordx", cut,
-        "Stub local coord x", 128, 0, 1024, col, fcol)
-    histos = doit([p0], imgdir)
-
-    p0 = struct("TTStubs_coordy", "TTStubs_coordy", cut,
-        "Stub local coord y", 33, 0, 33, col, fcol)
-    histos = doit([p0], imgdir)
-
     ##
     p0 = struct("TTStubs_simPt", "TTStubs_simPt", cut,
-        "Stub simTrack p_{T} [GeV]", 50, 0, 200, col, fcol)
+        "Stub simTrack p_{T} [GeV]", 50, 0, 100, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("TTStubs_simOneoverpt", "TTStubs_simPt==0 ? 9999 : 1.0/TTStubs_simPt", cut,
-        "Stub simTrack 1/p_{T} [1/GeV]", 50, 0, 0.5, col, fcol)
+        "Stub simTrack 1/p_{T} [1/GeV]", 50, 0, 1, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("TTStubs_simEta", "TTStubs_simEta", cut,
@@ -737,20 +696,20 @@ if sections["stubs"]:
     histos = doit([p0], imgdir)
 
     p0 = struct("TTStubs_modId", "TTStubs_modId", cut,
-        "Stub module id", 120, 0, 240000, col, fcol)
+        "Stub module id", 120, 0, 300000, col, fcol)
     histos = doit([p0], imgdir)
 
-    #p0 = struct("TTStubs_iModLayer", "TTStubs_iModLayer", cut,
-    #    "Stub layer number", 30, 0, 30, col, fcol)
-    #histos = doit([p0], imgdir)
+    p0 = struct("TTStubs_iModLayer", "TTStubs_iModLayer", cut,
+        "Stub layer number", 30, 0, 30, col, fcol)
+    histos = doit([p0], imgdir)
 
-    #p0 = struct("TTStubs_iModLadder", "TTStubs_iModLadder", cut,
-    #    "Stub ladder number", 100, 0, 100, col, fcol)
-    #histos = doit([p0], imgdir)
+    p0 = struct("TTStubs_iModLadder", "TTStubs_iModLadder", cut,
+        "Stub ladder number", 100, 0, 100, col, fcol)
+    histos = doit([p0], imgdir)
 
-    #p0 = struct("TTStubs_iModModule", "TTStubs_iModModule", cut,
-    #    "Stub module number", 100, 0, 200, col, fcol)
-    #histos = doit([p0], imgdir)
+    p0 = struct("TTStubs_iModModule", "TTStubs_iModModule", cut,
+        "Stub module number", 100, 0, 200, col, fcol)
+    histos = doit([p0], imgdir)
 
     p0 = struct("TTStubs_iModPitchX", "TTStubs_iModPitchX", cut,
         "Stub pitch x [unit?]", 10, 0, 10, col, fcol)
@@ -772,44 +731,28 @@ if sections["stubs"]:
         "Stub # hits", 20, 0, 20, col, fcol)
     histos = doit([p0], imgdir)
 
-    p0 = struct("TTStubs_hitXs", "TTStubs_hitXs", cut,
-        "Stub hit global pos x (for each hit) [cm]", 120, -120, 120, col, fcol)
-    histos = doit([p0], imgdir)
-
-    p0 = struct("TTStubs_hitYs", "TTStubs_hitYs", cut,
-        "Stub hit global pos y (for each hit) [cm]", 120, -120, 120, col, fcol)
-    histos = doit([p0], imgdir)
-
-    p0 = struct("TTStubs_hitZs", "TTStubs_hitZs", cut,
-        "Stub hit global pos z (for each hit) [cm]", 120, -300, 300, col, fcol)
-    histos = doit([p0], imgdir)
-
     p0 = struct("TTStubs_hitADCs", "TTStubs_hitADCs", cut,
-        "Stub hit ADC count (for each hit)", 64, 0, 256, col, fcol)
+        "Stub hit ADC count (for each hit)", 129, 0, 256+2, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("TTStubs_hitChans", "TTStubs_hitChans", cut,
-        "Stub hit channel id (for each hit)", 60, 0, 2400000, col, fcol)
+        "Stub hit channel id (for each hit)", 125, 0, 2500000, col, fcol)
     histos = doit([p0], imgdir)
 
-    #p0 = struct("TTStubs_hitCols", "TTStubs_hitCols", cut,
-    #    "Stub hit column number (for each hit)", 33, 0, 32+1, col, fcol)
-    #histos = doit([p0], imgdir)
+    p0 = struct("TTStubs_hitCols", "TTStubs_hitCols", cut,
+        "Stub hit column number (for each hit)", 33, 0, 32+1, col, fcol)
+    histos = doit([p0], imgdir)
 
-    #p0 = struct("TTStubs_hitRows", "TTStubs_hitRows", cut,
-    #    "Stub hit row number (for each hit)", 128, 0, 1024, col, fcol)
-    #histos = doit([p0], imgdir)
+    p0 = struct("TTStubs_hitRows", "TTStubs_hitRows", cut,
+        "Stub hit row number (for each hit)", 129, 0, 1024+8, col, fcol)
+    histos = doit([p0], imgdir)
 
-    #p0 = struct("TTStubs_hitFracs", "TTStubs_hitFracs", cut,
-    #    "Stub hit charge fraction (for each hit)", 100, 0, 1, col, fcol)
-    #histos = doit([p0], imgdir)
+    p0 = struct("TTStubs_hitFracs", "TTStubs_hitFracs", cut,
+        "Stub hit charge fraction (for each hit)", 100, 0, 1, col, fcol)
+    histos = doit([p0], imgdir)
 
     p0 = struct("TTStubs_hitTrkIds", "TTStubs_hitTrkIds", cut,
         "Stub hit simTrack track id (for each hit)", 50, 0, 200, col, fcol)
-    histos = doit([p0], imgdir, logy=True)
-
-    p0 = struct("TTStubs_hitEvtIds", "TTStubs_hitEvtIds", cut,
-        "Stub hit simTrack event id (for each hit)", 4, 0, 4, col, fcol)
     histos = doit([p0], imgdir, logy=True)
 
     p0 = struct("TTStubs_barrel", "TTStubs_barrel", cut,
@@ -850,7 +793,7 @@ if sections["stubs"]:
     histos = doit([p0], imgdir)
 
     p0 = struct("TTStubs_trigPos", "TTStubs_trigPos", cut,
-        "Stub trigger local coord x [strip unit]", 128, 0, 1024, col, fcol)
+        "Stub trigger local coord x [strip unit]", 129, 0, 1024+8, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("TTStubs_trigBend", "TTStubs_trigBend", cut,
@@ -862,25 +805,47 @@ if sections["stubs"]:
     histos = doit([p0], imgdir)
 
     p0 = struct("TTStubs_detWindow", "TTStubs_detWindow", cut,
-        "Stub window", 10, 0, 10, col, fcol)
+        "Stub window (ignore for now)", 80, -1000, 3000, col, fcol)
     histos = doit([p0], imgdir)
 
-    # Special attention
+    p0 = struct("TTStubs_trivial", "TTStubs_trivial", cut,
+        "Stub trivial match", 4, 0, 4, col, fcol)
+    histos = book([p0]); project(tree, histos); draw(histos, text=True); save(imgdir, p0.name)
 
-    #p0 = struct("TTStubs_passed", "TTStubs_passed", cut,
-    #    "Stub pattern match (by event)", 4, 0, 4, col, fcol)
-    #histos = book([p0]); project(tree, histos, nentries); draw(histos, text=True); save(imgdir, p0.name)
-    #
-    #p0 = struct("TTStubs_modPassed", "TTStubs_modPassed", cut,
-    #    "Stub pattern match (by module)", 4, 0, 4, col, fcol)
-    #histos = book([p0]); project(tree, histos, nentries); draw(histos, text=True); save(imgdir, p0.name)
-    #
-    #p0 = struct("TTStubs_hitPasseds", "TTStubs_hitPasseds", cut,
-    #    "Stub pattern match (by hit, for each hit)", 4, 0, 4, col, fcol)
-    #histos = book([p0]); project(tree, histos, nentries); draw(histos, text=True); save(imgdir, p0.name)
+    p0 = struct("TTStubs_passed", "TTStubs_passed", cut,
+        "Stub pattern match (by event)", 4, 0, 4, col, fcol)
+    histos = book([p0]); project(tree, histos); draw(histos, text=True); save(imgdir, p0.name)
+
+    p0 = struct("TTStubs_modPassed", "TTStubs_modPassed", cut,
+        "Stub pattern match (by module)", 4, 0, 4, col, fcol)
+    histos = book([p0]); project(tree, histos); draw(histos, text=True); save(imgdir, p0.name)
+
+    p0 = struct("TTStubs_hitPasseds", "TTStubs_hitPasseds", cut,
+        "Stub pattern match (by hit, for each hit)", 4, 0, 4, col, fcol)
+    histos = book([p0]); project(tree, histos); draw(histos, text=True); save(imgdir, p0.name)
 
 
 # ______________________________________________________________________________
 if sections["fixme"]:
+    cut = "TTStubs_trkId==1"
+    col = sBase03
 
-    pass
+    fcol = ssBase3
+    p0 = struct("TTStubs_size", "TTStubs_size", "",
+        "# stubs", 30, 0, 30, col, fcol)
+    histos = book([p0]); project(tree, histos); draws(histos, logy=True); save(imgdir, p0.name+"_logy")
+
+    fcol = ssBase4
+    p0 = struct("TTStubs_size", "Sum$(%s)" % cut, "",
+        "# stubs {simTrack id==1}", 30, 0, 30, col, fcol)
+    histos = book([p0]); project(tree, histos); draws(histos, logy=True); save(imgdir, p0.name+"_id1_logy")
+
+    fcol = ssBase4
+    p0 = struct("TTStubs_size", "Sum$(%s)" % cut, "",
+        "# stubs {# simTracks==1}", 30, 0, 30, col, fcol)
+    histos = book([p0]); project(tree, histos); draws(histos, logy=True); save(imgdir, p0.name+"_ns1_logy")
+
+    #fcol = ssBase3
+    #p0 = struct("TTStubs_pdgId", "TTStubs_pdgId", "",
+    #    "Stub PDG id", 50, -25, 25, col, fcol)
+    #histos = book([p0]); project(tree, histos); draws(histos, logy=True); save(imgdir, p0.name+"_logy")

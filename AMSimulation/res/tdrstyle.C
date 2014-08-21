@@ -41,8 +41,8 @@ void setTDRStyle() {
   tdrStyle->SetFrameFillStyle(0);
   tdrStyle->SetFrameLineColor(1);
   tdrStyle->SetFrameLineStyle(1);
-  tdrStyle->SetFrameLineWidth(2);
-
+  tdrStyle->SetFrameLineWidth(1);
+  
 // For the histo:
   // tdrStyle->SetHistFillColor(1);
   // tdrStyle->SetHistFillStyle(0);
@@ -58,7 +58,7 @@ void setTDRStyle() {
   //tdrStyle->SetErrorX(0.);
   
   tdrStyle->SetMarkerStyle(20);
-
+  
 //For the fit/function:
   tdrStyle->SetOptFit(1);
   tdrStyle->SetFitFormat("5.4g");
@@ -152,6 +152,10 @@ void setTDRStyle() {
   // tdrStyle->SetPalette(Int_t ncolors = 0, Int_t* colors = 0);
   // tdrStyle->SetTimeOffset(Double_t toffset);
   // tdrStyle->SetHistMinimumZero(kTRUE);
+
+  tdrStyle->SetHatchesLineWidth(5);
+  tdrStyle->SetHatchesSpacing(0.05);
+
   tdrStyle->SetPalette(1);
   tdrStyle->cd();
 
