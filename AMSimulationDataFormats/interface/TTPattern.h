@@ -26,13 +26,13 @@ class TTRoad {
   public:
     // Constructors
     TTRoad()
-    : nHitLayers_(0), bankIndex_(0), patternId_(), hits_() {}
+    : nHitLayers_(0), bankIndex_(0), hits_() {}
 
-    TTRoad(count_type nHitLayers, id_type bankIndex, const pattern_type& patternId, const std::vector<TTHit>& hits)
-    : nHitLayers_(nHitLayers), bankIndex_(bankIndex), patternId_(patternId), hits_(hits) {}
+    TTRoad(count_type nHitLayers, id_type bankIndex, const std::vector<TTHit>& hits)
+    : nHitLayers_(nHitLayers), bankIndex_(bankIndex), hits_(hits) {}
 
     TTRoad(const TTRoad& rhs)
-    : nHitLayers_(rhs.nHitLayers_), bankIndex_(rhs.bankIndex_), patternId_(rhs.patternId_), hits_(rhs.hits_) {}
+    : nHitLayers_(rhs.nHitLayers_), bankIndex_(rhs.bankIndex_), hits_(rhs.hits_) {}
 
     // Destructor
     ~TTRoad() {}
@@ -45,8 +45,6 @@ class TTRoad {
 
     id_type bankIndex()             const { return bankIndex_; }
 
-    pattern_type patternId()        const { return patternId_; }
-
     std::vector<TTHit> getHits()    const { return hits_; }
     TTHit getHit(int l)             const { return hits_.at(l); }
 
@@ -54,7 +52,6 @@ class TTRoad {
   private:
     count_type nHitLayers_;
     id_type bankIndex_;
-    pattern_type patternId_;
     std::vector<TTHit> hits_;
 };
 

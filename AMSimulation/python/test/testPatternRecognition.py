@@ -59,32 +59,12 @@ class TestAMSim(unittest.TestCase):
                 self.assertTrue(iroad not in bankIndices)
                 bankIndices[iroad] = 0
 
-    def test_patternId(self):
-        tree = self.ttree
-        for ievt in tree:
-            for iroad in ievt.AMTTRoads_patternIds:
-                for ihit in iroad[:6]:
-                    self.assertNotEqual(ihit, 0)
-
     def test_charges(self):
         tree = self.ttree
         for ievt in tree:
             for iroad in ievt.AMTTRoads_hitCharges:
                 for ihit in iroad:
                     self.assertEqual(ihit, -1)
-
-    #def test_superstripIds(self):
-    #    tree = self.ttree
-    #    for ievt in tree:
-    #        ssIds = []
-    #        for iroad in ievt.AMTTRoads_patternIds:
-    #            for ihit in iroad[:6]:
-    #                ssIds.append(ihit)
-
-    #        for iroad in ievt.AMTTRoads_hitSuperstripIds:
-    #            for ihit in iroad:
-    #                self.assertTrue(ihit in ssIds)
-
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

@@ -30,7 +30,6 @@ struct TTHit {
     int charge;
     float pt;
     id_type  superstripId;
-    bit_type superstripBit;
 
     // Functions
     // Simple trigonometrics

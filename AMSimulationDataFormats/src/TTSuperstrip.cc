@@ -13,7 +13,7 @@ std::ostream& operator<<(std::ostream& o, const TTHit& hit) {
     o << "x: " << hit.x << " y: " << hit.y << " z: " << hit.z
       << " xerr: " << hit.xError << " yerr: " << hit.yError << " zerr: " << hit.zError
       << " signed pt: " << hit.charge * hit.pt
-      << " ssId: " << hit.superstripId << " ssBit: " << hit.superstripBit << " ";
+      << " ssId: " << hit.superstripId << " ";
     return o;
 }
 
