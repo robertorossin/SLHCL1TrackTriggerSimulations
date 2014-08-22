@@ -14,7 +14,8 @@ class DrawerInit:
 
         gStyle.SetEndErrorSize(2)
         gStyle.SetTitleOffset(1.1, "Y")
-        #gStyle.SetLabelSize(0.04, "Y")
+        gStyle.SetLabelSize(0.04, "Y")
+        gStyle.SetNdivisions(505, "XY")
 
         gStyle.SetOptStat(111110)
         gStyle.SetStatX(0.94)
@@ -89,8 +90,9 @@ class HistView(_HistViewBase):
 class HistViewProf(_HistViewBase):
     def __init__(self, p):
         super(HistViewProf, self).__init__(p)
-        self.h = TH2F("hp1_%i" % randint(0,65535), "; %s; %s" % (p.xtitle, p.ytitle), p.nbinsx, p.xlow, p.xup, p.ylow, p.yup)
+        self.h = TProfile("hp1_%i" % randint(0,65535), "; %s; %s" % (p.xtitle, p.ytitle), p.nbinsx, p.xlow, p.xup, p.ylow, p.yup)
         self.randname = self.h.GetName()
+        p.markersize = 1.3
         self.style(p)
 
 class HistView2D(_HistViewBase):
@@ -161,22 +163,22 @@ def book2D(params):
     return histos
 
 # Project
-def project(tree, histos, normalize=-1, drawOverflow=True, drawUnderflow=True):
+def project(tree, histos, nentries=1000000000, normalize=-1, drawOverflow=True, drawUnderflow=True):
     for i, h in enumerate(histos):
-        tree.Project(h.randname, h.var, h.cut, "goff")
+        tree.Project(h.randname, h.var, h.cut, "goff", nentries)
         if normalize > 0:  h.Scale(normalize / h.GetSumOfWeights())
         if drawOverflow :  h.fixOverflow()
         if drawUnderflow:  h.fixUnderflow()
     return
 
-def projectProf(tree, histos):
+def projectProf(tree, histos, nentries=1000000000):
     for i, h in enumerate(histos):
-        tree.Project(h.randname, h.var, h.cut, "prof goff")
+        tree.Project(h.randname, h.var, h.cut, "prof goff", nentries)
     return
 
-def project2D(tree, histos):
+def project2D(tree, histos, nentries=1000000000):
     for i, h in enumerate(histos):
-        tree.Project(h.randname, h.var, h.cut, "goff")
+        tree.Project(h.randname, h.var, h.cut, "goff", nentries)
     return
 
 # Draw
@@ -184,11 +186,10 @@ def draw(histos, ytitle="Events", logx=False, logy=False, stats=True, text=False
     if isinstance(histos[0], HistView):
         histos = [hv.h for hv in histos]
     h = histos[0]
-    if not stats:
-        h.SetStats(0)
+    if not stats:  h.SetStats(0)
     h.SetMaximum(h.GetMaximum() * 1.4)
     if not logy:  h.SetMinimum(0.)
-    h.GetYaxis().SetTitle(ytitle)
+    if ytitle:  h.GetYaxis().SetTitle(ytitle)
     h.Draw("hist")
     gPad.SetLogx(logx); gPad.SetLogy(logy)
     if text:
@@ -198,18 +199,33 @@ def draw(histos, ytitle="Events", logx=False, logy=False, stats=True, text=False
     return
 
 # Draw more than one
-def draws(histos, ytitle="Events", logx=False, logy=False, stats=True):
+def draws(histos, ytitle="Events", logx=False, logy=False, stats=False):
     if isinstance(histos[0], HistView):
         histos = [hv.h for hv in histos]
     h = histos[0]
-    if not stats:
-        h.SetStats(0)
+    if not stats:  h.SetStats(0)
+    h.SetMaximum(h.GetMaximum() * 1.4)
     if not logy:  h.SetMinimum(0.)
-    h.GetYaxis().SetTitle(ytitle)
+    if ytitle:  h.GetYaxis().SetTitle(ytitle)
     h.Draw("hist")
     gPad.SetLogx(logx); gPad.SetLogy(logy)
     for h in histos[1:]:
         h.Draw("same hist")
+    CMS_label()
+    return
+
+def drawsProf(histos, ytitle="", logx=False, logy=False, ymax=-1, stats=False):
+    if isinstance(histos[0], HistViewProf):
+        histos = [hv.h for hv in histos]
+    h = histos[0]
+    if not stats:  h.SetStats(0)
+    h.SetMaximum(h.GetMaximum() * 1.4)  if ymax == -1  else h.SetMaximum(ymax)
+    if not logy:  h.SetMinimum(0.)
+    if ytitle:  h.GetYaxis().SetTitle(ytitle)
+    h.Draw("hist p")
+    gPad.SetLogx(logx); gPad.SetLogy(logy)
+    for h in histos[1:]:
+        h.Draw("same hist p")
     CMS_label()
     return
 
@@ -247,9 +263,22 @@ def label(histos, legend=(0.70,0.74,0.96,0.94)):
     return (leg1)
 
 def CMS_label():
+    cmsTextFont = 61; extraTextFont = 52
+    lumiTextSize = 0.6; lumiTextOffset = 0.2; extraOverCmsTextSize = 0.76
+    cmsTextSize = 0.75; cmsTextOffset = 0.1; extraTextSize = extraOverCmsTextSize * cmsTextSize
+    relPosX = 0.045; relPosY = 0.035; relExtraDY = 1.2
+    lumiText = "";  cmsText = "CMS";  extraText = "Very Preliminary"
+
     old = (latex.GetTextFont(), latex.GetTextSize())
-    latex.SetTextFont(62); latex.SetTextSize(0.028)
-    latex.DrawLatex(0.670, 0.968, "CMS Very Preliminary")
+    l, r, t, b = gPad.GetLeftMargin(), gPad.GetRightMargin(), gPad.GetTopMargin(), gPad.GetBottomMargin()
+    posX_ = l + relPosX*(1-l-r); posY_ = 1-t+lumiTextOffset*t
+    relPosX = 0.103; posX_ = 0.8 - relPosX*(1-l-r);  # right aligned
+    latex.SetTextFont(42); latex.SetTextSize(lumiTextSize*t)
+    latex.DrawLatex(1-r,1-t+lumiTextOffset*t, lumiText)
+    latex.SetTextFont(cmsTextFont); latex.SetTextSize(cmsTextSize*t)
+    latex.DrawLatex(posX_,1-t+lumiTextOffset*t,cmsText)  # out of frame
+    latex.SetTextFont(extraTextFont); latex.SetTextSize(extraTextSize*t)
+    latex.DrawLatex(posX_ + relPosX*(1-l-r), posY_, extraText)
     latex.SetTextFont(old[0]); latex.SetTextSize(old[1])
     return
 

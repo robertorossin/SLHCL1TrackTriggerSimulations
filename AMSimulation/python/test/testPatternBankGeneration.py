@@ -28,16 +28,16 @@ class TestAMSim(unittest.TestCase):
         allowed_layers = [5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22]
         tree = self.ttree
         for ievt in tree:
-            l = 0
+            ssIds = []
             for ssId in ievt.superstripIds:
-                if l<6:
-                    pass
-                    #self.assertNotEqual(ssId, 0)
-                    #lay = (ssId >> 14) / 10000
-                    #self.assertTrue(lay in allowed_layers)
-                else:
-                    self.assertEqual(ssId, 0)
-                l += 1
+                #if l<6:
+                #    #self.assertNotEqual(ssId, 0)
+                #    #lay = (ssId >> 14) / 10000
+                #    #self.assertTrue(lay in allowed_layers)
+                #else:
+                #    self.assertEqual(ssId, 0)
+                self.assertTrue(ssId not in ssIds)
+                ssIds.append(ssId)
 
             self.assertTrue(ievt.superstripIds.size() == 8)
 

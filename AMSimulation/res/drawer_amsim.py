@@ -3,6 +3,13 @@
 from rootdrawing import *
 import os
 
+"""
+This is dedicated for coverage studies where we fully control what the inputs
+and outputs are:
+- no pileup
+- training and testing samples are basically identical
+"""
+
 # ______________________________________________________________________________
 # Global
 

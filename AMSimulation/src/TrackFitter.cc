@@ -60,7 +60,6 @@ int TrackFitter::makeTracks(TString out) {
     typedef unsigned short unsigned16;
     std::vector<unsigned16> *               vr_nHitLayers        = 0;
     std::vector<unsigned> *                 vr_bankIndex         = 0;
-    std::vector<std::vector<unsigned> > *   vr_patternIds        = 0;
     std::vector<std::vector<float> > *      vr_hitXs             = 0;
     std::vector<std::vector<float> > *      vr_hitYs             = 0;
     std::vector<std::vector<float> > *      vr_hitZs             = 0;
@@ -70,13 +69,11 @@ int TrackFitter::makeTracks(TString out) {
     std::vector<std::vector<int> > *        vr_hitCharges        = 0;
     std::vector<std::vector<float> > *      vr_hitPts            = 0;
     std::vector<std::vector<unsigned> > *   vr_hitSuperstripIds  = 0;
-    std::vector<std::vector<unsigned16> > * vr_hitSuperstripBits = 0;
 
     //chain_->SetBranchStatus("*", 1);
 
     chain_->SetBranchAddress(prefixRoad_ + "nHitLayers"        + suffix_, &(vr_nHitLayers));
     chain_->SetBranchAddress(prefixRoad_ + "bankIndex"         + suffix_, &(vr_bankIndex));
-    chain_->SetBranchAddress(prefixRoad_ + "patternIds"        + suffix_, &(vr_patternIds));
     chain_->SetBranchAddress(prefixRoad_ + "hitXs"             + suffix_, &(vr_hitXs));
     chain_->SetBranchAddress(prefixRoad_ + "hitYs"             + suffix_, &(vr_hitYs));
     chain_->SetBranchAddress(prefixRoad_ + "hitZs"             + suffix_, &(vr_hitZs));
@@ -86,7 +83,6 @@ int TrackFitter::makeTracks(TString out) {
     chain_->SetBranchAddress(prefixRoad_ + "hitCharges"        + suffix_, &(vr_hitCharges));
     chain_->SetBranchAddress(prefixRoad_ + "hitPts"            + suffix_, &(vr_hitPts));
     chain_->SetBranchAddress(prefixRoad_ + "hitSuperstripIds"  + suffix_, &(vr_hitSuperstripIds));
-    chain_->SetBranchAddress(prefixRoad_ + "hitSuperstripBits" + suffix_, &(vr_hitSuperstripBits));
 
     // For writing
     if (verbose_)  std::cout << Info() << "Recreating " << out << std::endl;
@@ -103,7 +99,7 @@ int TrackFitter::makeTracks(TString out) {
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
 
-        unsigned nroads = vr_patternIds->size();
+        const unsigned nroads = vr_nHitLayers->size();
         if (verbose_>1 && ievt_step == 5000) {
             std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, fitting: %7i", ievt, nKept, nPassed) << std::endl;
             ievt_step -= 5000;
@@ -120,16 +116,7 @@ int TrackFitter::makeTracks(TString out) {
         tracks.reserve(200);
 
         for (unsigned i=0; i<nroads; ++i) {
-            pattern_type patternId;
-
-            std::vector<id_type> addresses;
-            for (unsigned j=0; j<vr_patternIds->at(i).size(); ++j) {
-                addresses.push_back(vr_patternIds->at(i).at(j));
-            }
-            addresses.resize(8,0);  // pad with zeroes
-            std::copy(addresses.begin(), addresses.end(), patternId.begin());
-
-            unsigned nhits = vr_hitXs->at(i).size();
+            const unsigned nhits = vr_hitXs->at(i).size();
             //if (nhits<3) {
             //    std::cout << Error() << "Too few hits in a road: " << nhits << std::endl;
             //    return 1;
@@ -148,8 +135,7 @@ int TrackFitter::makeTracks(TString out) {
                     vr_hitZErrors->at(i).at(j),
                     vr_hitCharges->at(i).at(j),
                     vr_hitPts->at(i).at(j),
-                    vr_hitSuperstripIds->at(i).at(j),
-                    vr_hitSuperstripBits->at(i).at(j)
+                    vr_hitSuperstripIds->at(i).at(j)
                 });
 
                 // In R-Z plane, a track is a straight line
@@ -162,7 +148,7 @@ int TrackFitter::makeTracks(TString out) {
                 hitsViewUV.push_back(hitViewUV);
             }
 
-            TTRoad road(vr_nHitLayers->at(i), vr_bankIndex->at(i), patternId, hits);
+            TTRoad road(vr_nHitLayers->at(i), vr_bankIndex->at(i), hits);
 
             // Fitting starts here
             RetinaTrackFitterAlgo<ZR> retinaZR(po.pqType, po.pbins, po.qbins, po.pmin, po.qmin, po.pmax, po.qmax, po.sigma, po.minWeight);

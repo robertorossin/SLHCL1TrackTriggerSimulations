@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-ntupleStubs= cms.EDProducer('NTupleStubs',
+ntupleStubs = cms.EDProducer('NTupleStubs',
     inputTagClus = cms.InputTag('TTClustersFromPixelDigis', 'ClusterInclusive'),
     inputTagStub = cms.InputTag('TTStubsFromPixelDigis', 'StubAccepted'),
     inputTagTrack = cms.InputTag('TTTracksFromPixelDigis', 'Level1TTTracks'),
@@ -17,6 +17,13 @@ ntupleStubs= cms.EDProducer('NTupleStubs',
     #maxN = cms.uint32(999999)
 )
 
+ntupleStubsTTI = ntupleStubs.clone(
+    inputTagDigi = cms.InputTag(''),
+    inputTagClus = cms.InputTag('TTStubsFromPixelDigis', 'ClusterAccepted'),
+    inputTagClusMCAssoc = cms.InputTag('TTClusterAssociatorFromPixelDigis', 'ClusterAccepted'),
+)
+
 # No track fitting yet
 ntupleL1Track = cms.Sequence(ntupleStubs)
+ntupleL1Track_TTI = cms.Sequence(ntupleStubsTTI)
 
