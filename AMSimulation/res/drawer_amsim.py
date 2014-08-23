@@ -25,7 +25,9 @@ line1.SetLineStyle(2)
 sections = {}
 sections["coverage_vs_pt"     ] = True
 sections["coverage_vs_eta"    ] = True
+sections["coverage_vs_phi"    ] = True
 sections["coverage_vs_eta_phi"] = True
+sections["coverage_vs_vz"     ] = True
 
 drawerInit = DrawerInit()
 chain = TChain("ntupler/tree", "")

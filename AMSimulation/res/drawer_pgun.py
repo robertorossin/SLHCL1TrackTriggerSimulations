@@ -6,8 +6,9 @@ from rootdrawing import *
 # Configurations
 
 samples = {}
-samples["nu140"] = False
-samples["mu140"] = False
+samples["nu140"]   = False
+samples["mu140"]   = False
+samples["minbias"] = True
 
 sections = {}
 sections["genParts"   ] = False
@@ -15,9 +16,11 @@ sections["simTracks"  ] = False
 sections["simVertices"] = False
 sections["trkParts"   ] = False
 sections["trkVertices"] = False
-sections["eventInfo"  ] = True
+sections["eventInfo"  ] = False
 sections["clusters"   ] = False
 sections["stubs"      ] = False
+sections["minbias1"   ] = False
+sections["minbias140" ] = True
 sections["fixme"      ] = False
 
 drawerInit = DrawerInit()
@@ -45,6 +48,14 @@ if samples["mu140"]:
     fcol = TColor.GetColor("#cab2d6")
     imgdir = "figures_pgun_mu140/"
 
+# MinBias
+if samples["minbias"]:
+    infiles = get_infiles("/uscms_data/d2/jiafu/L1TrackTrigger/CRAB_amsim/input_MinBias_20140821.txt", fast=False)
+    col  = TColor.GetColor("#ff7f00")  # Paired
+    fcol = TColor.GetColor("#fdbf6f")
+    imgdir = "figures_pgun_minbias/"
+
+
 #nentries = 100000
 nentries = 1000
 
@@ -66,7 +77,7 @@ if sections["genParts"]:
         histos = book(x)
         project(tree, histos, nentries=nentries)
         draw(histos, logy=logy)
-        if imgdir:  save(imgdir, x[0].name)
+        save(imgdir, x[0].name)
         return histos
 
     cut = ""
@@ -116,11 +127,11 @@ if sections["genParts"]:
     histos = doit([p0], imgdir)
 
     p0 = struct("genParts_charge", "genParts_charge", cut,
-        "gen charge", 8, -4, 4, col, fcol)
+        "gen charge", 5, -2.5, 2.5, col, fcol)
     histos = doit([p0], imgdir)
 
     p0 = struct("genParts_status", "genParts_status", cut,
-        "gen status", 4, 0, 4, col, fcol)
+        "gen status", 5, 0, 5, col, fcol)
     histos = doit([p0], imgdir)
 
 
@@ -132,7 +143,7 @@ if sections["simTracks"]:
         histos = book(x)
         project(tree, histos, nentries)
         draw(histos, logy=logy)
-        if imgdir:  save(imgdir, x[0].name)
+        save(imgdir, x[0].name)
         return histos
 
     cut = "simTracks_trkId==1"
@@ -194,7 +205,7 @@ if sections["simVertices"]:
         histos = book(x)
         project(tree, histos, nentries)
         draw(histos, logy=logy)
-        if imgdir:  save(imgdir, x[0].name)
+        save(imgdir, x[0].name)
         return histos
 
     cut = "simVertices_vtxId==0"
@@ -250,7 +261,7 @@ if sections["trkParts"]:
         histos = book(x)
         project(tree, histos, nentries)
         draw(histos, logy=logy)
-        if imgdir:  save(imgdir, x[0].name)
+        save(imgdir, x[0].name)
         return histos
 
     cut = "trkParts_trkId==1"
@@ -340,7 +351,7 @@ if sections["trkVertices"]:
         histos = book(x)
         project(tree, histos, nentries)
         draw(histos, logy=logy)
-        if imgdir:  save(imgdir, x[0].name)
+        save(imgdir, x[0].name)
         return histos
 
     #cut = "trkVertices_vtxId==0"
@@ -393,7 +404,7 @@ if sections["eventInfo"]:
         histos = book(x)
         project(tree, histos, nentries)
         draw(histos, logy=logy)
-        if imgdir:  save(imgdir, x[0].name)
+        save(imgdir, x[0].name)
         return histos
 
     cut = ""
@@ -437,7 +448,7 @@ if sections["clusters"]:
         histos = book(x)
         project(tree, histos, nentries)
         draw(histos, logy=logy)
-        if imgdir:  save(imgdir, x[0].name)
+        save(imgdir, x[0].name)
         return histos
 
     cut = "TTClusters_trkId==1"
@@ -648,7 +659,7 @@ if sections["stubs"]:
         histos = book(x)
         project(tree, histos, nentries)
         draw(histos, logy=logy)
-        if imgdir:  save(imgdir, x[0].name)
+        save(imgdir, x[0].name)
         return histos
 
     cut = "TTStubs_trkId==1"
@@ -889,6 +900,347 @@ if sections["stubs"]:
     #p0 = struct("TTStubs_hitPasseds", "TTStubs_hitPasseds", cut,
     #    "Stub pattern match (by hit, for each hit)", 4, 0, 4, col, fcol)
     #histos = book([p0]); project(tree, histos, nentries); draw(histos, text=True); save(imgdir, p0.name)
+
+
+# ______________________________________________________________________________
+if sections["minbias1"]:
+
+    if not samples["minbias"]:
+        print "ERROR"
+        exit
+
+    subsections = {}
+    subsections["genParts"   ] = False
+    subsections["simTracks"  ] = True
+    subsections["simVertices"] = False
+
+
+    gROOT.LoadMacro("pdgName.C")
+    from ROOT import pdgName
+
+    def doit(x, imgdir=None, logy=False):
+        histos = book(x)
+        project(tree, histos, nentries=nentries)
+        draw(histos, logy=logy)
+        save(imgdir, x[0].name)
+        return histos
+
+
+    # __________________________________________________________________________
+    if subsections["genParts"]:
+        cut = ""
+
+        p0 = struct("genParts_all_status", "genParts_status", cut,
+            "gen status", 5, 0, 5, col, fcol)
+        histos = doit([p0], imgdir)
+
+        cut = "(genParts_status==1 && abs(genParts_eta)<2.5)"  # prompt only
+
+        p0 = struct("genParts_size", "genParts_size" if not cut else "Sum$(%s)" % cut, "",
+            "# gen particles", 20, 0, 20, col, fcol)
+        histos = doit([p0], imgdir)
+
+        p0 = struct("genParts_charge", "genParts_charge", cut,
+            "gen charge", 5, -2.5, 2.5, col, fcol)
+        histos = doit([p0], imgdir)
+
+        def myProject(tree, histos, nentries=1000000000):
+            tree.SetBranchStatus("*"              , 0)
+            tree.SetBranchStatus("genParts_status", 1)
+            tree.SetBranchStatus("genParts_eta"   , 1)
+            tree.SetBranchStatus("genParts_pdgId" , 1)
+
+            for i_ievt, ievt in enumerate(tree):
+                if (i_ievt == nentries):  break
+
+                for br in izip(ievt.genParts_status, ievt.genParts_eta, ievt.genParts_pdgId):
+                    status, eta, pdgId = br
+                    if status==1 and abs(eta)<2.5:  # cut
+                        histos[0].h.Fill(pdgName(pdgId), 1)
+
+            histos[0].h.LabelsDeflate("X")
+            histos[0].h.LabelsOption("a")
+            tree.SetBranchStatus("*"              , 1)
+            return
+
+        p0 = struct("genParts_pdgId", "pdgName(genParts_pdgId)", cut,
+            "gen PDG id", 50, -25, 25, col, fcol)
+        if True:
+            x = [p0]; logy=False
+            histos = book(x)
+            myProject(tree, histos, nentries=nentries)
+            draw(histos, logy=logy)
+            save(imgdir, x[0].name)
+
+        cut = "(genParts_status==1 && abs(genParts_eta)<2.5 && genParts_charge != 0)"
+
+        p0 = struct("genParts_charged_size", "genParts_charged_size" if not cut else "Sum$(%s)" % cut, "",
+            "# gen_{charged} particles", 20, 0, 20, col, fcol)
+        histos = doit([p0], imgdir)
+
+        p0 = struct("genParts_charged_pt", "genParts_pt", cut,
+            "gen_{charged} p_{T} [GeV]", 50, 0, 10, col, fcol)
+        histos = doit([p0], imgdir, logy=True)
+
+        p0 = struct("genParts_charged_eta", "genParts_eta", cut,
+            "gen_{charged} #eta", 60, -3, 3, col, fcol)
+        histos = doit([p0], imgdir)
+
+        p0 = struct("genParts_charged_phi", "genParts_phi", cut,
+            "gen_{charged} #phi [rad]", 64, -3.2, 3.2, col, fcol)
+        histos = doit([p0], imgdir)
+
+        p0 = struct("genParts_charged_vz", "genParts_vz", cut,
+            "gen_{charged} vertex z_{0} [cm]", 60, -30, 30, col, fcol)
+        histos = doit([p0], imgdir)
+
+
+    # __________________________________________________________________________
+    if subsections["simTracks"]:
+        cut = "(simTracks_genpId!=-1 && abs(simTracks_eta)<2.5 && simTracks_charge!=0)"
+
+        p0 = struct("simTracks_size", "simTracks_size" if not cut else "Sum$(%s)" % cut, "",
+            "# simTracks", 50, 0, 200, col, fcol)
+        histos = doit([p0], imgdir)
+
+        p0 = struct("simTracks_pt", "simTracks_pt", cut,
+            "simTrack p_{T} [GeV]", 50, 0, 10, col, fcol)
+        histos = doit([p0], imgdir, logy=True)
+
+        def myProject(tree, histos, nentries=nentries):
+            #nentries = 139995
+            tree.SetBranchStatus("*"               , 0)
+            tree.SetBranchStatus("simTracks_genpId", 1)
+            tree.SetBranchStatus("simTracks_eta"   , 1)
+            tree.SetBranchStatus("simTracks_charge", 1)
+            tree.SetBranchStatus("simTracks_pdgId" , 1)
+
+            for i_ievt, ievt in enumerate(tree):
+                if (i_ievt == nentries):  break
+
+                for br in izip(ievt.simTracks_genpId, ievt.simTracks_eta, ievt.simTracks_charge, ievt.simTracks_pdgId):
+                    genpId, eta, charge, pdgId = br
+                    if genpId!=-1 and abs(eta)<2.5 and charge!=0:  # cut
+                        histos[0].h.Fill(pdgName(pdgId), 1)
+
+            histos[0].h.LabelsDeflate("X")
+            histos[0].h.LabelsOption("a")
+            tree.SetBranchStatus("*"               , 1)
+            return
+
+        p0 = struct("simTracks_pdgId", "pdgName(simTracks_pdgId)", cut,
+            "simTrack PDG id", 50, -25, 25, col, fcol)
+        if True:
+            x = [p0]; logy=False
+            histos = book(x)
+            myProject(tree, histos, nentries=nentries)
+            draw(histos, logy=logy)
+            save(imgdir, x[0].name)
+
+        # ______________________________________________________________________
+        cut = "(simTracks_genpId!=-1 && abs(simTracks_eta)<2.5 && simTracks_charge!=0 && simTracks_pt>2)"
+
+        p0 = struct("simTracks_pt2_size", "simTracks_size" if not cut else "Sum$(%s)" % cut, "",
+            "# simTracks_{pt>2}", 50, 0, 200, col, fcol)
+        histos = doit([p0], imgdir)
+
+        p0 = struct("simTracks_pt2_charge", "simTracks_charge", cut,
+            "simTracks_{pt>2} charge", 5, -2.5, 2.5, col, fcol)
+        histos = doit([p0], imgdir)
+
+        p0 = struct("simTracks_pt2_eta", "simTracks_eta", cut,
+            "simTrack_{pt>2} #eta", 60, -3, 3, col, fcol)
+        histos = doit([p0], imgdir)
+
+        p0 = struct("simTracks_pt2_phi", "simTracks_phi", cut,
+            "simTrack_{pt>2} #phi [rad]", 64, -3.2, 3.2, col, fcol)
+        histos = doit([p0], imgdir)
+
+        p0 = struct("simTracks_pt2_vz", "simVertices_vz[simTracks_vtxId]", cut,
+            "simTrack_{pt>2} vertex z_{0} [cm]", 60, -30, 30, col, fcol)
+        histos = doit([p0], imgdir)
+
+# ______________________________________________________________________________
+if sections["minbias140"]:
+
+    if not samples["minbias"]:
+        print "ERROR"
+        exit
+
+    subsections = {}
+    subsections["genParts"   ] = False
+    subsections["simTracks"  ] = False
+    subsections["simVertices"] = False
+    subsections["simTracks_n"] = True
+
+
+    gROOT.LoadMacro("pdgName.C")
+    from ROOT import pdgName
+
+    import numpy as np
+    np.random.seed(62935)
+    ninteractions = []
+    for i in xrange(nentries):
+        ninteractions.append(np.random.poisson(140))
+    nentries2 = sum(ninteractions)
+
+
+    def doit(x, imgdir=None, logy=False):
+        histos = book(x)
+        project(tree, histos, nentries=nentries2)
+        draw(histos, logy=logy)
+        save(imgdir, x[0].name)
+        return histos
+
+
+    # __________________________________________________________________________
+    if subsections["simTracks"]:
+
+        p0 = struct("ave140_gen_nPV", "dummy", "dummy",
+            "sim # PV", 50, 0, 200, col, fcol)
+
+        if True:
+            x = [p0]; logy=False
+            histos = book(x)
+            for i in xrange(nentries):
+                histos[0].h.Fill(ninteractions[i])
+            draw(histos, logy=logy)
+            save(imgdir, x[0].name)
+
+        cut = "(simTracks_genpId!=-1 && abs(simTracks_eta)<2.5 && simTracks_charge!=0)"
+
+        p0 = struct("ave140_simTracks_size", "simTracks_size" if not cut else "Sum$(%s)" % cut, "",
+            "# simTracks", 50, 0, 200, col, fcol)
+        histos = doit([p0], imgdir)
+
+        p0 = struct("ave140_simTracks_pt", "simTracks_pt", cut,
+            "simTrack p_{T} [GeV]", 50, 0, 10, col, fcol)
+        histos = doit([p0], imgdir, logy=True)
+
+        cut = "(simTracks_genpId!=-1 && abs(simTracks_eta)<2.5 && simTracks_charge!=0 && simTracks_pt>2)"
+
+        p0 = struct("ave140_simTracks_pt2_charge", "simTracks_charge", cut,
+            "simTracks_{pt>2} charge", 5, -2.5, 2.5, col, fcol)
+        histos = doit([p0], imgdir)
+
+        p0 = struct("ave140_simTracks_pt2_eta", "simTracks_eta", cut,
+            "simTrack_{pt>2} #eta", 60, -3, 3, col, fcol)
+        histos = doit([p0], imgdir)
+
+        p0 = struct("ave140_simTracks_pt2_phi", "simTracks_phi", cut,
+            "simTrack_{pt>2} #phi [rad]", 64, -3.2, 3.2, col, fcol)
+        histos = doit([p0], imgdir)
+
+        p0 = struct("ave140_simTracks_pt2_vz", "simVertices_vz[simTracks_vtxId]", cut,
+            "simTrack_{pt>2} vertex z_{0} [cm]", 60, -30, 30, col, fcol)
+        histos = doit([p0], imgdir)
+
+
+    def doit(x, f, region, imgdir=None, logy=False):
+        histos = book(x)
+        f(tree, histos, region, nentries=nentries)
+        for i, ix in enumerate(x):
+            draw(histos[i:i+1], logy=logy)
+            save(imgdir, ix.name)
+        return histos
+
+    # __________________________________________________________________________
+    if subsections["simTracks_n"]:
+
+        def myProject(tree, histos, region, nentries=1000000000):
+            tree.SetBranchStatus("*"               , 0)
+            tree.SetBranchStatus("simTracks_genpId", 1)
+            tree.SetBranchStatus("simTracks_eta"   , 1)
+            tree.SetBranchStatus("simTracks_phi"   , 1)
+            tree.SetBranchStatus("simTracks_charge", 1)
+            tree.SetBranchStatus("simTracks_pt"    , 1)
+
+            j_ievt, j_i = 0, 0
+            rr = [0] * 4
+            nn = [0] * 6
+
+            for i_ievt, ievt in enumerate(tree):
+                if (j_ievt == nentries):  break
+
+                #print i_ievt, j_ievt, j_i
+
+                for br in izip(ievt.simTracks_genpId, ievt.simTracks_eta, ievt.simTracks_phi, ievt.simTracks_charge, ievt.simTracks_pt):
+                    genpId, eta, phi, charge, pt = br
+                    if genpId!=-1 and abs(eta)<2.5 and charge!=0:  # cut
+
+                        rr[0] = True
+                        if 0.6<phi and phi<1.6:
+                            rr[1] = -0.2<eta and eta<0.8
+                            rr[2] = 0.6<eta and eta<1.5
+                            rr[3] = 1.3<eta and eta<2.5
+                        else:
+                            rr[1] = False
+                            rr[2] = False
+                            rr[3] = False
+
+                        if rr[region]:
+                            if pt > 0  :   nn[0] += 1
+                            if pt > 0.2:   nn[1] += 1
+                            if pt > 0.5:   nn[2] += 1
+                            if pt > 1  :   nn[3] += 1
+                            if pt > 2  :   nn[4] += 1
+                            if pt > 3  :   nn[5] += 1
+
+                j_i += 1
+                if j_i == ninteractions[j_ievt]:
+                    j_ievt += 1
+                    j_i = 0
+
+                    #print nn
+                    for i in xrange(6):
+                        histos[i].h.Fill(nn[i])
+                    nn = [0] * 6
+
+            tree.SetBranchStatus("*"               , 1)
+            return
+
+        params = [
+            struct("ave140_simTracks_pt0_size"  , "dummy", "dummy", "# simTracks_{pt>0}"  , 60, 0, 6000, col, fcol),
+            struct("ave140_simTracks_pt0p2_size", "dummy", "dummy", "# simTracks_{pt>0.2}", 50, 0, 5000, col, fcol),
+            struct("ave140_simTracks_pt0p5_size", "dummy", "dummy", "# simTracks_{pt>0.5}", 60, 0, 3000, col, fcol),
+            struct("ave140_simTracks_pt1_size"  , "dummy", "dummy", "# simTracks_{pt>1}"  , 60, 0, 1200, col, fcol),
+            struct("ave140_simTracks_pt2_size"  , "dummy", "dummy", "# simTracks_{pt>2}"  , 50, 0,  250, col, fcol),
+            struct("ave140_simTracks_pt3_size"  , "dummy", "dummy", "# simTracks_{pt>3}"  , 50, 0,  100, col, fcol),
+            ]
+        histos = doit(params, myProject, region=0, imgdir=imgdir, logy=False)
+
+        params = [
+            struct("ave140_barrel_simTracks_pt0_size"  , "dummy", "dummy", "# simTracks_{pt>0, barrel}"  , 60, 0, 6000/30, col, fcol),
+            struct("ave140_barrel_simTracks_pt0p2_size", "dummy", "dummy", "# simTracks_{pt>0.2, barrel}", 50, 0, 5000/25, col, fcol),
+            struct("ave140_barrel_simTracks_pt0p5_size", "dummy", "dummy", "# simTracks_{pt>0.5, barrel}", 60, 0, 3000/15, col, fcol),
+            struct("ave140_barrel_simTracks_pt1_size"  , "dummy", "dummy", "# simTracks_{pt>1, barrel}"  , 60, 0, 1200/20, col, fcol),
+            struct("ave140_barrel_simTracks_pt2_size"  , "dummy", "dummy", "# simTracks_{pt>2, barrel}"  , 50, 0,  250/ 5, col, fcol),
+            struct("ave140_barrel_simTracks_pt3_size"  , "dummy", "dummy", "# simTracks_{pt>3, barrel}"  , 50, 0,  100/ 2, col, fcol),
+            ]
+        for p in params:  p.fillstyle = 3004
+        #histos = doit(params, myProject, region=1, imgdir=imgdir, logy=False)
+
+        params = [
+            struct("ave140_hybrid_simTracks_pt0_size"  , "dummy", "dummy", "# simTracks_{pt>0, hybrid}"  , 60, 0, 6000/30, col, fcol),
+            struct("ave140_hybrid_simTracks_pt0p2_size", "dummy", "dummy", "# simTracks_{pt>0.2, hybrid}", 50, 0, 5000/25, col, fcol),
+            struct("ave140_hybrid_simTracks_pt0p5_size", "dummy", "dummy", "# simTracks_{pt>0.5, hybrid}", 60, 0, 3000/15, col, fcol),
+            struct("ave140_hybrid_simTracks_pt1_size"  , "dummy", "dummy", "# simTracks_{pt>1, hybrid}"  , 60, 0, 1200/20, col, fcol),
+            struct("ave140_hybrid_simTracks_pt2_size"  , "dummy", "dummy", "# simTracks_{pt>2, hybrid}"  , 50, 0,  250/ 5, col, fcol),
+            struct("ave140_hybrid_simTracks_pt3_size"  , "dummy", "dummy", "# simTracks_{pt>3, hybrid}"  , 50, 0,  100/ 2, col, fcol),
+            ]
+        for p in params:  p.fillstyle = 3003
+        #histos = doit(params, myProject, region=2, imgdir=imgdir, logy=False)
+
+        params = [
+            struct("ave140_endcap_simTracks_pt0_size"  , "dummy", "dummy", "# simTracks_{pt>0, endcap}"  , 60, 0, 6000/30, col, fcol),
+            struct("ave140_endcap_simTracks_pt0p2_size", "dummy", "dummy", "# simTracks_{pt>0.2, endcap}", 50, 0, 5000/25, col, fcol),
+            struct("ave140_endcap_simTracks_pt0p5_size", "dummy", "dummy", "# simTracks_{pt>0.5, endcap}", 60, 0, 3000/15, col, fcol),
+            struct("ave140_endcap_simTracks_pt1_size"  , "dummy", "dummy", "# simTracks_{pt>1, endcap}"  , 60, 0, 1200/20, col, fcol),
+            struct("ave140_endcap_simTracks_pt2_size"  , "dummy", "dummy", "# simTracks_{pt>2, endcap}"  , 50, 0,  250/ 5, col, fcol),
+            struct("ave140_endcap_simTracks_pt3_size"  , "dummy", "dummy", "# simTracks_{pt>3, endcap}"  , 50, 0,  100/ 2, col, fcol),
+            ]
+        for p in params:  p.fillstyle = 3005
+        #histos = doit(params, myProject, region=3, imgdir=imgdir, logy=False)
 
 
 # ______________________________________________________________________________

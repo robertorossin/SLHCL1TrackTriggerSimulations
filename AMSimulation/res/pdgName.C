@@ -40,14 +40,24 @@ const char* pdgName(int id) {
     case  -211:  return "pi^-";
     case   321:  return "K^+";
     case  -321:  return "K^-";
+    case   323:  return "K*(892)^+";
+    case  -323:  return "K*(892)^-";
+    case   411:  return "D^+";
+    case  -411:  return "D^-";
     case  2112:  return "n^0";
     case -2112:  return "n~^0";
     case  2212:  return "p^+";
     case -2212:  return "p~^-";
     case  3122:  return "Lambda^0";
     case -3122:  return "Lambda~^0";
+    case  3112:  return "Sigma^-";
+    case -3112:  return "Sigma~^+";
     case  3222:  return "Sigma^+";
     case -3222:  return "Sigma~^-";
+    case  3312:  return "Xi^-";
+    case -3312:  return "Xi~^+";
+    case  3334:  return "Omega^-";
+    case -3334:  return "Omega~^+";
 
     default:
       static char buffer[32];

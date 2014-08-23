@@ -2,6 +2,7 @@ from ROOT import TH1, TH1F, TH2F, TProfile, TProfile2D, TFile, TChain, TCanvas, 
 from rootcolors import *
 from math import sqrt
 from random import randint
+from itertools import izip
 
 # For init
 class DrawerInit:
