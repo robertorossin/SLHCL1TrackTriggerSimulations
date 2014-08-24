@@ -88,3 +88,8 @@ ssBase6     = TColor.GetColor("#EAFDE3")
 palette      = map(lambda x: TColor.GetColor(x), ("#004586","#FF420E","#FFD320","#579D1C","#7E0021","#83CAFF","#314004","#AECF00","#4B1F6F","#FF950E","#C5000B","#0084D1"))
 lightpalette = map(lambda x: TColor.GetColor(x), ("#79B7F2","#F29379","#FFEDA6","#B1F279","#F27999","#C2DEF2","#D4F279","#DFF279","#C791F2","#F2BD79","#F27980","#AAD7F2"))
 
+#paletteSet1      = map(lambda x: TColor.GetColor(x), ("#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", "#a65628", "#f781bf", "#999999"))
+#lightpaletteSet1 = map(lambda x: TColor.GetColor(x), ("#f28d8e", "#9bbfdc", "#a6d7a5", "#cca7d1", "#ffbf80", "#ffff99", "#d3ab94", "#fbc0df", "#cccccc"))
+paletteSet1      = map(lambda x: TColor.GetColor(x), ("#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#a65628", "#f781bf", "#999999"))
+lightpaletteSet1 = map(lambda x: TColor.GetColor(x), ("#f28d8e", "#9bbfdc", "#a6d7a5", "#cca7d1", "#ffbf80", "#d3ab94", "#fbc0df", "#cccccc"))
+
