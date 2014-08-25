@@ -1,9 +1,5 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/StubCleaner.h"
 
-#ifndef ROOT_Math_GenVector_eta
-#include "Math/GenVector/eta.h"
-#endif
-
 static const unsigned MIN_NGOODSTUBS = 3;
 static const unsigned MAX_NGOODSTUBS = 8;
 
@@ -64,57 +60,66 @@ int StubCleaner::cleanStubs(TString out) {
     // For reading
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events; recreating " << out << " after stub cleaning." << std::endl;
 
-    std::vector<float> *          vb_x          = 0;
-    std::vector<float> *          vb_y          = 0;
+    //std::vector<float> *          vb_x          = 0;
+    //std::vector<float> *          vb_y          = 0;
     std::vector<float> *          vb_z          = 0;
     std::vector<float> *          vb_r          = 0;
+    std::vector<float> *          vb_eta        = 0;
     std::vector<float> *          vb_phi        = 0;
     std::vector<float> *          vb_coordx     = 0;
     std::vector<float> *          vb_coordy     = 0;
-    std::vector<float> *          vb_roughPt    = 0;
+    //std::vector<float> *          vb_roughPt    = 0;
+    //std::vector<float> *          vb_trigBend   = 0;
     std::vector<unsigned> *       vb_modId      = 0;
-    std::vector<unsigned> *       vb_nhits      = 0;
-    std::vector<float> *          vb_simPt      = 0;
-    std::vector<float> *          vb_simEta     = 0;
-    std::vector<float> *          vb_simPhi     = 0;
     std::vector<int> *            vb_trkId      = 0;
+    std::vector<float> *          vp_pt         = 0;
+    std::vector<float> *          vp_eta        = 0;
+    std::vector<float> *          vp_phi        = 0;
+    std::vector<float> *          vp_vx         = 0;
+    std::vector<float> *          vp_vy         = 0;
+    std::vector<float> *          vp_vz         = 0;
+    std::vector<int> *            vp_charge     = 0;
 
     chain_->SetBranchStatus("*"                 , 0);
-    chain_->SetBranchStatus("TTStubs_x"         , 1);
-    chain_->SetBranchStatus("TTStubs_y"         , 1);
+    //chain_->SetBranchStatus("TTStubs_x"         , 1);
+    //chain_->SetBranchStatus("TTStubs_y"         , 1);
     chain_->SetBranchStatus("TTStubs_z"         , 1);
     chain_->SetBranchStatus("TTStubs_r"         , 1);
+    chain_->SetBranchStatus("TTStubs_eta"       , 1);
     chain_->SetBranchStatus("TTStubs_phi"       , 1);
     chain_->SetBranchStatus("TTStubs_coordx"    , 1);
     chain_->SetBranchStatus("TTStubs_coordy"    , 1);
-    chain_->SetBranchStatus("TTStubs_roughPt"   , 1);
+    //chain_->SetBranchStatus("TTStubs_roughPt"   , 1);
+    //chain_->SetBranchStatus("TTStubs_trigBend"  , 1);
     chain_->SetBranchStatus("TTStubs_modId"     , 1);
-    chain_->SetBranchStatus("TTStubs_nhits"     , 1);
-    chain_->SetBranchStatus("TTStubs_simPt"     , 1);
-    chain_->SetBranchStatus("TTStubs_simEta"    , 1);
-    chain_->SetBranchStatus("TTStubs_simPhi"    , 1);
     chain_->SetBranchStatus("TTStubs_trkId"     , 1);
+    chain_->SetBranchStatus("genParts_pt"       , 1);
+    chain_->SetBranchStatus("genParts_eta"      , 1);
+    chain_->SetBranchStatus("genParts_phi"      , 1);
+    chain_->SetBranchStatus("genParts_vx"       , 1);
+    chain_->SetBranchStatus("genParts_vy"       , 1);
+    chain_->SetBranchStatus("genParts_vz"       , 1);
+    chain_->SetBranchStatus("genParts_charge"   , 1);
 
-    chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
-    chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
+    //chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
+    //chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
     chain_->SetBranchAddress("TTStubs_z"        , &(vb_z));
     chain_->SetBranchAddress("TTStubs_r"        , &(vb_r));
+    chain_->SetBranchAddress("TTStubs_eta"      , &(vb_eta));
     chain_->SetBranchAddress("TTStubs_phi"      , &(vb_phi));
     chain_->SetBranchAddress("TTStubs_coordx"   , &(vb_coordx));
     chain_->SetBranchAddress("TTStubs_coordy"   , &(vb_coordy));
-    chain_->SetBranchAddress("TTStubs_roughPt"  , &(vb_roughPt));
+    //chain_->SetBranchAddress("TTStubs_roughPt"  , &(vb_roughPt));
+    //chain_->SetBranchAddress("TTStubs_trigBend" , &(vb_trigBend));
     chain_->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
-    chain_->SetBranchAddress("TTStubs_nhits"    , &(vb_nhits));
-    chain_->SetBranchAddress("TTStubs_simPt"    , &(vb_simPt));
-    chain_->SetBranchAddress("TTStubs_simEta"   , &(vb_simEta));
-    chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
     chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
-
-    // In addition, keep genParticle info
-    //chain_->SetBranchStatus("genParts_pt"       , 1);
-    //chain_->SetBranchStatus("genParts_eta"      , 1);
-    //chain_->SetBranchStatus("genParts_phi"      , 1);
-    //chain_->SetBranchStatus("genParts_charge"   , 1);
+    chain_->SetBranchAddress("genParts_pt"      , &(vp_pt));
+    chain_->SetBranchAddress("genParts_eta"     , &(vp_eta));
+    chain_->SetBranchAddress("genParts_phi"     , &(vp_phi));
+    chain_->SetBranchAddress("genParts_vx"      , &(vp_vx));
+    chain_->SetBranchAddress("genParts_vy"      , &(vp_vy));
+    chain_->SetBranchAddress("genParts_vz"      , &(vp_vz));
+    chain_->SetBranchAddress("genParts_charge"  , &(vp_charge));
 
     // Set up TTreeFormula for event selection
     TTreeFormula* ttf_event = new TTreeFormula("ttf_event", eventSelect_, chain_);
@@ -147,7 +152,7 @@ int StubCleaner::cleanStubs(TString out) {
         }
         chain_->GetEntry(ievt);
 
-        unsigned nstubs = vb_modId->size();
+        const unsigned nstubs = vb_modId->size();
         if (verbose_>1 && ievt_step == 50000) {
             std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, passing: %7i", ievt, nKept, nPassed) << std::endl;
             ievt_step -= 50000;
@@ -180,20 +185,10 @@ int StubCleaner::cleanStubs(TString out) {
             keep = false;
 
         // Check sim info
-        // Take the sim-matched particle info from the outermost stub
-        int   trkId  = vb_trkId ->back();
-        float simPt  = vb_simPt ->back();
-        float simEta = vb_simEta->back();
-        float simPhi = vb_simPhi->back();
-        for (unsigned l=0, ll=nstubs-1; (l<nstubs) && keep; ++l, --ll) {
-            trkId = vb_trkId->at(ll);  // reverse iteration using ll
-            if (trkId == good_trkId) {
-                simPt = vb_simPt->at(ll);
-                simEta = vb_simEta->at(ll);
-                simPhi = vb_simPhi->at(ll);
-                break;
-            }
-        }
+        assert(vp_pt->size() == 1);
+        float simPt    = vp_pt->front();
+        float simEta   = vp_eta->front();
+        float simPhi   = vp_phi->front();
         float simTheta = simPt > 0.0 ? (2.0 * std::atan(std::exp(-simEta)) ) : (simEta >= 0 ? 0 : M_PI);
 
         // Apply pt, eta, phi requirements
@@ -209,9 +204,9 @@ int StubCleaner::cleanStubs(TString out) {
         // Remove multiple stubs in one layer
         std::vector<std::pair<unsigned, float> > vec_index_dZ;
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
-            trkId = vb_trkId->at(l);  // check sim info
+            int trkId = vb_trkId->at(l);  // check sim info
             if (trkId == good_trkId || trkId == unmatch_trkId) {  // also catch stubs that fail to find a matched simTrack
-                //float stub_eta = ROOT::Math::Impl::Eta_FromRhoZ(vb_r->at(l), vb_z->at(l));
+                //float stub_eta = vb_eta->at(l);
                 //float dEta = std::abs(simEta - stub_eta);
                 //if (dEta > 0.8)  // way too far
                 //    continue;
@@ -254,16 +249,12 @@ int StubCleaner::cleanStubs(TString out) {
         // _____________________________________________________________________
         // Now make keep-or-ignore decision per stub
         unsigned ngoodstubs = 0;
-        unsigned nhits;
         id_type moduleId;
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
             bool keepstub = true;
 
-            nhits = vb_nhits->at(l);
-            assert(nhits > 0);
-
             moduleId = vb_modId->at(l);
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << " # hits: " << nhits << std::endl;
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << vb_trkId->at(l) << std::endl;
 
             // Check whether the index l was stored as a good stub
             unsigned count = std::count(goodLayerStubs.begin(), goodLayerStubs.end(), l);
@@ -273,26 +264,24 @@ int StubCleaner::cleanStubs(TString out) {
             if (keepstub) {
                 // Keep and do something similar to insertion sort
                 // First, find the correct position to insert (according to moduleId)
-                std::vector<unsigned>::iterator pos = vb_modId->begin()+ngoodstubs;
+                std::vector<unsigned>::const_iterator pos = vb_modId->begin()+ngoodstubs;
                 unsigned ipos = ngoodstubs;
                 while (ipos != 0 && moduleId < *(--pos))  // start comparing from the tail
                     --ipos;
 
                 // Insert, keeping only the 'ngoodstubs' elements
-                insertSorted(vb_x->begin()      , ipos, ngoodstubs, vb_x->at(l));
-                insertSorted(vb_y->begin()      , ipos, ngoodstubs, vb_y->at(l));
-                insertSorted(vb_z->begin()      , ipos, ngoodstubs, vb_z->at(l));
-                insertSorted(vb_r->begin()      , ipos, ngoodstubs, vb_r->at(l));
-                insertSorted(vb_phi->begin()    , ipos, ngoodstubs, vb_phi->at(l));
-                insertSorted(vb_coordx->begin() , ipos, ngoodstubs, vb_coordx->at(l));
-                insertSorted(vb_coordy->begin() , ipos, ngoodstubs, vb_coordy->at(l));
-                insertSorted(vb_roughPt->begin(), ipos, ngoodstubs, vb_roughPt->at(l));
-                insertSorted(vb_modId->begin()  , ipos, ngoodstubs, vb_modId->at(l));
-                insertSorted(vb_nhits->begin()  , ipos, ngoodstubs, vb_nhits->at(l));
-                insertSorted(vb_simPt->begin()  , ipos, ngoodstubs, vb_simPt->at(l));
-                insertSorted(vb_simEta->begin() , ipos, ngoodstubs, vb_simEta->at(l));
-                insertSorted(vb_simPhi->begin() , ipos, ngoodstubs, vb_simPhi->at(l));
-                insertSorted(vb_trkId->begin()  , ipos, ngoodstubs, vb_trkId->at(l));
+                //insertSorted(vb_x->begin()        , ipos, ngoodstubs, vb_x->at(l));
+                //insertSorted(vb_y->begin()        , ipos, ngoodstubs, vb_y->at(l));
+                insertSorted(vb_z->begin()        , ipos, ngoodstubs, vb_z->at(l));
+                insertSorted(vb_r->begin()        , ipos, ngoodstubs, vb_r->at(l));
+                insertSorted(vb_eta->begin()      , ipos, ngoodstubs, vb_eta->at(l));
+                insertSorted(vb_phi->begin()      , ipos, ngoodstubs, vb_phi->at(l));
+                insertSorted(vb_coordx->begin()   , ipos, ngoodstubs, vb_coordx->at(l));
+                insertSorted(vb_coordy->begin()   , ipos, ngoodstubs, vb_coordy->at(l));
+                //insertSorted(vb_roughPt->begin()  , ipos, ngoodstubs, vb_roughPt->at(l));
+                //insertSorted(vb_trigBend->begin() , ipos, ngoodstubs, vb_trigBend->at(l));
+                insertSorted(vb_modId->begin()    , ipos, ngoodstubs, vb_modId->at(l));
+                insertSorted(vb_trkId->begin()    , ipos, ngoodstubs, vb_trkId->at(l));
 
                 ++ngoodstubs;  // remember to increment
             }
@@ -314,33 +303,22 @@ int StubCleaner::cleanStubs(TString out) {
             ngoodstubs = 0;
 
         if (keep && ngoodstubs > MAX_NGOODSTUBS) {
-            std::cout << Warning() << "... evt: " << ievt << " simPt: " << simPt << " simEta: " << simEta << " simPhi: " << simPhi << std::endl;
-
-            for (unsigned l=0; (l<ngoodstubs) && keep; ++l) {
-                float stub_eta = ROOT::Math::Impl::Eta_FromRhoZ(vb_r->at(l), vb_z->at(l));
-                float stub_phi = vb_phi->at(l);
-                float dEta = std::abs(simEta - stub_eta);
-                float dPhi = deltaPhi(simPhi, stub_phi);
-                float dZ = std::abs(vb_r->at(l) / std::tan(simTheta) - vb_z->at(l));
-                std::cout << "... ... stub: " << l << " moduleId: " << vb_modId->at(l) << " trkId: " << vb_trkId->at(l) << " r,phi,z: " << vb_r->at(l) << "," << vb_phi->at(l) << "," << vb_z->at(l) << " dPhi,dEta,dZ: " << dPhi << "," << dEta << "," << dZ << std::endl;
-            }
+            std::cout << Warning() << "... evt: " << ievt << " simPt: " << simPt << " simEta: " << simEta << " simPhi: " << simPhi <<  " ngoodstubs: " << ngoodstubs << std::endl;
         }
 
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # good stubs: " << ngoodstubs << " keep? " << keep << std::endl;
 
-        vb_x        ->resize(ngoodstubs);
-        vb_y        ->resize(ngoodstubs);
+        //vb_x        ->resize(ngoodstubs);
+        //vb_y        ->resize(ngoodstubs);
         vb_z        ->resize(ngoodstubs);
         vb_r        ->resize(ngoodstubs);
+        vb_eta      ->resize(ngoodstubs);
         vb_phi      ->resize(ngoodstubs);
         vb_coordx   ->resize(ngoodstubs);
         vb_coordy   ->resize(ngoodstubs);
-        vb_roughPt  ->resize(ngoodstubs);
+        //vb_roughPt  ->resize(ngoodstubs);
+        //vb_trigBend ->resize(ngoodstubs);
         vb_modId    ->resize(ngoodstubs);
-        vb_nhits    ->resize(ngoodstubs);
-        vb_simPt    ->resize(ngoodstubs);
-        vb_simEta   ->resize(ngoodstubs);
-        vb_simPhi   ->resize(ngoodstubs);
         vb_trkId    ->resize(ngoodstubs);
 
         ++nKept;

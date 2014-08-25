@@ -8,6 +8,9 @@ struct genPart {
     float pt;
     float eta;
     float phi;
+    float vx;
+    float vy;
+    float vz;
     int charge;
 };
 
@@ -55,6 +58,9 @@ class TTRoadWriter {
     std::auto_ptr<std::vector<float> > vp_pt;
     std::auto_ptr<std::vector<float> > vp_eta;
     std::auto_ptr<std::vector<float> > vp_phi;
+    std::auto_ptr<std::vector<float> > vp_vx;
+    std::auto_ptr<std::vector<float> > vp_vy;
+    std::auto_ptr<std::vector<float> > vp_vz;
     std::auto_ptr<std::vector<int> >   vp_charge;
 };
 
@@ -176,68 +182,67 @@ int PatternMatcher::makeRoads_vector(TString out) {
     assert(std::is_pod<TTSuperstrip>::value && std::is_pod<TTPattern>::value && std::is_pod<TTHit>::value);
 
     // For reading
-    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
+    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events." << std::endl;
 
     std::vector<float> *          vb_x          = 0;
     std::vector<float> *          vb_y          = 0;
     std::vector<float> *          vb_z          = 0;
-    std::vector<float> *          vb_r          = 0;
-    std::vector<float> *          vb_phi        = 0;
+    //std::vector<float> *          vb_r          = 0;
+    //std::vector<float> *          vb_eta        = 0;
+    //std::vector<float> *          vb_phi        = 0;
     std::vector<float> *          vb_coordx     = 0;
     std::vector<float> *          vb_coordy     = 0;
     std::vector<float> *          vb_roughPt    = 0;
+    std::vector<float> *          vb_trigBend   = 0;
     std::vector<unsigned> *       vb_modId      = 0;
-    std::vector<unsigned> *       vb_nhits      = 0;
-    std::vector<float> *          vb_simPt      = 0;
-    std::vector<float> *          vb_simEta     = 0;
-    std::vector<float> *          vb_simPhi     = 0;
-    std::vector<int> *            vb_trkId      = 0;
+    //std::vector<int> *            vb_trkId      = 0;
+    std::vector<float> *          vp_pt         = 0;
+    std::vector<float> *          vp_eta        = 0;
+    std::vector<float> *          vp_phi        = 0;
+    std::vector<float> *          vp_vx         = 0;
+    std::vector<float> *          vp_vy         = 0;
+    std::vector<float> *          vp_vz         = 0;
+    std::vector<int> *            vp_charge     = 0;
 
     chain_->SetBranchStatus("*"                 , 0);
     chain_->SetBranchStatus("TTStubs_x"         , 1);
     chain_->SetBranchStatus("TTStubs_y"         , 1);
     chain_->SetBranchStatus("TTStubs_z"         , 1);
-    chain_->SetBranchStatus("TTStubs_r"         , 1);
-    chain_->SetBranchStatus("TTStubs_phi"       , 1);
+    //chain_->SetBranchStatus("TTStubs_r"         , 1);
+    //chain_->SetBranchStatus("TTStubs_eta"       , 1);
+    //chain_->SetBranchStatus("TTStubs_phi"       , 1);
     chain_->SetBranchStatus("TTStubs_coordx"    , 1);
     chain_->SetBranchStatus("TTStubs_coordy"    , 1);
     chain_->SetBranchStatus("TTStubs_roughPt"   , 1);
+    chain_->SetBranchStatus("TTStubs_trigBend"  , 1);
     chain_->SetBranchStatus("TTStubs_modId"     , 1);
-    chain_->SetBranchStatus("TTStubs_nhits"     , 1);
-    chain_->SetBranchStatus("TTStubs_simPt"     , 1);
-    chain_->SetBranchStatus("TTStubs_simEta"    , 1);
-    chain_->SetBranchStatus("TTStubs_simPhi"    , 1);
-    chain_->SetBranchStatus("TTStubs_trkId"     , 1);
+    //chain_->SetBranchStatus("TTStubs_trkId"     , 1);
+    chain_->SetBranchStatus("genParts_pt"       , 1);
+    chain_->SetBranchStatus("genParts_eta"      , 1);
+    chain_->SetBranchStatus("genParts_phi"      , 1);
+    chain_->SetBranchStatus("genParts_vx"       , 1);
+    chain_->SetBranchStatus("genParts_vy"       , 1);
+    chain_->SetBranchStatus("genParts_vz"       , 1);
+    chain_->SetBranchStatus("genParts_charge"   , 1);
 
     chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
     chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
     chain_->SetBranchAddress("TTStubs_z"        , &(vb_z));
-    chain_->SetBranchAddress("TTStubs_r"        , &(vb_r));
-    chain_->SetBranchAddress("TTStubs_phi"      , &(vb_phi));
+    //chain_->SetBranchAddress("TTStubs_r"        , &(vb_r));
+    //chain_->SetBranchAddress("TTStubs_eta"      , &(vb_eta));
+    //chain_->SetBranchAddress("TTStubs_phi"      , &(vb_phi));
     chain_->SetBranchAddress("TTStubs_coordx"   , &(vb_coordx));
     chain_->SetBranchAddress("TTStubs_coordy"   , &(vb_coordy));
     chain_->SetBranchAddress("TTStubs_roughPt"  , &(vb_roughPt));
+    chain_->SetBranchAddress("TTStubs_trigBend" , &(vb_trigBend));
     chain_->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
-    chain_->SetBranchAddress("TTStubs_nhits"    , &(vb_nhits));
-    chain_->SetBranchAddress("TTStubs_simPt"    , &(vb_simPt));
-    chain_->SetBranchAddress("TTStubs_simEta"   , &(vb_simEta));
-    chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
-    chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
-
-    // In addition, keep genParticle info
-    std::vector<float> *          vp_pt         = 0;
-    std::vector<float> *          vp_eta        = 0;
-    std::vector<float> *          vp_phi        = 0;
-    std::vector<int> *            vp_charge     = 0;
-
-    chain_->SetBranchStatus("genParts_pt"       , 1);
-    chain_->SetBranchStatus("genParts_eta"      , 1);
-    chain_->SetBranchStatus("genParts_phi"      , 1);
-    chain_->SetBranchStatus("genParts_charge"   , 1);
-
+    //chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
     chain_->SetBranchAddress("genParts_pt"      , &(vp_pt));
     chain_->SetBranchAddress("genParts_eta"     , &(vp_eta));
     chain_->SetBranchAddress("genParts_phi"     , &(vp_phi));
+    chain_->SetBranchAddress("genParts_vx"      , &(vp_vx));
+    chain_->SetBranchAddress("genParts_vy"      , &(vp_vy));
+    chain_->SetBranchAddress("genParts_vz"      , &(vp_vz));
     chain_->SetBranchAddress("genParts_charge"  , &(vp_charge));
 
     // For writing
@@ -272,7 +277,7 @@ int PatternMatcher::makeRoads_vector(TString out) {
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
 
-        unsigned nstubs = vb_modId->size();
+        const unsigned nstubs = vb_modId->size();
         if (verbose_>1 && ievt_step == 5000) {
             std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, triggering: %7i", ievt, nKept, nPassed) << std::endl;
             ievt_step -= 5000;
@@ -347,7 +352,7 @@ int PatternMatcher::makeRoads_vector(TString out) {
                 }
             }
 
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << " trkId: " << vb_trkId->at(l) << std::endl;
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << std::endl;
         }
 
         // _____________________________________________________________________
@@ -415,12 +420,15 @@ int PatternMatcher::makeRoads_vector(TString out) {
         // In addition, keep genParticle info
         genParts.clear();
 
-        unsigned nparts = vp_pt->size();
+        const unsigned nparts = vp_pt->size();
         for (unsigned l=0; l<nparts; ++l) {
             genPart part;
             part.pt     = vp_pt->at(l);
             part.eta    = vp_eta->at(l);
             part.phi    = vp_phi->at(l);
+            part.vx     = vp_vx->at(l);
+            part.vy     = vp_vy->at(l);
+            part.vz     = vp_vz->at(l);
             part.charge = vp_charge->at(l);
             genParts.push_back(part);
         }
@@ -547,68 +555,67 @@ int PatternMatcher::makeRoads_fas(TString out) {
     assert(std::is_pod<TTSuperstrip>::value && std::is_pod<TTPattern>::value && std::is_pod<TTHit>::value);
 
     // For reading
-    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
+    if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events." << std::endl;
 
     std::vector<float> *          vb_x          = 0;
     std::vector<float> *          vb_y          = 0;
     std::vector<float> *          vb_z          = 0;
-    std::vector<float> *          vb_r          = 0;
-    std::vector<float> *          vb_phi        = 0;
+    //std::vector<float> *          vb_r          = 0;
+    //std::vector<float> *          vb_eta        = 0;
+    //std::vector<float> *          vb_phi        = 0;
     std::vector<float> *          vb_coordx     = 0;
     std::vector<float> *          vb_coordy     = 0;
     std::vector<float> *          vb_roughPt    = 0;
+    std::vector<float> *          vb_trigBend   = 0;
     std::vector<unsigned> *       vb_modId      = 0;
-    std::vector<unsigned> *       vb_nhits      = 0;
-    std::vector<float> *          vb_simPt      = 0;
-    std::vector<float> *          vb_simEta     = 0;
-    std::vector<float> *          vb_simPhi     = 0;
-    std::vector<int> *            vb_trkId      = 0;
+    //std::vector<int> *            vb_trkId      = 0;
+    std::vector<float> *          vp_pt         = 0;
+    std::vector<float> *          vp_eta        = 0;
+    std::vector<float> *          vp_phi        = 0;
+    std::vector<float> *          vp_vx         = 0;
+    std::vector<float> *          vp_vy         = 0;
+    std::vector<float> *          vp_vz         = 0;
+    std::vector<int> *            vp_charge     = 0;
 
     chain_->SetBranchStatus("*"                 , 0);
     chain_->SetBranchStatus("TTStubs_x"         , 1);
     chain_->SetBranchStatus("TTStubs_y"         , 1);
     chain_->SetBranchStatus("TTStubs_z"         , 1);
-    chain_->SetBranchStatus("TTStubs_r"         , 1);
-    chain_->SetBranchStatus("TTStubs_phi"       , 1);
+    //chain_->SetBranchStatus("TTStubs_r"         , 1);
+    //chain_->SetBranchStatus("TTStubs_eta"       , 1);
+    //chain_->SetBranchStatus("TTStubs_phi"       , 1);
     chain_->SetBranchStatus("TTStubs_coordx"    , 1);
     chain_->SetBranchStatus("TTStubs_coordy"    , 1);
     chain_->SetBranchStatus("TTStubs_roughPt"   , 1);
+    chain_->SetBranchStatus("TTStubs_trigBend"  , 1);
     chain_->SetBranchStatus("TTStubs_modId"     , 1);
-    chain_->SetBranchStatus("TTStubs_nhits"     , 1);
-    chain_->SetBranchStatus("TTStubs_simPt"     , 1);
-    chain_->SetBranchStatus("TTStubs_simEta"    , 1);
-    chain_->SetBranchStatus("TTStubs_simPhi"    , 1);
-    chain_->SetBranchStatus("TTStubs_trkId"     , 1);
+    //chain_->SetBranchStatus("TTStubs_trkId"     , 1);
+    chain_->SetBranchStatus("genParts_pt"       , 1);
+    chain_->SetBranchStatus("genParts_eta"      , 1);
+    chain_->SetBranchStatus("genParts_phi"      , 1);
+    chain_->SetBranchStatus("genParts_vx"       , 1);
+    chain_->SetBranchStatus("genParts_vy"       , 1);
+    chain_->SetBranchStatus("genParts_vz"       , 1);
+    chain_->SetBranchStatus("genParts_charge"   , 1);
 
     chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
     chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
     chain_->SetBranchAddress("TTStubs_z"        , &(vb_z));
-    chain_->SetBranchAddress("TTStubs_r"        , &(vb_r));
-    chain_->SetBranchAddress("TTStubs_phi"      , &(vb_phi));
+    //chain_->SetBranchAddress("TTStubs_r"        , &(vb_r));
+    //chain_->SetBranchAddress("TTStubs_eta"      , &(vb_eta));
+    //chain_->SetBranchAddress("TTStubs_phi"      , &(vb_phi));
     chain_->SetBranchAddress("TTStubs_coordx"   , &(vb_coordx));
     chain_->SetBranchAddress("TTStubs_coordy"   , &(vb_coordy));
     chain_->SetBranchAddress("TTStubs_roughPt"  , &(vb_roughPt));
+    chain_->SetBranchAddress("TTStubs_trigBend" , &(vb_trigBend));
     chain_->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
-    chain_->SetBranchAddress("TTStubs_nhits"    , &(vb_nhits));
-    chain_->SetBranchAddress("TTStubs_simPt"    , &(vb_simPt));
-    chain_->SetBranchAddress("TTStubs_simEta"   , &(vb_simEta));
-    chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
-    chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
-
-    // In addition, keep genParticle info
-    std::vector<float> *          vp_pt         = 0;
-    std::vector<float> *          vp_eta        = 0;
-    std::vector<float> *          vp_phi        = 0;
-    std::vector<int> *            vp_charge     = 0;
-
-    chain_->SetBranchStatus("genParts_pt"       , 1);
-    chain_->SetBranchStatus("genParts_eta"      , 1);
-    chain_->SetBranchStatus("genParts_phi"      , 1);
-    chain_->SetBranchStatus("genParts_charge"   , 1);
-
+    //chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
     chain_->SetBranchAddress("genParts_pt"      , &(vp_pt));
     chain_->SetBranchAddress("genParts_eta"     , &(vp_eta));
     chain_->SetBranchAddress("genParts_phi"     , &(vp_phi));
+    chain_->SetBranchAddress("genParts_vx"      , &(vp_vx));
+    chain_->SetBranchAddress("genParts_vy"      , &(vp_vy));
+    chain_->SetBranchAddress("genParts_vz"      , &(vp_vz));
     chain_->SetBranchAddress("genParts_charge"  , &(vp_charge));
 
     // For writing
@@ -641,7 +648,7 @@ int PatternMatcher::makeRoads_fas(TString out) {
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
 
-        unsigned nstubs = vb_modId->size();
+        const unsigned nstubs = vb_modId->size();
         if (verbose_>1 && ievt_step == 5000) {
             std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, triggering: %7i", ievt, nKept, nPassed) << std::endl;
             ievt_step -= 5000;
@@ -712,7 +719,7 @@ int PatternMatcher::makeRoads_fas(TString out) {
                 }
             }
 
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << " trkId: " << vb_trkId->at(l) << std::endl;
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << std::endl;
         }
 
         // _____________________________________________________________________
@@ -772,12 +779,15 @@ int PatternMatcher::makeRoads_fas(TString out) {
         // In addition, keep genParticle info
         genParts.clear();
 
-        unsigned nparts = vp_pt->size();
+        const unsigned nparts = vp_pt->size();
         for (unsigned l=0; l<nparts; ++l) {
             genPart part;
             part.pt     = vp_pt->at(l);
             part.eta    = vp_eta->at(l);
             part.phi    = vp_phi->at(l);
+            part.vx     = vp_vx->at(l);
+            part.vy     = vp_vy->at(l);
+            part.vz     = vp_vz->at(l);
             part.charge = vp_charge->at(l);
             genParts.push_back(part);
         }
@@ -820,6 +830,9 @@ TTRoadWriter::TTRoadWriter(TString out, TString prefix, TString suffix)
   vp_pt               (new std::vector<float>()),
   vp_eta              (new std::vector<float>()),
   vp_phi              (new std::vector<float>()),
+  vp_vx               (new std::vector<float>()),
+  vp_vy               (new std::vector<float>()),
+  vp_vz               (new std::vector<float>()),
   vp_charge           (new std::vector<int>()) {
 
     init(out, prefix, suffix);
@@ -857,6 +870,9 @@ void TTRoadWriter::init(TString out, TString prefix, TString suffix) {
     ttree->Branch("genParts_pt"    , &(*vp_pt));
     ttree->Branch("genParts_eta"   , &(*vp_eta));
     ttree->Branch("genParts_phi"   , &(*vp_phi));
+    ttree->Branch("genParts_vx"    , &(*vp_vx));
+    ttree->Branch("genParts_vy"    , &(*vp_vy));
+    ttree->Branch("genParts_vz"    , &(*vp_vz));
     ttree->Branch("genParts_charge", &(*vp_charge));
 }
 
@@ -877,6 +893,9 @@ void TTRoadWriter::fill(const std::vector<TTRoad>& roads, const std::vector<genP
     vp_pt               ->clear();
     vp_eta              ->clear();
     vp_phi              ->clear();
+    vp_vx               ->clear();
+    vp_vy               ->clear();
+    vp_vz               ->clear();
     vp_charge           ->clear();
 
     const unsigned nroads = roads.size();
@@ -927,6 +946,9 @@ void TTRoadWriter::fill(const std::vector<TTRoad>& roads, const std::vector<genP
         vp_pt    ->push_back(part.pt);
         vp_eta   ->push_back(part.eta);
         vp_phi   ->push_back(part.phi);
+        vp_vx    ->push_back(part.vx);
+        vp_vy    ->push_back(part.vy);
+        vp_vz    ->push_back(part.vz);
         vp_charge->push_back(part.charge);
     }
 
