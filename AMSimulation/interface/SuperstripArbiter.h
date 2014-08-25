@@ -3,6 +3,10 @@
 
 #include <vector>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 namespace slhcl1tt {
 
 class SuperstripArbiter {
@@ -36,6 +40,9 @@ class SuperstripArbiter {
                         const bool isHalfStrip=true) const;
 
     unsigned module(unsigned lay, unsigned lad, unsigned mod) const;
+
+    unsigned superstrip_luciano(unsigned lay, float z, float phi,
+                                const float unit_z=640., const float unit_phi=M_PI/1600.) const;
 
     // Debug
     void print();
