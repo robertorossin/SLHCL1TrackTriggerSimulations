@@ -209,8 +209,10 @@ def draw(histos, ytitle="Entries", logx=False, logy=False, stats=True, text=Fals
         histos = [hv.h for hv in histos]
     h = histos[0]
     if not stats:  h.SetStats(0)
-    h.SetMaximum(h.GetMaximum() * 1.4)
-    if not logy:  h.SetMinimum(0.)
+    if logy:
+        h.SetMaximum(h.GetMaximum() * 14)
+    else:
+        h.SetMaximum(h.GetMaximum() * 1.4); h.SetMinimum(0.)
     if ytitle:  h.GetYaxis().SetTitle(ytitle)
     h.Draw("hist")
     gPad.SetLogx(logx); gPad.SetLogy(logy)
@@ -220,13 +222,16 @@ def draw(histos, ytitle="Entries", logx=False, logy=False, stats=True, text=Fals
     CMS_label()
     return
 
-def drawProf(histos, ytitle="Entries", logx=False, logy=False, stats=True):
+def drawProf(histos, ytitle="Entries", logx=False, logy=False, ymax=-1, stats=True):
     if isinstance(histos[0], HistViewProf):
         histos = [hv.h for hv in histos]
     h = histos[0]
     if not stats:  h.SetStats(0)
-    h.SetMaximum(h.GetMaximum() * 1.4)
-    if not logy:  h.SetMinimum(0.)
+    if logy:
+        h.SetMaximum(h.GetMaximum() * 14)
+    else:
+        h.SetMaximum(h.GetMaximum() * 1.4); h.SetMinimum(0.)
+    if ymax != -1: h.SetMaximum(ymax)
     if ytitle:  h.GetYaxis().SetTitle(ytitle)
     h.Draw("hist p")
     gPad.SetLogx(logx); gPad.SetLogy(logy)
@@ -239,8 +244,10 @@ def draws(histos, ytitle="Entries", logx=False, logy=False, stats=False):
         histos = [hv.h for hv in histos]
     h = histos[0]
     if not stats:  h.SetStats(0)
-    h.SetMaximum(h.GetMaximum() * 1.4)
-    if not logy:  h.SetMinimum(0.)
+    if logy:
+        h.SetMaximum(h.GetMaximum() * 14)
+    else:
+        h.SetMaximum(h.GetMaximum() * 1.4); h.SetMinimum(0.)
     if ytitle:  h.GetYaxis().SetTitle(ytitle)
     h.Draw("hist")
     gPad.SetLogx(logx); gPad.SetLogy(logy)
@@ -254,8 +261,11 @@ def drawsProf(histos, ytitle="", logx=False, logy=False, ymax=-1, stats=False):
         histos = [hv.h for hv in histos]
     h = histos[0]
     if not stats:  h.SetStats(0)
-    h.SetMaximum(h.GetMaximum() * 1.4)  if ymax == -1  else h.SetMaximum(ymax)
-    if not logy:  h.SetMinimum(0.)
+    if logy:
+        h.SetMaximum(h.GetMaximum() * 14)
+    else:
+        h.SetMaximum(h.GetMaximum() * 1.4); h.SetMinimum(0.)
+    if ymax != -1: h.SetMaximum(ymax)
     if ytitle:  h.GetYaxis().SetTitle(ytitle)
     h.Draw("hist p")
     gPad.SetLogx(logx); gPad.SetLogy(logy)
