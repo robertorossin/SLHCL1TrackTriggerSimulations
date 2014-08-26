@@ -100,24 +100,6 @@ def getReverseMap(directMap):
 
 ttrmap = getReverseMap(ttmap)
 
-class EtaBinning:
-    def __init__(self, xtitle, nbinsx, xlow, xup):
-        self.xtitle = xtitle
-        self.nbinsx, self.xlow, self.xup = nbinsx, xlow, xup
-        self.binwidth = float(self.xup - self.xlow) / self.nbinsx
-
-    def findBin(self, x):
-        if x <  self.xlow: x = self.xlow
-        if x >= self.xup : x = self.xup - 1e-6
-        x = float(x - self.xlow) / self.binwidth
-        return int(x)
-
-    def getBinCenter(self, b):
-        if b < 0           : b = 0
-        if b >= self.nbinsx: b = self.nbinsx - 1
-        b = self.xlow + (0.5+b) * self.binwidth
-        return b
-
 eb = EtaBinning("#eta", 60, -3, 3)
 pb = EtaBinning("#phi", 64, -3.2, 3.2)
 
@@ -187,7 +169,7 @@ if sections["rate_by_module"]:
         tree.SetBranchStatus("*", 1)
         return
 
-    def drawModule(histos):
+    def drawModule(histos, imgdir):
         oldTextSize = latex.GetTextSize()
         latex.SetTextSize(0.06)
 
@@ -249,7 +231,7 @@ if sections["rate_by_module"]:
     histos = bookModule()
     projectModule(tree, histos, nentries=nentries)
     print tree.GetEntries()
-    drawModule(histos)
+    drawModule(histos, imgdir)
 
 
 # ______________________________________________________________________________
@@ -307,7 +289,7 @@ if sections["rate_by_layer"]:
         tree.SetBranchStatus("*", 1)
         return
 
-    def drawLayer(histos):
+    def drawLayer(histos, imgdir):
         # Get ymax
         ymax = 0
         for k, v in histos.iteritems():
@@ -418,7 +400,7 @@ if sections["rate_by_layer"]:
     histos = bookLayer()
     projectLayer(tree, histos, nentries=nentries)
     print tree.GetEntries()
-    d = drawLayer(histos)
+    d = drawLayer(histos, imgdir)
 
 
 # ______________________________________________________________________________
@@ -477,7 +459,7 @@ if sections["rate_by_layer2"]:
         tree.SetBranchStatus("*", 1)
         return
 
-    def drawLayer(histos):
+    def drawLayer(histos, imgdir):
         # Get ymax
         ymax = 0
         for k, v in histos.iteritems():
@@ -588,7 +570,7 @@ if sections["rate_by_layer2"]:
     histos = bookLayer()
     projectLayer(tree, histos, nentries=nentries)
     print tree.GetEntries()
-    d = drawLayer(histos)
+    d = drawLayer(histos, imgdir)
 
 
 # ______________________________________________________________________________
@@ -641,7 +623,7 @@ if sections["rate_by_track"]:
         tree.SetBranchStatus("*", 1)
         return
 
-    def drawTrack(histos):
+    def drawTrack(histos, imgdir):
         # Style fix
         for k, v in histos.iteritems():
             if k.endswith("_1"):
@@ -666,7 +648,7 @@ if sections["rate_by_track"]:
     histos = bookTrack()
     projectTrack(tree, histos, nentries=nentries)
     print tree.GetEntries()
-    d = drawTrack(histos)
+    d = drawTrack(histos, imgir)
 
 
 # ______________________________________________________________________________
@@ -750,7 +732,7 @@ if sections["efficiency_by_module"]:
         tree.SetBranchStatus("*", 1)
         return
 
-    def drawModule(histos):
+    def drawModule(histos, imgdir):
         oldTextSize = latex.GetTextSize()
         latex.SetTextSize(0.06)
 
@@ -819,7 +801,7 @@ if sections["efficiency_by_module"]:
     histos = bookModule()
     projectModule(tree, histos, nentries=nentries)
     print tree.GetEntries()
-    drawModule(histos)
+    drawModule(histos, imgdir)
 
 
 # ______________________________________________________________________________
@@ -898,7 +880,7 @@ if sections["efficiency_by_layer"]:
         tree.SetBranchStatus("*", 1)
         return
 
-    def drawLayer(histos):
+    def drawLayer(histos, imgdir):
         # Style fix
         for k, v in histos.iteritems():
             v.SetLineWidth(2)
@@ -995,7 +977,7 @@ if sections["efficiency_by_layer"]:
     histos = bookLayer()
     projectLayer(tree, histos, nentries=nentries)
     print tree.GetEntries()
-    d = drawLayer(histos)
+    d = drawLayer(histos, imgdir)
 
 
 # ______________________________________________________________________________

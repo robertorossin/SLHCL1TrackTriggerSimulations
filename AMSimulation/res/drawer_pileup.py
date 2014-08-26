@@ -106,28 +106,6 @@ def myBookProf(hname, xtitle, nbinsx, xlow, xup, ytitle, ymax):
     histos = bookProf(params)
     return (params, histos)
 
-#from math import tan, atan2, log
-#def etaFromRhoZ(rho, z):
-#    theta = atan2(rho, z)
-#    return log(tan(theta/2.))
-
-class EtaBinning:
-    def __init__(self, p):
-        self.nbinsx, self.xlow, self.xup = p.nbinsx, p.xlow, p.xup
-        self.binwidth = float(self.xup - self.xlow) / self.nbinsx
-
-    def findBin(self, x):
-        if x <  self.xlow: x = self.xlow
-        if x >= self.xup : x = self.xup - 1e-6
-        x = float(x - self.xlow) / self.binwidth
-        return int(x)
-
-    def getBinCenter(self, b):
-        if b < 0           : b = 0
-        if b >= self.nbinsx: b = self.nbinsx - 1
-        b = self.xlow + (0.5+b) * self.binwidth
-        return b
-
 
 # ______________________________________________________________________________
 # geometry
@@ -146,14 +124,16 @@ if sections["geometry"]:
 
         setBranchStatus(tree, sim=sim)
 
-        eb = EtaBinning(params[0])
+        p = params[0]
+        eb = EtaBinning(p.xtitle, p.nbinsx, p.xlow, p.xup)
+
         f(tree, histos, eb, nentries=nentries, sim=sim)
 
         drawsProf(histos, logy=logy, ymax=ymax)
         if not sim:
-            save(imgdir, params[0].name)
+            save(imgdir, p.name)
         else:
-            save(imgdir, params[0].name + "_sim")
+            save(imgdir, p.name + "_sim")
         return histos
 
     def setBranchStatus(tree, branches=[], sim=False):
