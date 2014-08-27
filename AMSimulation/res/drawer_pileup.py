@@ -1,18 +1,17 @@
 #!/usr/bin/env python
 
 from rootdrawing import *
-from itertools import izip
 
 """
 **PLOTS**
+
+# nstubs per module, per concentrator, per chip, per superstrip-32 [per layer]
 
 # number of hits, number of clusters
 
 # number of modules? number of superstrips
 
-# hit rate, stub rate, hit occupancy (%)
-
-# trigger tower occupancy
+# hit rate, stub rate, hit occupancy in module (%), in layer, module occupancy in tower
 
 # hit efficiency, stub efficiency, layer efficiency
   (subsume drawer_layerdisk.py)
@@ -20,8 +19,6 @@ from itertools import izip
 # stub purity
 
 # trigger efficiency, trigger purity
-
-# layer efficiency
 
 # refer to tkgeometry plots
 
@@ -109,28 +106,6 @@ def myBookProf(hname, xtitle, nbinsx, xlow, xup, ytitle, ymax):
     histos = bookProf(params)
     return (params, histos)
 
-#from math import tan, atan2, log
-#def etaFromRhoZ(rho, z):
-#    theta = atan2(rho, z)
-#    return log(tan(theta/2.))
-
-class EtaBinning:
-    def __init__(self, p):
-        self.nbinsx, self.xlow, self.xup = p.nbinsx, p.xlow, p.xup
-        self.binwidth = float(self.xup - self.xlow) / self.nbinsx
-
-    def findBin(self, x):
-        if x <  self.xlow: x = self.xlow
-        if x >= self.xup : x = self.xup - 1e-6
-        x = float(x - self.xlow) / self.binwidth
-        return int(x)
-
-    def getBinCenter(self, b):
-        if b < 0           : b = 0
-        if b >= self.nbinsx: b = self.nbinsx - 1
-        b = self.xlow + (0.5+b) * self.binwidth
-        return b
-
 
 # ______________________________________________________________________________
 # geometry
@@ -149,14 +124,16 @@ if sections["geometry"]:
 
         setBranchStatus(tree, sim=sim)
 
-        eb = EtaBinning(params[0])
+        p = params[0]
+        eb = EtaBinning(p.xtitle, p.nbinsx, p.xlow, p.xup)
+
         f(tree, histos, eb, nentries=nentries, sim=sim)
 
         drawsProf(histos, logy=logy, ymax=ymax)
         if not sim:
-            save(imgdir, params[0].name)
+            save(imgdir, p.name)
         else:
-            save(imgdir, params[0].name + "_sim")
+            save(imgdir, p.name + "_sim")
         return histos
 
     def setBranchStatus(tree, branches=[], sim=False):

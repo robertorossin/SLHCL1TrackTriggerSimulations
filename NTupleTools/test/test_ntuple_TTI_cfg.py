@@ -46,10 +46,6 @@ process.TFileService = cms.Service("TFileService",
 )
 
 process.load("SLHCL1TrackTriggerSimulations.NTupleTools.sequences_cff")
-process.ntupleSimBeamSpot.inputTag = cms.InputTag('')
-process.ntupleStubs.inputTagDigi = cms.InputTag('')
-process.ntupleStubs.inputTagClus = cms.InputTag('TTStubsFromPixelDigis', 'ClusterAccepted')
-process.ntupleStubs.inputTagClusMCAssoc = cms.InputTag('TTClusterAssociatorFromPixelDigis', 'ClusterAccepted')
 
-process.p = cms.Path(process.ntupleSequence)
+process.p = cms.Path(process.ntupleSequence_TTI)
 

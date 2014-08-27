@@ -17,6 +17,7 @@ NTupleSimTracks::NTupleSimTracks(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >    (prefix_ + "pt"     + suffix_);
     produces<std::vector<float> >    (prefix_ + "eta"    + suffix_);
     produces<std::vector<float> >    (prefix_ + "phi"    + suffix_);
+    produces<std::vector<float> >    (prefix_ + "charge" + suffix_);
     produces<std::vector<int> >      (prefix_ + "pdgId"  + suffix_);
     produces<std::vector<unsigned> > (prefix_ + "trkId"  + suffix_);
     produces<std::vector<unsigned> > (prefix_ + "evtId"  + suffix_);
@@ -33,6 +34,7 @@ void NTupleSimTracks::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     std::auto_ptr<std::vector<float> >    v_pt    (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    v_eta   (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    v_phi   (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >    v_charge(new std::vector<float>());
     std::auto_ptr<std::vector<int> >      v_pdgId (new std::vector<int>());
     std::auto_ptr<std::vector<unsigned> > v_trkId (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> > v_evtId (new std::vector<unsigned>());
@@ -63,6 +65,7 @@ void NTupleSimTracks::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                 v_pt->push_back(momentum.pt());
                 v_eta->push_back(momentum.eta());
                 v_phi->push_back(momentum.phi());
+                v_charge->push_back(it->charge());
                 v_pdgId->push_back(it->type());
                 v_trkId->push_back(it->trackId());
                 v_evtId->push_back(it->eventId().rawId());
@@ -79,16 +82,17 @@ void NTupleSimTracks::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
 
     //__________________________________________________________________________
-    iEvent.put(v_px    , prefix_ + "px"   + suffix_);
-    iEvent.put(v_py    , prefix_ + "py"   + suffix_);
-    iEvent.put(v_pz    , prefix_ + "pz"   + suffix_);
-    iEvent.put(v_pt    , prefix_ + "pt"   + suffix_);
-    iEvent.put(v_eta   , prefix_ + "eta"  + suffix_);
-    iEvent.put(v_phi   , prefix_ + "phi"  + suffix_);
-    iEvent.put(v_pdgId , prefix_ + "pdgId" + suffix_);
-    iEvent.put(v_trkId , prefix_ + "trkId" + suffix_);
-    iEvent.put(v_evtId , prefix_ + "evtId" + suffix_);
-    iEvent.put(v_vtxId , prefix_ + "vtxId" + suffix_);
+    iEvent.put(v_px    , prefix_ + "px"     + suffix_);
+    iEvent.put(v_py    , prefix_ + "py"     + suffix_);
+    iEvent.put(v_pz    , prefix_ + "pz"     + suffix_);
+    iEvent.put(v_pt    , prefix_ + "pt"     + suffix_);
+    iEvent.put(v_eta   , prefix_ + "eta"    + suffix_);
+    iEvent.put(v_phi   , prefix_ + "phi"    + suffix_);
+    iEvent.put(v_charge, prefix_ + "charge" + suffix_);
+    iEvent.put(v_pdgId , prefix_ + "pdgId"  + suffix_);
+    iEvent.put(v_trkId , prefix_ + "trkId"  + suffix_);
+    iEvent.put(v_evtId , prefix_ + "evtId"  + suffix_);
+    iEvent.put(v_vtxId , prefix_ + "vtxId"  + suffix_);
     iEvent.put(v_genpId, prefix_ + "genpId" + suffix_);
-    iEvent.put(v_size  , prefix_ + "size" + suffix_);
+    iEvent.put(v_size  , prefix_ + "size"   + suffix_);
 }

@@ -2,6 +2,7 @@ from ROOT import TH1, TH1F, TH2F, TProfile, TProfile2D, TFile, TChain, TCanvas, 
 from rootcolors import *
 from math import sqrt
 from random import randint
+from itertools import izip
 
 # For init
 class DrawerInit:
@@ -63,6 +64,9 @@ class _HistViewBase(object):
         if hasattr(p, "linewidth"  ):  self.h.SetLineWidth(p.linewidth)
         if hasattr(p, "markersize" ):  self.h.SetMarkerSize(p.markersize)
 
+    def Draw(self, arg=""):
+        self.h.Draw(arg)
+
 class HistView(_HistViewBase):
     def __init__(self, p):
         super(HistView, self).__init__(p)
@@ -102,6 +106,24 @@ class HistView2D(_HistViewBase):
         self.randname = self.h.GetName()
         self.style(p)
         self.h.SetStats(0)
+
+class EtaBinning:
+    def __init__(self, xtitle, nbinsx, xlow, xup):
+        self.xtitle = xtitle
+        self.nbinsx, self.xlow, self.xup = nbinsx, xlow, xup
+        self.binwidth = float(self.xup - self.xlow) / self.nbinsx
+
+    def findBin(self, x):
+        if x <  self.xlow: x = self.xlow
+        if x >= self.xup : x = self.xup - 1e-6
+        x = float(x - self.xlow) / self.binwidth
+        return int(x)
+
+    def getBinCenter(self, b):
+        if b < 0           : b = 0
+        if b >= self.nbinsx: b = self.nbinsx - 1
+        b = self.xlow + (0.5+b) * self.binwidth
+        return b
 
 
 # ______________________________________________________________________________
@@ -182,13 +204,15 @@ def project2D(tree, histos, nentries=1000000000):
     return
 
 # Draw
-def draw(histos, ytitle="Events", logx=False, logy=False, stats=True, text=False):
+def draw(histos, ytitle="Entries", logx=False, logy=False, stats=True, text=False):
     if isinstance(histos[0], HistView):
         histos = [hv.h for hv in histos]
     h = histos[0]
     if not stats:  h.SetStats(0)
-    h.SetMaximum(h.GetMaximum() * 1.4)
-    if not logy:  h.SetMinimum(0.)
+    if logy:
+        h.SetMaximum(h.GetMaximum() * 14)
+    else:
+        h.SetMaximum(h.GetMaximum() * 1.4); h.SetMinimum(0.)
     if ytitle:  h.GetYaxis().SetTitle(ytitle)
     h.Draw("hist")
     gPad.SetLogx(logx); gPad.SetLogy(logy)
@@ -198,14 +222,32 @@ def draw(histos, ytitle="Events", logx=False, logy=False, stats=True, text=False
     CMS_label()
     return
 
+def drawProf(histos, ytitle="Entries", logx=False, logy=False, ymax=-1, stats=True):
+    if isinstance(histos[0], HistViewProf):
+        histos = [hv.h for hv in histos]
+    h = histos[0]
+    if not stats:  h.SetStats(0)
+    if logy:
+        h.SetMaximum(h.GetMaximum() * 14)
+    else:
+        h.SetMaximum(h.GetMaximum() * 1.4); h.SetMinimum(0.)
+    if ymax != -1: h.SetMaximum(ymax)
+    if ytitle:  h.GetYaxis().SetTitle(ytitle)
+    h.Draw("hist p")
+    gPad.SetLogx(logx); gPad.SetLogy(logy)
+    CMS_label()
+    return
+
 # Draw more than one
-def draws(histos, ytitle="Events", logx=False, logy=False, stats=False):
+def draws(histos, ytitle="Entries", logx=False, logy=False, stats=False):
     if isinstance(histos[0], HistView):
         histos = [hv.h for hv in histos]
     h = histos[0]
     if not stats:  h.SetStats(0)
-    h.SetMaximum(h.GetMaximum() * 1.4)
-    if not logy:  h.SetMinimum(0.)
+    if logy:
+        h.SetMaximum(h.GetMaximum() * 14)
+    else:
+        h.SetMaximum(h.GetMaximum() * 1.4); h.SetMinimum(0.)
     if ytitle:  h.GetYaxis().SetTitle(ytitle)
     h.Draw("hist")
     gPad.SetLogx(logx); gPad.SetLogy(logy)
@@ -219,8 +261,11 @@ def drawsProf(histos, ytitle="", logx=False, logy=False, ymax=-1, stats=False):
         histos = [hv.h for hv in histos]
     h = histos[0]
     if not stats:  h.SetStats(0)
-    h.SetMaximum(h.GetMaximum() * 1.4)  if ymax == -1  else h.SetMaximum(ymax)
-    if not logy:  h.SetMinimum(0.)
+    if logy:
+        h.SetMaximum(h.GetMaximum() * 14)
+    else:
+        h.SetMaximum(h.GetMaximum() * 1.4); h.SetMinimum(0.)
+    if ymax != -1: h.SetMaximum(ymax)
     if ytitle:  h.GetYaxis().SetTitle(ytitle)
     h.Draw("hist p")
     gPad.SetLogx(logx); gPad.SetLogy(logy)

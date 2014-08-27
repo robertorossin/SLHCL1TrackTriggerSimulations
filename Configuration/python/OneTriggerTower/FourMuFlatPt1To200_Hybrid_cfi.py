@@ -1,11 +1,11 @@
 import FWCore.ParameterSet.Config as cms
 
-# reference: https://github.com/cms-sw/genproductions/blob/master/python/EightTeV/SingleMuMinusFlatPt0p2To100_cff.py
-generator = cms.EDProducer("FlatRandomOneOverPtGunProducer",
+# reference: Configuration/Generator/python/FourMuPt_1_200_cfi.py
+generator = cms.EDProducer("FlatRandomPtGunProducer",
     PGunParameters = cms.PSet(
-        MaxOneOverPt = cms.double(0.5),
-        MinOneOverPt = cms.double(0.005),
-        PartID = cms.vint32(13),
+        MaxPt = cms.double(200.0),
+        MinPt = cms.double(1.0),
+        PartID = cms.vint32(13,-13,13,-13),
         MaxEta = cms.double(1.6),
         MaxPhi = cms.double(1.7),
         MinEta = cms.double(0.5),
@@ -13,10 +13,9 @@ generator = cms.EDProducer("FlatRandomOneOverPtGunProducer",
         #XFlatSpread = cms.double(1.5),  ## in mm
         #YFlatSpread = cms.double(1.5),  ## in mm
         #ZFlatSpread = cms.double(150.), ## in mm
-        #ReallyFlat = cms.bool(True),
     ),
     Verbosity = cms.untracked.int32(0),
-    psethack = cms.string('single mu- 1/pt 0.005 to 0.5 tower 35'),
+    psethack = cms.string('Four mu pt 1 to 200 tower 35'),
     AddAntiParticle = cms.bool(False),
     firstRun = cms.untracked.uint32(1)
 )

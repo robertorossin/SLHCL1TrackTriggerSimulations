@@ -3,6 +3,7 @@
 static const unsigned MIN_NGOODSTUBS = 3;
 static const unsigned MAX_NTOWERS = 6 * 8;
 static const unsigned MAX_FREQUENCY = 0xffff;  // 65535
+static const unsigned MAX_NPATTERNS = 380000000;  // cap at 12.5GB memory
 
 bool sortByFrequency(const std::pair<pattern_type, unsigned>& lhs, const std::pair<pattern_type, unsigned>& rhs) {
     return lhs.second > rhs.second;
@@ -105,54 +106,69 @@ int PatternGenerator::makePatterns_map() {
     if (nEvents_ > nentries)
         nEvents_ = nentries;
 
+    // For reading
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events." << std::endl;
 
-    // For reading
     //std::vector<float> *          vb_x          = 0;
     //std::vector<float> *          vb_y          = 0;
     //std::vector<float> *          vb_z          = 0;
     //std::vector<float> *          vb_r          = 0;
+    //std::vector<float> *          vb_eta        = 0;
     //std::vector<float> *          vb_phi        = 0;
     std::vector<float> *          vb_coordx     = 0;
     std::vector<float> *          vb_coordy     = 0;
-    std::vector<float> *          vb_roughPt    = 0;
+    //std::vector<float> *          vb_roughPt    = 0;
+    //std::vector<float> *          vb_trigBend   = 0;
     std::vector<unsigned> *       vb_modId      = 0;
-    std::vector<unsigned> *       vb_nhits      = 0;
-    //std::vector<float> *          vb_simPt      = 0;
-    //std::vector<float> *          vb_simEta     = 0;
-    //std::vector<float> *          vb_simPhi     = 0;
     //std::vector<int> *            vb_trkId      = 0;
+    //std::vector<float> *          vp_pt         = 0;
+    //std::vector<float> *          vp_eta        = 0;
+    //std::vector<float> *          vp_phi        = 0;
+    //std::vector<float> *          vp_vx         = 0;
+    //std::vector<float> *          vp_vy         = 0;
+    //std::vector<float> *          vp_vz         = 0;
+    //std::vector<int> *            vp_charge     = 0;
 
     chain_->SetBranchStatus("*"                 , 0);
     //chain_->SetBranchStatus("TTStubs_x"         , 1);
     //chain_->SetBranchStatus("TTStubs_y"         , 1);
     //chain_->SetBranchStatus("TTStubs_z"         , 1);
     //chain_->SetBranchStatus("TTStubs_r"         , 1);
+    //chain_->SetBranchStatus("TTStubs_eta"       , 1);
     //chain_->SetBranchStatus("TTStubs_phi"       , 1);
     chain_->SetBranchStatus("TTStubs_coordx"    , 1);
     chain_->SetBranchStatus("TTStubs_coordy"    , 1);
-    chain_->SetBranchStatus("TTStubs_roughPt"   , 1);
+    //chain_->SetBranchStatus("TTStubs_roughPt"   , 1);
+    //chain_->SetBranchStatus("TTStubs_trigBend"  , 1);
     chain_->SetBranchStatus("TTStubs_modId"     , 1);
-    chain_->SetBranchStatus("TTStubs_nhits"     , 1);
-    //chain_->SetBranchStatus("TTStubs_simPt"     , 1);
-    //chain_->SetBranchStatus("TTStubs_simEta"    , 1);
-    //chain_->SetBranchStatus("TTStubs_simPhi"    , 1);
     //chain_->SetBranchStatus("TTStubs_trkId"     , 1);
+    //chain_->SetBranchStatus("genParts_pt"       , 1);
+    //chain_->SetBranchStatus("genParts_eta"      , 1);
+    //chain_->SetBranchStatus("genParts_phi"      , 1);
+    //chain_->SetBranchStatus("genParts_vx"       , 1);
+    //chain_->SetBranchStatus("genParts_vy"       , 1);
+    //chain_->SetBranchStatus("genParts_vz"       , 1);
+    //chain_->SetBranchStatus("genParts_charge"   , 1);
 
     //chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
     //chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
     //chain_->SetBranchAddress("TTStubs_z"        , &(vb_z));
     //chain_->SetBranchAddress("TTStubs_r"        , &(vb_r));
+    //chain_->SetBranchAddress("TTStubs_eta"      , &(vb_eta));
     //chain_->SetBranchAddress("TTStubs_phi"      , &(vb_phi));
     chain_->SetBranchAddress("TTStubs_coordx"   , &(vb_coordx));
     chain_->SetBranchAddress("TTStubs_coordy"   , &(vb_coordy));
-    chain_->SetBranchAddress("TTStubs_roughPt"  , &(vb_roughPt));
+    //chain_->SetBranchAddress("TTStubs_roughPt"  , &(vb_roughPt));
+    //chain_->SetBranchAddress("TTStubs_trigBend" , &(vb_trigBend));
     chain_->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
-    chain_->SetBranchAddress("TTStubs_nhits"    , &(vb_nhits));
-    //chain_->SetBranchAddress("TTStubs_simPt"    , &(vb_simPt));
-    //chain_->SetBranchAddress("TTStubs_simEta"   , &(vb_simEta));
-    //chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
     //chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
+    //chain_->SetBranchAddress("genParts_pt"      , &(vp_pt));
+    //chain_->SetBranchAddress("genParts_eta"     , &(vp_eta));
+    //chain_->SetBranchAddress("genParts_phi"     , &(vp_phi));
+    //chain_->SetBranchAddress("genParts_vx"      , &(vp_vx));
+    //chain_->SetBranchAddress("genParts_vy"      , &(vp_vy));
+    //chain_->SetBranchAddress("genParts_vz"      , &(vp_vz));
+    //chain_->SetBranchAddress("genParts_charge"  , &(vp_charge));
 
     // Allocate memory
     allPatterns_map_.clear();
@@ -443,57 +459,77 @@ int PatternGenerator::makePatterns_fas() {
     if (nEvents_ > nentries)
         nEvents_ = nentries;
 
+    // For reading
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events." << std::endl;
 
-    // For reading
     //std::vector<float> *          vb_x          = 0;
     //std::vector<float> *          vb_y          = 0;
     //std::vector<float> *          vb_z          = 0;
     //std::vector<float> *          vb_r          = 0;
+    //std::vector<float> *          vb_eta        = 0;
     //std::vector<float> *          vb_phi        = 0;
     std::vector<float> *          vb_coordx     = 0;
     std::vector<float> *          vb_coordy     = 0;
-    std::vector<float> *          vb_roughPt    = 0;
+    //std::vector<float> *          vb_roughPt    = 0;
+    //std::vector<float> *          vb_trigBend   = 0;
     std::vector<unsigned> *       vb_modId      = 0;
-    std::vector<unsigned> *       vb_nhits      = 0;
-    //std::vector<float> *          vb_simPt      = 0;
-    //std::vector<float> *          vb_simEta     = 0;
-    //std::vector<float> *          vb_simPhi     = 0;
     //std::vector<int> *            vb_trkId      = 0;
+    //std::vector<float> *          vp_pt         = 0;
+    //std::vector<float> *          vp_eta        = 0;
+    //std::vector<float> *          vp_phi        = 0;
+    //std::vector<float> *          vp_vx         = 0;
+    //std::vector<float> *          vp_vy         = 0;
+    //std::vector<float> *          vp_vz         = 0;
+    //std::vector<int> *            vp_charge     = 0;
 
     chain_->SetBranchStatus("*"                 , 0);
     //chain_->SetBranchStatus("TTStubs_x"         , 1);
     //chain_->SetBranchStatus("TTStubs_y"         , 1);
     //chain_->SetBranchStatus("TTStubs_z"         , 1);
     //chain_->SetBranchStatus("TTStubs_r"         , 1);
+    //chain_->SetBranchStatus("TTStubs_eta"       , 1);
     //chain_->SetBranchStatus("TTStubs_phi"       , 1);
     chain_->SetBranchStatus("TTStubs_coordx"    , 1);
     chain_->SetBranchStatus("TTStubs_coordy"    , 1);
-    chain_->SetBranchStatus("TTStubs_roughPt"   , 1);
+    //chain_->SetBranchStatus("TTStubs_roughPt"   , 1);
+    //chain_->SetBranchStatus("TTStubs_trigBend"  , 1);
     chain_->SetBranchStatus("TTStubs_modId"     , 1);
-    chain_->SetBranchStatus("TTStubs_nhits"     , 1);
-    //chain_->SetBranchStatus("TTStubs_simPt"     , 1);
-    //chain_->SetBranchStatus("TTStubs_simEta"    , 1);
-    //chain_->SetBranchStatus("TTStubs_simPhi"    , 1);
     //chain_->SetBranchStatus("TTStubs_trkId"     , 1);
+    //chain_->SetBranchStatus("genParts_pt"       , 1);
+    //chain_->SetBranchStatus("genParts_eta"      , 1);
+    //chain_->SetBranchStatus("genParts_phi"      , 1);
+    //chain_->SetBranchStatus("genParts_vx"       , 1);
+    //chain_->SetBranchStatus("genParts_vy"       , 1);
+    //chain_->SetBranchStatus("genParts_vz"       , 1);
+    //chain_->SetBranchStatus("genParts_charge"   , 1);
 
     //chain_->SetBranchAddress("TTStubs_x"        , &(vb_x));
     //chain_->SetBranchAddress("TTStubs_y"        , &(vb_y));
     //chain_->SetBranchAddress("TTStubs_z"        , &(vb_z));
     //chain_->SetBranchAddress("TTStubs_r"        , &(vb_r));
+    //chain_->SetBranchAddress("TTStubs_eta"      , &(vb_eta));
     //chain_->SetBranchAddress("TTStubs_phi"      , &(vb_phi));
     chain_->SetBranchAddress("TTStubs_coordx"   , &(vb_coordx));
     chain_->SetBranchAddress("TTStubs_coordy"   , &(vb_coordy));
-    chain_->SetBranchAddress("TTStubs_roughPt"  , &(vb_roughPt));
+    //chain_->SetBranchAddress("TTStubs_roughPt"  , &(vb_roughPt));
+    //chain_->SetBranchAddress("TTStubs_trigBend" , &(vb_trigBend));
     chain_->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
-    chain_->SetBranchAddress("TTStubs_nhits"    , &(vb_nhits));
-    //chain_->SetBranchAddress("TTStubs_simPt"    , &(vb_simPt));
-    //chain_->SetBranchAddress("TTStubs_simEta"   , &(vb_simEta));
-    //chain_->SetBranchAddress("TTStubs_simPhi"   , &(vb_simPhi));
     //chain_->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
+    //chain_->SetBranchAddress("genParts_pt"      , &(vp_pt));
+    //chain_->SetBranchAddress("genParts_eta"     , &(vp_eta));
+    //chain_->SetBranchAddress("genParts_phi"     , &(vp_phi));
+    //chain_->SetBranchAddress("genParts_vx"      , &(vp_vx));
+    //chain_->SetBranchAddress("genParts_vy"      , &(vp_vy));
+    //chain_->SetBranchAddress("genParts_vz"      , &(vp_vz));
+    //chain_->SetBranchAddress("genParts_charge"  , &(vp_charge));
 
     // Allocate memory
-    allPatterns_fas_.reserve(nEvents_);
+    unsigned allocation = nEvents_;
+    if (allocation > MAX_NPATTERNS) {
+        allocation = MAX_NPATTERNS;
+        std::cout << Warning() << "Can only allocate max " << allocation << " patterns. " << std::endl;
+    }
+    allPatterns_fas_.reserve(allocation);
 
     // _________________________________________________________________________
     // Loop over all events

@@ -25,7 +25,7 @@ def cust_RAWSIMoutput(process):
 
 # Run in tracker only, ignoring calorimeter and muon system
 # In CMSSW_6_2_0_SLHC12_patch1, processing speed is reduced to ~0.06 s/evt
-def cust_useTrackerOnly(process):
+def cust_useTrackerOnly(process, ntuple=True):
 
     # __________________________________________________________________________
     # Customise generation step
@@ -107,21 +107,22 @@ def cust_useTrackerOnly(process):
     # __________________________________________________________________________
     # Customise output steps
 
-    # Drop RAWSIM output
-    for removee in [process.genfiltersummary_step, process.endjob_step, process.RAWSIMoutput_step]:
-        if removee in process.schedule:
-            process.schedule.remove(removee)
+    if ntuple:
+        # Drop RAWSIM output
+        for removee in [process.genfiltersummary_step, process.endjob_step, process.RAWSIMoutput_step]:
+            if removee in process.schedule:
+                process.schedule.remove(removee)
 
-    # Substitute with TFileService
-    outputFileName = process.RAWSIMoutput.fileName._value
-    outputFileName = outputFileName.replace(".root", "_ntuple.root")
-    process.TFileService = cms.Service("TFileService",
-        fileName = cms.string(outputFileName)
-    )
+        # Substitute with TFileService
+        outputFileName = process.RAWSIMoutput.fileName._value
+        outputFileName = outputFileName.replace(".root", "_ntuple.root")
+        process.TFileService = cms.Service("TFileService",
+            fileName = cms.string(outputFileName)
+        )
 
-    # Straight to ntuples
-    process.load("SLHCL1TrackTriggerSimulations.NTupleTools.sequences_cff")
-    process.p = cms.Path(process.ntupleSequence)
-    process.schedule.append(process.p)
+        # Straight to ntuples
+        process.load("SLHCL1TrackTriggerSimulations.NTupleTools.sequences_cff")
+        process.p = cms.Path(process.ntupleSequence)
+        process.schedule.append(process.p)
 
     return (process)

@@ -35,18 +35,14 @@ class TestAMSim(unittest.TestCase):
     def test_trkId(self):
         tree = self.ttree
         for ievt in tree:
-            for trkId, simPt, simEta, simPhi in izip(ievt.TTStubs_trkId, ievt.TTStubs_simPt, ievt.TTStubs_simEta, ievt.TTStubs_simPhi):
+            for trkId in ievt.TTStubs_trkId:
                 self.assertTrue(trkId == 1 or trkId == -1)
-                if trkId == 1:
-                    self.assertTrue(2.0 <= simPt and simPt <= 999999.0)
-                    self.assertTrue(-2.5 <= simEta and simEta <= 2.5)
-                    self.assertTrue(-pi <= simPhi and simPhi <= pi)
 
-    def test_nhits(self):
-        tree = self.ttree
-        for ievt in tree:
-            for nhits in ievt.TTStubs_nhits:
-                self.assertTrue(nhits > 0)
+    #def test_nhits(self):
+    #    tree = self.ttree
+    #    for ievt in tree:
+    #        for nhits in ievt.TTStubs_nhits:
+    #            self.assertTrue(nhits > 0)
 
     def test_nstubs(self):
         tree = self.ttree
