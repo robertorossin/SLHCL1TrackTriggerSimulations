@@ -35,6 +35,8 @@ class TestNTuple(unittest.TestCase):
         self.uvec9 = vector('unsigned int')()
         self.bvec1 = vector('bool')()
         self.bvec2 = vector('bool')()
+        self.bvec3 = vector('bool')()
+        self.bvec4 = vector('bool')()
 
 
     def tearDown(self):
@@ -140,6 +142,20 @@ class TestNTuple(unittest.TestCase):
             with self.assertRaises(IndexError):
                 print self.fvec1[n]
 
+    def test_trackingVertices(self):
+        tree = self.ttree
+        tree.SetBranchAddress("trkVertices_vx", self.fvec1)
+        tree.SetBranchAddress("trkVertices_vz", self.fvec2)
+        for i in xrange(self.nevents):
+            tree.GetEntry(i)
+            n = getattr(tree, "trkVertices_size")
+            self.assertTrue(n > 0)
+            for j in xrange(n):
+                self.assertTrue(abs(self.fvec1[j]) < 1000)
+                self.assertTrue(abs(self.fvec2[j]) < 1200)
+            with self.assertRaises(IndexError):
+                print self.fvec1[n]
+
     def test_TTClusters(self):
         tree = self.ttree
         tree.SetBranchAddress("TTClusters_x", self.fvec1)
@@ -147,17 +163,15 @@ class TestNTuple(unittest.TestCase):
         tree.SetBranchAddress("TTClusters_z", self.fvec3)
         tree.SetBranchAddress("TTClusters_coordx", self.fvec4)
         tree.SetBranchAddress("TTClusters_coordy", self.fvec5)
-        #tree.SetBranchAddress("TTClusters_iLayer", self.uvec1)
-        #tree.SetBranchAddress("TTClusters_iRing", self.uvec2)
-        #tree.SetBranchAddress("TTClusters_iSide", self.uvec3)
-        #tree.SetBranchAddress("TTClusters_iPhi", self.uvec4)
-        #tree.SetBranchAddress("TTClusters_iZ", self.uvec5)
-        #tree.SetBranchAddress("TTClusters_iModLayer", self.uvec6)
-        #tree.SetBranchAddress("TTClusters_iModLadder", self.uvec7)
-        #tree.SetBranchAddress("TTClusters_iModModule", self.uvec8)
-        tree.SetBranchAddress("TTClusters_nhits", self.uvec9)
-        tree.SetBranchAddress("TTClusters_barrel", self.bvec1)
-        tree.SetBranchAddress("TTClusters_isGenuine", self.bvec2)
+        tree.SetBranchAddress("TTClusters_nhits", self.uvec1)
+        tree.SetBranchAddress("TTClusters_modId", self.uvec2)
+        tree.SetBranchAddress("TTClusters_isGenuine", self.bvec1)
+        tree.SetBranchAddress("TTClusters_isCombinatoric", self.bvec2)
+        tree.SetBranchAddress("TTClusters_isUnknown", self.bvec3)
+
+        barrel_z_divisions = [63, 55, 54, 24, 24, 24]
+        barrel_phi_divisions = [16, 24, 34, 48, 62, 76]
+        endcap_ring_divisions = [20, 24, 28, 28, 32, 36, 36, 40, 40, 52, 56, 64, 68, 76, 80]
 
         for i in xrange(self.nevents):
             tree.GetEntry(i)
@@ -167,17 +181,25 @@ class TestNTuple(unittest.TestCase):
                 self.assertTrue(abs(self.fvec1[j]) < 110)
                 self.assertTrue(abs(self.fvec2[j]) < 110)
                 self.assertTrue(abs(self.fvec3[j]) < 300)
-                self.assertTrue(self.fvec4[j] >= 0 and self.fvec4[j] < 1100)
+                self.assertTrue(self.fvec4[j] >= 0 and self.fvec4[j] < 1016)
                 self.assertTrue(self.fvec5[j] >= 0 and self.fvec5[j] < 32)
-                #self.assertTrue(not self.bvec1[j] or (self.uvec1[j]<16 and self.uvec4[j]<256 and self.uvec5[j]<128))  # barrel
-                #self.assertTrue(self.bvec1[j] or (self.uvec3[j]<4 and self.uvec5[j]<16 and self.uvec2[j]<32 and self.uvec4[j]<128))  # endcap
-                #self.assertTrue(self.uvec6[j] in [5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22])
-                #self.assertTrue(self.uvec7[j] < 100)
-                #self.assertTrue(self.uvec8[j] < 200)
-                self.assertTrue(self.uvec9[j] >= 1)
+                self.assertTrue(self.uvec1[j] >= 1)
+                moduleId = self.uvec2[j]
+                lay = moduleId / 10000
+                lad = (moduleId / 100) % 100
+                mod = moduleId % 100
+                self.assertTrue(lay in [5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22])
+                if moduleId < 110000:  # barrel
+                    self.assertTrue(lad < barrel_phi_divisions[lay-5] and mod < barrel_z_divisions[lay-5])
+                else:                  # endcap
+                    self.assertTrue(lad < len(endcap_ring_divisions) and mod < endcap_ring_divisions[lad])
+                mc = 0 + self.bvec1[j] + self.bvec2[j] + self.bvec3[j]
+                self.assertTrue(1 == mc)
+                mc = 0 + 1 * self.bvec1[j] + 2 * self.bvec2[j] + 3 * self.bvec3[j]
+                self.assertTrue(1 <= mc <= 3)
 
                 # test associated tp
-                if self.bvec2[j]:
+                if self.bvec1[j]:
                     simPt1 = getattr(tree, "TTClusters_simPt")[j]
                     simPt2 = getattr(tree, "trkParts_pt")[getattr(tree, "TTClusters_tpId")[j]]
                     self.assertEqual(simPt1, simPt2)
@@ -194,17 +216,15 @@ class TestNTuple(unittest.TestCase):
         tree.SetBranchAddress("TTStubs_z", self.fvec3)
         tree.SetBranchAddress("TTStubs_roughPt", self.fvec4)
         tree.SetBranchAddress("TTStubs_trigDist", self.fvec5)
-        #tree.SetBranchAddress("TTStubs_iLayer", self.uvec1)
-        #tree.SetBranchAddress("TTStubs_iRing", self.uvec2)
-        #tree.SetBranchAddress("TTStubs_iSide", self.uvec3)
-        #tree.SetBranchAddress("TTStubs_iPhi", self.uvec4)
-        #tree.SetBranchAddress("TTStubs_iZ", self.uvec5)
-        #tree.SetBranchAddress("TTStubs_iModLayer", self.uvec6)
-        #tree.SetBranchAddress("TTStubs_iModLadder", self.uvec7)
-        #tree.SetBranchAddress("TTStubs_iModModule", self.uvec8)
-        tree.SetBranchAddress("TTStubs_nhits", self.uvec9)
-        tree.SetBranchAddress("TTStubs_barrel", self.bvec1)
-        tree.SetBranchAddress("TTStubs_isGenuine", self.bvec2)
+        tree.SetBranchAddress("TTStubs_nhits", self.uvec1)
+        tree.SetBranchAddress("TTStubs_modId", self.uvec2)
+        tree.SetBranchAddress("TTStubs_isGenuine", self.bvec1)
+        tree.SetBranchAddress("TTStubs_isCombinatoric", self.bvec2)
+        tree.SetBranchAddress("TTStubs_isUnknown", self.bvec3)
+
+        barrel_z_divisions = [63, 55, 54, 24, 24, 24]
+        barrel_phi_divisions = [16, 24, 34, 48, 62, 76]
+        endcap_ring_divisions = [20, 24, 28, 28, 32, 36, 36, 40, 40, 52, 56, 64, 68, 76, 80]
 
         for i in xrange(self.nevents):
             tree.GetEntry(i)
@@ -216,12 +236,20 @@ class TestNTuple(unittest.TestCase):
                 self.assertTrue(abs(self.fvec3[j]) < 300)
                 self.assertTrue(self.fvec4[j] > 0)
                 self.assertTrue(abs(self.fvec5[j]) < 7.5)
-                #self.assertTrue(not self.bvec1[j] or (self.uvec1[j]<16 and self.uvec4[j]<256 and self.uvec5[j]<128))  # barrel
-                #self.assertTrue(self.bvec1[j] or (self.uvec3[j]<4 and self.uvec5[j]<16 and self.uvec2[j]<32 and self.uvec4[j]<128))  # endcap
-                #self.assertTrue(self.uvec6[j] in [5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22])
-                #self.assertTrue(self.uvec7[j] < 100)
-                #self.assertTrue(self.uvec8[j] < 200)
-                self.assertTrue(self.uvec9[j] >= 1)
+                self.assertTrue(self.uvec1[j] >= 1)
+                moduleId = self.uvec2[j]
+                lay = moduleId / 10000
+                lad = (moduleId / 100) % 100
+                mod = moduleId % 100
+                self.assertTrue(lay in [5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22])
+                if moduleId < 110000:  # barrel
+                    self.assertTrue(lad < barrel_phi_divisions[lay-5] and mod < barrel_z_divisions[lay-5])
+                else:                  # endcap
+                    self.assertTrue(lad < len(endcap_ring_divisions) and mod < endcap_ring_divisions[lad])
+                mc = 0 + self.bvec1[j] + self.bvec2[j] + self.bvec3[j]
+                self.assertTrue(1 == mc)
+                mc = 0 + 1 * self.bvec1[j] + 2 * self.bvec2[j] + 3 * self.bvec3[j]
+                self.assertTrue(1 <= mc <= 3)
 
                 # test associated clusters
                 geoId01 = getattr(tree, "TTStubs_geoId0")[j]
@@ -237,7 +265,7 @@ class TestNTuple(unittest.TestCase):
                 self.assertEqual(stackId, stackId1)
 
                 # test associated tp
-                if self.bvec2[j]:
+                if self.bvec1[j]:
                     simPt1 = getattr(tree, "TTStubs_simPt")[j]
                     simPt2 = getattr(tree, "trkParts_pt")[getattr(tree, "TTStubs_tpId")[j]]
                     self.assertEqual(simPt1, simPt2)
