@@ -43,17 +43,6 @@ kBrown2     = TColor.GetColor("#964B00")
 kCocoa2     = TColor.GetColor("#D2691E")
 kTurquoise2 = TColor.GetColor("#40E0D0")
 
-#mBlue       = TColor.GetColor("#3F3D99")
-#mMagenta    = TColor.GetColor("#993D71")
-#mGold       = TColor.GetColor("#998C3D")
-#mGreen      = TColor.GetColor("#3D9956")
-#mBlue2      = TColor.GetColor("#D9D8EB")
-#mMagenta2   = TColor.GetColor("#EBD8E3")
-#mGold2      = TColor.GetColor("#EBE8D8")
-#mGreen2     = TColor.GetColor("#D8EBDD")
-
-#nBlue       = TColor.GetColor("#6699cc")
-
 kQuark      = TColor.GetColor("#EA6699")
 kLepton     = TColor.GetColor("#608060")
 kBoson      = TColor.GetColor("#20ABBF")
@@ -82,6 +71,10 @@ ssBase3     = TColor.GetColor("#E3EAFD")
 ssBase4     = TColor.GetColor("#FCF8E3")
 ssBase5     = TColor.GetColor("#FDE3F8")
 ssBase6     = TColor.GetColor("#EAFDE3")
+
+#blkrgb      = (kBlack, kBlue, kRed, kGreen)
+#blkrgb      = (kBlack, kNavy2, kMaroon2, kLime2)
+blkrgb       = map(lambda x: TColor.GetColor(x), ("#333333", "#0571b0", "#ca0020", "#008837"))
 
 # Very nice color palette stolen from tkgeometry
 # https://code.google.com/p/tkgeometry/source/browse/trunk/src/Palette.cc

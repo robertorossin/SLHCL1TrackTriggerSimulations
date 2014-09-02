@@ -2,31 +2,6 @@
 
 from rootdrawing import *
 
-"""
-**PLOTS**
-
-# nstubs per module, per concentrator, per chip, per superstrip-32 [per layer]
-
-# number of hits, number of clusters
-
-# number of modules? number of superstrips
-
-# hit rate, stub rate, hit occupancy in module (%), in layer, module occupancy in tower
-
-# hit efficiency, stub efficiency, layer efficiency
-  (subsume drawer_layerdisk.py)
-
-# stub purity
-
-# trigger efficiency, trigger purity
-
-# refer to tkgeometry plots
-
-# refer to Luciano's plots
-
-# muon + PU140 after pattern matching
-"""
-
 # ______________________________________________________________________________
 # Configurations
 

@@ -11,7 +11,6 @@ Dedicated script for coverage studies where there is no pileup
 # Global
 
 latex.SetTextSize(0.036)
-tricolors = [kBlack, kRed, kBlue]
 
 # ______________________________________________________________________________
 # Configurations
@@ -103,8 +102,8 @@ if sections["coverage"]:
         for i in xrange(3):
             hname = "pt_%i" % i
             h = TProfile(hname, "; p_{T} [GeV]; coverage", 100, 0., 100., 0., 2., "")
-            h.SetMarkerColor(tricolors[i % 3])
-            h.SetLineColor(tricolors[i % 3])
+            h.SetMarkerColor(blkrgb[i % 3])
+            h.SetLineColor(blkrgb[i % 3])
             histos[hname] = h
             histos[hname + "_val"] = h.Clone(hname + "_val")
 
@@ -112,8 +111,8 @@ if sections["coverage"]:
         for i in xrange(3):
             hname = "eta_%i" % i
             h = TProfile(hname, "; #eta; coverage", 120, -3.0, 3.0, 0., 2., "")
-            h.SetMarkerColor(tricolors[i % 3])
-            h.SetLineColor(tricolors[i % 3])
+            h.SetMarkerColor(blkrgb[i % 3])
+            h.SetLineColor(blkrgb[i % 3])
             histos[hname] = h
             histos[hname + "_val"] = h.Clone(hname + "_val")
 
@@ -121,8 +120,8 @@ if sections["coverage"]:
         for i in xrange(3):
             hname = "phi_%i" % i
             h = TProfile(hname, "; #phi; coverage", 128, -3.2, 3.2, 0., 2., "")
-            h.SetMarkerColor(tricolors[i % 3])
-            h.SetLineColor(tricolors[i % 3])
+            h.SetMarkerColor(blkrgb[i % 3])
+            h.SetLineColor(blkrgb[i % 3])
             histos[hname] = h
             histos[hname + "_val"] = h.Clone(hname + "_val")
 
@@ -130,8 +129,8 @@ if sections["coverage"]:
         for i in xrange(3):
             hname = "vz_%i" % i
             h = TProfile(hname, "; vertex z_{0} [cm]; coverage", 120, -30, 30, 0., 2., "")
-            h.SetMarkerColor(tricolors[i % 3])
-            h.SetLineColor(tricolors[i % 3])
+            h.SetMarkerColor(blkrgb[i % 3])
+            h.SetLineColor(blkrgb[i % 3])
             histos[hname] = h
             histos[hname + "_val"] = h.Clone(hname + "_val")
 
