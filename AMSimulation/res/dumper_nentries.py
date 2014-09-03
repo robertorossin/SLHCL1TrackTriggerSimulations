@@ -1,7 +1,9 @@
 from ROOT import TFile
 
 txt = "/uscms_data/d2/jiafu/L1TrackTrigger/CRAB_amsim/input_MinBias_20140821.txt"
+#txt = "input_pileup.txt"
 treename = "ntupler/tree"
+#treename = "Events"
 nfiles = 1000
 
 with open(txt) as f:
