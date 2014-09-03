@@ -1,4 +1,4 @@
-from ROOT import TH1, TH1F, TH2F, TProfile, TProfile2D, TFile, TChain, TCanvas, TLegend, TLatex, TLine, TGraphAsymmErrors, gROOT, gInterpreter, gStyle, gSystem, gPad
+from ROOT import TH1, TH1F, TH2F, TProfile, TProfile2D, TFile, TChain, TCanvas, TLegend, TLatex, TLine, TBox, TGraphAsymmErrors, gROOT, gInterpreter, gStyle, gSystem, gPad
 from rootcolors import *
 from math import sqrt
 from random import randint
@@ -275,7 +275,7 @@ def drawsProf(histos, ytitle="", logx=False, logy=False, ymax=-1, stats=False):
     return
 
 def draw2D(histos, logx=False, logy=False, logz=False, palette=True, stats=True):
-    if isinstance(histos[0], HistView):
+    if isinstance(histos[0], HistView2D):
         histos = [hv.h for hv in histos]
     h = histos[0]
     if not stats:
