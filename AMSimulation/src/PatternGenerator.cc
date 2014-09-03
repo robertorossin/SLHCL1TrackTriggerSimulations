@@ -187,7 +187,7 @@ int PatternGenerator::makePatterns_map() {
 
     std::map<unsigned, unsigned> towerCountMap;
 
-    float bankSize_f = 0., bankOldSize_f = 0.;
+    float bankSize_f = 0., bankOldSize_f = 0., nKept_f = 0., nKeptOld_f = 0.;
 
     int nRead = 0, nKept = 0;
     unsigned ievt_step = 0;
@@ -200,10 +200,12 @@ int PatternGenerator::makePatterns_map() {
         if (verbose_>1 && ievt_step == 100000) {
             // Coverage info
             bankSize_f = allPatterns_map_.size();
-            coverage_ = 1. - (bankSize_f - bankOldSize_f) / 100000.;
+            nKept_f = nKept;
+            coverage_ = 1. - (bankSize_f - bankOldSize_f) / (nKept_f - nKeptOld_f);
             std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, # patterns: %7.0f, coverage: %7.5f", ievt, nKept, bankSize_f, coverage_) << std::endl;
 
             bankOldSize_f = bankSize_f;
+            nKeptOld_f = nKept_f;
             ievt_step -= 100000;
         }
 
@@ -335,7 +337,7 @@ int PatternGenerator::makePatterns_map() {
         }
         ++nRead;
     }
-    if (verbose_)  std::cout << Info() << Form("Read: %7i, kept: %7i, # patterns: %7lu", nRead, nKept, allPatterns_map_.size()) << std::endl;
+    if (verbose_)  std::cout << Info() << Form("Read: %7i, kept: %7i, # patterns: %7lu, coverage: %7.5f", nRead, nKept, allPatterns_map_.size(), coverage_) << std::endl;
 
     // Keep this number to calculate sorted coverage
     coverage_count_ = nKept;
@@ -403,11 +405,11 @@ int PatternGenerator::writePatterns_map(TString out) {
 
     unsigned ievt_step = 0;
     for (long long ievt=0; ievt<nentries; ++ievt, ++ievt_step) {
-        if (verbose_>1 && ievt_step == 100000) {
+        if (verbose_>1 && ievt_step == 10000) {
             sortedCoverage = float(integralFrequency) / coverage_count_ * coverage_;
             std::cout << Debug() << Form("... Writing event: %7lld, sorted coverage: %7.5f", ievt, sortedCoverage) << std::endl;
 
-            ievt_step -= 100000;
+            ievt_step -= 10000;
         }
 
         *frequency = allPatterns_map_pairs_.at(ievt).second;;
@@ -541,7 +543,7 @@ int PatternGenerator::makePatterns_fas() {
 
     std::map<unsigned, unsigned> towerCountMap;
 
-    float bankSize_f = 0., bankOldSize_f = 0.;
+    float bankSize_f = 0., bankOldSize_f = 0., nKept_f = 0., nKeptOld_f = 0.;
 
     int nRead = 0, nKept = 0;
     unsigned ievt_step = 0;
@@ -554,10 +556,12 @@ int PatternGenerator::makePatterns_fas() {
         if (verbose_>1 && ievt_step == 100000) {
             // Coverage info
             bankSize_f = allPatterns_fas_.size();
-            coverage_ = 1. - (bankSize_f - bankOldSize_f) / 100000.;
+            nKept_f = nKept;
+            coverage_ = 1. - (bankSize_f - bankOldSize_f) / (nKept_f - nKeptOld_f);
             std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, # patterns: %7.0f, coverage: %7.5f", ievt, nKept, bankSize_f, coverage_) << std::endl;
 
             bankOldSize_f = bankSize_f;
+            nKeptOld_f = nKept_f;
             ievt_step -= 100000;
         }
 
@@ -690,7 +694,7 @@ int PatternGenerator::makePatterns_fas() {
         }
         ++nRead;
     }
-    if (verbose_)  std::cout << Info() << Form("Read: %7i, kept: %7i, # patterns: %7u", nRead, nKept, allPatterns_fas_.size()) << std::endl;
+    if (verbose_)  std::cout << Info() << Form("Read: %7i, kept: %7i, # patterns: %7u, coverage: %7.5f", nRead, nKept, allPatterns_fas_.size(), coverage_) << std::endl;
 
     // Keep this number to calculate sorted coverage
     coverage_count_ = nKept;
@@ -755,11 +759,11 @@ int PatternGenerator::writePatterns_fas(TString out) {
 
     unsigned ievt_step = 0;
     for (long long ievt=0; ievt<nentries; ++ievt, ++ievt_step) {
-        if (verbose_>1 && ievt_step == 100000) {
+        if (verbose_>1 && ievt_step == 10000) {
             sortedCoverage = float(integralFrequency) / coverage_count_ * coverage_;
             std::cout << Debug() << Form("... Writing event: %7lld, sorted coverage: %7.5f", ievt, sortedCoverage) << std::endl;
 
-            ievt_step -= 100000;
+            ievt_step -= 10000;
         }
 
         const fas::lean_table3::return_type& ret = allPatterns_fas_.at(ievt);
