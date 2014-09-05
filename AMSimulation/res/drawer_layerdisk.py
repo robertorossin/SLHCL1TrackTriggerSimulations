@@ -63,17 +63,14 @@ e_nmods  = [20, 24, 28, 28, 32, 36, 36, 40, 40, 52, 56, 64, 68, 76, 80]
 tt_netas = 6
 tt_nphis = 8
 
-mapfile = "../data/trigger_sector_map.json"
-ttmap = json.load(open(mapfile))
+convert_key_to_int = lambda pairs: dict([(int(k),v) for (k,v) in pairs])
+ttmap = json.load(open("../data/trigger_sector_map.json"), object_pairs_hook=convert_key_to_int)
 
 def getReverseMap(directMap):
     reverseMap = {}
     for i in xrange(6*8):
-        for m in directMap[str(i)]:
-            if m in reverseMap:
-                reverseMap[m].append(i)
-            else:
-                reverseMap[m] = [i]
+        for m in directMap[i]:
+            reverseMap.setdefault(m, []).append(i)
     return reverseMap
 
 ttrmap = getReverseMap(ttmap)
@@ -118,15 +115,14 @@ def isBarrelModule(moduleId):
 
 if sections["layerdisk"]:
 
-    if False:
+    if True:
         p0 = struct("layerdisk_nconnections", "dummy", "dummy",
             "# connections", 6, 0, 6, kBlack, blkrgb[2])
         histos = book([p0])
 
-        connectmap = json.load(open("../data/module_connections.json"))
+        connectmap = json.load(open("../data/module_connections.json"), object_pairs_hook=convert_key_to_int)
         for k, v in connectmap.iteritems():
             n = 0
-            k = int(k)
             if k in ttrmap:
                 assert(len(v) == len(ttrmap[k]))
                 n = len(v)
@@ -136,7 +132,7 @@ if sections["layerdisk"]:
         histos[0].h.Draw("same hist text0")
         save(imgdir, p0.name)
 
-    if False:
+    if True:
         params = [
             struct("layerdisk_nconnections0_eta", "dummy", "dummy",
                 "module "+eb.xtitle, eb.nbinsx, eb.xlow, eb.xup, kBlack, blkrgb[0]),
@@ -155,16 +151,14 @@ if sections["layerdisk"]:
             p0.fillstyle = 3004
         histos = book(params)
 
-        coordmap = json.load(open("../data/module_coordinates.json"))
+        coordmap = json.load(open("../data/module_coordinates.json"), object_pairs_hook=convert_key_to_int)
         for k, v in coordmap.iteritems():
             eta = v[2]
 
             n = 0
-            k = int(k)
             if k in ttrmap:
                 n = len(ttrmap[k])
             histos[n].h.Fill(eta)
-
             histos[len(params)-1].h.Fill(eta)
 
         for i in xrange(len(params)):
@@ -175,7 +169,7 @@ if sections["layerdisk"]:
             draw(histos[i:i+1], ytitle=ytitle)
             save(imgdir, params[i].name)
 
-    if False:
+    if True:
         # By layers
         layers = []
         for i in xrange(5,11):
@@ -185,12 +179,11 @@ if sections["layerdisk"]:
         for i in xrange(18,23):
             layers.append(("e%i" % i, "Endcap -%i" % (i-17)))
 
-        coordmap = json.load(open("../data/module_coordinates.json"))
+        coordmap = json.load(open("../data/module_coordinates.json"), object_pairs_hook=convert_key_to_int)
         coordmap_eta = {}
         coordmap_phi = {}
         for k, v in coordmap.iteritems():
-            lay = int(k)
-            lay = decodeLayer(lay)
+            lay = decodeLayer(k)
             eta = v[2]
             phi = v[3]
             coordmap_eta.setdefault(lay, []).append(eta)
@@ -228,20 +221,18 @@ if sections["layerdisk"]:
             CMS_label()
             save(imgdir, p0.name)
 
-    if False:
+    if True:
         # By towers
         towers = []
         for i in xrange(48):
             towers.append(("tt%i" % i, "Trigger tower %i" % i))
 
-        coordmap = json.load(open("../data/module_coordinates.json"))
+        coordmap = json.load(open("../data/module_coordinates.json"), object_pairs_hook=convert_key_to_int)
         coordmap_eta = {}
         coordmap_phi = {}
         for tt, tt_modules in ttmap.iteritems():
-            tt = int(tt)
-
             for k in tt_modules:
-                v = coordmap[str(k)]
+                v = coordmap[k]
                 eta = v[2]
                 phi = v[3]
                 coordmap_eta.setdefault(tt, []).append(eta)
@@ -356,8 +347,7 @@ if sections["rate_by_module"]:
                 zmax = max(zmax, v.GetMaximum())
         for k, v in histos.iteritems():
             if k.startswith("b") or k.startswith("e"):
-                v.SetMinimum(0)
-                v.SetMaximum(zmax)
+                v.SetMinimum(0); v.SetMaximum(zmax)
 
         # Style fix
         for k, v in histos.iteritems():
@@ -382,10 +372,7 @@ if sections["rate_by_module"]:
                 if j == 0:
                     histos[hname1].Draw("same pol colz")
                     gPad.Modified(); gPad.Update()
-                    xy = (0.91, 0.13, 0.95, 0.95)
-                    paletteObj = histos[hname1].FindObject("palette")
-                    paletteObj.SetX1NDC(xy[0]); paletteObj.SetY1NDC(xy[1]); paletteObj.SetX2NDC(xy[2]); paletteObj.SetY2NDC(xy[3])
-                    paletteObj.SetTitleSize(0.024); paletteObj.SetLabelSize(0.024)
+                    movePalette2D(histos[hname1])
                     gPad.Modified(); gPad.Update()
                 else:
                     histos[hname1].Draw("same pol col")
@@ -841,8 +828,7 @@ if sections["efficiency_by_module"]:
         for i in xrange(5,11):
             h = histos["b%i_num" % i].Clone("b%i" % i)
             h.Divide(histos["b%i_num" % i], histos["b%i_denom" % i], 1, 1, "b")
-            h.SetMinimum(0)
-            h.SetMaximum(zmax)
+            h.SetMinimum(0); h.SetMaximum(zmax)
             histos[h.GetName()] = h
 
         for i in xrange(11,23):
@@ -851,8 +837,7 @@ if sections["efficiency_by_module"]:
             for j in xrange(0,15):
                 h = histos["e%i_r%i_num" % (i,j)].Clone("e%i_r%i" % (i,j))
                 h.Divide(histos["e%i_r%i_num" % (i,j)], histos["e%i_r%i_denom" % (i,j)], 1, 1, "b")
-                h.SetMinimum(0)
-                h.SetMaximum(zmax)
+                h.SetMinimum(0); h.SetMaximum(zmax)
                 histos[h.GetName()] = h
 
         # Debug
@@ -877,10 +862,7 @@ if sections["efficiency_by_module"]:
                 if j == 0:
                     histos[hname1].Draw("same pol colz")
                     gPad.Modified(); gPad.Update()
-                    xy = (0.91, 0.13, 0.95, 0.95)
-                    paletteObj = histos[hname1].FindObject("palette")
-                    paletteObj.SetX1NDC(xy[0]); paletteObj.SetY1NDC(xy[1]); paletteObj.SetX2NDC(xy[2]); paletteObj.SetY2NDC(xy[3])
-                    paletteObj.SetTitleSize(0.024); paletteObj.SetLabelSize(0.024)
+                    movePalette2D(histos[hname1])
                     gPad.Modified(); gPad.Update()
                 else:
                     histos[hname1].Draw("same pol col")
