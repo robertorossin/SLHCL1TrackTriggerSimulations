@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
 from rootdrawing import *
-from math import pi, floor
-import json
+from roothelper import *
+from math import pi
 
 # ______________________________________________________________________________
 # Configurations
 
 sections = {}
-sections["layerdisk"            ] = False
+sections["layerdisk"            ] = True
 sections["rate_by_module"       ] = False
 sections["rate_by_layer"        ] = False
 sections["rate_by_layer2"       ] = False
@@ -17,7 +17,7 @@ sections["efficiency_by_layer"  ] = False
 sections["efficiency_by_layer2" ] = False
 sections["efficiency_by_track"  ] = False
 sections["nstubs_by_track"      ] = False
-sections["nsuperstrips_by_track"] = True
+sections["nsuperstrips_by_track"] = False
 sections["nmodules_by_track"    ] = False
 sections["nlayers_by_track"     ] = False
 sections["fixme"                ] = False
@@ -51,63 +51,12 @@ if gSystem.AccessPathName(imgdir):
 
 
 # ______________________________________________________________________________
-# Constants
+# Load
 
-b_nlads = [16, 24, 34, 48, 62, 76]
-b_nmods = [63, 55, 54, 24, 24, 24]
-
-e_offset = 5
-e_nrings = [15 + e_offset]
-e_nmods  = [20, 24, 28, 28, 32, 36, 36, 40, 40, 52, 56, 64, 68, 76, 80]
-
-tt_netas = 6
-tt_nphis = 8
-
-convert_key_to_int = lambda pairs: dict([(int(k),v) for (k,v) in pairs])
 ttmap = json.load(open("../data/trigger_sector_map.json"), object_pairs_hook=convert_key_to_int)
-
-def getReverseMap(directMap):
-    reverseMap = {}
-    for i in xrange(6*8):
-        for m in directMap[i]:
-            reverseMap.setdefault(m, []).append(i)
-    return reverseMap
-
-ttrmap = getReverseMap(ttmap)
-
+ttrmap = get_reverse_map(ttmap)
 eb = EtaBinning("#eta", 60, -3, 3)
 pb = EtaBinning("#phi", 64, -3.2, 3.2)
-
-# ______________________________________________________________________________
-# Encoding
-
-def halfStripRound(x):
-    p = 10.
-    return int(floor((x*2)*p + 0.5)/p)
-
-def decodeLayer(moduleId):
-    return moduleId / 10000
-
-def decodeLadder(moduleId):
-    return (moduleId / 100) % 100
-
-def decodeModule(moduleId):
-    return moduleId % 100
-
-def isPSModule(moduleId):
-    lay = decodeLayer(moduleId)
-    if 5 <= lay <= 7:
-        return True
-    lad = decodeLadder(moduleId)
-    if 11 <= lay <= 22 and lad <= 8:
-        return True
-    return False
-
-def isBarrelModule(moduleId):
-    lay = decodeLayer(moduleId)
-    if 5 <= lay <= 10:
-        return True
-    return False
 
 
 # ______________________________________________________________________________
@@ -169,7 +118,7 @@ if sections["layerdisk"]:
             draw(histos[i:i+1], ytitle=ytitle)
             save(imgdir, params[i].name)
 
-    if True:
+    if False:
         # By layers
         layers = []
         for i in xrange(5,11):
@@ -218,10 +167,11 @@ if sections["layerdisk"]:
             latex.SetTextSize(0.036)
             latex.DrawLatex(0.62, 0.83, "#eta = [%.2f,%.2f]" % (minEta, maxEta))
             latex.DrawLatex(0.62, 0.79, "#phi = [%.2f,%.2f]" % (minPhi, maxPhi))
+            latex.DrawLatex(0.62, 0.75, "%i modules" % len(coordmap_eta[lay]))
             CMS_label()
             save(imgdir, p0.name)
 
-    if True:
+    if False:
         # By towers
         towers = []
         for i in xrange(48):
@@ -267,6 +217,7 @@ if sections["layerdisk"]:
             latex.SetTextSize(0.036)
             latex.DrawLatex(0.48, 0.83, "#eta = [%.2f,%.2f]" % (minEta, maxEta))
             latex.DrawLatex(0.48, 0.79, "#phi = [%.2f,%.2f]" % (minPhi, maxPhi))
+            latex.DrawLatex(0.48, 0.75, "%i modules" % len(coordmap_eta[tt]))
             CMS_label()
             save(imgdir, p0.name)
 

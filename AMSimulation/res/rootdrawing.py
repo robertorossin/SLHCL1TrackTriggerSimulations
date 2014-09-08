@@ -114,25 +114,6 @@ class HistView2D(_HistViewBase):
         self.style(p)
         self.h.SetStats(0)
 
-class EtaBinning:
-    def __init__(self, xtitle, nbinsx, xlow, xup):
-        self.xtitle = xtitle
-        self.nbinsx, self.xlow, self.xup = nbinsx, xlow, xup
-        self.binwidth = float(self.xup - self.xlow) / self.nbinsx
-
-    def findBin(self, x):
-        if x <  self.xlow: x = self.xlow
-        if x >= self.xup : x = self.xup - 1e-6
-        x = float(x - self.xlow) / self.binwidth
-        return int(x)
-
-    def getBinCenter(self, b):
-        if b < 0           : b = 0
-        if b >= self.nbinsx: b = self.nbinsx - 1
-        b = self.xlow + (0.5+b) * self.binwidth
-        return b
-
-
 # ______________________________________________________________________________
 # Functions
 
@@ -312,7 +293,6 @@ def draw2D(histos, logx=False, logy=False, logz=False, palette=True, stats=True)
     gPad.Modified(); gPad.Update()
     CMS_label()
     return
-
 
 # ______________________________________________________________________________
 # Auxiliary

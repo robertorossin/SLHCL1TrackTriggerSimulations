@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 from rootdrawing import *
-from math import pi, floor
-import json
+from roothelper import *
+from math import pi
 
 # ______________________________________________________________________________
 # Configurations
@@ -33,7 +33,6 @@ infiles = ["/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1/SingleMuMinus
 
 col  = TColor.GetColor("#1f78b4")  # Paired
 fcol = TColor.GetColor("#a6cee3")
-gcol = kGray+1
 imgdir = "figures_pileup/"
 
 # Neutrino gun (140PU)
@@ -41,7 +40,6 @@ if samples["nu140"]:
     infiles = ["/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/Neutrino_Pt2to20_gun_20140821/ntuple_1_1_9cK.root", "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/Neutrino_Pt2to20_gun_20140821/ntuple_2_1_HJw.root"]
     col  = TColor.GetColor("#e31a1c")  # Paired
     fcol = TColor.GetColor("#fb9a99")
-    gcol = kGray+1
     imgdir = "figures_pileup_nu140/"
 
 # Muon gun (140PU)
@@ -49,7 +47,6 @@ if samples["mu140"]:
     infiles = ["/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/SingleMuMinusFlatPt0p2To150_20140821/ntuple_1_1_dzk.root", "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/SingleMuMinusFlatPt0p2To150_20140821/ntuple_2_1_j6Z.root"]
     col  = TColor.GetColor("#6a3d9a")  # Paired
     fcol = TColor.GetColor("#cab2d6")
-    gcol = kGray+1
     imgdir = "figures_pileup_mu140/"
 
 # MinBias
@@ -57,23 +54,18 @@ if samples["minbias"]:
     infiles = get_infiles("/uscms_data/d2/jiafu/L1TrackTrigger/CRAB_amsim/input_MinBias_20140821.txt", fast=False)
     col  = TColor.GetColor("#ff7f00")  # Paired
     fcol = TColor.GetColor("#fdbf6f")
-    gcol = kGray+1
     imgdir = "figures_pileup_minbias/"
 
 if samples["minbias_remix"]:
     infiles = ["/uscms_data/d2/jiafu/L1TrackTrigger/CRAB_amsim/Neutrino_E2023TTI_PU140_ntuple.0.root"]
     col  = TColor.GetColor("#ff7f00")  # Paired
     fcol = TColor.GetColor("#fdbf6f")
-    gcol = kGray+1
     imgdir = "figures_pileup_minbias/"
 
 
 # Number of events
 nentries = 1000
 #nentries = 20
-
-cut1, cut2, cut3 = "(TTStubs_isGenuine==1)", "(TTStubs_isCombinatoric==1)", "(TTStubs_isUnknown==1)"
-cuts = ((cut1,col), (cut2,fcol), (cut3,gcol))
 
 chain = TChain("ntupler/tree", "")
 for f in infiles:
@@ -86,63 +78,12 @@ if gSystem.AccessPathName(imgdir):
 
 
 # ______________________________________________________________________________
-# Constants
+# Load
 
-b_nlads = [16, 24, 34, 48, 62, 76]
-b_nmods = [63, 55, 54, 24, 24, 24]
-
-e_offset = 5
-e_nrings = [15 + e_offset]
-e_nmods  = [20, 24, 28, 28, 32, 36, 36, 40, 40, 52, 56, 64, 68, 76, 80]
-
-tt_netas = 6
-tt_nphis = 8
-
-convert_key_to_int = lambda pairs: dict([(int(k),v) for (k,v) in pairs])
 ttmap = json.load(open("../data/trigger_sector_map.json"), object_pairs_hook=convert_key_to_int)
-
-def getReverseMap(directMap):
-    reverseMap = {}
-    for i in xrange(6*8):
-        for m in directMap[i]:
-            reverseMap.setdefault(m, []).append(i)
-    return reverseMap
-
-ttrmap = getReverseMap(ttmap)
-
+ttrmap = get_reverse_map(ttmap)
 eb = EtaBinning("#eta", 60, -3, 3)
 pb = EtaBinning("#phi", 64, -3.2, 3.2)
-
-# ______________________________________________________________________________
-# Encoding
-
-def halfStripRound(x):
-    p = 10.
-    return int(floor((x*2)*p + 0.5)/p)
-
-def decodeLayer(moduleId):
-    return moduleId / 10000
-
-def decodeLadder(moduleId):
-    return (moduleId / 100) % 100
-
-def decodeModule(moduleId):
-    return moduleId % 100
-
-def isPSModule(moduleId):
-    lay = decodeLayer(moduleId)
-    if 5 <= lay <= 7:
-        return True
-    lad = decodeLadder(moduleId)
-    if 11 <= lay <= 22 and lad <= 8:
-        return True
-    return False
-
-def isBarrelModule(moduleId):
-    lay = decodeLayer(moduleId)
-    if 5 <= lay <= 10:
-        return True
-    return False
 
 
 # ______________________________________________________________________________
