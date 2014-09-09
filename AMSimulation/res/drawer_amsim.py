@@ -344,22 +344,22 @@ if sections["roads"]:
         histos = {}
 
         hname = "nroads_per_event"
-        histos[hname] = TH1F(hname, "; # roads per event"       , 50, 0, 100)
+        histos[hname] = TH1F(hname, "; # roads per event"       , 50, 0, 200)
 
         hname = "nsuperstrips_per_road"
         histos[hname] = TH1F(hname, "; # superstrips per road"  , 20, 0,  20)
 
         hname = "nstubs_per_superstrip"
-        histos[hname] = TH1F(hname, "; # stubs per superstrip"  , 20, 0,  20)
+        histos[hname] = TH1F(hname, "; # stubs per superstrip"  , 30, 0,  30)
 
         hname = "nstubs_per_road"
         histos[hname] = TH1F(hname, "; # stubs per road"        , 40, 0,  40)
 
         hname = "ncombinations_per_road"
-        histos[hname] = TH1F(hname, "; # combinations per road" , 50, 0, 200)
+        histos[hname] = TH1F(hname, "; # combinations per road" , 60, 0, 300)
 
         hname = "ncombinations_per_event"
-        histos[hname] = TH1F(hname, "; # combinations per event", 50, 0, 400)
+        histos[hname] = TH1F(hname, "; # combinations per event", 80, 0, 800)
 
         for k, v in histos.iteritems():
             v.SetLineWidth(2); v.SetMarkerSize(0)
