@@ -1,17 +1,8 @@
 #!/usr/bin/env python
 
 from rootdrawing import *
+from roothelper import *
 import os
-
-"""
-Dedicated script for coverage studies where there is no pileup
-"""
-
-# ______________________________________________________________________________
-# Global
-
-latex.SetTextSize(0.036)
-tricolors = [kBlack, kRed, kBlue]
 
 # ______________________________________________________________________________
 # Configurations
@@ -25,19 +16,14 @@ sections = {}
 sections["coverage"     ] = False
 sections["roads"        ] = True
 
-
 drawerInit = DrawerInit()
 gStyle.SetNumberContours(100)
 gStyle.SetPalette(55)  # rainbow color map
 
 
-chain = TChain("ntupler/tree", "")
-chain_val = TChain("ntupler/tree", "")
-
 EOS = "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_results/"
-EOS_val = EOS.replace("_results","_results_val")
-
 RES = "SingleMuPlusMinus_sp16_%s"
+
 settings = [
     ("ss1024_20140821"    ,   8246923),
     ("ss512_20140821"     ,  17990289),
@@ -48,22 +34,22 @@ settings = [
 ]
 
 settings_barrel = [
-    ("ss1024_20140821"    ,   276831),
-    ("ss512_20140821"     ,   748757),
-    ("ss256_20140821"     ,  2126119),
-    ("ss128_20140821"     ,  5856686),
-    ("ss64_20140821"      , 14496333),
-    ("ss32_20140821"      , 32277270),
+    ("ss1024_20140821"    ,   478317),
+    ("ss512_20140821"     ,  1380003),
+    ("ss256_20140821"     ,  4101108),
+    ("ss128_20140821"     , 11580865),
+    ("ss64_20140821"      , 28988201),
+    ("ss32_20140821"      , 64656668),
 ]
 
 col  = TColor.GetColor("#1f78b4")  # Paired
 fcol = TColor.GetColor("#a6cee3")
 imgdir = "figures_amsim/"
 
-
 if samples["tt27"]:
-    RES = "SingleMuMinus_Barrel_sp16_%s"
+    RES = "SingleMuPlusMinus_Barrel_sp16_%s"
     settings = settings_barrel
+    imgdir = "figures_amsim_tt27/"
 
 if samples["nu140"]:
     EOS = EOS.replace("_results","_results_PU140bx25")
@@ -80,11 +66,27 @@ if samples["tt27_nu140"]:
 
     col = TColor.GetColor("#e31a1c")  # Paired
     fcol = TColor.GetColor("#fb9a99")
-    imgdir = "figures_amsim_nu140/"
+    imgdir = "figures_amsim_tt27_nu140/"
+
+
+# Number of events
+nentries = 2000000
+#nentries = 20000
+
+chain = TChain("ntupler/tree", "")
 
 if not imgdir.endswith("/"):  imgdir += "/"
 if gSystem.AccessPathName(imgdir):
     gSystem.mkdir(imgdir)
+
+# ______________________________________________________________________________
+# Load
+
+ttmap = json.load(open("../data/trigger_sector_map.json"), object_pairs_hook=convert_key_to_int)
+ttrmap = get_reverse_map(ttmap)
+
+def listdir_fullpath(d):
+    return [os.path.join(d, f) for f in os.listdir(d)]
 
 
 # ______________________________________________________________________________
@@ -92,216 +94,286 @@ if gSystem.AccessPathName(imgdir):
 
 if sections["coverage"]:
 
+    latex.SetTextSize(0.036)
     if samples["nu140"] or samples["tt27_nu140"]:
-        print "ERROR"
+        print "ERROR!"
         exit
 
     def bookCoverage():
         histos = {}
 
-        # pt
+        # 1D: pt, pt (zoom), eta, phi, vz
+        ytitle = "coverage"
+        ac_ytitle = "acceptance"
         for i in xrange(3):
             hname = "pt_%i" % i
-            h = TProfile(hname, "; p_{T} [GeV]; coverage", 100, 0., 100., 0., 2., "")
-            h.SetMarkerColor(tricolors[i % 3])
-            h.SetLineColor(tricolors[i % 3])
-            histos[hname] = h
-            histos[hname + "_val"] = h.Clone(hname + "_val")
+            histos[hname] = TProfile(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 200., 0., 2., "")
+            histos["ac_"+hname] = TProfile("ac_"+hname, "; p_{T} [GeV]; %s" % ac_ytitle, 100, 0., 200., 0., 2., "")
 
-        # eta
-        for i in xrange(3):
+            hname = "ppt_%i" % i
+            histos[hname] = TProfile(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 5., 0., 2., "")
+            histos["ac_"+hname] = TProfile("ac_"+hname, "; p_{T} [GeV]; %s" % ac_ytitle, 100, 0., 5., 0., 2., "")
+
             hname = "eta_%i" % i
-            h = TProfile(hname, "; #eta; coverage", 120, -3.0, 3.0, 0., 2., "")
-            h.SetMarkerColor(tricolors[i % 3])
-            h.SetLineColor(tricolors[i % 3])
-            histos[hname] = h
-            histos[hname + "_val"] = h.Clone(hname + "_val")
+            histos[hname] = TProfile(hname, "; #eta; %s" % ytitle, 120, -3.0, 3.0, 0., 2., "")
+            histos["ac_"+hname] = TProfile("ac_"+hname, "; #eta; %s" % ac_ytitle, 120, -3.0, 3.0, 0., 2., "")
 
-        # phi
-        for i in xrange(3):
             hname = "phi_%i" % i
-            h = TProfile(hname, "; #phi; coverage", 128, -3.2, 3.2, 0., 2., "")
-            h.SetMarkerColor(tricolors[i % 3])
-            h.SetLineColor(tricolors[i % 3])
-            histos[hname] = h
-            histos[hname + "_val"] = h.Clone(hname + "_val")
+            histos[hname] = TProfile(hname, "; #phi; %s" % ytitle, 128, -3.2, 3.2, 0., 2., "")
+            histos["ac_"+hname] = TProfile("ac_"+hname, "; #phi; %s" % ac_ytitle, 128, -3.2, 3.2, 0., 2., "")
 
-        # vz
-        for i in xrange(3):
             hname = "vz_%i" % i
-            h = TProfile(hname, "; vertex z_{0} [cm]; coverage", 120, -30, 30, 0., 2., "")
-            h.SetMarkerColor(tricolors[i % 3])
-            h.SetLineColor(tricolors[i % 3])
-            histos[hname] = h
-            histos[hname + "_val"] = h.Clone(hname + "_val")
+            histos[hname] = TProfile(hname, "; vertex z_{0} [cm]; %s" % ytitle, 120, -30, 30, 0., 2., "")
+            histos["ac_"+hname] = TProfile("ac_"+hname, "; vertex z_{0} [cm]; %s" % ac_ytitle, 120, -30, 30, 0., 2., "")
 
         for k, v in histos.iteritems():
-            v.SetFillStyle(0)
-            v.SetMarkerStyle(24)
-            v.SetMarkerSize(0.9)
-            v.SetLineWidth(2)
+            i = int(v.GetName()[-1])
+            v.SetLineWidth(2); v.SetFillStyle(0)
+            v.SetMarkerStyle(24); v.SetMarkerSize(0.9)
+            v.SetMarkerColor(blkrgb[i % 3]); v.SetLineColor(blkrgb[i % 3])
 
-        # eta-phi map
-        hname = "etaphi_0"
-        h = TProfile2D(hname, "; #eta; #phi; coverage", 60, -3, 3, 64, -3.2, 3.2, 0., 2., "")
-        histos[hname] = h
+        # 2D: eta-phi
+        for i in xrange(3):
+            hname = "etaphi_%i" % i
+            histos[hname] = TProfile2D(hname, "; #eta; #phi; %s" % ytitle, 60, -3, 3, 64, -3.2, 3.2, 0., 2., "")
+            histos["ac_"+hname] = TProfile2D("ac_"+hname, "; #eta; #phi; %s" % ac_ytitle, 60, -3, 3, 64, -3.2, 3.2, 0., 2., "")
         return histos
 
-    def projectCoverage(tree, histos, is_val):
-        val = "" if not is_val else "_val"
+    def projectCoverage(tree, histos, nentries=1000000000, val=""):
+        tree.SetBranchStatus("*", 0)
+        tree.SetBranchStatus("genParts_pt"           , 1)
+        tree.SetBranchStatus("genParts_eta"          , 1)
+        tree.SetBranchStatus("genParts_phi"          , 1)
+        tree.SetBranchStatus("genParts_vz"           , 1)
+        tree.SetBranchStatus("TTStubs_modId"         , 1)
+        tree.SetBranchStatus("AMTTRoads_nHitLayers"  , 1)
+
+        def fill(pt, eta, phi, vz, cover, trigger):
+            if cover:
+                if abs(eta) < 0.8:
+                    histos["pt_0"     + val].Fill(pt , trigger)
+                    histos["ppt_0"    + val].Fill(pt , trigger)
+                elif abs(eta) < 1.6:
+                    histos["pt_1"     + val].Fill(pt , trigger)
+                    histos["ppt_1"    + val].Fill(pt , trigger)
+                elif abs(eta) < 2.2:
+                    histos["pt_2"     + val].Fill(pt , trigger)
+                    histos["ppt_2"    + val].Fill(pt , trigger)
+
+                if pt >= 20:
+                    histos["eta_0"    + val].Fill(eta, trigger)
+                    histos["phi_0"    + val].Fill(phi, trigger)
+                    histos["vz_0"     + val].Fill(vz , trigger)
+                    histos["etaphi_0" + val].Fill(eta, phi, trigger)
+                elif pt >= 5:
+                    histos["eta_1"    + val].Fill(eta, trigger)
+                    histos["phi_1"    + val].Fill(phi, trigger)
+                    histos["vz_1"     + val].Fill(vz , trigger)
+                    histos["etaphi_1" + val].Fill(eta, phi, trigger)
+                elif pt >= 2:
+                    histos["eta_2"    + val].Fill(eta, trigger)
+                    histos["phi_2"    + val].Fill(phi, trigger)
+                    histos["vz_2"     + val].Fill(vz , trigger)
+                    histos["etaphi_2" + val].Fill(eta, phi, trigger)
+
+            if abs(eta) < 0.8:
+                histos["ac_pt_0"     + val].Fill(pt , trigger)
+                histos["ac_ppt_0"    + val].Fill(pt , trigger)
+            elif abs(eta) < 1.6:
+                histos["ac_pt_1"     + val].Fill(pt , trigger)
+                histos["ac_ppt_1"    + val].Fill(pt , trigger)
+            elif abs(eta) < 2.2:
+                histos["ac_pt_2"     + val].Fill(pt , trigger)
+                histos["ac_ppt_2"    + val].Fill(pt , trigger)
+
+            if pt >= 20:
+                histos["ac_eta_0"    + val].Fill(eta, trigger)
+                histos["ac_phi_0"    + val].Fill(phi, trigger)
+                histos["ac_vz_0"     + val].Fill(vz , trigger)
+                histos["ac_etaphi_0" + val].Fill(eta, phi, trigger)
+            elif pt >= 5:
+                histos["ac_eta_1"    + val].Fill(eta, trigger)
+                histos["ac_phi_1"    + val].Fill(phi, trigger)
+                histos["ac_vz_1"     + val].Fill(vz , trigger)
+                histos["ac_etaphi_1" + val].Fill(eta, phi, trigger)
+            elif pt >= 2:
+                histos["ac_eta_2"    + val].Fill(eta, trigger)
+                histos["ac_phi_2"    + val].Fill(phi, trigger)
+                histos["ac_vz_2"     + val].Fill(vz , trigger)
+                histos["ac_etaphi_2" + val].Fill(eta, phi, trigger)
+
+        # Merged layers
+        layermap = {
+            5:0, 6:1, 7:2, 8:3, 9:4, 10:5,
+            11:5, 12:4, 13:3, 14:2, 15:1,
+            18:5, 19:4, 20:3, 21:2, 22:1,
+        }
 
         # Loop over events
         for i_ievt, ievt in enumerate(tree):
-            pt, eta, phi, vz = ievt.genParts_pt[0], ievt.genParts_eta[0], ievt.genParts_phi[0], ievt.genParts_vz[0]
+            if (i_ievt == nentries):  break
 
-            fired = (ievt.AMTTRoads_nHitLayers.size() > 0)
+            # Get track pt, eta, phi, vz
+            thePt, theEta, thePhi, theVz = ievt.genParts_pt[0], ievt.genParts_eta[0], ievt.genParts_phi[0], ievt.genParts_vz[0]
 
-            if abs(eta) < 0.8:
-                histos["pt_0"  + val].Fill(pt , fired)
-            elif abs(eta) < 1.6:
-                histos["pt_1"  + val].Fill(pt , fired)
-            elif abs(eta) < 2.2:
-                histos["pt_2"  + val].Fill(pt , fired)
-            else:
-                pass
+            # Get trigger results
+            trigger = (ievt.AMTTRoads_nHitLayers.size() > 0)
 
-            if pt >= 20:
-                histos["eta_0" + val].Fill(eta, fired)
-                histos["phi_0" + val].Fill(phi, fired)
-                histos["vz_0"  + val].Fill(vz, fired)
-            elif pt >= 5:
-                histos["eta_1" + val].Fill(eta, fired)
-                histos["phi_1" + val].Fill(phi, fired)
-                histos["vz_1"  + val].Fill(vz, fired)
-            elif pt >= 2:
-                histos["eta_2" + val].Fill(eta, fired)
-                histos["phi_2" + val].Fill(phi, fired)
-                histos["vz_2"  + val].Fill(vz, fired)
-            else:
-                pass
+            # Loop over stubs
+            found_mlayers = [0] * 6
+            for moduleId in ievt.TTStubs_modId:
+                lay = decodeLayer(moduleId)
+                mlay = layermap[lay]
+                found_mlayers[mlay] = 1
+            count_mlayers = sum(found_mlayers)
+            cover = (count_mlayers == 6)
 
-            if not is_val and pt >= 20:
-                histos["etaphi_0"].Fill(eta, phi, fired)
+            fill(thePt, theEta, thePhi, theVz, cover, trigger)
 
-    def drawCoverage(histos, setting, banksize, imgdir, result):
-        for var in ["pt", "eta", "phi", "vz"]:
-            h = histos["%s_0_val" % var]
-            h.SetStats(0); h.SetMinimum(0); h.SetMaximum(1.2)
+        tree.SetBranchStatus("*", 1)
+        return
 
-            g = TGraphAsymmErrors(h)
-            for i in xrange(g.GetN()):
-                g.SetPointError(i, 1, 1, 0, 10)
-            g.SetFillStyle(1001)
-            g.SetFillColor(kGray2)
-            histos["%s_0_val_g"] = g
-            h.Reset()
+    def drawCoverage(histos, setting, banksize, hnlambda, imgdir):
+        for hvar in ["pt", "ppt", "eta", "phi", "vz"]:
+            ymax = 1.2
 
+            hname = "%s_%i" % (hvar,0)
+            h = histos[hnlambda(hname)]
+            h.SetStats(0); h.SetMinimum(0); h.SetMaximum(ymax)
             h.Draw()
-            g.Draw("3")
-            histos["%s_0" % var].Draw("same")
-            histos["%s_1" % var].Draw("same")
-            histos["%s_2" % var].Draw("same")
 
+            # Reference lines for 0.4 and 1.0
             xmin, xmax = h.GetXaxis().GetXmin(), h.GetXaxis().GetXmax()
             line.DrawLine(xmin, 1.0, xmax, 1.0)
             line.DrawLine(xmin, 0.4, xmax, 0.4)
+            for i in xrange(3):
+                hname1 = "%s_%i" % (hvar,i)
+                histos[hnlambda(hname1)].Draw("same")
 
-            if var == "pt":
-                leg1 = TLegend(0.42,0.22,0.94,0.39)
-                leg1.SetTextFont(42)
-                leg1.SetFillStyle(0); leg1.SetLineColor(0); leg1.SetShadowColor(0); leg1.SetBorderSize(0)
-                leg1.AddEntry(histos["%s_0" % var], "Single muon 0.0 #leq |#eta| < 0.8", "lp")
-                leg1.AddEntry(histos["%s_1" % var], "Single muon 0.8 #leq |#eta| < 1.6", "lp")
-                leg1.AddEntry(histos["%s_2" % var], "Single muon 1.6 #leq |#eta| < 2.2", "lp")
-                leg1.Draw()
+            # Out of sample range
+            tboxes = []
+            if hvar == "pt" or hvar == "ppt":
+                tboxes = [
+                    TBox( xmin, 0,   2.0, ymax),
+                    TBox(min(xmax,200.0), 0,  xmax, ymax),
+                ]
+            if samples["tt27"]:
+                if hvar == "eta":
+                    tboxes = [
+                        TBox( xmin, 0,  -0.2, ymax),
+                        TBox(  0.8, 0,  xmax, ymax),
+                    ]
+                elif hvar == "phi":
+                    tboxes = [
+                        TBox( xmin, 0,   0.6, ymax),
+                        TBox(  1.7, 0,  xmax, ymax),
+                    ]
+            for box in tboxes:
+                box.SetFillStyle(3004); box.SetFillColor(kGray)
+                box.Draw()
+
+            # Legend
+            moveLegend(0.48,0.22,0.94,0.34); legend.Clear()
+            if hvar == "pt" or hvar == "ppt":
+                writeme = [
+                    "0.0 #leq |#eta| < 0.8",
+                    "0.8 #leq |#eta| < 1.6",
+                    "1.6 #leq |#eta| < 2.2",
+                ]
             else:
-                leg1 = TLegend(0.42,0.22,0.94,0.39)
-                leg1.SetTextFont(42)
-                leg1.SetFillStyle(0); leg1.SetLineColor(0); leg1.SetShadowColor(0); leg1.SetBorderSize(0)
-                leg1.AddEntry(histos["%s_0" % var], "Single muon 20 #leq p_{T} < #infty  GeV", "lp")
-                leg1.AddEntry(histos["%s_1" % var], "Single muon   5 #leq p_{T} < 20 GeV", "lp")
-                leg1.AddEntry(histos["%s_2" % var], "Single muon   2 #leq p_{T} <   5 GeV", "lp")
-                leg1.Draw()
+                writeme = [
+                    "20 #leq p_{T} < #infty  GeV",
+                    "  5 #leq p_{T} < 20 GeV",
+                    "  2 #leq p_{T} <   5 GeV",
+                ]
+            for i in xrange(3):
+                hname1 = "%s_%i" % (hvar,i)
+                legend.AddEntry(histos[hnlambda(hname1)], writeme[i], "lp")
+            legend.Draw()
 
-            latex.DrawLatex(0.55, 0.185, "%s [%.1fM bank]" % (setting, banksize))
-
+            latex.DrawLatex(0.6, 0.185, "%s [%.1fM bank]" % (setting, banksize))
             CMS_label()
-            save(imgdir, "coverage_vs_%s_%s" % (var, result))
+            save(imgdir, "coverage_%s_%s" % (hnlambda(hname), setting))
 
+        # TH2F
         oldRightMargin = gPad.GetRightMargin()
-        h = histos["etaphi_0"]
-        h.SetStats(0); h.SetMinimum(0); h.SetMaximum(1.2)
+        hvar = "etaphi"
+        hname = "%s_%i" % (hvar,0)
+        h = histos[hnlambda(hname)]
+        h.SetStats(0); h.SetMinimum(0); h.SetMaximum(ymax)
         draw2D([h], stats=False)
 
-        latex.DrawLatex(0.5, 0.22, "Single muon p_{T} > 20 GeV")
-        latex.DrawLatex(0.5, 0.185, "%s [%.1fM bank]" % (setting, banksize))
-        save(imgdir, "coverage_vs_etaphi_%s" % (result))
+        latex.DrawLatex(0.6, 0.235, "20 #leq p_{T} < #infty  GeV")
+        latex.DrawLatex(0.6, 0.185, "%s [%.1fM bank]" % (setting, banksize))
+        save(imgdir, "coverage_%s_%s" % (hnlambda(hname), setting))
 
         gPad.SetRightMargin(oldRightMargin)
+        donotdelete = [tboxes]
+        return donotdelete
+
 
     # __________________________________________________________________________
-    histos = {}
-    for sett, sett1 in settings[0:]:
+    for sett, sett1 in settings[:]:
         chain.Reset()
-        chain_val.Reset()
-        histos.clear()
 
         result = RES % sett
-        infiles = map(lambda x: EOS+"/"+result+"/"+x, os.listdir(EOS+"/"+result))
-        infiles_val = map(lambda x: EOS_val+"/"+result+"/"+x, os.listdir(EOS_val+"/"+result))
-        print sett, len(infiles), len(infiles_val)
+        infiles = listdir_fullpath(EOS+"/"+result)
+        print sett, len(infiles)
         for f in infiles:
             chain.Add(f)
-        for f in infiles_val:
-            chain_val.Add(f)
 
         histos = bookCoverage()
-        projectCoverage(chain, histos, is_val=False)
-        projectCoverage(chain_val, histos, is_val=True)
-
+        projectCoverage(chain, histos, nentries=nentries)
         setting = sett[:-9].replace("_", " ")
         banksize = 1e-6*sett1
-        drawCoverage(histos, setting, banksize, imgdir, result)
+        drawCoverage(histos, setting, banksize, lambda x: x, imgdir)
+        drawCoverage(histos, setting, banksize, lambda x: "ac_"+x, imgdir)
+
 
 # ______________________________________________________________________________
 # Roads
 
 if sections["roads"]:
 
+    latex.SetTextSize(0.036)
+    if not (samples["nu140"] or samples["tt27_nu140"]):
+        print "ERROR!"
+        exit
+
     def bookRoads():
         histos = {}
 
         hname = "nroads_per_event"
-        h = TH1F(hname, "; # roads per event", 60, 0, 60)
-        histos[hname] = h
+        histos[hname] = TH1F(hname, "; # roads per event"       , 50, 0, 100)
 
         hname = "nsuperstrips_per_road"
-        h = TH1F(hname, "; # superstrips per road", 20, 0, 20)
-        histos[hname] = h
+        histos[hname] = TH1F(hname, "; # superstrips per road"  , 20, 0,  20)
 
         hname = "nstubs_per_superstrip"
-        h = TH1F(hname, "; # stubs per superstrip", 20, 0, 20)
-        histos[hname] = h
+        histos[hname] = TH1F(hname, "; # stubs per superstrip"  , 20, 0,  20)
 
         hname = "nstubs_per_road"
-        h = TH1F(hname, "; # stubs per road", 40, 0, 40)
-        histos[hname] = h
+        histos[hname] = TH1F(hname, "; # stubs per road"        , 40, 0,  40)
 
         hname = "ncombinations_per_road"
-        h = TH1F(hname, "; # combinations per road", 50, 0, 200)
-        histos[hname] = h
+        histos[hname] = TH1F(hname, "; # combinations per road" , 50, 0, 200)
 
         hname = "ncombinations_per_event"
-        h = TH1F(hname, "; # combinations per event", 60, 0, 300)
-        histos[hname] = h
+        histos[hname] = TH1F(hname, "; # combinations per event", 50, 0, 400)
 
         for k, v in histos.iteritems():
-            v.SetLineColor(col)
-            v.SetFillColor(fcol)
+            v.SetLineWidth(2); v.SetMarkerSize(0)
+            v.SetLineColor(col); v.SetFillColor(fcol)
         return histos
 
-    def projectRoads(tree, histos):
+    def projectRoads(tree, histos, nentries=1000000000):
+        tree.SetBranchStatus("*", 0)
+        tree.SetBranchStatus("AMTTRoads_nHitLayers"      , 1)
+        tree.SetBranchStatus("AMTTRoads_hitSuperstripIds", 1)
+
+        # Loop over events
         for i_ievt, ievt in enumerate(tree):
+            if (i_ievt == nentries):  break
 
             nroads_per_event = 0
             ncombinations_per_event = 0
@@ -340,29 +412,28 @@ if sections["roads"]:
             histos["nroads_per_event"].Fill(nroads_per_event)
             histos["ncombinations_per_event"].Fill(ncombinations_per_event)
 
-    def drawRoads(histos, setting, banksize, imgdir, result, logy=False):
+        tree.SetBranchStatus("*", 1)
+        return
+
+    def drawRoads(histos, setting, banksize, imgdir, logy=False):
         for hname, h in histos.iteritems():
             draw([h], ytitle="", logy=logy)
+            latex.DrawLatex(0.6, 0.185, "%s [%.1fM bank]" % (setting, banksize))
+            save(imgdir, "roads_%s_%s" % (hname, setting))
 
-            latex.DrawLatex(0.62, 0.185, "%s [%.1fM bank]" % (setting, banksize))
-            save(imgdir, "%s_%s" % (hname, result))
 
     # __________________________________________________________________________
-    histos = {}
-    for sett, sett1 in settings[0:]:
+    for sett, sett1 in settings[:]:
         chain.Reset()
-        histos.clear()
 
         result = RES % sett
-        infiles = map(lambda x: EOS+"/"+result+"/"+x, os.listdir(EOS+"/"+result))
+        infiles = listdir_fullpath(EOS+"/"+result)
         print sett, len(infiles)
         for f in infiles:
             chain.Add(f)
 
         histos = bookRoads()
-        projectRoads(chain, histos)
-
+        projectRoads(chain, histos, nentries=nentries/1000)
         setting = sett[:-9].replace("_", " ")
         banksize = 1e-6*sett1
-        drawRoads(histos, setting, banksize, imgdir, result, logy=True)
-
+        drawRoads(histos, setting, banksize, imgdir, logy=True)

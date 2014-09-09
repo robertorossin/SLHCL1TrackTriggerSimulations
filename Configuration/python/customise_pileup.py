@@ -1,31 +1,48 @@
 import FWCore.ParameterSet.Config as cms
 
-# Reduce particle gun sample size
-# In CMSSW_6_2_0_SLHC12_patch1, edm output size is reduced to ~2.2 KB/evt
-def cust_RAWSIMoutput(process):
+pileup_input = [
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/E0C50F1A-C4D1-E311-B819-0026B95B8CC9.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/94EE28AF-C0D1-E311-9056-842B2B2922E2.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/143D4B0B-C4D1-E311-A5BC-AC853D9DACF7.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/E21827A9-C3D1-E311-928B-AC853D9F5256.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/08B35081-C0D1-E311-B1EA-AC853D9DACD7.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00002/8EB77EAA-EDD1-E311-86C9-003048344C20.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00002/448CC32B-EDD1-E311-A563-003048F5B69E.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00002/62097CFB-ECD1-E311-9171-00238BCE45F2.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00002/94E110AB-E9D1-E311-A374-00238BBD7674.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00002/724C7F76-E9D1-E311-8378-0025907254BC.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/0EAF8EDC-CFD1-E311-A4B2-0019B9F72F97.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/9EAC7429-CED1-E311-919F-02163E00E9E5.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/3EC126FD-CAD1-E311-A5CD-02163E00E9A3.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/4030FFAA-C9D1-E311-ABD4-001D09F242EF.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/64940974-C8D1-E311-ADD0-001D09F24399.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00000/60864153-B4D1-E311-8798-002590E3A0D4.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00000/3433B82E-B4D1-E311-BA70-003048F5ADEC.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00000/748326F9-B3D1-E311-9499-0025908653C4.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00000/CA404658-B3D1-E311-AAC2-002590E3A0D4.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00000/56F0E22F-B3D1-E311-99C3-003048F5ADEC.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/0A98176C-C3D1-E311-A211-00238BBD7678.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/7470E263-C3D1-E311-BB1A-003048F5B2A6.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/9602542F-C3D1-E311-AB5D-003048F7CC8A.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/4269D771-C2D1-E311-BD0C-003048F7CC92.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/32DEE13E-C2D1-E311-8E00-003048F7CC8A.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/7CF29C46-9DD0-E311-BBE6-003048FEC15C.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/B8A4543A-9AD0-E311-9676-02163E00E9C7.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/82F208AE-9BD0-E311-822F-02163E00EB8E.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/FC755EB8-98D0-E311-A1EF-02163E00EB8E.root",
+"/store/mc/TTI2023Upg14/MinBias_TuneZ2star_14TeV-pythia6/GEN-SIM/DES23_62_V1-v1/00001/0672938B-99D0-E311-AC65-003048FEFFF8.root",
+]
 
-    # Keep track of random number seeds
-    process.load('SLHCL1TrackTriggerSimulations.NTupleTools.randomEngineSeedKeeper_cfi')
-    process.pgen += process.randomEngineSeedKeeper
-
-    # Modify event content
-    process.RAWSIMoutput.outputCommands += [
-        'drop *_MEtoEDMConverter_*_*',
-        'drop *_randomEngineStateProducer_*_*',
-        'drop *_logErrorHarvester_*_*',
-        'drop *_simEcalDigis_*_*',
-        'drop *_simHcalUnsuppressedDigis_*_*',
-        'drop recoGenJets_*_*_*',
-        'drop recoGenMETs_*_*_*',
-        'keep *_mix_MergedTrackTruth_*',
-        'keep *_randomEngineSeedKeeper_*_*',
-    ]
+def cust_pileup_input(process, sequential=False):
+    # Modify pileup input source
+    process.mix.input.fileNames = pileup_input
+    process.mix.input.sequential = sequential
     return (process)
 
 
 # Run in tracker only, ignoring calorimeter and muon system
 # In CMSSW_6_2_0_SLHC12_patch1, processing speed is reduced to ~0.06 s/evt
-def cust_useTrackerOnly(process, intime=True, ntuple=True):
+def cust_useTrackerOnly(process, sequential=False, intime=False, ntuple=True):
 
     # __________________________________________________________________________
     # Customise generation step
@@ -46,7 +63,7 @@ def cust_useTrackerOnly(process, intime=True, ntuple=True):
             delattr(process.g4SimHits, removee)
 
     # Kill delta rays
-    process.g4SimHits.StackingAction.KillDeltaRay = True
+    #process.g4SimHits.StackingAction.KillDeltaRay = True
 
     # Modify geometry
     geoms_orig = process.XMLIdealGeometryESSource.geomXMLFiles
@@ -63,6 +80,10 @@ def cust_useTrackerOnly(process, intime=True, ntuple=True):
 
     # __________________________________________________________________________
     # Customise digitisation step
+
+    # Modify pileup input source
+    process.mix.input.fileNames = pileup_input
+    process.mix.input.sequential = sequential
 
     # Drop calorimeter and muon system
     process.pdigi_valid = process.pdigi_valid.copyAndExclude([process.doAllDigi])
@@ -127,7 +148,7 @@ def cust_useTrackerOnly(process, intime=True, ntuple=True):
 
         # Straight to ntuples
         process.load("SLHCL1TrackTriggerSimulations.NTupleTools.sequences_cff")
-        process.p = cms.Path(process.ntupleSequence)
+        process.p = cms.Path(process.ntupleSequence_TTI)
         process.schedule.append(process.p)
 
     return (process)

@@ -6,9 +6,10 @@ from rootdrawing import *
 # Configurations
 
 samples = {}
-samples["nu140"]   = False
-samples["mu140"]   = False
-samples["minbias"] = True
+samples["nu140"        ] = False
+samples["mu140"        ] = False
+samples["minbias"      ] = True
+samples["minbias_remix"] = False
 
 sections = {}
 sections["genParts"   ] = False
@@ -26,9 +27,8 @@ sections["fixme"      ] = False
 drawerInit = DrawerInit()
 
 # Muon gun
-#infiles = ["/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/SingleMuMinus_20140714/ntuple_1_1_1TX.root"]
 #infiles = ["/uscms_data/d2/jiafu/L1TrackTrigger/CRAB_amsim/ntuple_1_1_1TX_redux.root"]
-infiles = ["/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1/SingleMuMinus_Barrel_20140821/SingleMu_Barrel_E2023TTI_ntuple_1_1_Fr2.root"]
+infiles = ["/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1/SingleMuMinus_Barrel_20140821/SingleMu_Barrel_E2023TTI_ntuple_1_1_Fr2.root", "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1/SingleMuPlus_Barrel_20140821/SingleMu_Barrel_E2023TTI_ntuple_1_1_guT.root"]
 
 col  = TColor.GetColor("#1f78b4")  # Paired
 fcol = TColor.GetColor("#a6cee3")
@@ -55,9 +55,16 @@ if samples["minbias"]:
     fcol = TColor.GetColor("#fdbf6f")
     imgdir = "figures_pgun_minbias/"
 
+if samples["minbias_remix"]:
+    infiles = ["/uscms_data/d2/jiafu/L1TrackTrigger/CRAB_amsim/Neutrino_E2023TTI_PU140_ntuple.0.root"]
+    col  = TColor.GetColor("#ff7f00")  # Paired
+    fcol = TColor.GetColor("#fdbf6f")
+    imgdir = "figures_pgun_minbias/"
+
+
 # Number of events
-#nentries = 139995
-#nentries = 100000
+#nentries = 139673
+#nentries = 200000
 nentries = 1000
 
 chain = TChain("ntupler/tree", "")
@@ -905,6 +912,7 @@ if sections["stubs"]:
 
 # ______________________________________________________________________________
 if sections["minbias1"]:
+    """For single min-bias event"""
 
     if not samples["minbias"]:
         print "ERROR"
@@ -1000,7 +1008,7 @@ if sections["minbias1"]:
         cut = "(simTracks_genpId!=-1 && abs(simTracks_eta)<2.5 && simTracks_charge!=0)"
 
         p0 = struct("simTracks_size", "simTracks_size" if not cut else "Sum$(%s)" % cut, "",
-            "# simTracks", 50, 0, 200, col, fcol)
+            "# simTracks per interaction", 50, 0, 200, col, fcol)
         histos = doit([p0], imgdir)
 
         p0 = struct("simTracks_pt", "simTracks_pt", cut,
@@ -1112,6 +1120,7 @@ if sections["minbias1"]:
 
 # ______________________________________________________________________________
 if sections["minbias140"]:
+    """For 140 min-bias event"""
 
     if not samples["minbias"]:
         print "ERROR"
@@ -1122,11 +1131,16 @@ if sections["minbias140"]:
     subsections["simTracks_eta"] = True
 
 
-    import numpy as np
-    np.random.seed(62935)
-    ninteractions = []
-    for i in xrange(nentries):
-        ninteractions.append(np.random.poisson(140))
+    #import numpy as np
+    #np.random.seed(62935)
+    #ninteractions = []
+    #for i in xrange(nentries):
+    #    ninteractions.append(np.random.poisson(140))
+    #nentries2 = sum(ninteractions)
+    #print nentries2
+
+    from poisson_ave_140 import ninteractions
+    ninteractions = ninteractions[:nentries]
     nentries2 = sum(ninteractions)
     print nentries2
 
@@ -1143,8 +1157,7 @@ if sections["minbias140"]:
     if subsections["simTracks"]:
 
         p0 = struct("ave140_gen_nPV", "dummy", "dummy",
-            "sim # PV", 50, 0, 200, col, fcol)
-
+            "sim # interactions", 60, 80, 200, col, fcol)
         if True:
             x = [p0]; logy=False
             histos = book(x)
@@ -1320,4 +1333,8 @@ if sections["minbias140"]:
 # ______________________________________________________________________________
 if sections["fixme"]:
 
-    pass
+    if True:
+        nPV = []
+        for ievt in tree:
+            nPV.append(ievt.gen_nPV)
+        print "ninteractions =", nPV

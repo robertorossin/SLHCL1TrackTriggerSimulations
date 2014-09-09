@@ -1,4 +1,4 @@
-from ROOT import TH1, TH1F, TH2F, TProfile, TProfile2D, TFile, TChain, TCanvas, TLegend, TLatex, TLine, TGraphAsymmErrors, gROOT, gInterpreter, gStyle, gSystem, gPad
+from ROOT import TH1, TH1F, TH2F, TProfile, TProfile2D, TFile, TChain, TCanvas, TLegend, TLatex, TLine, TBox, TGraphAsymmErrors, gROOT, gInterpreter, gStyle, gSystem, gPad
 from rootcolors import *
 from math import sqrt
 from random import randint
@@ -14,6 +14,7 @@ class DrawerInit:
         gROOT.ProcessLine("setTDRStyle()")
 
         gStyle.SetEndErrorSize(2)
+        gStyle.SetPadRightMargin(0.05)
         gStyle.SetTitleOffset(1.1, "Y")
         gStyle.SetLabelSize(0.04, "Y")
         gStyle.SetNdivisions(505, "XY")
@@ -32,6 +33,12 @@ latex = TLatex()
 latex.SetNDC()
 latex.SetTextFont(42)
 latex.SetTextSize(0.026)
+
+legend = TLegend(0.70,0.74,0.96,0.94)
+legend.SetFillStyle(0)
+legend.SetLineColor(0)
+legend.SetShadowColor(0)
+legend.SetBorderSize(0)
 
 line = TLine()
 line.SetLineColor(kGray+2)
@@ -106,25 +113,6 @@ class HistView2D(_HistViewBase):
         self.randname = self.h.GetName()
         self.style(p)
         self.h.SetStats(0)
-
-class EtaBinning:
-    def __init__(self, xtitle, nbinsx, xlow, xup):
-        self.xtitle = xtitle
-        self.nbinsx, self.xlow, self.xup = nbinsx, xlow, xup
-        self.binwidth = float(self.xup - self.xlow) / self.nbinsx
-
-    def findBin(self, x):
-        if x <  self.xlow: x = self.xlow
-        if x >= self.xup : x = self.xup - 1e-6
-        x = float(x - self.xlow) / self.binwidth
-        return int(x)
-
-    def getBinCenter(self, b):
-        if b < 0           : b = 0
-        if b >= self.nbinsx: b = self.nbinsx - 1
-        b = self.xlow + (0.5+b) * self.binwidth
-        return b
-
 
 # ______________________________________________________________________________
 # Functions
@@ -274,38 +262,47 @@ def drawsProf(histos, ytitle="", logx=False, logy=False, ymax=-1, stats=False):
     CMS_label()
     return
 
+def movePalette2D(h):
+    x1, y1, x2, y2 = 0.91, 0.13, 0.95, 0.95
+    paletteObj = h.FindObject("palette")
+    paletteObj.SetX1NDC(x1); paletteObj.SetY1NDC(y1); paletteObj.SetX2NDC(x2); paletteObj.SetY2NDC(y2)
+    paletteObj.SetTitleSize(0.024); paletteObj.SetLabelSize(0.024)
+
+def moveStats2D(h):
+    x1, y1, x2, y2 = 0.64, 0.70, 0.88, 0.93
+    statsObj = h.FindObject("stats")
+    statsObj.SetX1NDC(x1); statsObj.SetY1NDC(y1); statsObj.SetX2NDC(x2); statsObj.SetY2NDC(y2)
+
 def draw2D(histos, logx=False, logy=False, logz=False, palette=True, stats=True):
-    if isinstance(histos[0], HistView):
+    if isinstance(histos[0], HistView2D):
         histos = [hv.h for hv in histos]
     h = histos[0]
     if not stats:
         h.SetStats(0)
-    h.Draw("colz")
+    if palette:
+        h.Draw("colz")
+    else:
+        h.Draw("col")
     gPad.SetLogx(logx); gPad.SetLogy(logy); gPad.SetLogz(logz)
     gPad.SetRightMargin(0.10)
     gPad.Modified(); gPad.Update()
     if palette:
-        xy = (0.91, 0.13, 0.95, 0.95)
-        paletteObj = h.FindObject("palette")
-        paletteObj.SetX1NDC(xy[0]); paletteObj.SetY1NDC(xy[1]); paletteObj.SetX2NDC(xy[2]); paletteObj.SetY2NDC(xy[3])
-        paletteObj.SetTitleSize(0.024); paletteObj.SetLabelSize(0.024)
+        movePalette2D(h)
     if stats:
-        xy = (0.64, 0.70, 0.88, 0.93)
-        statsObj = h.FindObject("stats")
-        statsObj.SetX1NDC(xy[0]); statsObj.SetY1NDC(xy[1]); statsObj.SetX2NDC(xy[2]); statsObj.SetY2NDC(xy[3])
+        moveStats2D(h)
     gPad.Modified(); gPad.Update()
     CMS_label()
     return
 
-
 # ______________________________________________________________________________
 # Auxiliary
 
-def label(histos, legend=(0.70,0.74,0.96,0.94)):
-    leg1 = TLegend(legend[0], legend[1], legend[2], legend[3])
-    leg1.SetFillStyle(0); leg1.SetLineColor(0); leg1.SetShadowColor(0); leg1.SetBorderSize(0)
-    leg1.Draw()
-    return (leg1)
+def moveLegend(x1, y1, x2, y2):
+    # SetX1NDC, SetX2NDC etc don't update if the legend is not drawn first
+    # SetX1, SetX2 etc don't update if the legend has already been drawn
+    # Thanks ROOT!
+    legend.SetX1(x1); legend.SetY1(y1); legend.SetX2(x2); legend.SetY2(y2)
+    legend.SetX1NDC(x1); legend.SetY1NDC(y1); legend.SetX2NDC(x2); legend.SetY2NDC(y2)
 
 def CMS_label():
     cmsTextFont = 61; extraTextFont = 52
@@ -335,6 +332,7 @@ def getMaximum(histos):
 
 def save(imgdir, imgname):
     gPad.RedrawAxis()
+    #gPad.Modified(); gPad.Update()
     gPad.Print(imgdir+imgname+".pdf")
     gPad.Print(imgdir+imgname+".png")
 
