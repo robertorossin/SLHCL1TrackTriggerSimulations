@@ -1,7 +1,6 @@
 #include <memory>
 #include <vector>
 #include <map>
-#include "../interface/HelperMath.h"
 
 #ifdef __CINT__
 //#pragma link off all globals;
@@ -37,13 +36,5 @@
 #pragma link C++ operators std::map<unsigned, std::vector<unsigned> >::reverse_iterator;
 #pragma link C++ operators std::map<unsigned, std::vector<unsigned> >::const_reverse_iterator;
 //#pragma link C++ class std::pair<unsigned, std::vector<unsigned> >+;
-
-#pragma link C++ function quadsum(double, double);
-#pragma link C++ function quadsum(float, float);
-#pragma link C++ function deltaPhi(double, double);
-#pragma link C++ function deltaPhi(float, float);
-#pragma link C++ function deltaR(double, double, double, double);
-#pragma link C++ function deltaR(float, float, float, float);
-#pragma link C++ function etaFromTheta(float);
-#pragma link C++ function etaFromRhoZ(float, float);
 #endif
+

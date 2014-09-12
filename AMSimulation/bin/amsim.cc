@@ -6,6 +6,7 @@
 
 #include "boost/program_options.hpp"
 #include <cstdlib>
+#include <fstream>
 
 // To print default vectors
 namespace boost {
@@ -19,6 +20,12 @@ namespace boost {
 
 // _____________________________________________________________________________
 int main(int argc, char **argv) {
+
+    std::cout << "amsim arguments << ";
+    for(int i = 1; i < argc-1; ++i) {
+        std::cout << argv[i] << " ";
+    }
+    std::cout << argv[argc-1] << std::endl << std::endl;
 
     // Declare a group of options that will be allowed only on command line
     namespace po = boost::program_options;
@@ -48,11 +55,11 @@ int main(int argc, char **argv) {
     PatternBankOption bankOption;
     TrackFitterOption fitOption;
 
-    std::vector<unsigned> dv_subLadderVarSize = {8, 16, 32, 16, 16, 32};
-    std::vector<unsigned> dv_subModuleVarSize = {256, 256, 256, 256, 512, 512};
-    std::vector<unsigned> dv_subLadderECVarSize = {8, 8, 8, 16, 16, 16, 16, 32, 32, 16, 16, 16, 16, 32, 32};
-    std::vector<unsigned> dv_subModuleECVarSize = {256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 512, 512, 512, 512};
-    std::vector<unsigned> dv_triggerTowers = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47};
+    const std::vector<unsigned> dv_subLadderVarSize = {8, 16, 32, 16, 16, 32};
+    const std::vector<unsigned> dv_subModuleVarSize = {256, 256, 256, 256, 512, 512};
+    const std::vector<unsigned> dv_subLadderECVarSize = {8, 8, 8, 16, 16, 16, 16, 32, 32, 16, 16, 16, 16, 32, 32};
+    const std::vector<unsigned> dv_subModuleECVarSize = {256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 512, 512, 512, 512};
+    const std::vector<unsigned> dv_triggerTowers = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47};
 
     po::options_description config("Configuration");
     config.add_options()
@@ -224,6 +231,15 @@ int main(int argc, char **argv) {
     //    bankOption.nDCBits = 0;
     //}
 
+    // Check if all trigger towers are correct
+    for (unsigned i=0; i<bankOption.triggerTowers.size(); ++i) {
+        if (bankOption.triggerTowers.at(i) >= 48) {
+            std::cout << Warning() << "Found an invalid trigger tower: " << bankOption.triggerTowers.at(i) << ". Use the default trigger towers" << std::endl;
+            bankOption.triggerTowers = dv_triggerTowers;
+            break;
+        }
+    }
+
     // _________________________________________________________________________
     // Calling main functions
     if (vm.count("cleanStubs")) {
@@ -235,7 +251,7 @@ int main(int argc, char **argv) {
         cleaner.setNEvents(maxEvents);
         cleaner.setFilter(!nofilter);
         cleaner.setVerbosity(verbose);
-        int exitcode = cleaner.run(output, input);
+        int exitcode = cleaner.run(input, output);
         if (exitcode) {
             std::cerr << "An error occurred during stub cleaning. Exiting." << std::endl;
             return exitcode;
@@ -249,11 +265,14 @@ int main(int argc, char **argv) {
         std::cout << bankOption << std::endl;
         std::cout << Color("magenta") << "Start pattern bank generation..." << EndColor() << std::endl;
 
+        TString datadir = std::getenv("CMSSW_BASE");
+        datadir += "/src/SLHCL1TrackTriggerSimulations/AMSimulation/data/";
+
         PatternGenerator generator(bankOption);
         generator.setNEvents(maxEvents);
         generator.setMinFrequency(minFrequency);
         generator.setVerbosity(verbose);
-        int exitcode = generator.run(output, input, layout);
+        int exitcode = generator.run(input, datadir, output);
         if (exitcode) {
             std::cerr << "An error occurred during pattern bank generation. Exiting." << std::endl;
             return exitcode;
@@ -279,7 +298,7 @@ int main(int argc, char **argv) {
         matcher.setMaxRoads(maxRoads);
         matcher.setMaxHits(maxHits);
         matcher.setVerbosity(verbose);
-        int exitcode = matcher.run(output, input, bankfile);
+        int exitcode = matcher.run(input, bankfile, output);
         if (exitcode) {
             std::cerr << "An error occurred during pattern recognition. Exiting." << std::endl;
             return exitcode;
@@ -296,7 +315,7 @@ int main(int argc, char **argv) {
         fitter.setNEvents(maxEvents);
         fitter.setMaxTracks(maxTracks);
         fitter.setVerbosity(verbose);
-        int exitcode = fitter.run(output, input);
+        int exitcode = fitter.run(input, output);
         if (exitcode) {
             std::cerr << "An error occurred during track fitting. Exiting." << std::endl;
             return exitcode;
@@ -311,7 +330,7 @@ int main(int argc, char **argv) {
         writer.setNEvents(maxEvents);
         writer.setTrim(!notrim);
         writer.setVerbosity(verbose);
-        int exitcode = writer.run(output, input, roadfile, trackfile);
+        int exitcode = writer.run(input, roadfile, trackfile, output);
         if (exitcode) {
             std::cerr << "An error occurred during writing full ntuple. Exiting." << std::endl;
             return exitcode;

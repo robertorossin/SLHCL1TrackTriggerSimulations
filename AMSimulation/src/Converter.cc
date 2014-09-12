@@ -1,7 +1,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Converter.h"
 
 #include <bitset>
-#include <iostream>
+#include <fstream>
 
 static const unsigned MAX_NLAYERS = 8;
 
@@ -74,7 +74,7 @@ int Converter::bankToTxt(TString src, TString out, TString fmt) {
             unsigned ssId, moduleId, col, row;
             for (unsigned l=0; l<MAX_NLAYERS; ++l) {
                 ssId = superstripIds->at(l);
-                moduleId = (ssId >> 10) & 0x3FFF;
+                moduleId = (ssId >> 10) & 0x3FFF;  // FIXME: obsolete
                 col      = (ssId >>  7) & 0x7;
                 row      = (ssId >>  0) & 0x7F;
 

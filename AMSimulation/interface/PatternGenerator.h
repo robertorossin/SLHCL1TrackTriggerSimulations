@@ -8,11 +8,6 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripStitcher.h"
 using namespace slhcl1tt;
 
-#include "TFile.h"
-#include "TFileCollection.h"
-#include "TChain.h"
-#include "TString.h"
-
 #include "fas/lean_table3.h"
 
 
@@ -25,16 +20,14 @@ class PatternGenerator {
     // Constructor
     PatternGenerator(PatternBankOption option)
     : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits), nFakers_(po.nFakers),
-      bankName_("patternBank"),
       nEvents_(999999999), minFrequency_(1),
       verbose_(1),
-      allPatterns_fas_(0,0) {
+      allPatterns_fas_(0,0),
+      coverage_(0.), coverage_count_(0) {
 
         assert(3 <= nLayers_ && nLayers_ <= 8);
         assert(nDCBits_ <= 4);
         assert(nFakers_ <= 3);
-
-        chain_ = new TChain("ntupler/tree");
 
         // Decide on the size of superstrip
         if (po.useVariableSize)
@@ -48,8 +41,8 @@ class PatternGenerator {
 
     // Destructor
     ~PatternGenerator() {
-        delete arbiter_;
-        delete stitcher_;
+        if (arbiter_)   delete arbiter_;
+        if (stitcher_)  delete stitcher_;
     }
 
 
@@ -63,33 +56,23 @@ class PatternGenerator {
 
     // Functions
     int readTriggerTowerFile(TString src);
+    int readModuleCoordinateFile(TString src);
 
-    int readFile(TString src);
-
-    int makePatterns_map();
+    int makePatterns_map(TString src);
     int writePatterns_map(TString out);
 
-    int makePatterns_fas();
+    int makePatterns_fas(TString src);
     int writePatterns_fas(TString out);
 
     // Main driver
-    int run(TString out, TString src, TString layout);
+    int run(TString src, TString datadir, TString out);
 
   private:
-    // Private functions
-    // none
-
-
-  public:
     // Configurations
     const PatternBankOption po;
-
-  private:
-    // Configurations
     const unsigned nLayers_;
     const unsigned nDCBits_;  // UNUSED
     const unsigned nFakers_;
-    const TString bankName_;
 
     // Program options
     long long nEvents_;
@@ -100,8 +83,7 @@ class PatternGenerator {
     SuperstripArbiter  * arbiter_;
     SuperstripStitcher * stitcher_;
 
-    // Containers
-    TChain * chain_;
+    // Pattern bank data
     std::map<pattern_type, unsigned> allPatterns_map_;  // using std::map approach
     std::vector<std::pair<pattern_type, unsigned> > allPatterns_map_pairs_;
     fas::lean_table3 allPatterns_fas_;                  // using fas::lean_table3 approach
@@ -109,7 +91,9 @@ class PatternGenerator {
     // Maps
     std::map<unsigned, std::vector<unsigned> > triggerTowerMap_;        // key: towerId, value: moduleIds in the tower
     std::map<unsigned, std::vector<unsigned> > triggerTowerReverseMap_; // key: moduleId, value: towerIds containing the module
+    std::map<unsigned, ModuleCoordinate>       moduleCoordinateMap_;    // key: moduleId, value: rho, eta, phi of the module
 
+    // Bookkeepers
     float coverage_;
     float coverage_count_;
 };

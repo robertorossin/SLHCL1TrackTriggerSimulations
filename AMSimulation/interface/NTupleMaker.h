@@ -1,12 +1,10 @@
 #ifndef AMSimulation_NTupleMaker_h_
 #define AMSimulation_NTupleMaker_h_
 
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
-using namespace slhcl1tt;
-
+#include "TChain.h"
 #include "TFile.h"
 #include "TFileCollection.h"
-#include "TChain.h"
+#include "TROOT.h"
 #include "TString.h"
 
 
@@ -31,10 +29,6 @@ class NTupleMaker {
     NTupleMaker()
     : nEvents_(999999999), trim_(true),
       verbose_(1) {
-
-        chain_        = new TChain("ntupler/tree");
-        chain_roads_  = new TChain("ntupler/tree");
-        chain_tracks_ = new TChain("ntupler/tree");
 
         makeLeafMap();
     }
@@ -61,7 +55,7 @@ class NTupleMaker {
     int writeTree(TString out);
 
     // Main driver
-    int run(TString out, TString src, TString roadfile, TString trackfile);
+    int run(TString src, TString roadfile, TString trackfile, TString out);
 
   private:
     // Connect branch

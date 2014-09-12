@@ -1,4 +1,4 @@
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/Helper.h"
 
 #include "TStopwatch.h"
 #include "TString.h"

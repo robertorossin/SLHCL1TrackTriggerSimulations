@@ -34,19 +34,32 @@ class TTTrackWriter {
 // _____________________________________________________________________________
 // Read the input ntuples
 int TrackFitter::readFile(TString src) {
-    if (src.EndsWith(".root")) {
-        if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
-        if (chain_->Add(src) )  // 1 if successful, 0 otherwise
-            return 0;
-
-    } else if (src.EndsWith(".txt")) {
-        TFileCollection* fc = new TFileCollection("fileinfolist", "", src);
-        if (chain_->AddFileInfoList((TCollection*) fc->GetList()) )  // 1 if successful, 0 otherwise
-            return 0;
+    if (!src.EndsWith(".root") && !src.EndsWith(".txt")) {
+        std::cout << Error() << "Input source must be either .root or .txt" << std::endl;
+        return 1;
     }
 
-    std::cout << Error() << "Input source should be either a .root file or a .txt file." << std::endl;
-    return 1;
+    if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
+    chain_        = new TChain("ntupler/tree");
+
+    if (src.EndsWith(".root")) {
+        if (chain_->Add(src) ) {
+            if (verbose_)  std::cout << Info() << "Successfully read " << src << std::endl;
+        } else {
+            std::cout << Error() << "Failed to read " << src << std::endl;
+            return 1;
+        }
+
+    } else if (src.EndsWith(".txt")) {
+        TFileCollection fc("fileinfolist", "", src);
+        if (chain_->AddFileInfoList((TCollection*) fc.GetList()) ) {
+            if (verbose_)  std::cout << Info() << "Successfully read " << src << std::endl;
+        } else {
+            std::cout << Error() << "Failed to read " << src << std::endl;
+            return 1;
+        }
+    }
+    return 0;
 }
 
 
@@ -57,9 +70,8 @@ int TrackFitter::makeTracks(TString out) {
     // For reading
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events" << std::endl;
 
-    typedef unsigned short unsigned16;
-    std::vector<unsigned16> *               vr_nHitLayers        = 0;
-    std::vector<unsigned> *                 vr_bankIndex         = 0;
+    std::vector<count_type> *               vr_nHitLayers        = 0;
+    std::vector<id_type> *                  vr_bankIndex         = 0;
     std::vector<std::vector<float> > *      vr_hitXs             = 0;
     std::vector<std::vector<float> > *      vr_hitYs             = 0;
     std::vector<std::vector<float> > *      vr_hitZs             = 0;
@@ -68,7 +80,7 @@ int TrackFitter::makeTracks(TString out) {
     std::vector<std::vector<float> > *      vr_hitZErrors        = 0;
     std::vector<std::vector<int> > *        vr_hitCharges        = 0;
     std::vector<std::vector<float> > *      vr_hitPts            = 0;
-    std::vector<std::vector<unsigned> > *   vr_hitSuperstripIds  = 0;
+    std::vector<std::vector<id_type> > *    vr_hitSuperstripIds  = 0;
 
     //chain_->SetBranchStatus("*", 1);
 
@@ -93,17 +105,14 @@ int TrackFitter::makeTracks(TString out) {
     // Loop over all events
 
     int nPassed = 0, nKept = 0;
-    unsigned ievt_step = 0;
-    for (long long ievt=0; ievt<nEvents_; ++ievt, ++ievt_step) {
+
+    for (long long ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
 
         const unsigned nroads = vr_nHitLayers->size();
-        if (verbose_>1 && ievt_step == 5000) {
-            std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, fitting: %7i", ievt, nKept, nPassed) << std::endl;
-            ievt_step -= 5000;
-        }
+        if (verbose_>1 && ievt%5000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, fitting: %7i", ievt, nKept, nPassed) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # roads: " << nroads << std::endl;
 
 //FIXME        if (!nroads) {  // skip if no road
@@ -305,7 +314,7 @@ long long TTTrackWriter::write() {
 
 // _____________________________________________________________________________
 // Main driver
-int TrackFitter::run(TString out, TString src) {
+int TrackFitter::run(TString src, TString out) {
     gROOT->ProcessLine("#include <vector>");  // how is it not loaded?
 
     int exitcode = 0;
@@ -319,6 +328,5 @@ int TrackFitter::run(TString out, TString src) {
     if (exitcode)  return exitcode;
     Timing();
 
-    chain_->Reset();
     return exitcode;
 }
