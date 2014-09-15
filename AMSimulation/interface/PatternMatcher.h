@@ -8,7 +8,10 @@
 using namespace slhcl1tt;
 
 #include "fas/lean_lut3.h"
+#include "fas/lean_merger3.h"
 #include "fas/lean_counter3.h"
+
+#define USE_LEAN_COUNTER
 
 
 // SETTINGS: Majority logic

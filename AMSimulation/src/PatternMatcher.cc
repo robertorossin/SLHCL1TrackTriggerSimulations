@@ -35,7 +35,11 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
     inputPatterns_fas_.init(MAX_NLAYERS, npatterns, nsuperstrips);
     if (verbose_>2)  std::cout << Debug() << "Initialized inputPatterns_fas_" << std::endl;
 
+#ifdef USE_LEAN_COUNTER
     fas::lean_counter3 patternFinder(0,0);
+#else
+    fas::lean_merger3 patternFinder(0,0);
+#endif
     patternFinder.init(nLayers_, nLayers_ - po.nMisses, inputPatterns_fas_.num_keys());
 
     // _________________________________________________________________________
@@ -128,8 +132,8 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
     std::vector<TTHit> hits;                  // after serialized
 
     std::map<id_type, std::vector<TTHit> > superstripHitsMap;   // key: superstrip addr; values: vector of hits
-    std::vector<bool> superstripBooleans;                       // index: superstrip addr; true: found
-    superstripBooleans.resize(nsuperstrips);
+    //std::vector<bool> superstripBooleans;                       // index: superstrip addr; true: found
+    //superstripBooleans.resize(nsuperstrips);
 
     std::vector<TTRoad> roads;
     roads.reserve(300);
@@ -161,7 +165,7 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
         // _____________________________________________________________________
         // Start pattern recognition
         superstripHitsMap.clear();
-        std::fill(superstripBooleans.begin(), superstripBooleans.end(), false);
+        //std::fill(superstripBooleans.begin(), superstripBooleans.end(), false);
 
         // Loop over reconstructed stubs
         id_type moduleId, lay, lad, mod, col, row;  // declare the usual suspects
@@ -198,10 +202,15 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
             superstripHitsMap[ssId].emplace_back(TTHit{stub_x, stub_y, stub_z, 0., 0., 0., -1, stub_pt, ssId});  // POD type constructor
 
             // Make a tick
-            superstripBooleans.at(ssId) = true;
+            //superstripBooleans.at(ssId) = true;
 
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << std::endl;
         }
+
+        // Always trigger fake superstrip
+        superstripHitsMap[fakeSuperstrip] = std::vector<TTHit>();
+        //superstripBooleans.at(fakeSuperstrip) = true;
+
 
         // _____________________________________________________________________
         // Create roads
@@ -210,36 +219,37 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
         hitses.clear();
         hits.clear();
 
+#ifdef USE_LEAN_COUNTER
         // Perform reverse lookup
         for (std::map<id_type, std::vector<TTHit> >::const_iterator it = superstripHitsMap.begin();
              it != superstripHitsMap.end(); ++it) {
             patternFinder.insert(it->first, &inputPatterns_fas_);
         }
-        patternFinder.insert(fakeSuperstrip, &inputPatterns_fas_);  // always trigger fake superstrip
-        const fas::lean_counter3::return_type& ret = patternFinder.count();
+        const fas::lean_counter3::return_key_range& ret_keys = patternFinder.count();
 
         // Collect stubs
+        for (std::map<id_type, std::vector<TTHit> >::const_iterator it = superstripHitsMap.begin();
+             it != superstripHitsMap.end(); ++it) {
+            patternFinder.insert_again(it->first, &inputPatterns_fas_);
+        }
+        const fas::lean_counter3::return_value_range& ret_values = patternFinder.count_again();
+
+        fas::lean_counter3::value_type * itss = ret_values.begin;
         std::map<id_type, std::vector<TTHit> >::iterator found;
 
-        for (fas::lean_counter3::key_type * it = ret.begin; it != ret.end; ++it) {
+        for (fas::lean_counter3::key_type * it = ret_keys.begin; it != ret_keys.end; ++it) {
             hitses.clear();
             hits.clear();
 
-            pbreader.getPattern(*it);  // retrieve pattern
+            for (unsigned i=0; i<MAX_NLAYERS; ++i, ++itss) {
+                const id_type& ssId = *itss;
+                if (ssId == fas::bad_4byte)  continue;
 
-            for (unsigned i=0; i<MAX_NLAYERS; ++i) {
-                const id_type& ssId = pbreader.pb_superstripIds->at(i);
-
-                if (ssId != fakeSuperstrip) {
-                    found = superstripHitsMap.find(ssId);
-                    if (found != superstripHitsMap.end()) {
-                        hitses.push_back(found -> second);
-                        if ((int) hitses.back().size() > maxHits_)
-                            hitses.back().resize(maxHits_);
-                    }
-
-                } else {  // fake superstrip
-                    hitses.push_back(std::vector<TTHit>());
+                found = superstripHitsMap.find(ssId);
+                if (found != superstripHitsMap.end()) {
+                    hitses.push_back(found -> second);
+                    if ((int) hitses.back().size() > maxHits_)
+                        hitses.back().resize(maxHits_);
                 }
             }
 
@@ -254,6 +264,47 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
             if ((int) roads.size() >= maxRoads_)
                 break;
         }
+
+#else
+        // Perform reverse lookup
+        for (std::map<id_type, std::vector<TTHit> >::const_iterator it = superstripHitsMap.begin();
+             it != superstripHitsMap.end(); ++it) {
+            patternFinder.insert(it->first, &inputPatterns_fas_);
+        }
+        const fas::lean_merger3::return_type& ret_pairs = patternFinder.merge();
+
+        // Collect stubs
+        fas::lean_merger3::pair_type * it = ret_pairs.begin;
+        std::map<id_type, std::vector<TTHit> >::iterator found;
+
+        while (it != ret_pairs.end) {
+            hitses.clear();
+            hits.clear();
+
+            const unsigned ipatt = it->key;
+            for (; (it != ret_pairs.end) && (it->key == ipatt); ++it) {
+                const id_type& ssId = it->value;
+
+                found = superstripHitsMap.find(ssId);
+                if (found != superstripHitsMap.end()) {
+                    hitses.push_back(found -> second);
+                    if ((int) hitses.back().size() > maxHits_)
+                        hitses.back().resize(maxHits_);
+                }
+            }
+
+            // Serialize
+            for (unsigned i=0; i<hitses.size(); ++i) {
+                hits.insert(hits.end(), hitses.at(i).begin(), hitses.at(i).end());
+            }
+            roads.emplace_back(hitses.size(), ipatt, hits);
+
+            if (verbose_>2)  std::cout << Debug() << "... ... road: " << roads.size() - 1 << " " << roads.back() << std::endl;
+
+            if ((int) roads.size() >= maxRoads_)
+                break;
+        }
+#endif
 
         if (! roads.empty())
             ++nPassed;

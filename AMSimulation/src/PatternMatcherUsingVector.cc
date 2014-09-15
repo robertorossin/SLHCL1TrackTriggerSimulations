@@ -196,6 +196,11 @@ int PatternMatcher::makeRoads_vector(TString src, TString bank, TString out) {
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << std::endl;
         }
 
+        // Always trigger fake superstrip
+        superstripHitsMap[fakeSuperstrip] = std::vector<TTHit>();
+        superstripBooleans.at(fakeSuperstrip) = true;
+
+
         // _____________________________________________________________________
         // Create roads
         roads.clear();
@@ -212,10 +217,8 @@ int PatternMatcher::makeRoads_vector(TString src, TString bank, TString out) {
             for (pattern_type::const_iterator itss = itpatt->begin(); itss != itpatt->begin() + nLayers_; ++itss) {
                 const id_type& ssId = *itss;
 
-                if (ssId != fakeSuperstrip) {
-                    if (!superstripBooleans.at(ssId))
-                        ++nMisses;
-                }
+                if (!superstripBooleans.at(ssId))
+                    ++nMisses;
 
                 // if number of allowed misses more than the requirement
                 if (nMisses > po.nMisses)
@@ -237,16 +240,11 @@ int PatternMatcher::makeRoads_vector(TString src, TString bank, TString out) {
             for (pattern_type::const_iterator itss = itpatt->begin(); itss != itpatt->begin() + nLayers_; ++itss) {
                 const id_type& ssId = *itss;
 
-                if (ssId != fakeSuperstrip) {
-                    found = superstripHitsMap.find(ssId);
-                    if (found != superstripHitsMap.end()) {
-                        hitses.push_back(found -> second);
-                        if ((int) hitses.back().size() > maxHits_)
-                            hitses.back().resize(maxHits_);
-                    }
-
-                } else {  // fake superstrip
-                    hitses.push_back(std::vector<TTHit>());
+                found = superstripHitsMap.find(ssId);
+                if (found != superstripHitsMap.end()) {
+                    hitses.push_back(found -> second);
+                    if ((int) hitses.back().size() > maxHits_)
+                        hitses.back().resize(maxHits_);
                 }
             }
 
