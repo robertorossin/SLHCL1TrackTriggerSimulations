@@ -131,3 +131,19 @@ def cust_useTrackerOnly(process, intime=True, ntuple=True):
         process.schedule.append(process.p)
 
     return (process)
+
+
+# Use zeroMaterial tracker
+def cust_useZeroMaterialTrackerOnly(process):
+    # Modify geometry
+    geoms_orig = process.XMLIdealGeometryESSource.geomXMLFiles
+    geoms_modified = []
+    zeroMaterial = "Geometry/TrackerCommonData/data/zeroMaterial/"
+    for geom in geoms_orig:
+        for xml in ["pixbarmaterial.xml", "pixfwdMaterials.xml", "trackermaterial.xml"]:
+            if geom.endswith(xml):
+                geom = zeroMaterial + xml
+        geoms_modified.append(geom)
+    process.XMLIdealGeometryESSource.geomXMLFiles = geoms_modified
+
+    return (process)
