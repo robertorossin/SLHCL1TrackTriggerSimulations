@@ -8,9 +8,10 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgo.h"
 using namespace slhcl1tt;
 
+#include "TChain.h"
 #include "TFile.h"
 #include "TFileCollection.h"
-#include "TChain.h"
+#include "TROOT.h"
 #include "TString.h"
 
 
@@ -30,8 +31,6 @@ class TrackFitter {
       verbose_(1) {
 
         assert(3 <= nLayers_ && nLayers_ <= 8);
-
-        chain_ = new TChain("ntupler/tree");
     }
 
     // Destructor
@@ -52,7 +51,7 @@ class TrackFitter {
     int makeTracks(TString out);
 
     // Main driver
-    int run(TString out, TString src);
+    int run(TString src, TString out);
 
 
   public:

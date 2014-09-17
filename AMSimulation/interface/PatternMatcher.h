@@ -7,33 +7,29 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
 using namespace slhcl1tt;
 
-#include "TFile.h"
-#include "TFileCollection.h"
-#include "TChain.h"
-#include "TString.h"
-
 #include "fas/lean_lut3.h"
+#include "fas/lean_merger3.h"
+#include "fas/lean_counter3.h"
+
+#define USE_LEAN_COUNTER
 
 
 // SETTINGS: Majority logic
 // INPUT   : TTree with moduleId, hitId, sim info + pattern bank
 // OUTPUT  : Roads
 
-
 class PatternMatcher {
   public:
     // Constructor
     PatternMatcher(PatternBankOption option)
     : po(option), nLayers_(po.nLayers), nDCBits_(po.nDCBits),
-      bankName_("patternBank"), prefixRoad_("AMTTRoads_"), suffix_(""),
+      prefixRoad_("AMTTRoads_"), suffix_(""),
       nEvents_(999999999), minFrequency_(1), maxPatterns_(999999999), maxRoads_(999999999), maxHits_(999999999),
       verbose_(1),
       inputPatterns_fas_(0,0) {
 
         assert(3 <= nLayers_ && nLayers_ <= 8);
         assert(nDCBits_ <= 4);
-
-        chain_ = new TChain("ntupler/tree");
 
         // Decide on the size of superstrip
         if (po.useVariableSize)
@@ -44,7 +40,7 @@ class PatternMatcher {
 
     // Destructor
     ~PatternMatcher() {
-        delete arbiter_;
+        if (arbiter_)  delete arbiter_;
     }
 
 
@@ -60,31 +56,17 @@ class PatternMatcher {
     // none
 
     // Functions
-    int readFile(TString src);
-
-    int readPatterns_vector(TString src);
-    int makeRoads_vector(TString out);
-
-    int readPatterns_fas(TString src);
-    int makeRoads_fas(TString out);
+    int makeRoads_vector(TString src, TString bank, TString out);
+    int makeRoads_fas(TString src, TString bank, TString out);
 
     // Main driver
-    int run(TString out, TString src, TString bank);
+    int run(TString src, TString bank, TString out);
 
   private:
-    // Private functions
-    // none
-
-
-  public:
     // Configurations
     const PatternBankOption po;
-
-  private:
-    // Configurations
     const unsigned nLayers_;
     const unsigned nDCBits_;  // UNUSED
-    const TString bankName_;
     const TString prefixRoad_;
     const TString suffix_;
 
@@ -99,15 +81,13 @@ class PatternMatcher {
     // Operators
     SuperstripArbiter * arbiter_;
 
-    // Containers
-    TChain * chain_;
+    // Pattern bank data
+    std::vector<pattern_type> inputPatterns_vector_;  // using std::vector approach
+    fas::lean_lut3 inputPatterns_fas_;                // using fas::lean_lut3 approach
 
     // Maps
     std::map<unsigned, std::vector<unsigned> > triggerTowerMap_;        // key: towerId, value: moduleIds in the tower
     std::map<unsigned, std::vector<unsigned> > triggerTowerReverseMap_; // key: moduleId, value: towerIds containing the module
-
-    std::vector<pattern_type> inputPatterns_vector_;  // using std::vector approach
-    fas::lean_lut3 inputPatterns_fas_;                // using fas::lean_lut3 approach
 };
 
 #endif

@@ -103,6 +103,23 @@ inline id_type encodeModuleId(id_type lay, id_type lad, id_type mod) {
     return (10000*lay + 100*lad + mod);
 }
 
+/// Simple structs
+struct GenParticle {
+    float pt;
+    float eta;
+    float phi;
+    float vx;
+    float vy;
+    float vz;
+    int charge;
+};
+
+struct ModuleCoordinate {
+    float rho;
+    float eta;
+    float phi;
+};
+
 #endif  // if not defined __GCCXML__
 
 }  // namespace slhcl1tt

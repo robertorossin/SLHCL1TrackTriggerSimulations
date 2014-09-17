@@ -1,48 +1,78 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/NTupleMaker.h"
 
+#include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/Helper.h"
+using namespace slhcl1tt;
+
 
 // _____________________________________________________________________________
 int NTupleMaker::readRoads(TString src) {
-    if (src.EndsWith(".root")) {
-        if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
-        if (chain_roads_->Add(src) )  // 1 if successful, 0 otherwise
-            return 0;
+    if (!src.EndsWith(".root")) {
+        std::cout << Error() << "Roads source must be .root" << std::endl;
+        return 1;
     }
 
-    std::cout << Error() << "Roads source should be a .root file." << std::endl;
-    return 1;
+    if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
+    chain_roads_  = new TChain("ntupler/tree");
+
+    if (chain_roads_->Add(src) ) {
+        if (verbose_)  std::cout << Info() << "Successfully read " << src << std::endl;
+    } else {
+        std::cout << Error() << "Failed to read " << src << std::endl;
+        return 1;
+    }
+    return 0;
 }
 
 
 // _____________________________________________________________________________
 int NTupleMaker::readTracks(TString src) {
-    if (src.EndsWith(".root")) {
-        if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
-        if (chain_tracks_->Add(src) )  // 1 if successful, 0 otherwise
-            return 0;
+    if (!src.EndsWith(".root")) {
+        std::cout << Error() << "Tracks source must be .root" << std::endl;
+        return 1;
     }
 
-    std::cout << Error() << "Tracks source should be a .root file." << std::endl;
-    return 1;
+    if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
+    chain_tracks_ = new TChain("ntupler/tree");
+
+    if (chain_tracks_->Add(src) ) {
+        if (verbose_)  std::cout << Info() << "Successfully read " << src << std::endl;
+    } else {
+        std::cout << Error() << "Failed to read " << src << std::endl;
+        return 1;
+    }
+    return 0;
 }
 
 
 // _____________________________________________________________________________
 // Read the input ntuples
 int NTupleMaker::readFile(TString src) {
-    if (src.EndsWith(".root")) {
-        if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
-        if (chain_->Add(src) )  // 1 if successful, 0 otherwise
-            return 0;
-
-    } else if (src.EndsWith(".txt")) {
-        TFileCollection* fc = new TFileCollection("fileinfolist", "", src);
-        if (chain_->AddFileInfoList((TCollection*) fc->GetList()) )  // 1 if successful, 0 otherwise
-            return 0;
+    if (!src.EndsWith(".root") && !src.EndsWith(".txt")) {
+        std::cout << Error() << "Input source must be either .root or .txt" << std::endl;
+        return 1;
     }
 
-    std::cout << Error() << "Input source should be either a .root file or a .txt file." << std::endl;
-    return 1;
+    if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
+    chain_        = new TChain("ntupler/tree");
+
+    if (src.EndsWith(".root")) {
+        if (chain_->Add(src) ) {
+            if (verbose_)  std::cout << Info() << "Successfully read " << src << std::endl;
+        } else {
+            std::cout << Error() << "Failed to read " << src << std::endl;
+            return 1;
+        }
+
+    } else if (src.EndsWith(".txt")) {
+        TFileCollection fc("fileinfolist", "", src);
+        if (chain_->AddFileInfoList((TCollection*) fc.GetList()) ) {
+            if (verbose_)  std::cout << Info() << "Successfully read " << src << std::endl;
+        } else {
+            std::cout << Error() << "Failed to read " << src << std::endl;
+            return 1;
+        }
+    }
+    return 0;
 }
 
 
@@ -92,8 +122,7 @@ int NTupleMaker::writeTree(TString out) {
     // _________________________________________________________________________
     // Loop over all events
 
-    unsigned ievt_step = 0;
-    for (long long ievt=0; ievt<nEvents_; ++ievt, ++ievt_step) {
+    for (long long ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
         chain_->GetEntry(ievt);
@@ -104,10 +133,7 @@ int NTupleMaker::writeTree(TString out) {
         //assert(chain_tracks_->LoadTree(ievt) >= 0);
         //chain_tracks_->GetEntry(ievt);
 
-        if (verbose_>1 && ievt_step == 50000) {
-            std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
-            ievt_step -= 50000;
-        }
+        if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
 
         ttree->Fill();
     }
@@ -227,7 +253,7 @@ void NTupleMaker::makeConnector(const TBranch* branch, TTree* tree) {
 
 // _____________________________________________________________________________
 // Main driver
-int NTupleMaker::run(TString out, TString src, TString roadfile, TString trackfile) {
+int NTupleMaker::run(TString src, TString roadfile, TString trackfile, TString out) {
     gROOT->ProcessLine("#include <vector>");  // how is it not loaded?
 
     int exitcode = 0;
@@ -249,8 +275,5 @@ int NTupleMaker::run(TString out, TString src, TString roadfile, TString trackfi
     if (exitcode)  return exitcode;
     Timing();
 
-    chain_->Reset();
-    chain_roads_->Reset();
-    chain_tracks_->Reset();
     return exitcode;
 }

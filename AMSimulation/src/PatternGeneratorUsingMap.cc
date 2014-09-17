@@ -10,56 +10,16 @@ static const unsigned MAX_NTOWERS = 6 * 8;
 static const unsigned MAX_NMODULES = 15428;
 static const unsigned MAX_FREQUENCY = 0xffff;  // 65535
 
-
-// _____________________________________________________________________________
-// Parse the trigger tower csv file
-int PatternGenerator::readTriggerTowerFile(TString src) {
-    CSVFileReader csvreader(verbose_);
-    if (csvreader.getTriggerTowerMap(src, triggerTowerMap_)) {
-        std::cout << Error() << "Failed to parse the trigger tower csv file." << std::endl;
-        return 1;
-    }
-
-    assert(triggerTowerMap_.size() == MAX_NTOWERS);
-
-    //for (auto it: triggerTowerMap_)
-    //    std::cout << "Tower " << it.first << " has " << it.second.size() << " modules." << std::endl;
-
-    // Reverse trigger tower map
-    triggerTowerReverseMap_.clear();
-    for (auto it: po.triggerTowers) { // loop over input trigger towers
-        const std::vector<unsigned>& moduleIds = triggerTowerMap_[it];
-        for (auto it2: moduleIds) {   // loop over the moduleIds in the tower
-            triggerTowerReverseMap_[it2].push_back(it);
-        }
-    }
-
-    //for (auto it: triggerTowerReverseMap_)
-    //    std::cout << "Module " << it.first << " is in " << it.second.size() << " towers." << std::endl;
-    return 0;
+namespace {
+bool sortByFrequency(const std::pair<pattern_type, unsigned>& lhs, const std::pair<pattern_type, unsigned>& rhs) {
+    return lhs.second > rhs.second;
 }
-
-
-// _____________________________________________________________________________
-// Parse the module coordinate csv file
-int PatternGenerator::readModuleCoordinateFile(TString src) {
-    CSVFileReader csvreader(verbose_);
-    if (csvreader.getModuleCoordinateMap(src, moduleCoordinateMap_)) {
-        std::cout << Error() << "Failed to parse the module coordinate csv file." << std::endl;
-        return 1;
-    }
-
-    assert(moduleCoordinateMap_.size() == MAX_NMODULES);
-
-    //for (auto it: moduleCoordinateMap_)
-    //    std::cout << "Module " << it.first << " coordinate: " << it.second.rho << "," << it.second.eta << "," << it.second.phi << std::endl;
-    return 0;
 }
 
 
 // _____________________________________________________________________________
 // Make the patterns
-int PatternGenerator::makePatterns_fas(TString src) {
+int PatternGenerator::makePatterns_map(TString src) {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events and generating patterns." << std::endl;
 
     // _________________________________________________________________________
@@ -98,8 +58,7 @@ int PatternGenerator::makePatterns_fas(TString src) {
     const id_type& fakeSuperstrip = arbiter_ -> superstrip(27, 0, 0, 0, 0);
 
     // Allocate memory
-    allPatterns_fas_.init(0);  // automatic memory allocation
-    if (verbose_>2)  std::cout << Debug() << "Initialized allPatterns_fas_." << std::endl;
+    allPatterns_map_.clear();  // std::map does not have reserve()
 
 
     // _________________________________________________________________________
@@ -123,7 +82,7 @@ int PatternGenerator::makePatterns_fas(TString src) {
         const unsigned nstubs = reader.vb_modId->size();
         if (verbose_>1 && ievt%100000==0) {
             // Coverage info
-            bankSize_f = allPatterns_fas_.size();
+            bankSize_f = allPatterns_map_.size();
             nKept_f = nKept;
             coverage_ = 1. - (bankSize_f - bankOldSize_f) / (nKept_f - nKeptOld_f);
             std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, # patterns: %7.0f, coverage: %7.5f", ievt, nKept, bankSize_f, coverage_) << std::endl;
@@ -253,15 +212,14 @@ int PatternGenerator::makePatterns_fas(TString src) {
         // _____________________________________________________________________
         // Insert pattern
         if (keep) {
-            allPatterns_fas_.insert(patt.data(), patt.data() + patt.size());
-            //allPatterns_fas_.insert_nosort(patt.data(), patt.data() + patt.size());
+            ++allPatterns_map_[patt];
             ++nKept;
 
             if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " patt: " << patt << std::endl;
         }
         ++nRead;
     }
-    if (verbose_)  std::cout << Info() << Form("Read: %7i, kept: %7i, # patterns: %7u, coverage: %7.5f", nRead, nKept, allPatterns_fas_.size(), coverage_) << std::endl;
+    if (verbose_)  std::cout << Info() << Form("Read: %7i, kept: %7i, # patterns: %7lu, coverage: %7.5f", nRead, nKept, allPatterns_map_.size(), coverage_) << std::endl;
 
     // Keep this number to calculate sorted coverage
     coverage_count_ = nKept;
@@ -269,20 +227,36 @@ int PatternGenerator::makePatterns_fas(TString src) {
     // _________________________________________________________________________
     // Sort by frequency
 
-    allPatterns_fas_.sort();
-    //assert(allPatterns_fas_.at(0).count <= MAX_FREQUENCY);
+    // Convert map to vector of pairs
+    const unsigned origSize = allPatterns_map_.size();
+    //allPatterns_map_pairs_.reserve(allPatterns_map_.size());  // can cause bad_alloc
+    //allPatterns_map_pairs_.insert(allPatterns_map_pairs_.end(), allPatterns_map_.begin(), allPatterns_map_.end());
+
+    for (std::map<pattern_type, unsigned>::const_iterator it = allPatterns_map_.begin();
+         it != allPatterns_map_.end(); ) {  // should not cause bad_alloc
+        allPatterns_map_pairs_.push_back(*it);
+        it = allPatterns_map_.erase(it);
+    }
+    assert(allPatterns_map_pairs_.size() == origSize);
+
+    // Clear the map and release memory
+    std::map<pattern_type, unsigned> mapEmpty;
+    allPatterns_map_.clear();
+    allPatterns_map_.swap(mapEmpty);
+
+    // Sort by frequency
+    std::stable_sort(allPatterns_map_pairs_.begin(), allPatterns_map_pairs_.end(), sortByFrequency);
+    assert(allPatterns_map_pairs_.front().second <= MAX_FREQUENCY);
 
     if (verbose_>2) {
-        for (unsigned i=0; i<allPatterns_fas_.size(); ++i) {
-            const fas::lean_table3::return_type& ret = allPatterns_fas_.at(i);
-            std::cout << Debug() << "... patt: " << i << "  ";
-            std::copy(ret.begin, ret.end, std::ostream_iterator<id_type>(std::cout, " "));
-            std::cout << " freq: " << ret.count << std::endl;
+        for (unsigned i=0; i<allPatterns_map_pairs_.size(); ++i) {
+            const auto& pair = allPatterns_map_pairs_.at(i);
+            std::cout << Debug() << "... patt: " << i << "  " << pair.first << " freq: " << pair.second << std::endl;
         }
     }
 
-    unsigned highest_freq = allPatterns_fas_.size() ? allPatterns_fas_.at(0).count : 0;
-    if (verbose_)  std::cout << Info() << "Generated " << allPatterns_fas_.size() << " patterns, highest freq: " << highest_freq << std::endl;
+    unsigned highest_freq = allPatterns_map_pairs_.size() ? allPatterns_map_pairs_.front().second : 0;
+    if (verbose_)  std::cout << Info() << "Generated " << allPatterns_map_pairs_.size() << " patterns, highest freq: " << highest_freq << std::endl;
 
     return 0;
 }
@@ -290,7 +264,7 @@ int PatternGenerator::makePatterns_fas(TString src) {
 
 // _____________________________________________________________________________
 // Output patterns into a TTree
-int PatternGenerator::writePatterns_fas(TString out) {
+int PatternGenerator::writePatterns_map(TString out) {
 
     // _________________________________________________________________________
     // For writing
@@ -308,7 +282,7 @@ int PatternGenerator::writePatterns_fas(TString out) {
 
     // _________________________________________________________________________
     // Save pattern bank
-    const long long nentries = allPatterns_fas_.size();
+    const long long nentries = allPatterns_map_pairs_.size();
 
     float integralFreq_f = 0;
     unsigned integralFreq = 0;
@@ -321,8 +295,7 @@ int PatternGenerator::writePatterns_fas(TString out) {
             std::cout << Debug() << Form("... Writing event: %7lld, sorted coverage: %7.5f", ievt, coverage) << std::endl;
         }
 
-        const fas::lean_table3::return_type& ret = allPatterns_fas_.at(ievt);
-        freq = ret.count;
+        freq = allPatterns_map_pairs_.at(ievt).second;
 
         // Make sure patterns are indeed sorted by frequency
         assert(oldFreq >= freq);
@@ -334,7 +307,8 @@ int PatternGenerator::writePatterns_fas(TString out) {
 
         *(writer.pb_frequency) = freq;
         writer.pb_superstripIds->clear();
-        for (id_type * it = ret.begin; it != ret.end; ++it) {
+        const pattern_type& patt = allPatterns_map_pairs_.at(ievt).first;
+        for (pattern_type::const_iterator it = patt.begin(); it != patt.end(); ++it) {
             writer.pb_superstripIds->push_back(*it);
         }
         writer.fillPatternBank();
@@ -344,49 +318,4 @@ int PatternGenerator::writePatterns_fas(TString out) {
     assert(nentries == nentries2);
 
     return 0;
-}
-
-
-// _____________________________________________________________________________
-// Private functions
-// none
-
-
-// _____________________________________________________________________________
-// Main driver
-int PatternGenerator::run(TString src, TString datadir, TString out) {
-    int exitcode = 0;
-    Timing(1);
-
-    exitcode = readTriggerTowerFile(datadir + "trigger_sector_map.csv");
-    if (exitcode)  return exitcode;
-    Timing();
-
-    //exitcode = readModuleCoordinateFile(datadir + "module_coordinates.csv");
-    //if (exitcode)  return exitcode;
-    //Timing();
-
-    bool use_fas = true;
-    if (use_fas) {
-        exitcode = makePatterns_fas(src);
-        if (exitcode)  return exitcode;
-        Timing();
-
-        exitcode = writePatterns_fas(out);
-        if (exitcode)  return exitcode;
-        Timing();
-
-    } else {
-        if (verbose_)  std::cout << Info() << "Switched off fas" << std::endl;
-
-        exitcode = makePatterns_map(src);
-        if (exitcode)  return exitcode;
-        Timing();
-
-        exitcode = writePatterns_map(out);
-        if (exitcode)  return exitcode;
-        Timing();
-    }
-
-    return exitcode;
 }

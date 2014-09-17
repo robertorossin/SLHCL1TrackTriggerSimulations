@@ -7,13 +7,6 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
 using namespace slhcl1tt;
 
-#include "TFile.h"
-#include "TFileCollection.h"
-#include "TChain.h"
-#include "TTreePlayer.h"
-#include "TTreeFormula.h"
-#include "TString.h"
-
 
 // SETTINGS: none
 // INPUT   : TTree with moduleId, hitId, sim info
@@ -26,8 +19,6 @@ class StubCleaner {
     : po(option),
       nEvents_(999999999), filter_(true),
       verbose_(1) {
-
-        chain_ = new TChain("ntupler/tree");
 
         eventSelect_ = "(1)";  // always on
     }
@@ -45,19 +36,16 @@ class StubCleaner {
     // none
 
     // Functions
-    int readFile(TString src);
-
-    int cleanStubs(TString out);
+    int cleanStubs(TString src, TString out);
 
     // Main driver
-    int run(TString out, TString src);
+    int run(TString src, TString out);
 
 
-  public:
+  private:
     // Configurations
     const PatternBankOption po;
 
-  private:
     // Program options
     long long nEvents_;
     bool filter_;  // throw away events with stubs?
@@ -65,9 +53,6 @@ class StubCleaner {
 
     // Event selection
     TString eventSelect_;
-
-    // Containers
-    TChain * chain_;
 };
 
 #endif
