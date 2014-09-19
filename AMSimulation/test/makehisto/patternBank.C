@@ -5,10 +5,15 @@
 #include "TH1D.h"
 
 void patternBank() {
-    //TString infilename = "patternBank_200x1_ttt27_198M.2GeV.root";
-    //TString infilename = "patternBank_400x1_ttt27_198M.2GeV.root";
-    TString infilename = "patternBank_200x1_ttt27_198M.10GeV.root";
-    //TString infilename = "patternBank_400x1_ttt27_198M.10GeV.root";
+    //TString infilename = "patternBank_200x1_ttt27_198M.2GeV.root";   double finalCoverage = 0.99923;
+    //TString infilename = "patternBank_400x1_ttt27_198M.2GeV.root";   double finalCoverage = 0.99108;
+    //TString infilename = "patternBank_200x1_ttt27_198M.10GeV.root";  double finalCoverage = 0.99944;
+    //TString infilename = "patternBank_400x1_ttt27_198M.10GeV.root";  double finalCoverage = 0.99841;
+
+    //TString infilename = "patternBank_200x1_ttt27zm_38M.2GeV.root";  double finalCoverage = 0.99715;
+    //TString infilename = "patternBank_400x1_ttt27zm_38M.2GeV.root";  double finalCoverage = 0.96221;
+    //TString infilename = "patternBank_200x1_ttt27zm_38M.10GeV.root"; double finalCoverage = 0.99954;
+    TString infilename = "patternBank_400x1_ttt27zm_38M.10GeV.root"; double finalCoverage = 0.99377;
 
     TString outfilename = infilename; outfilename.ReplaceAll("patternBank_", "histos_");
     TFile *infile = TFile::Open(infilename);
@@ -37,7 +42,7 @@ void patternBank() {
         if (ievt % 1000 == 0) {
             coverage = sum2;
             coverage /= sum;
-            h_coverage->SetBinContent(ievt/1000 + 1, coverage);
+            h_coverage->SetBinContent(ievt/1000 + 1, coverage * finalCoverage);
         }
 
         b_frequency->GetEntry(ievt);
