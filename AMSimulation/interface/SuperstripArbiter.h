@@ -42,7 +42,7 @@ class SuperstripArbiter {
     unsigned module(unsigned lay, unsigned lad, unsigned mod) const;
 
     unsigned superstrip_luciano(unsigned lay, float z, float phi,
-                                const float unit_z=640., const float unit_phi=M_PI/1600.) const;
+                                const float unit_z=640., const float unit_phi=M_PI/1600.) const;  // default: 400x1
 
     // Debug
     void print();
