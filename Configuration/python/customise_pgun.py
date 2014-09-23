@@ -140,7 +140,7 @@ def cust_useZeroMaterialTrackerOnly(process):
     geoms_modified = []
     zeroMaterial = "Geometry/TrackerCommonData/data/zeroMaterial/"
     for geom in geoms_orig:
-        for xml in ["pixbarmaterial.xml", "pixfwdMaterials.xml", "trackermaterial.xml"]:
+        for xml in ["tracker.xml"]:
             if geom.endswith(xml):
                 geom = zeroMaterial + xml
         geoms_modified.append(geom)

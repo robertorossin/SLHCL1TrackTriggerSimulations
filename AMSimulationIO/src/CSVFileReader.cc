@@ -20,7 +20,7 @@ int CSVFileReader::getTriggerTowerMap(TString src,
         return 1;
     }
 
-    if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
+    //if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
     std::vector<unsigned> values;
 
     unsigned i = 0;
@@ -63,7 +63,7 @@ int CSVFileReader::getModuleCoordinateMap(TString src,
         return 1;
     }
 
-    if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
+    //if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
     std::vector<unsigned> values;
     std::vector<float> values_f;
 

@@ -10,11 +10,11 @@ import os
 samples = {}
 samples["nu140"     ] = False
 samples["tt27"      ] = False
-samples["tt27_nu140"] = True
+samples["tt27_nu140"] = False
 
 sections = {}
-sections["coverage"     ] = False
-sections["roads"        ] = True
+sections["coverage"     ] = True
+sections["roads"        ] = False
 
 drawerInit = DrawerInit()
 gStyle.SetNumberContours(100)
@@ -25,12 +25,7 @@ EOS = "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_results/"
 RES = "SingleMuPlusMinus_sp16_%s"
 
 settings = [
-    ("ss1024_20140821"    ,   8246923),
-    ("ss512_20140821"     ,  17990289),
-    ("ss256_20140821"     ,  39435020),
-    ("ss128_20140821"     ,  76364339),
-    ("ss64_20140821"      , 125888937),
-    ("ss32_20140821"      , 178122282),
+    ("ss256_20140922"     ,  86366532),
 ]
 
 settings_barrel = [

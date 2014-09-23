@@ -10,7 +10,7 @@ class DrawerInit:
         # ROOT
         gROOT.LoadMacro("tdrstyle.C")
         gROOT.LoadMacro("../interface/HelperMath.h")
-        gROOT.LoadMacro("../src/AMSimulationLinkDef.h")
+        gROOT.LoadMacro("../../AMSimulationIO/src/AMSimulationIOLinkDef.h")
         gROOT.ProcessLine("setTDRStyle()")
 
         gStyle.SetEndErrorSize(2)
