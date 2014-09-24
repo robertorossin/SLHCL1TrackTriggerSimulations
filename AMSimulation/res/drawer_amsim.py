@@ -23,9 +23,12 @@ gStyle.SetPalette(55)  # rainbow color map
 
 EOS = "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_results/"
 RES = "SingleMuPlusMinus_sp16_%s"
+RES = "SingleElePlusMinus_sp16_%s"
+RES = "SingleKaonPlusMinus_sp16_%s"
+#RES = "SinglePionPlusMinus_sp16_%s"
 
 settings = [
-    ("ss256_20140922"     ,  86366532),
+    ("ss256_20140926"     ,  87631104),
 ]
 
 settings_barrel = [
@@ -251,6 +254,11 @@ if sections["coverage"]:
                 tboxes = [
                     TBox( xmin, 0,   2.0, ymax),
                     TBox(min(xmax,200.0), 0,  xmax, ymax),
+                ]
+            elif hvar == "eta":
+                tboxes = [
+                    TBox( xmin, 0,  -2.2, ymax),
+                    TBox(  2.2, 0,  xmax, ymax),
                 ]
             if samples["tt27"]:
                 if hvar == "eta":

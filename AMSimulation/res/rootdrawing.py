@@ -1,4 +1,4 @@
-from ROOT import TH1, TH1F, TH2F, TProfile, TProfile2D, TFile, TChain, TCanvas, TLegend, TLatex, TLine, TBox, TGraphAsymmErrors, gROOT, gInterpreter, gStyle, gSystem, gPad
+from ROOT import TH1, TH1F, TH2F, TProfile, TProfile2D, TFile, TChain, TCanvas, TLegend, TLatex, TLine, TBox, TGraph, TGraphAsymmErrors, gROOT, gInterpreter, gStyle, gSystem, gPad
 from rootcolors import *
 from math import sqrt
 from random import randint
@@ -309,12 +309,12 @@ def CMS_label():
     lumiTextSize = 0.6; lumiTextOffset = 0.2; extraOverCmsTextSize = 0.76
     cmsTextSize = 0.75; cmsTextOffset = 0.1; extraTextSize = extraOverCmsTextSize * cmsTextSize
     relPosX = 0.045; relPosY = 0.035; relExtraDY = 1.2
-    lumiText = "";  cmsText = "CMS";  extraText = "Very Preliminary"
+    lumiText = "";  cmsText = "CMS";  extraText = "Preliminary Phase II Simulation"
 
     old = (latex.GetTextFont(), latex.GetTextSize())
     l, r, t, b = gPad.GetLeftMargin(), gPad.GetRightMargin(), gPad.GetTopMargin(), gPad.GetBottomMargin()
     posX_ = l + relPosX*(1-l-r); posY_ = 1-t+lumiTextOffset*t
-    relPosX = 0.103; posX_ = 0.8 - relPosX*(1-l-r);  # right aligned
+    relPosX = 0.105; posX_ = 0.62 - relPosX*(1-l-r);  # right aligned
     latex.SetTextFont(42); latex.SetTextSize(lumiTextSize*t)
     latex.DrawLatex(1-r,1-t+lumiTextOffset*t, lumiText)
     latex.SetTextFont(cmsTextFont); latex.SetTextSize(cmsTextSize*t)
