@@ -1,7 +1,48 @@
 diff --git a/SLHCUpgradeSimulations/Configuration/python/combinedCustoms_TTI.py b/SLHCUpgradeSimulations/Configuration/python/combinedCustoms_TTI.py
-index b02134d..68cbab7 100644
+index b02134d..eee196a 100644
 --- a/SLHCUpgradeSimulations/Configuration/python/combinedCustoms_TTI.py
 +++ b/SLHCUpgradeSimulations/Configuration/python/combinedCustoms_TTI.py
+@@ -7,23 +7,23 @@ def customise(process):
+ 
+ def customise_Digi_TTI(process):
+ 
+-    # keep bx=0 only for TrackingParticles  (still includes all the in-time PU)
+-    process.mix.digitizers.mergedtruth.maximumPreviousBunchCrossing = cms.uint32(0)
+-    process.mix.digitizers.mergedtruth.maximumSubsequentBunchCrossing = cms.uint32(0)
+-
+-    # remove all PU from TrackingParticles
+-    process.mix.digitizers.mergedtruth.select = cms.PSet(
+-        lipTP = cms.double(1000),
+-        chargedOnlyTP = cms.bool(False),
+-        pdgIdTP = cms.vint32(),
+-        signalOnlyTP = cms.bool(True),
+-        minRapidityTP = cms.double(-5.0),
+-        minHitTP = cms.int32(0),
+-        ptMinTP = cms.double(0.),
+-        maxRapidityTP = cms.double(5.0),
+-        tipTP = cms.double(1000),
+-        stableOnlyTP = cms.bool( False )
+-     )
++    ## keep bx=0 only for TrackingParticles  (still includes all the in-time PU)
++    #process.mix.digitizers.mergedtruth.maximumPreviousBunchCrossing = cms.uint32(0)
++    #process.mix.digitizers.mergedtruth.maximumSubsequentBunchCrossing = cms.uint32(0)
++
++    ## remove all PU from TrackingParticles
++    #process.mix.digitizers.mergedtruth.select = cms.PSet(
++    #    lipTP = cms.double(1000),
++    #    chargedOnlyTP = cms.bool(False),
++    #    pdgIdTP = cms.vint32(),
++    #    signalOnlyTP = cms.bool(True),
++    #    minRapidityTP = cms.double(-5.0),
++    #    minHitTP = cms.int32(0),
++    #    ptMinTP = cms.double(0.),
++    #    maxRapidityTP = cms.double(5.0),
++    #    tipTP = cms.double(1000),
++    #    stableOnlyTP = cms.bool( False )
++    #)
+     return process
+ 
+ 
 @@ -46,13 +46,14 @@ def l1EventContent_TTI(process):
              getattr(process,b).outputCommands.append('drop PixelDigiSimLinkedmDetSetVector_mix_*_*')
              getattr(process,b).outputCommands.append('drop PixelDigiedmDetSetVector_mix_*_*')
@@ -21,17 +62,18 @@ index b02134d..68cbab7 100644
  
  	    # other savings. The following collections can be obtained from RAW2DIGI
  	    #getattr(process,b).outputCommands.append('drop EcalTriggerPrimitiveDigisSorted_simEcalTriggerPrimitiveDigis_*_*')
-@@ -62,6 +63,14 @@ def l1EventContent_TTI(process):
+@@ -62,6 +63,15 @@ def l1EventContent_TTI(process):
  	    getattr(process,b).outputCommands.append('drop *_simHcalDigis_*_*')
  	    #getattr(process,b).outputCommands.append('drop *_simSiStripDigis_*_*')
  
-+            # drop even more
-+            getattr(process,b).outputCommands.append('drop FEDRawDataCollection_*_*_*')
-+            getattr(process,b).outputCommands.append('drop PCaloHits_*_*_*')
-+            getattr(process,b).outputCommands.append('drop PSimHits_*_*_*')
-+            getattr(process,b).outputCommands.append('drop *_simMuonDTDigis_*_*')
-+            getattr(process,b).outputCommands.append('drop *_simMuonCSCDigis_*_*')
-+            getattr(process,b).outputCommands.append('drop *_simMuonRPCDigis_*_*')
++            if b == "RAWSIMoutput":
++                # drop even more
++                getattr(process,b).outputCommands.append('drop FEDRawDataCollection_*_*_*')
++                getattr(process,b).outputCommands.append('drop PCaloHits_*_*_*')
++                getattr(process,b).outputCommands.append('drop PSimHits_*_*_*')
++                getattr(process,b).outputCommands.append('drop *_simMuonDTDigis_*_*')
++                getattr(process,b).outputCommands.append('drop *_simMuonCSCDigis_*_*')
++                getattr(process,b).outputCommands.append('drop *_simMuonRPCDigis_*_*')
 +
      return process
  
