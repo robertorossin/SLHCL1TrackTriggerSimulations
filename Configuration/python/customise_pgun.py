@@ -54,7 +54,11 @@ def cust_useTrackerOnly(process, intime=True, ntuple=True):
     for geom in geoms_orig:
         keep = True
         for removee in ['EcalCommonData', 'HcalCommonData', 'MuonCommonData', 'ForwardCommonData', 'EcalSimData', 'HcalSimData', 'MuonSimData', 'ForwardSimData', 'DTGeometryBuilder', 'CSCGeometryBuilder', 'RPCGeometryBuilder', 'GEMGeometryBuilder']:
-            if geom.startswith("Geometry/%s/" % removee):
+            if geom.startswith('Geometry/%s/' % removee):
+                keep = False
+                break
+        for removee in ['caloBase.xml', 'cmsCalo.xml', 'muonBase.xml', 'cmsMuon.xml', 'mgnt.xml', 'muonMB.xml', 'muonMagnet.xml', 'cavern.xml']:
+            if geom.startswith('Geometry/CMSCommonData/data/%s' % removee):
                 keep = False
                 break
         if keep:
