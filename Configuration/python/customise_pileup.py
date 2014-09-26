@@ -100,6 +100,14 @@ def cust_useTrackerOnly(process, sequential=False, intime=False, ntuple=True):
     # Drop sim hits in muon system
     process.mix.digitizers.mergedtruth.simHitCollections.muon = cms.VInputTag()
 
+    # Reduce number of tracking particles
+    process.mix.digitizers.mergedtruth.alwaysAddAncestors = cms.bool(False)
+    process.mix.digitizers.mergedtruth.ignoreTracksOutsideVolume = cms.bool(True)
+    process.mix.digitizers.mergedtruth.select.ptMinTP = cms.double(0.2)
+    #process.mix.digitizers.mergedtruth.select.minHitTP = cms.int32(0)
+    process.mix.digitizers.mergedtruth.select.tipTP = process.mix.digitizers.mergedtruth.volumeRadius
+    process.mix.digitizers.mergedtruth.select.lipTP = process.mix.digitizers.mergedtruth.volumeZ
+
     # Drop digitizers
     for removee in ['ecal', 'hcal', 'castor']:
         if hasattr(process.mix.digitizers, removee):
@@ -111,7 +119,7 @@ def cust_useTrackerOnly(process, sequential=False, intime=False, ntuple=True):
             process.mix.mixObjects.mixSH.crossingFrames.remove(removee)
 
     # Drop sub detectors
-    for removee in ['BSCHits', 'FP420SI', 'MuonCSCHits', 'MuonDTHits', 'MuonRPCHits', 'TotemHitsRP', 'TotemHitsT1', 'TotemHitsT2Gem']:
+    for removee in ['BSCHits', 'FP420SI', 'MuonCSCHits', 'MuonDTHits', 'MuonRPCHits', 'TotemHitsRP', 'TotemHitsT1', 'TotemHitsT2Gem', 'TrackerHitsTECHighTof', 'TrackerHitsTECLowTof', 'TrackerHitsTIBHighTof', 'TrackerHitsTIBLowTof', 'TrackerHitsTIDHighTof', 'TrackerHitsTIDLowTof', 'TrackerHitsTOBHighTof', 'TrackerHitsTOBLowTof']:
         if removee in process.mix.mixObjects.mixSH.subdets:
             process.mix.mixObjects.mixSH.subdets.remove(removee)
         removeee = cms.InputTag("g4SimHits", removee)
