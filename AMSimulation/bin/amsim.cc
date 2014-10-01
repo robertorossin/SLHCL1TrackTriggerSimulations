@@ -54,6 +54,7 @@ int main(int argc, char **argv) {
     bool nofilter, notrim;
     PatternBankOption bankOption;
     TrackFitterOption fitOption;
+    unsigned dividePhi, divideZ;
 
     const std::vector<unsigned> dv_subLadderVarSize = {8, 16, 32, 16, 16, 32};
     const std::vector<unsigned> dv_subModuleVarSize = {256, 256, 256, 256, 512, 512};
@@ -95,6 +96,8 @@ int main(int argc, char **argv) {
         ("bank_maxEta"              , po::value<float>(&bankOption.maxEta)->default_value( 2.5), "Specify max eta (signed)")
         ("bank_minPhi"              , po::value<float>(&bankOption.minPhi)->default_value(-M_PI), "Specify min phi (from -pi to pi)")
         ("bank_maxPhi"              , po::value<float>(&bankOption.maxPhi)->default_value( M_PI), "Specify max phi (from -pi to pi)")
+        ("bank_dividePhi"           , po::value<unsigned>(&dividePhi)->default_value(400), "Specify the number of phi divisions in one trigger tower in simplified geometry")
+        ("bank_divideZ"             , po::value<unsigned>(&divideZ)->default_value(1), "Specify the number of z divisions in one trigger tower in simplified geometry")
         ("bank_subLadderSize"       , po::value<unsigned>(&bankOption.subLadderSize)->default_value(4), "Specify the size of a subladder (a.k.a. segment)")
         ("bank_subModuleSize"       , po::value<unsigned>(&bankOption.subModuleSize)->default_value(8), "Specify the size of a submodule (a.k.a. superstrip)")
         ("bank_nLayers"             , po::value<unsigned>(&bankOption.nLayers)->default_value(6), "Specify # of layers")
@@ -190,6 +193,8 @@ int main(int argc, char **argv) {
     bankOption.nMisses          = std::min(std::max(0u, bankOption.nMisses), 3u);
     bankOption.nFakers          = std::min(std::max(0u, bankOption.nFakers), 3u);
     bankOption.nDCBits          = std::min(std::max(0u, bankOption.nDCBits), 4u);
+    bankOption.unitPhi          = (M_PI*2.0) / float(dividePhi * 8);
+    bankOption.unitZ            = 640. / float(divideZ * 6);
     if (!bankOption.subLadderVarSize.empty())
         for (unsigned i=0; i<bankOption.subLadderVarSize.size(); ++i)
             bankOption.subLadderVarSize.at(i) = std::min(std::max(1u, bankOption.subLadderVarSize.at(i)), 32u);

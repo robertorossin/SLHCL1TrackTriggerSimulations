@@ -96,6 +96,9 @@ int PatternGenerator::makePatterns_fas(TString src) {
     const id_type& caloSuperstrip = arbiter_ -> superstrip(25, 0, 0, 0, 0);
     const id_type& muonSuperstrip = arbiter_ -> superstrip(26, 0, 0, 0, 0);
     const id_type& fakeSuperstrip = arbiter_ -> superstrip(27, 0, 0, 0, 0);
+    //const id_type& caloSuperstrip = arbiter_ -> superstrip_luciano(25, 0, 0, po.unitPhi, po.unitZ);
+    //const id_type& muonSuperstrip = arbiter_ -> superstrip_luciano(26, 0, 0, po.unitPhi, po.unitZ);
+    //const id_type& fakeSuperstrip = arbiter_ -> superstrip_luciano(27, 0, 0, po.unitPhi, po.unitZ);
 
     // Allocate memory
     allPatterns_fas_.init(0);  // automatic memory allocation
@@ -144,6 +147,12 @@ int PatternGenerator::makePatterns_fas(TString src) {
             return 1;
         }
 
+        //float simPt = reader.vp_pt->front();
+        //if (2. > simPt) {
+        //    ++nRead;
+        //    continue;
+        //}
+
         // _____________________________________________________________________
         // Start generating patterns
         bool keep = true;
@@ -155,6 +164,7 @@ int PatternGenerator::makePatterns_fas(TString src) {
 
         // Quick loop over reconstructed stubs
         id_type moduleId, lay, lad, mod, col, row;  // declare the usual suspects
+        float stub_phi, stub_z;
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
             moduleId = reader.vb_modId->at(l);
 
@@ -220,6 +230,11 @@ int PatternGenerator::makePatterns_fas(TString src) {
             // Find superstrip address
             const id_type& ssId = arbiter_ -> superstrip(lay, lad, mod, col, row);
             patt.at(k) = ssId;
+
+            //stub_phi = reader.vb_phi->at(l);
+            //stub_z = reader.vb_z->at(l);
+            //const id_type& ssId = arbiter_ -> superstrip_luciano(lay, stub_phi, stub_z, po.unitPhi, po.unitZ);
+            //patt.at(k) = ssId;
 
             // Find associated trigger towers
             if (po.requireTriggerTower) {

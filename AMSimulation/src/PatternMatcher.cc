@@ -25,6 +25,7 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
         npatterns = maxPatterns_;
 
     const id_type& fakeSuperstrip = arbiter_ -> superstrip(27, 0, 0, 0, 0);
+    //const id_type& fakeSuperstrip = arbiter_ -> superstrip_luciano(27, 0, 0, po.unitPhi, po.unitZ);
     id_type nsuperstrips = fakeSuperstrip + 1;
     if (nsuperstrips & 1) nsuperstrips += 1;  // if odd, make it even
 
@@ -169,7 +170,7 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
 
         // Loop over reconstructed stubs
         id_type moduleId, lay, lad, mod, col, row;  // declare the usual suspects
-        float stub_x, stub_y, stub_z, stub_pt;
+        float stub_x, stub_y, stub_z, stub_pt, stub_phi;
         for (unsigned l=0; l<nstubs; ++l) {
 
             // Break moduleId into lay, lad, mod
@@ -191,6 +192,11 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
 
             // Find superstrip address
             const id_type& ssId = arbiter_ -> superstrip(lay, lad, mod, col, row);
+
+            //stub_phi = reader.vb_phi->at(l);
+            //stub_z = reader.vb_z->at(l);
+            //const id_type& ssId = arbiter_ -> superstrip_luciano(lay, stub_phi, stub_z, po.unitPhi, po.unitZ);
+            //patt.at(k) = ssId;
 
             // Position and rough pt
             stub_x = reader.vb_x->at(l);
