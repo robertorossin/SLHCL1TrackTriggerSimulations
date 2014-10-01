@@ -1,9 +1,10 @@
 import FWCore.ParameterSet.Config as cms
 
-from SLHCL1TrackTriggerSimulations.NTupleTools.prunedGenParticles_cfi import prunedGenParticles
+#from SLHCL1TrackTriggerSimulations.NTupleTools.prunedGenParticles_cfi import prunedGenParticles
 
 ntupleGenParticles = cms.EDProducer('NTupleGenParticles',
-    inputTag = cms.InputTag('prunedGenParticles'),
+    #inputTag = cms.InputTag('prunedGenParticles'),
+    inputTag = cms.InputTag('genParticles'),
     prefix = cms.string('genParts@'),
     suffix = cms.string(''),
     cut = cms.string(''),
@@ -37,5 +38,6 @@ ntupleGenEventInfo = cms.EDProducer('NTupleGenEventInfo',
 )
 
 #ntupleGen = cms.Sequence((prunedGenParticles * ntupleGenParticles) * ntupleGenJets * ntupleGenMET * ntupleGenEventInfo)
-ntupleGen = cms.Sequence((prunedGenParticles * ntupleGenParticles) * ntupleGenEventInfo)
+#ntupleGen = cms.Sequence((prunedGenParticles * ntupleGenParticles) * ntupleGenEventInfo)
+ntupleGen = cms.Sequence(ntupleGenParticles * ntupleGenEventInfo)
 

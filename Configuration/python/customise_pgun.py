@@ -54,7 +54,11 @@ def cust_useTrackerOnly(process, intime=True, ntuple=True):
     for geom in geoms_orig:
         keep = True
         for removee in ['EcalCommonData', 'HcalCommonData', 'MuonCommonData', 'ForwardCommonData', 'EcalSimData', 'HcalSimData', 'MuonSimData', 'ForwardSimData', 'DTGeometryBuilder', 'CSCGeometryBuilder', 'RPCGeometryBuilder', 'GEMGeometryBuilder']:
-            if geom.startswith("Geometry/%s/" % removee):
+            if geom.startswith('Geometry/%s/' % removee):
+                keep = False
+                break
+        for removee in ['caloBase.xml', 'cmsCalo.xml', 'muonBase.xml', 'cmsMuon.xml', 'mgnt.xml', 'muonMB.xml', 'muonMagnet.xml', 'cavern.xml']:
+            if geom.startswith('Geometry/CMSCommonData/data/%s' % removee):
                 keep = False
                 break
         if keep:
@@ -75,6 +79,14 @@ def cust_useTrackerOnly(process, intime=True, ntuple=True):
     # Drop sim hits in muon system
     process.mix.digitizers.mergedtruth.simHitCollections.muon = cms.VInputTag()
 
+    # Reduce number of tracking particles
+    process.mix.digitizers.mergedtruth.alwaysAddAncestors = cms.bool(False)
+    process.mix.digitizers.mergedtruth.ignoreTracksOutsideVolume = cms.bool(True)
+    process.mix.digitizers.mergedtruth.select.ptMinTP = cms.double(0.2)
+    #process.mix.digitizers.mergedtruth.select.minHitTP = cms.int32(0)
+    process.mix.digitizers.mergedtruth.select.tipTP = process.mix.digitizers.mergedtruth.volumeRadius
+    process.mix.digitizers.mergedtruth.select.lipTP = process.mix.digitizers.mergedtruth.volumeZ
+
     # Drop digitizers
     for removee in ['ecal', 'hcal', 'castor']:
         if hasattr(process.mix.digitizers, removee):
@@ -86,7 +98,7 @@ def cust_useTrackerOnly(process, intime=True, ntuple=True):
             process.mix.mixObjects.mixSH.crossingFrames.remove(removee)
 
     # Drop sub detectors
-    for removee in ['BSCHits', 'FP420SI', 'MuonCSCHits', 'MuonDTHits', 'MuonRPCHits', 'TotemHitsRP', 'TotemHitsT1', 'TotemHitsT2Gem']:
+    for removee in ['BSCHits', 'FP420SI', 'MuonCSCHits', 'MuonDTHits', 'MuonRPCHits', 'TotemHitsRP', 'TotemHitsT1', 'TotemHitsT2Gem', 'TrackerHitsTECHighTof', 'TrackerHitsTECLowTof', 'TrackerHitsTIBHighTof', 'TrackerHitsTIBLowTof', 'TrackerHitsTIDHighTof', 'TrackerHitsTIDLowTof', 'TrackerHitsTOBHighTof', 'TrackerHitsTOBLowTof']:
         if removee in process.mix.mixObjects.mixSH.subdets:
             process.mix.mixObjects.mixSH.subdets.remove(removee)
         removeee = cms.InputTag("g4SimHits", removee)
