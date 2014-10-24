@@ -54,6 +54,7 @@ class TTRoadWriter {
     std::auto_ptr<std::vector<std::vector<int> > >        vr_hitCharges;
     std::auto_ptr<std::vector<std::vector<float> > >      vr_hitPts;
     std::auto_ptr<std::vector<std::vector<id_type> > >    vr_hitSuperstripIds;
+    std::auto_ptr<std::vector<std::vector<int> > >        vr_hitTrkIds;
 
     // Roads (inner vectors)
     std::vector<float>      hitXs;
@@ -65,6 +66,7 @@ class TTRoadWriter {
     std::vector<int>        hitCharges;
     std::vector<float>      hitPts;
     std::vector<id_type>    hitSuperstripIds;
+    std::vector<int>        hitTrkIds;
 
     // In addition, keep genParticle info
     std::auto_ptr<std::vector<float> > vp_pt;
@@ -83,4 +85,3 @@ class TTRoadWriter {
 }  // namespace slhcl1tt
 
 #endif
-

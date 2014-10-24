@@ -81,6 +81,7 @@ int TrackFitter::makeTracks(TString out) {
     std::vector<std::vector<int> > *        vr_hitCharges        = 0;
     std::vector<std::vector<float> > *      vr_hitPts            = 0;
     std::vector<std::vector<id_type> > *    vr_hitSuperstripIds  = 0;
+    std::vector<std::vector<int> > *        vr_hitTrkIds         = 0;
 
     //chain_->SetBranchStatus("*", 1);
 
@@ -95,6 +96,7 @@ int TrackFitter::makeTracks(TString out) {
     chain_->SetBranchAddress(prefixRoad_ + "hitCharges"        + suffix_, &(vr_hitCharges));
     chain_->SetBranchAddress(prefixRoad_ + "hitPts"            + suffix_, &(vr_hitPts));
     chain_->SetBranchAddress(prefixRoad_ + "hitSuperstripIds"  + suffix_, &(vr_hitSuperstripIds));
+    chain_->SetBranchAddress(prefixRoad_ + "hitTrkIds"         + suffix_, &(vr_hitTrkIds));
 
     // For writing
     if (verbose_)  std::cout << Info() << "Recreating " << out << std::endl;
@@ -144,7 +146,8 @@ int TrackFitter::makeTracks(TString out) {
                     vr_hitZErrors->at(i).at(j),
                     vr_hitCharges->at(i).at(j),
                     vr_hitPts->at(i).at(j),
-                    vr_hitSuperstripIds->at(i).at(j)
+                    vr_hitSuperstripIds->at(i).at(j),
+                    vr_hitTrkIds->at(i).at(j)
                 });
 
                 // In R-Z plane, a track is a straight line

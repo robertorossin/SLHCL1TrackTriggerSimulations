@@ -107,7 +107,7 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
         tchain->SetBranchStatus("TTStubs_roughPt"   , 1);
         tchain->SetBranchStatus("TTStubs_trigBend"  , 1);
         tchain->SetBranchStatus("TTStubs_modId"     , 1);
-      //tchain->SetBranchStatus("TTStubs_trkId"     , 1);
+        tchain->SetBranchStatus("TTStubs_trkId"     , 1);
         tchain->SetBranchStatus("genParts_pt"       , 1);
         tchain->SetBranchStatus("genParts_eta"      , 1);
         tchain->SetBranchStatus("genParts_phi"      , 1);
@@ -205,7 +205,8 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
             stub_pt = reader.vb_roughPt->at(l);
 
             // Create a hit
-            superstripHitsMap[ssId].emplace_back(TTHit{stub_x, stub_y, stub_z, 0., 0., 0., -1, stub_pt, ssId});  // POD type constructor
+            const int& trkId = reader.vb_trkId->at(l);
+            superstripHitsMap[ssId].emplace_back(TTHit{stub_x, stub_y, stub_z, 0., 0., 0., -1, stub_pt, ssId, trkId});  // POD type constructor
 
             // Make a tick
             //superstripBooleans.at(ssId) = true;

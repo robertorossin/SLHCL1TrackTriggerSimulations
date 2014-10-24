@@ -29,6 +29,7 @@ TTRoadWriter::TTRoadWriter(int verbose)
   vr_hitCharges       (new std::vector<std::vector<int> >()),
   vr_hitPts           (new std::vector<std::vector<float> >()),
   vr_hitSuperstripIds (new std::vector<std::vector<id_type> >()),
+  vr_hitTrkIds        (new std::vector<std::vector<int> >()),
   //
   vp_pt               (new std::vector<float>()),
   vp_eta              (new std::vector<float>()),
@@ -78,6 +79,7 @@ int TTRoadWriter::init(TString out, TString prefix, TString suffix) {
     ttree->Branch(prefix + "hitCharges"        + suffix, &(*vr_hitCharges));
     ttree->Branch(prefix + "hitPts"            + suffix, &(*vr_hitPts));
     ttree->Branch(prefix + "hitSuperstripIds"  + suffix, &(*vr_hitSuperstripIds));
+    ttree->Branch(prefix + "hitTrkIds"         + suffix, &(*vr_hitTrkIds));
     //
     ttree->Branch("genParts_pt"    , &(*vp_pt));
     ttree->Branch("genParts_eta"   , &(*vp_eta));
@@ -102,6 +104,7 @@ void TTRoadWriter::fill(const std::vector<TTRoad>& roads, const std::vector<GenP
     vr_hitCharges       ->clear();
     vr_hitPts           ->clear();
     vr_hitSuperstripIds ->clear();
+    vr_hitTrkIds        ->clear();
     //
     vp_pt               ->clear();
     vp_eta              ->clear();
@@ -122,6 +125,7 @@ void TTRoadWriter::fill(const std::vector<TTRoad>& roads, const std::vector<GenP
         hitCharges       .clear();
         hitPts           .clear();
         hitSuperstripIds .clear();
+        hitTrkIds        .clear();
 
         const TTRoad&             road = roads.at(i);
         const std::vector<TTHit>& hits = road.getHits();
@@ -137,6 +141,7 @@ void TTRoadWriter::fill(const std::vector<TTRoad>& roads, const std::vector<GenP
             hitCharges.push_back(hit.charge);
             hitPts.push_back(hit.pt);
             hitSuperstripIds.push_back(hit.superstripId);
+            hitTrkIds.push_back(hit.trkId);
         }
 
         vr_nHitLayers       ->push_back(road.nHitLayers());
@@ -151,6 +156,7 @@ void TTRoadWriter::fill(const std::vector<TTRoad>& roads, const std::vector<GenP
         vr_hitCharges       ->push_back(hitCharges);
         vr_hitPts           ->push_back(hitPts);
         vr_hitSuperstripIds ->push_back(hitSuperstripIds);
+        vr_hitTrkIds        ->push_back(hitTrkIds);
     }
 
     const unsigned nparts = genParts.size();
