@@ -6,12 +6,96 @@ using namespace slhcl1tt;
 
 // _____________________________________________________________________________
 TTRoadReader::TTRoadReader(int verbose)
-:
+: vr_nHitLayers        (0),
+  vr_bankIndex         (0),
+  //
+  vr_hitXs             (0),
+  vr_hitYs             (0),
+  vr_hitZs             (0),
+  vr_hitXErrors        (0),
+  vr_hitYErrors        (0),
+  vr_hitZErrors        (0),
+  vr_hitCharges        (0),
+  vr_hitPts            (0),
+  vr_hitSuperstripIds  (0),
+  vr_hitTrkIds         (0),
+  //
+  vp_pt                (0),
+  vp_eta               (0),
+  vp_phi               (0),
+  vp_vx                (0),
+  vp_vy                (0),
+  vp_vz                (0),
+  vp_charge            (0),
+  //
   verbose_(verbose) {}
 
 TTRoadReader::~TTRoadReader() {
-    if (ttree)  delete ttree;
-    if (tfile)  delete tfile;
+    if (tchain)  delete tchain;
+}
+
+int TTRoadReader::init(TString src, TString prefix, TString suffix) {
+    if (!src.EndsWith(".root") && !src.EndsWith(".txt")) {
+        std::cout << Error() << "Input source must be either .root or .txt" << std::endl;
+        return 1;
+    }
+
+    if (verbose_)  std::cout << Info() << "Opening " << src << std::endl;
+    tchain = new TChain("ntupler/tree");
+
+    if (src.EndsWith(".root")) {
+        if (tchain->Add(src) ) {
+            if (verbose_)  std::cout << Info() << "Successfully read " << src << std::endl;
+        } else {
+            std::cout << Error() << "Failed to read " << src << std::endl;
+            return 1;
+        }
+
+    } else if (src.EndsWith(".txt")) {
+        TFileCollection fc("fileinfolist", "", src);
+        if (tchain->AddFileInfoList((TCollection*) fc.GetList()) ) {
+            if (verbose_)  std::cout << Info() << "Successfully read " << src << std::endl;
+        } else {
+            std::cout << Error() << "Failed to read " << src << std::endl;
+            return 1;
+        }
+    }
+
+    assert(tchain != 0);
+    treenumber = tchain->GetTreeNumber();
+
+    tchain->SetBranchAddress(prefix + "nHitLayers"        + suffix, &(vr_nHitLayers));
+    tchain->SetBranchAddress(prefix + "bankIndex"         + suffix, &(vr_bankIndex));
+    //
+    tchain->SetBranchAddress(prefix + "hitXs"             + suffix, &(vr_hitXs));
+    tchain->SetBranchAddress(prefix + "hitYs"             + suffix, &(vr_hitYs));
+    tchain->SetBranchAddress(prefix + "hitZs"             + suffix, &(vr_hitZs));
+    tchain->SetBranchAddress(prefix + "hitXErrors"        + suffix, &(vr_hitXErrors));
+    tchain->SetBranchAddress(prefix + "hitYErrors"        + suffix, &(vr_hitYErrors));
+    tchain->SetBranchAddress(prefix + "hitZErrors"        + suffix, &(vr_hitZErrors));
+    tchain->SetBranchAddress(prefix + "hitCharges"        + suffix, &(vr_hitCharges));
+    tchain->SetBranchAddress(prefix + "hitPts"            + suffix, &(vr_hitPts));
+    tchain->SetBranchAddress(prefix + "hitSuperstripIds"  + suffix, &(vr_hitSuperstripIds));
+    tchain->SetBranchAddress(prefix + "hitTrkIds"         + suffix, &(vr_hitTrkIds));
+    //
+    tchain->SetBranchAddress("genParts_pt"      , &(vp_pt));
+    tchain->SetBranchAddress("genParts_eta"     , &(vp_eta));
+    tchain->SetBranchAddress("genParts_phi"     , &(vp_phi));
+    tchain->SetBranchAddress("genParts_vx"      , &(vp_vx));
+    tchain->SetBranchAddress("genParts_vy"      , &(vp_vy));
+    tchain->SetBranchAddress("genParts_vz"      , &(vp_vz));
+    tchain->SetBranchAddress("genParts_charge"  , &(vp_charge));
+    return 0;
+}
+
+Long64_t TTRoadReader::loadTree(Long64_t entry) {
+    //if (!tchain) return -5;
+    return tchain->LoadTree(entry);
+}
+
+Int_t TTRoadReader::getEntry(Long64_t entry) {
+   //if (!tchain) return 0;
+   return tchain->GetEntry(entry);
 }
 
 
