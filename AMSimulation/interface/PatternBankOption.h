@@ -21,7 +21,7 @@ struct PatternBankOption {
     unsigned nMisses;
     unsigned nFakers;
     unsigned nDCBits;
-    bool useVariableSize;
+    unsigned mode;
     bool requireTriggerTower;
     std::vector<unsigned> subLadderVarSize;
     std::vector<unsigned> subModuleVarSize;
