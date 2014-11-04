@@ -24,6 +24,8 @@ if gSystem.AccessPathName(imgdir):
 # ______________________________________________________________________________
 # Functions
 
+ycoverages = [0.5, 0.8, 0.9, 0.95, 1.0]
+
 def parseLogs(ss_sizes, logname, midpoint=4294967295, every=1000000):
     dict_unsort = {}
     dict_sort = {}
@@ -83,7 +85,6 @@ def makeGraphs(ss_sizes, dict_unsort, dict_sort):
 
 if sections["fixed"]:
 
-
     def drawCoverage(ss_sizes, graphs_unsort, graphs_sort, tower="barrel", xmin=0., xmax=1e8):
         h1 = TH1F("h1_%s" % tower, "; # of patterns; running estimate for coverage", 100, xmin, xmax)
         h1.SetStats(0); h1.SetMinimum(0); h1.SetMaximum(1.2)
@@ -93,7 +94,7 @@ if sections["fixed"]:
 
         # Draw unsorted
         h1.Draw()
-        for y in [0.5, 0.8, 0.9, 0.95, 1.0]:
+        for y in ycoverages:
             line.DrawLine(xmin, y, xmax, y)
 
         for i, ss_size in enumerate(ss_sizes):
@@ -120,7 +121,7 @@ if sections["fixed"]:
 
         # Draw sorted
         h1.Draw()
-        for y in [0.5, 0.8, 0.9, 0.95, 1.0]:
+        for y in ycoverages:
             line.DrawLine(xmin, y, xmax, y)
 
         for i, ss_size in enumerate(ss_sizes):
@@ -170,3 +171,84 @@ if sections["fixed"]:
     dict_unsort, dict_sort = parseLogs(ss_sizes, logs + "/" + logname, 100000000)
     graphs_unsort, graphs_sort = makeGraphs(ss_sizes, dict_unsort, dict_sort)
     drawCoverage(ss_sizes, graphs_unsort, graphs_sort, tower="endcap", xmin=0., xmax=7e7)
+
+# ______________________________________________________________________________
+# Projective
+
+if sections["projective"]:
+
+    def drawCoverage(ss_sizes, graphs_unsort, graphs_sort, tower="barrel", xmin=0., xmax=1e8):
+        h1 = TH1F("h1_%s" % tower, "; # of patterns; running estimate for coverage", 100, xmin, xmax)
+        h1.SetStats(0); h1.SetMinimum(0); h1.SetMaximum(1.2)
+        h1.SetNdivisions(510, "Y")
+        gStyle.SetLineStyleString(11,"36 36")
+        latex.SetTextSize(0.04)
+
+        # Draw unsorted
+        h1.Draw()
+        for y in ycoverages:
+            line.DrawLine(xmin, y, xmax, y)
+
+        for i, ss_size in enumerate(ss_sizes):
+            g1 = graphs_unsort[i]
+            g1.SetLineWidth(2); g1.SetLineStyle(11); g1.SetMarkerSize(0)
+            g1.SetLineColor(paletteSet1[i])
+            g1.Draw("C")
+
+        moveLegend(0.66,0.15,0.96,0.45); legend.Clear()
+        for i, ss_size in enumerate(ss_sizes):
+            legend.AddEntry(graphs_unsort[i], ss_size, "l")
+        legend.Draw()
+        towertext = (tower[0].upper() + tower[1:] + " trigger tower")
+        latex.DrawLatex(0.56, 0.88, towertext)
+        CMS_label()
+        save(imgdir, "projective_%s_unsorted" % tower)
+
+        # Redraw with log-x scale
+        gPad.SetLogx()
+        h1.GetXaxis().SetRangeUser(1, xmax)
+        save(imgdir, "projective_%s_unsorted_logx" % tower)
+        gPad.SetLogx(0)
+        h1.GetXaxis().SetRangeUser(0, xmax)
+
+        # Draw sorted
+        h1.Draw()
+        for y in ycoverages:
+            line.DrawLine(xmin, y, xmax, y)
+
+        for i, ss_size in enumerate(ss_sizes):
+            g1 = graphs_unsort[i]
+            g1.SetLineColor(kGray)
+            g1.Draw("C")
+
+        for i, ss_size in enumerate(ss_sizes):
+            g2 = graphs_sort[i]
+            g2.SetLineWidth(2); g2.SetLineStyle(1); g2.SetMarkerSize(0)
+            g2.SetLineColor(paletteSet1[i])
+            g2.Draw("C")
+
+        moveLegend(0.66,0.15,0.96,0.45); legend.Clear()
+        for i, ss_size in enumerate(ss_sizes):
+            legend.AddEntry(graphs_sort[i], ss_size, "l")
+        legend.Draw()
+        latex.DrawLatex(0.56, 0.88, towertext)
+        CMS_label()
+        save(imgdir, "projective_%s_sorted" % tower)
+
+        gPad.SetLogx()
+        h1.GetXaxis().SetRangeUser(1, xmax)
+        save(imgdir, "projective_%s_sorted_logx" % tower)
+        gPad.SetLogx(0)
+        h1.GetXaxis().SetRangeUser(0, xmax)
+
+
+    #ss_sizes = ["lu400x1"]
+    ss_sizes = ["lu600x1", "lu400x1", "lu200x1", "lu100x2", "lu50x4", "lu20x10"]
+    logs = "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_results/"
+
+    # Barrel
+    logname = "patternBank_%s_tt27_200M.log"
+    dict_unsort, dict_sort = parseLogs(ss_sizes, logs + "/" + logname, 100000000)
+    graphs_unsort, graphs_sort = makeGraphs(ss_sizes, dict_unsort, dict_sort)
+    drawCoverage(ss_sizes, graphs_unsort, graphs_sort, tower="barrel", xmin=0., xmax=7e7)
+
