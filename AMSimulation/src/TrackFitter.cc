@@ -50,7 +50,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
         tracks.reserve(200);
 
         for (unsigned i=0; i<nroads; ++i) {
-            const unsigned nhits = reader.vr_hitXs->at(i).size();
+            const unsigned nhits = reader.vr_hitRs->at(i).size();
             //if (nhits<3) {
             //    std::cout << Error() << "Too few hits in a road: " << nhits << std::endl;
             //    return 1;
@@ -61,11 +61,11 @@ int TrackFitter::makeTracks(TString src, TString out) {
             std::vector<UV> hitsViewUV;
             for (unsigned j=0; j<nhits; ++j) {
                 hits.emplace_back(TTHit{
-                    reader.vr_hitXs->at(i).at(j),
-                    reader.vr_hitYs->at(i).at(j),
+                    reader.vr_hitRs->at(i).at(j),
+                    reader.vr_hitPhis->at(i).at(j),
                     reader.vr_hitZs->at(i).at(j),
-                    reader.vr_hitXErrors->at(i).at(j),
-                    reader.vr_hitYErrors->at(i).at(j),
+                    reader.vr_hitRErrors->at(i).at(j),
+                    reader.vr_hitPhiErrors->at(i).at(j),
                     reader.vr_hitZErrors->at(i).at(j),
                     reader.vr_hitCharges->at(i).at(j),
                     reader.vr_hitPts->at(i).at(j),
@@ -74,7 +74,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 });
 
                 // In R-Z plane, a track is a straight line
-                ZR hitViewZR(hits.back().rho(), hits.back().z);
+                ZR hitViewZR(hits.back().r, hits.back().z);
                 hitsViewZR.push_back(hitViewZR);
 
                 // In X-Y plane, a track is a circle

@@ -9,11 +9,11 @@ TTRoadReader::TTRoadReader(int verbose)
 : vr_nHitLayers        (0),
   vr_bankIndex         (0),
   //
-  vr_hitXs             (0),
-  vr_hitYs             (0),
+  vr_hitRs             (0),
+  vr_hitPhis           (0),
   vr_hitZs             (0),
-  vr_hitXErrors        (0),
-  vr_hitYErrors        (0),
+  vr_hitRErrors        (0),
+  vr_hitPhiErrors      (0),
   vr_hitZErrors        (0),
   vr_hitCharges        (0),
   vr_hitPts            (0),
@@ -67,11 +67,11 @@ int TTRoadReader::init(TString src, TString prefix, TString suffix) {
     tchain->SetBranchAddress(prefix + "nHitLayers"        + suffix, &(vr_nHitLayers));
     tchain->SetBranchAddress(prefix + "bankIndex"         + suffix, &(vr_bankIndex));
     //
-    tchain->SetBranchAddress(prefix + "hitXs"             + suffix, &(vr_hitXs));
-    tchain->SetBranchAddress(prefix + "hitYs"             + suffix, &(vr_hitYs));
+    tchain->SetBranchAddress(prefix + "hitRs"             + suffix, &(vr_hitRs));
+    tchain->SetBranchAddress(prefix + "hitPhis"           + suffix, &(vr_hitPhis));
     tchain->SetBranchAddress(prefix + "hitZs"             + suffix, &(vr_hitZs));
-    tchain->SetBranchAddress(prefix + "hitXErrors"        + suffix, &(vr_hitXErrors));
-    tchain->SetBranchAddress(prefix + "hitYErrors"        + suffix, &(vr_hitYErrors));
+    tchain->SetBranchAddress(prefix + "hitRErrors"        + suffix, &(vr_hitRErrors));
+    tchain->SetBranchAddress(prefix + "hitPhiErrors"      + suffix, &(vr_hitPhiErrors));
     tchain->SetBranchAddress(prefix + "hitZErrors"        + suffix, &(vr_hitZErrors));
     tchain->SetBranchAddress(prefix + "hitCharges"        + suffix, &(vr_hitCharges));
     tchain->SetBranchAddress(prefix + "hitPts"            + suffix, &(vr_hitPts));
@@ -104,11 +104,11 @@ TTRoadWriter::TTRoadWriter(int verbose)
 : vr_nHitLayers       (new std::vector<count_type>()),
   vr_bankIndex        (new std::vector<id_type>()),
   //
-  vr_hitXs            (new std::vector<std::vector<float> >()),
-  vr_hitYs            (new std::vector<std::vector<float> >()),
+  vr_hitRs            (new std::vector<std::vector<float> >()),
+  vr_hitPhis          (new std::vector<std::vector<float> >()),
   vr_hitZs            (new std::vector<std::vector<float> >()),
-  vr_hitXErrors       (new std::vector<std::vector<float> >()),
-  vr_hitYErrors       (new std::vector<std::vector<float> >()),
+  vr_hitRErrors       (new std::vector<std::vector<float> >()),
+  vr_hitPhiErrors     (new std::vector<std::vector<float> >()),
   vr_hitZErrors       (new std::vector<std::vector<float> >()),
   vr_hitCharges       (new std::vector<std::vector<int> >()),
   vr_hitPts           (new std::vector<std::vector<float> >()),
@@ -154,11 +154,11 @@ int TTRoadWriter::init(TString out, TString prefix, TString suffix) {
     ttree->Branch(prefix + "nHitLayers"        + suffix, &(*vr_nHitLayers));
     ttree->Branch(prefix + "bankIndex"         + suffix, &(*vr_bankIndex));
     //
-    ttree->Branch(prefix + "hitXs"             + suffix, &(*vr_hitXs));
-    ttree->Branch(prefix + "hitYs"             + suffix, &(*vr_hitYs));
+    ttree->Branch(prefix + "hitRs"             + suffix, &(*vr_hitRs));
+    ttree->Branch(prefix + "hitPhis"           + suffix, &(*vr_hitPhis));
     ttree->Branch(prefix + "hitZs"             + suffix, &(*vr_hitZs));
-    ttree->Branch(prefix + "hitXErrors"        + suffix, &(*vr_hitXErrors));
-    ttree->Branch(prefix + "hitYErrors"        + suffix, &(*vr_hitYErrors));
+    ttree->Branch(prefix + "hitRErrors"        + suffix, &(*vr_hitRErrors));
+    ttree->Branch(prefix + "hitPhiErrors"      + suffix, &(*vr_hitPhiErrors));
     ttree->Branch(prefix + "hitZErrors"        + suffix, &(*vr_hitZErrors));
     ttree->Branch(prefix + "hitCharges"        + suffix, &(*vr_hitCharges));
     ttree->Branch(prefix + "hitPts"            + suffix, &(*vr_hitPts));
@@ -179,11 +179,11 @@ void TTRoadWriter::fill(const std::vector<TTRoad>& roads, const std::vector<GenP
     vr_nHitLayers       ->clear();
     vr_bankIndex        ->clear();
     //
-    vr_hitXs            ->clear();
-    vr_hitYs            ->clear();
+    vr_hitRs            ->clear();
+    vr_hitPhis          ->clear();
     vr_hitZs            ->clear();
-    vr_hitXErrors       ->clear();
-    vr_hitYErrors       ->clear();
+    vr_hitRErrors       ->clear();
+    vr_hitPhiErrors     ->clear();
     vr_hitZErrors       ->clear();
     vr_hitCharges       ->clear();
     vr_hitPts           ->clear();
@@ -200,11 +200,11 @@ void TTRoadWriter::fill(const std::vector<TTRoad>& roads, const std::vector<GenP
 
     const unsigned nroads = roads.size();
     for (unsigned i=0, j=0; i<nroads; ++i) {
-        hitXs            .clear();
-        hitYs            .clear();
+        hitRs            .clear();
+        hitPhis          .clear();
         hitZs            .clear();
-        hitXErrors       .clear();
-        hitYErrors       .clear();
+        hitRErrors       .clear();
+        hitPhiErrors     .clear();
         hitZErrors       .clear();
         hitCharges       .clear();
         hitPts           .clear();
@@ -216,11 +216,11 @@ void TTRoadWriter::fill(const std::vector<TTRoad>& roads, const std::vector<GenP
 
         for (j=0; j<hits.size(); ++j) {
             const TTHit& hit = hits.at(j);
-            hitXs.push_back(hit.x);
-            hitYs.push_back(hit.y);
+            hitRs.push_back(hit.r);
+            hitPhis.push_back(hit.phi);
             hitZs.push_back(hit.z);
-            hitXErrors.push_back(hit.xError);
-            hitYErrors.push_back(hit.yError);
+            hitRErrors.push_back(hit.rError);
+            hitPhiErrors.push_back(hit.phiError);
             hitZErrors.push_back(hit.zError);
             hitCharges.push_back(hit.charge);
             hitPts.push_back(hit.pt);
@@ -231,11 +231,11 @@ void TTRoadWriter::fill(const std::vector<TTRoad>& roads, const std::vector<GenP
         vr_nHitLayers       ->push_back(road.nHitLayers());
         vr_bankIndex        ->push_back(road.bankIndex());
         //
-        vr_hitXs            ->push_back(hitXs);
-        vr_hitYs            ->push_back(hitYs);
+        vr_hitRs            ->push_back(hitRs);
+        vr_hitPhis          ->push_back(hitPhis);
         vr_hitZs            ->push_back(hitZs);
-        vr_hitXErrors       ->push_back(hitXErrors);
-        vr_hitYErrors       ->push_back(hitYErrors);
+        vr_hitRErrors       ->push_back(hitRErrors);
+        vr_hitPhiErrors     ->push_back(hitPhiErrors);
         vr_hitZErrors       ->push_back(hitZErrors);
         vr_hitCharges       ->push_back(hitCharges);
         vr_hitPts           ->push_back(hitPts);
@@ -256,7 +256,7 @@ void TTRoadWriter::fill(const std::vector<TTRoad>& roads, const std::vector<GenP
     }
 
     ttree->Fill();
-    assert(vr_hitXs->size() == nroads);
+    assert(vr_hitRs->size() == nroads);
     assert(vp_pt->size() == nparts);
 }
 
