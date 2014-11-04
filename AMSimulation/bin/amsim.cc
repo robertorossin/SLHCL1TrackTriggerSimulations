@@ -193,8 +193,8 @@ int main(int argc, char **argv) {
     bankOption.nMisses          = std::min(std::max(0u, bankOption.nMisses), 3u);
     bankOption.nFakers          = std::min(std::max(0u, bankOption.nFakers), 3u);
     bankOption.nDCBits          = std::min(std::max(0u, bankOption.nDCBits), 4u);
-    bankOption.unitPhi          = (M_PI*2.0) / float(dividePhi * 8);
-    bankOption.unitZ            = 640. / float(divideZ * 6);
+    bankOption.unitPhi          = (M_PI*2.) / float(dividePhi * 8);
+    bankOption.unitZ            = (360*2.) / float(divideZ * 6);
     if (!bankOption.subLadderVarSize.empty())
         for (unsigned i=0; i<bankOption.subLadderVarSize.size(); ++i)
             bankOption.subLadderVarSize.at(i) = std::min(std::max(1u, bankOption.subLadderVarSize.at(i)), 32u);
