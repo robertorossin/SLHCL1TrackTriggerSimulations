@@ -184,11 +184,11 @@ int PatternMatcher::makeRoads_vector(TString src, TString bank, TString out) {
             stub_z = reader.vb_z->at(l);
             stub_pt = reader.vb_roughPt->at(l);
 
-            // Skip if moduleId not in any trigger tower
-            if (po.requireTriggerTower && triggerTowerReverseMap_.find(moduleId) == triggerTowerReverseMap_.end()) {
-                if (verbose_>2)  std::cout << Debug() << "... ... skip moduleId: " << moduleId << " not in any trigger tower." << std::endl;
-                continue;
-            }
+            //// Skip if moduleId not in any trigger tower
+            //if (po.requireTriggerTower && triggerTowerReverseMap_.find(moduleId) == triggerTowerReverseMap_.end()) {
+            //    if (verbose_>2)  std::cout << Debug() << "... ... skip moduleId: " << moduleId << " not in any trigger tower." << std::endl;
+            //    continue;
+            //}
 
             // Find superstrip address
             if (po.mode == 2) {  // luciano superstrip

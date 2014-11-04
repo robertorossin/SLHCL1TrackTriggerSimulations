@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
         ("bank_nFakers"             , po::value<unsigned>(&bankOption.nFakers)->default_value(0), "Specify # of fake superstrips")
         ("bank_nDCBits"             , po::value<unsigned>(&bankOption.nDCBits)->default_value(0), "Specify # of DC bits")
         ("bank_mode"                , po::value<unsigned>(&bankOption.mode)->default_value(0), "Select superstrip config -- 0: Fixed-size; 1: Variable-size; 2: Projective")
-        ("bank_requireTriggerTower" , po::value<bool>(&bankOption.requireTriggerTower)->default_value(false), "Apply trigger tower requirement")
+        ("bank_requireTriggerTower" , po::value<bool>(&bankOption.requireTriggerTower)->default_value(true), "Apply trigger tower requirement")
         ("bank_subLadderVarSize"    , po::value<std::vector<unsigned> >(&bankOption.subLadderVarSize)->default_value(dv_subLadderVarSize), "Specify the variable size of a subladder per layer")
         ("bank_subModuleVarSize"    , po::value<std::vector<unsigned> >(&bankOption.subModuleVarSize)->default_value(dv_subModuleVarSize), "Specify the variable size of a submodule per layer")
         ("bank_subLadderECVarSize"  , po::value<std::vector<unsigned> >(&bankOption.subLadderECVarSize)->default_value(dv_subLadderECVarSize), "Specify the variable size of a subladder per endcap ring")
