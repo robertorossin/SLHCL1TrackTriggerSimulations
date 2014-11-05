@@ -252,7 +252,7 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
             hitses.clear();
             hits.clear();
 
-            for (unsigned i=0; i<MAX_NLAYERS; ++i, ++itss) {
+            for (unsigned i=0; i<nLayers_; ++i, ++itss) {
                 const id_type& ssId = *itss;
                 if (ssId == fas::bad_4byte)  continue;
 
