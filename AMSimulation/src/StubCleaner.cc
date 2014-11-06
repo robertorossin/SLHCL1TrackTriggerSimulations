@@ -49,7 +49,7 @@ int StubCleaner::cleanStubs(TString src, TString out) {
         tchain->SetBranchStatus("TTStubs_coordx"    , 1);
         tchain->SetBranchStatus("TTStubs_coordy"    , 1);
       //tchain->SetBranchStatus("TTStubs_roughPt"   , 1);  // sync with TTStubReader
-      //tchain->SetBranchStatus("TTStubs_trigBend"  , 1);  // sync with TTStubReader
+        tchain->SetBranchStatus("TTStubs_trigBend"  , 1);
         tchain->SetBranchStatus("TTStubs_modId"     , 1);
         tchain->SetBranchStatus("TTStubs_trkId"     , 1);
         tchain->SetBranchStatus("genParts_pt"       , 1);
@@ -208,7 +208,7 @@ int StubCleaner::cleanStubs(TString src, TString out) {
                 insertSorted(reader.vb_coordx->begin()   , ipos, ngoodstubs, reader.vb_coordx->at(l));
                 insertSorted(reader.vb_coordy->begin()   , ipos, ngoodstubs, reader.vb_coordy->at(l));
               //insertSorted(reader.vb_roughPt->begin()  , ipos, ngoodstubs, reader.vb_roughPt->at(l));
-              //insertSorted(reader.vb_trigBend->begin() , ipos, ngoodstubs, reader.vb_trigBend->at(l));
+                insertSorted(reader.vb_trigBend->begin() , ipos, ngoodstubs, reader.vb_trigBend->at(l));
                 insertSorted(reader.vb_modId->begin()    , ipos, ngoodstubs, reader.vb_modId->at(l));
                 insertSorted(reader.vb_trkId->begin()    , ipos, ngoodstubs, reader.vb_trkId->at(l));
 
@@ -246,7 +246,7 @@ int StubCleaner::cleanStubs(TString src, TString out) {
         reader.vb_coordx   ->resize(ngoodstubs);
         reader.vb_coordy   ->resize(ngoodstubs);
       //reader.vb_roughPt  ->resize(ngoodstubs);
-      //reader.vb_trigBend ->resize(ngoodstubs);
+        reader.vb_trigBend ->resize(ngoodstubs);
         reader.vb_modId    ->resize(ngoodstubs);
         reader.vb_trkId    ->resize(ngoodstubs);
 

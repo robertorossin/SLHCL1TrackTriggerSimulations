@@ -78,7 +78,7 @@ int TTStubReader::init(TString src, bool full) {
     tchain->SetBranchAddress("TTStubs_coordx"   , &(vb_coordx));
     tchain->SetBranchAddress("TTStubs_coordy"   , &(vb_coordy));
     if (full)  tchain->SetBranchAddress("TTStubs_roughPt"  , &(vb_roughPt));
-    if (full)  tchain->SetBranchAddress("TTStubs_trigBend" , &(vb_trigBend));
+    tchain->SetBranchAddress("TTStubs_trigBend" , &(vb_trigBend));
     tchain->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
     tchain->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
     tchain->SetBranchAddress("genParts_pt"      , &(vp_pt));
