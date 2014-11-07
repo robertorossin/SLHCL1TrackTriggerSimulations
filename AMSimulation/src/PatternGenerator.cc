@@ -195,7 +195,7 @@ int PatternGenerator::makePatterns_fas(TString src) {
             keep = false;
 
         if (verbose_>2) {
-            std::cout << Debug() << "... evt: " << ievt << " moduleIds: ";
+            std::cout << Debug() << "... evt: " << ievt << " layers: ";
             std::copy(stubLayers.begin(), stubLayers.end(), std::ostream_iterator<unsigned>(std::cout, " "));
             std::cout << "  indices: ";
             std::copy(indices.begin(), indices.end(), std::ostream_iterator<unsigned>(std::cout, " "));
@@ -253,22 +253,31 @@ int PatternGenerator::makePatterns_fas(TString src) {
                 ++towerCountMap[999999];  // total count
             }
 
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << std::endl;
+            if (verbose_>2) {
+                std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << std::endl;
+                if (po.requireTriggerTower) {
+                    std::cout << Debug() << "... ... stub: " << l << " towers: ";
+                    const std::vector<unsigned>& towerIds = triggerTowerReverseMap_.at(moduleId);
+                    std::copy(towerIds.begin(), towerIds.end(), std::ostream_iterator<unsigned>(std::cout, " "));
+                    std::cout << std::endl;
+                }
+            }
         }
 
         if (keep && po.requireTriggerTower) {
             // Drop patterns that are not within any trigger tower
             std::map<unsigned, unsigned>::const_iterator ittower;
-            const unsigned total = towerCountMap.at(999999);
+            const unsigned totalTowerCount = towerCountMap.at(999999);
             towerCountMap.erase(999999);
 
-            keep = false;
+            unsigned highestTowerCount = 0;
             for (ittower = towerCountMap.begin(); ittower != towerCountMap.end(); ++ittower) {
-                if (ittower->second == total) {
-                    keep = true;
-                    break;
-                }
+                if (highestTowerCount < ittower->second)
+                    highestTowerCount = ittower->second;
             }
+
+            keep = (highestTowerCount == totalTowerCount);
+            if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " highestTowerCount: " << highestTowerCount << " totalTowerCount: " << totalTowerCount << std::endl;
         }
 
         assert (!keep || patt != pattEmpty);
@@ -306,6 +315,7 @@ int PatternGenerator::makePatterns_fas(TString src) {
 
     unsigned highest_freq = allPatterns_fas_.size() ? allPatterns_fas_.at(0).count : 0;
     if (verbose_)  std::cout << Info() << "Generated " << allPatterns_fas_.size() << " patterns, highest freq: " << highest_freq << std::endl;
+    if (highest_freq > 63000)  std::cout << Warning() << "Frequency (16-bit unsigned integer) could be overflow" << std::endl;
 
     return 0;
 }
