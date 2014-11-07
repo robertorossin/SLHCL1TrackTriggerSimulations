@@ -21,10 +21,12 @@ int readRoads()
     gROOT->ProcessLine("#include <vector>");
 
     // Enter your file name
-    TFile *tfile = new TFile("/uscms_data/d2/jiafu/L1TrackTrigger/CRAB_amsim/roads.root");
+    TFile *tfile = new TFile("/uscms_data/d2/jiafu/L1TrackTrigger/CRAB_amsim/roads_numEvent100.root");
+    assert(tfile != NULL);
 
     // Enter your TTree name
     TTree *ttree = (TTree *) tfile->Get("ntupler/tree");
+    assert(ttree != NULL);
     TString prefix = "AMTTRoads_";
     TString suffix = "";
 
@@ -99,7 +101,7 @@ int readRoads()
             std::vector<unsigned> indices;
             int ii, ij;
             for (ii=0; ii<int(nsuperstrips); ++ii)
-                indices.push_back(0);
+                indices.push_back(0);  // init indices to zeroes
 
             j = 0;
             while (true) {
@@ -110,13 +112,13 @@ int readRoads()
 
                 for (ii=nsuperstrips-1; ii>=0; --ii) {
                     if (indices[ii] != stubs_by_ssId.at(ii).size() - 1)
-                        break;
+                        break;  // take the last index that has not reached the end
                 }
                 if (ii == -1)  break;
 
-                indices[ii] += 1;
+                indices[ii] += 1;  // increment that index
                 for (ij = ii+1; ij<int(nsuperstrips); ++ij) {
-                    indices[ij] = 0;
+                    indices[ij] = 0;  // set indices behind that index to zeroes
                 }
                 ++j;
             }

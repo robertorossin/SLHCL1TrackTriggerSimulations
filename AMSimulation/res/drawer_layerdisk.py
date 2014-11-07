@@ -230,7 +230,7 @@ if sections["layerdisk"]:
         histos = book2D([p0, p1])
 
         for tt, moduleIds in ttmap.iteritems():
-            if tt not in [27, 35, 42]:
+            if tt not in [27, 35, 43]:
                 continue
             for moduleId in moduleIds:
                 s_tt = "tt" + str(tt)
