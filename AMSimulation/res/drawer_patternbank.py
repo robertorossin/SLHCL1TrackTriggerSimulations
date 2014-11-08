@@ -14,7 +14,12 @@ sections["projective"] = False
 drawerInit = DrawerInit()
 gStyle.SetPadRightMargin(0.1)
 
+EOS = "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_results/"
+
 imgdir = "figures_patternbank/"
+
+chain  = TChain("patternBank", "")
+chain2 = TChain("patternBankStats", "")
 
 if not imgdir.endswith("/"):  imgdir += "/"
 if gSystem.AccessPathName(imgdir):
@@ -29,43 +34,41 @@ if sections["fixed"]:
     gStyle.SetTitleSize(0.05, "Y")
     latex.SetTextSize(0.05)
 
-    bankdir = "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_results/"
     in_superstrips = ["ss32", "ss64", "ss128", "ss256", "ss512", "ss1024"]
     #in_superstrips = ["ss256"]
 
-    def bookCoverage(bankdir, bank):
+    def bookCoverage(bank):
         superstrips = {}
         graphs = []
 
         for ss in in_superstrips:
-            tfilename = (bankdir + "/" + bank) % ss
-            tfile = TFile.Open(tfilename)
+            chain.Reset(); chain2.Reset()
+            infile = (EOS + "/" + bank) % ss
 
             # Pattern bank statistics
-            ttree = tfile.patternBankStats
-            assert(ttree.GetEntries() > 0)
-
-            ttree.GetEntry(0)
-            coverage = ttree.coverage
-            count = ttree.count
+            chain2.Add(infile)
+            assert(chain2.GetEntries() > 0)
+            chain2.GetEntry(0)
+            coverage = chain2.coverage
+            count = chain2.count
 
             # Pattern bank
-            ttree = tfile.patternBank
-            assert(ttree.GetEntries() > 0)
-            ttree.SetBranchStatus("superstripIds", 0)
-            npatterns = ttree.GetEntriesFast()
+            chain.Add(infile)
+            assert(chain.GetEntries() > 0)
+            chain.SetBranchStatus("superstripIds", 0)
+            npatterns = chain.GetEntriesFast()
             npoints = 200
             every = npatterns / npoints
 
             xvalues, yvalues = [], []
             x, x_0p9, integral = 0, 0, 0
             for i in xrange(npatterns):
-                ttree.GetEntry(i)
-                frequency = ttree.frequency
+                chain.GetEntry(i)
+                frequency = chain.frequency
                 if i == x:
                     y = float(integral) / float(count) * coverage
-                    xvalues.append(x); yvalues.append(y)
-                    print "..", x, y
+                    xvalues.append(i); yvalues.append(y)
+                    print "..", i, y
                     if y < 0.9:  x_0p9 = x
                     x += every
 
@@ -81,7 +84,8 @@ if sections["fixed"]:
 
             superstrips[ss] = (npatterns, coverage, x_0p9)
             print ss, superstrips[ss]
-            gr = TGraph(len(xvalues), array('d', xvalues), array('d', yvalues))
+            npoints = len(xvalues)
+            gr = TGraph(npoints, array('d', xvalues), array('d', yvalues))
             graphs.append(gr)
         return (superstrips, graphs)
 
@@ -144,14 +148,14 @@ if sections["fixed"]:
         return donotdelete
 
     # Barrel 2 GeV
-    #bank = "patternBank_sp16_%s_tt27_400M.root"
-    #(superstrips, graphs) = bookCoverage(bankdir, bank)
-    #d = drawCoverage(superstrips, graphs, xmax=5e7, tower="tt27")
+    bank = "patternBank_sp16_%s_tt27_400M.root"
+    (superstrips, graphs) = bookCoverage(bank)
+    d = drawCoverage(superstrips, graphs, xmax=5e7, tower="tt27")
 
     # Barrel 3 GeV
-    bank = "patternBank_sp16_%s_tt27_3GeV_400M.root"
-    (superstrips, graphs) = bookCoverage(bankdir, bank)
-    d = drawCoverage(superstrips, graphs, xmax=5e7, tower="tt27_3GeV")
+    #bank = "patternBank_sp16_%s_tt27_pt3_400M.root"
+    #(superstrips, graphs) = bookCoverage(bank)
+    #d = drawCoverage(superstrips, graphs, xmax=5e7, tower="tt27_pt3")
 
 
 # ______________________________________________________________________________
@@ -162,43 +166,41 @@ if sections["projective"]:
     gStyle.SetTitleSize(0.05, "Y")
     latex.SetTextSize(0.05)
 
-    bankdir = "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_results/"
-    in_superstrips = ["600x1", "400x1", "200x1", "100x2", "50x4", "20x10"]
-    #in_superstrips = ["lu400x1"]
+    in_superstrips = ["600x0", "400x0", "200x0", "200x1", "100x2", "20x10"]
+    #in_superstrips = ["400x0"]
 
-    def bookCoverage(bankdir, bank):
+    def bookCoverage(bank):
         superstrips = {}
         graphs = []
 
         for ss in in_superstrips:
-            tfilename = (bankdir + "/" + bank) % ss
-            tfile = TFile.Open(tfilename)
+            chain.Reset(); chain2.Reset()
+            infile = (EOS + "/" + bank) % ss
 
             # Pattern bank statistics
-            ttree = tfile.patternBankStats
-            assert(ttree.GetEntries() > 0)
-
-            ttree.GetEntry(0)
-            coverage = ttree.coverage
-            count = ttree.count
+            chain2.Add(infile)
+            assert(chain2.GetEntries() > 0)
+            chain2.GetEntry(0)
+            coverage = chain2.coverage
+            count = chain2.count
 
             # Pattern bank
-            ttree = tfile.patternBank
-            assert(ttree.GetEntries() > 0)
-            ttree.SetBranchStatus("superstripIds", 0)
-            npatterns = ttree.GetEntriesFast()
+            chain.Add(infile)
+            assert(chain.GetEntries() > 0)
+            chain.SetBranchStatus("superstripIds", 0)
+            npatterns = chain.GetEntriesFast()
             npoints = 200
             every = npatterns / npoints
 
             xvalues, yvalues = [], []
             x, x_0p9, integral = 0, 0, 0
             for i in xrange(npatterns):
-                ttree.GetEntry(i)
-                frequency = ttree.frequency
+                chain.GetEntry(i)
+                frequency = chain.frequency
                 if i == x:
                     y = float(integral) / float(count) * coverage
-                    xvalues.append(x); yvalues.append(y)
-                    print "..", x, y
+                    xvalues.append(i); yvalues.append(y)
+                    print "..", i, y
                     if y < 0.9:  x_0p9 = x
                     x += every
 
@@ -214,7 +216,8 @@ if sections["projective"]:
 
             superstrips[ss] = (npatterns, coverage, x_0p9)
             print ss, superstrips[ss]
-            gr = TGraph(len(xvalues), array('d', xvalues), array('d', yvalues))
+            npoints = len(xvalues)
+            gr = TGraph(npoints, array('d', xvalues), array('d', yvalues))
             graphs.append(gr)
         return (superstrips, graphs)
 
@@ -277,11 +280,11 @@ if sections["projective"]:
         return donotdelete
 
     # Barrel 2 GeV
-    #bank = "patternBank_lu%s_tt27_400M.root"
-    #(superstrips, graphs) = bookCoverage(bankdir, bank)
-    #d = drawCoverage(superstrips, graphs, xmax=5e7, tower="tt27")
+    bank = "patternBank_lu%s_tt27_400M.root"
+    (superstrips, graphs) = bookCoverage(bank)
+    d = drawCoverage(superstrips, graphs, xmax=5e7, tower="tt27")
 
     # Barrel 3 GeV
-    bank = "patternBank_lu%s_tt27_3GeV_400M.root"
-    (superstrips, graphs) = bookCoverage(bankdir, bank)
-    d = drawCoverage(superstrips, graphs, xmax=5e7, tower="tt27_3GeV")
+    #bank = "patternBank_lu%s_tt27_pt3_400M.root"
+    #(superstrips, graphs) = bookCoverage(bank)
+    #d = drawCoverage(superstrips, graphs, xmax=5e7, tower="tt27_pt3")
