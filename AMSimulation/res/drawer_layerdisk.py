@@ -227,11 +227,21 @@ if sections["layerdisk"]:
             "Tower", 3, 0, 3, "Layer", 11+1, 0, 11+1, kBlack, blkrgb[0])
         p1 = struct2D("layerdisk_nsuperstrips_sslg", "dummy", "dummy",
             "Tower", 3, 0, 3, "Layer", 11+1, 0, 11+1, kBlack, blkrgb[0])
-        histos = book2D([p0, p1])
+        p2 = struct2D("layerdisk_nsuperstrips_onlyphi_sssm", "dummy", "dummy",
+            "Tower", 3, 0, 3, "Layer", 11+1, 0, 11+1, kBlack, blkrgb[0])
+        p3 = struct2D("layerdisk_nsuperstrips_onlyphi_sslg", "dummy", "dummy",
+            "Tower", 3, 0, 3, "Layer", 11+1, 0, 11+1, kBlack, blkrgb[0])
+        histos = book2D([p0, p1, p2, p3])
+        histos[0].caption = "ss32"
+        histos[1].caption = "ss256"
+        histos[2].caption = "ss32 (no z segmentation)"
+        histos[3].caption = "ss256 (no z segmentation)"
 
         for tt, moduleIds in ttmap.iteritems():
             if tt not in [27, 35, 43]:
                 continue
+
+            moduleLadders = []
             for moduleId in moduleIds:
                 s_tt = "tt" + str(tt)
                 lay = decodeLayer(moduleId)
@@ -239,7 +249,6 @@ if sections["layerdisk"]:
                     s_lay = "b" + str(lay)
                 else:
                     s_lay = "e" + str(lay)
-
                 if isPSModule(moduleId):
                     nsssms = (2 * 30)  # 30 = ceil(960./32)
                     nsslgs = (2 * 4)   #  4 = ceil(960./256)
@@ -247,14 +256,32 @@ if sections["layerdisk"]:
                     nsssms = (2 * 32)  # 32 = ceil(1016./32)
                     nsslgs = (2 * 4)   #  4 = ceil(1016./256)
 
+                lad = decodeLadder(moduleId)
+                moduleLadder = lay*10000 + lad*100 + 0
+                if isBarrelModule(moduleId):
+                    if moduleLadder not in moduleLadders:
+                        moduleLadders.append(moduleLadder)
+
                 histos[0].h.Fill(s_tt, "all layers", nsssms)
                 histos[1].h.Fill(s_tt, "all layers", nsslgs)
-
                 histos[0].h.Fill(s_tt, s_lay, nsssms)
                 histos[1].h.Fill(s_tt, s_lay, nsslgs)
 
-        histos[0].caption = "ss32"
-        histos[1].caption = "ss256"
+            for moduleId in moduleLadders:
+                s_tt = "tt" + str(tt)
+                lay = decodeLayer(moduleId)
+                if isBarrelModule(moduleId):
+                    s_lay = "b" + str(lay)
+                else:
+                    s_lay = "e" + str(lay)
+                nsssms = 32  # 32 = ceil(1016./32)
+                nsslgs = 4   #  4 = ceil(1016./256)
+
+                histos[2].h.Fill(s_tt, "all layers", nsssms)
+                histos[3].h.Fill(s_tt, "all layers", nsslgs)
+                histos[2].h.Fill(s_tt, s_lay, nsssms)
+                histos[3].h.Fill(s_tt, s_lay, nsslgs)
+
         for histo in histos:
             h = histo.h
             #h.LabelsDeflate("X"); h.LabelsDeflate("Y"); h.LabelsOption("a")
