@@ -34,9 +34,9 @@ int PatternGenerator::makePatterns_map(TString src) {
         tchain->SetBranchStatus("*"                 , 0);
       //tchain->SetBranchStatus("TTStubs_x"         , 1);
       //tchain->SetBranchStatus("TTStubs_y"         , 1);
-        tchain->SetBranchStatus("TTStubs_z"         , 1);
+      //tchain->SetBranchStatus("TTStubs_z"         , 1);
         tchain->SetBranchStatus("TTStubs_r"         , 1);
-      //tchain->SetBranchStatus("TTStubs_eta"       , 1);
+        tchain->SetBranchStatus("TTStubs_eta"       , 1);
         tchain->SetBranchStatus("TTStubs_phi"       , 1);
         tchain->SetBranchStatus("TTStubs_coordx"    , 1);
         tchain->SetBranchStatus("TTStubs_coordy"    , 1);
@@ -55,9 +55,9 @@ int PatternGenerator::makePatterns_map(TString src) {
 
     id_type caloSuperstrip, muonSuperstrip, fakeSuperstrip;
     if (po.mode == 2) {  // luciano superstrip
-        caloSuperstrip = arbiter_ -> superstrip_luciano(25, 0, 0, po.unitPhi, po.unitZ);
-        muonSuperstrip = arbiter_ -> superstrip_luciano(26, 0, 0, po.unitPhi, po.unitZ);
-        fakeSuperstrip = arbiter_ -> superstrip_luciano(27, 0, 0, po.unitPhi, po.unitZ);
+        caloSuperstrip = arbiter_ -> superstrip_luciano(25, 0, 0, po.unitPhi, po.unitEta);
+        muonSuperstrip = arbiter_ -> superstrip_luciano(26, 0, 0, po.unitPhi, po.unitEta);
+        fakeSuperstrip = arbiter_ -> superstrip_luciano(27, 0, 0, po.unitPhi, po.unitEta);
     } else {
         caloSuperstrip = arbiter_ -> superstrip(25, 0, 0, 0, 0);
         muonSuperstrip = arbiter_ -> superstrip(26, 0, 0, 0, 0);
@@ -127,7 +127,7 @@ int PatternGenerator::makePatterns_map(TString src) {
 
         // Quick loop over reconstructed stubs
         id_type ssId, moduleId, lay, lad, mod, col, row;  // declare the usual suspects
-        float stub_r, stub_phi, stub_z;
+        float stub_r, stub_eta, stub_phi;
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
             moduleId = reader.vb_modId->at(l);
 
@@ -154,7 +154,7 @@ int PatternGenerator::makePatterns_map(TString src) {
             keep = false;
 
         if (verbose_>2) {
-            std::cout << Debug() << "... evt: " << ievt << " moduleIds: ";
+            std::cout << Debug() << "... evt: " << ievt << " layers: ";
             std::copy(stubLayers.begin(), stubLayers.end(), std::ostream_iterator<unsigned>(std::cout, " "));
             std::cout << "  indices: ";
             std::copy(indices.begin(), indices.end(), std::ostream_iterator<unsigned>(std::cout, " "));
@@ -190,14 +190,14 @@ int PatternGenerator::makePatterns_map(TString src) {
             col = halfStripRound(reader.vb_coordy->at(l));
             row = halfStripRound(reader.vb_coordx->at(l));
 
-            // global r, phi, z
+            // global r, eta, phi
             stub_r = reader.vb_r->at(l);
+            stub_eta = reader.vb_eta->at(l);
             stub_phi = reader.vb_phi->at(l);
-            stub_z = reader.vb_z->at(l);
 
             // Find superstrip address
             if (po.mode == 2) {  // luciano superstrip
-                ssId = arbiter_ -> superstrip_luciano(lay, stub_phi, stub_z, po.unitPhi, po.unitZ);
+                ssId = arbiter_ -> superstrip_luciano(lay, stub_phi, stub_eta, po.unitPhi, po.unitEta);
             } else {
                 ssId = arbiter_ -> superstrip(lay, lad, mod, col, row);
             }
@@ -212,22 +212,31 @@ int PatternGenerator::makePatterns_map(TString src) {
                 ++towerCountMap[999999];  // total count
             }
 
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " ssId: " << ssId << std::endl;
+            if (verbose_>2) {
+                std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " r: " << stub_r << " eta: " << stub_eta << " phi: " << stub_phi << std::endl;
+                std::cout << Debug() << "... ... stub: " << l << " ssId: " << ssId << " towers: ";
+                if (po.requireTriggerTower) {
+                    const std::vector<unsigned>& towerIds = triggerTowerReverseMap_.at(moduleId);
+                    std::copy(towerIds.begin(), towerIds.end(), std::ostream_iterator<unsigned>(std::cout, " "));
+                }
+                std::cout << std::endl;
+            }
         }
 
         if (keep && po.requireTriggerTower) {
             // Drop patterns that are not within any trigger tower
             std::map<unsigned, unsigned>::const_iterator ittower;
-            const unsigned total = towerCountMap.at(999999);
+            const unsigned totalTowerCount = towerCountMap.at(999999);
             towerCountMap.erase(999999);
 
-            keep = false;
+            unsigned highestTowerCount = 0;
             for (ittower = towerCountMap.begin(); ittower != towerCountMap.end(); ++ittower) {
-                if (ittower->second == total) {
-                    keep = true;
-                    break;
-                }
+                if (highestTowerCount < ittower->second)
+                    highestTowerCount = ittower->second;
             }
+
+            keep = (highestTowerCount == totalTowerCount);
+            if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " highestTowerCount: " << highestTowerCount << " totalTowerCount: " << totalTowerCount << std::endl;
         }
 
         assert (!keep || patt != pattEmpty);

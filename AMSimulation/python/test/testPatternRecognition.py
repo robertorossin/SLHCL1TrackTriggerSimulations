@@ -40,10 +40,10 @@ class TestAMSim(unittest.TestCase):
             for iroad in ievt.AMTTRoads_hitRs:
                 for ihit in iroad:
                     n += 1
-                self.assertTrue(iroad.size() in [0, 6, 7])
+                self.assertTrue(iroad.size() in [0, 6, 7, 8])
         #self.assertEqual(n, 1031)
         #self.assertEqual(n, 476)
-        self.assertEqual(n, 469)
+        self.assertEqual(n, 471)
 
     def test_nSuperstrips(self):
         tree = self.ttree
