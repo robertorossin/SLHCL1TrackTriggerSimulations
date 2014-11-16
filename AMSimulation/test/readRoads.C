@@ -30,6 +30,10 @@ int readRoads()
     TString prefix = "AMTTRoads_";
     TString suffix = "";
 
+    // Enter the number of events to read
+    //unsigned nevents = 10;
+    unsigned nevents = ttree->GetEntries();
+
     // Setup vectors for the branches of interest
     std::vector<count_type> *               vr_nSuperstrips     = 0;
     std::vector<id_type> *                  vr_bankIndex        = 0;
@@ -58,9 +62,6 @@ int readRoads()
     ttree->SetBranchAddress(prefix + "hitSuperstripIds"  + suffix, &(vr_hitSuperstripIds));
     ttree->SetBranchAddress(prefix + "hitTrkIds"         + suffix, &(vr_hitTrkIds));
 
-    // Number of events to read
-    //unsigned nevents = 10;
-    unsigned nevents = ttree->GetEntries();
 
      // Loop over events
     for (unsigned ievt=0; ievt<nevents; ++ievt) {
