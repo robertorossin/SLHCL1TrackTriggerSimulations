@@ -2,10 +2,22 @@
 #define AMSimulationDataFormats_TTTrack_h_
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/Vector.h"
-
+#include <iosfwd>
 #include <vector>
 
 namespace slhcl1tt {
+
+// Track fit parameters
+struct TTTrackParam {
+    float curvature;  // = q/pT
+    float phi0;
+    float cottheta;
+    float z0;
+    float d0;
+    float chi2;
+    int   ndof;
+};
+
 
 // This is cloned from DataFormats/L1TrackTrigger/interface/TTTrack.h
 // with some style fixes.
@@ -80,6 +92,10 @@ class TTTrack {
     bool         valid4ParFit_;
     bool         valid5ParFit_;
 };
+
+// _____________________________________________________________________________
+// Output streams
+std::ostream& operator<<(std::ostream& o, const TTTrackParam& tparam);
 
 }  // namespace slhcl1tt
 

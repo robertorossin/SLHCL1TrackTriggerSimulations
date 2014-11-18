@@ -2,10 +2,8 @@
 #define AMSimulationDataFormats_TTPattern_h_
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTSuperstrip.h"
-
 #include <iosfwd>
 #include <vector>
-
 
 namespace slhcl1tt {
 
@@ -18,21 +16,30 @@ struct TTPattern {
 };
 
 
-// TTRoad is a collection of TTHit. In actuality, a road should be a word,
-// and its relevant data is retrieved using a lookup table. In software,
-// we simply skip this lookup.
-// TTRoad is not a POD data type due to the use of std::vector<TTHit>.
+// TTRoad contains info of a pattern that has fired. It consists of the index
+// of the pattern in bank, its number of superstrips, and the indices
+// of the stubs in those superstrips. The stub indices are serialized,
+// each accompanied by a superstrip id. One or more stubs can be in any
+// superstrip.
+// Note that nSuperstrips is NOT the size of superstripIds vector. nSuperstrips
+// is the number of superstrips in the pattern. The size of superstripIds
+// vector is the number of stubs in all superstrips in the road.
+// TTRoad is not a POD type due to the use of std::vector.
 class TTRoad {
   public:
     // Constructors
     TTRoad()
-    : nSuperstrips_(0), bankIndex_(0), hits_() {}
+    : bankIndex_(0), triggerTowerId_(0), nSuperstrips_(0),
+      superstripIds_(), stubIndices_() {}
 
-    TTRoad(count_type nSuperstrips, id_type bankIndex, const std::vector<TTHit>& hits)
-    : nSuperstrips_(nSuperstrips), bankIndex_(bankIndex), hits_(hits) {}
+    TTRoad(id_type bankIndex, id_type triggerTowerId, count_type nSuperstrips,
+           const std::vector<id_type>& superstripIds, const std::vector<unsigned>& stubIndices)
+    : bankIndex_(bankIndex), triggerTowerId_(triggerTowerId), nSuperstrips_(nSuperstrips),
+      superstripIds_(superstripIds), stubIndices_(stubIndices) {}
 
     TTRoad(const TTRoad& rhs)
-    : nSuperstrips_(rhs.nSuperstrips_), bankIndex_(rhs.bankIndex_), hits_(rhs.hits_) {}
+    : bankIndex_(rhs.bankIndex_), triggerTowerId_(rhs.triggerTowerId_), nSuperstrips_(rhs.nSuperstrips_),
+      superstripIds_(rhs.superstripIds_), stubIndices_(rhs.stubIndices_) {}
 
     // Destructor
     ~TTRoad() {}
@@ -41,18 +48,25 @@ class TTRoad {
     // none
 
     // Getters
-    count_type nSuperstrips()       const { return nSuperstrips_; }
+    id_type bankIndex()                     const { return bankIndex_; }
 
-    id_type bankIndex()             const { return bankIndex_; }
+    id_type triggerTowerId()                const { return triggerTowerId_; }
 
-    std::vector<TTHit> getHits()    const { return hits_; }
-    TTHit getHit(int l)             const { return hits_.at(l); }
+    count_type nSuperstrips()               const { return nSuperstrips_; }
+
+    std::vector<id_type> getSuperstripIds() const { return superstripIds_; }
+    id_type getSuperstripId(int l)          const { return superstripIds_.at(l); }
+
+    std::vector<unsigned> getStubIndices()  const { return stubIndices_; }
+    unsigned getStubIndex(int l)            const { return stubIndices_.at(l); }
 
 
   private:
-    count_type nSuperstrips_;
     id_type bankIndex_;
-    std::vector<TTHit> hits_;
+    id_type triggerTowerId_;
+    count_type nSuperstrips_;
+    std::vector<id_type>  superstripIds_;
+    std::vector<unsigned> stubIndices_;
 };
 
 
@@ -61,8 +75,6 @@ class TTRoad {
 std::ostream& operator<<(std::ostream& o, const pattern_type& patt);
 
 std::ostream& operator<<(std::ostream& o, const TTPattern& patt);
-
-std::ostream& operator<<(std::ostream& o, const std::vector<TTHit>& hits);
 
 std::ostream& operator<<(std::ostream& o, const TTRoad& road);
 

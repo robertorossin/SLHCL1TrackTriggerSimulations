@@ -16,15 +16,11 @@ std::ostream& operator<<(std::ostream& o, const TTPattern& patt) {
     return o;
 }
 
-std::ostream& operator<<(std::ostream& o, const std::vector<TTHit>& hits) {
-    for (std::vector<TTHit>::const_iterator it=hits.begin(); it!=hits.end(); ++it) {
-        o << *it << " ";
-    }
-    return o;
-}
-
 std::ostream& operator<<(std::ostream& o, const TTRoad& road) {
-    o << "nSuperstrips: " << (unsigned) road.nSuperstrips() << " bank index: " << road.bankIndex() << " # TTHits: " << road.getHits().size() << " ";
+    o << " Bank index: " << road.bankIndex() << " triggerTowerId: " << road.triggerTowerId() << " # superstrips: " << (unsigned) road.nSuperstrips() << " # stubs: " << road.getStubIndices().size() << " {(superstripId,stub index)}: ";
+    for (unsigned i=0; i<road.getStubIndices().size(); ++i) {
+        o << "(" << road.getSuperstripId(i) << "," << road.getStubIndex(i) << ")" << " ";
+    }
     return o;
 }
 
