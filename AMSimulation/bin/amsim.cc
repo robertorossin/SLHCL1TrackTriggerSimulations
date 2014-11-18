@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     // and in config file
     std::string input, output, layout, bankfile, roadfile, trackfile;
     long long maxEvents;
-    int minFrequency, maxPatterns, maxRoads, maxHits, maxTracks;
+    int minFrequency, maxPatterns, maxRoads, maxStubs, maxTracks;
     bool nofilter, notrim;
     PatternBankOption bankOption;
     TrackFitterOption fitOption;
@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
         ("bank,B"       , po::value<std::string>(&bankfile), "Specify pattern bank file")
         ("maxPatterns"  , po::value<int>(&maxPatterns)->default_value(-1), "Specfiy max number of patterns")
         ("maxRoads"     , po::value<int>(&maxRoads)->default_value(-1), "Specfiy max number of roads per event")
-        ("maxHits"      , po::value<int>(&maxHits)->default_value(-1), "Specfiy max number of hits per road")
+        ("maxStubs"     , po::value<int>(&maxStubs)->default_value(-1), "Specfiy max number of stubs per superstrip")
 
         // Only for track fitting
         ("maxTracks"    , po::value<int>(&maxTracks)->default_value(-1), "Specfiy max number of tracks per event")
@@ -300,7 +300,7 @@ int main(int argc, char **argv) {
         matcher.setMinFrequency(minFrequency);
         matcher.setMaxPatterns(maxPatterns);
         matcher.setMaxRoads(maxRoads);
-        matcher.setMaxHits(maxHits);
+        matcher.setMaxStubs(maxStubs);
         matcher.setVerbosity(verbose);
         int exitcode = matcher.run(input, bankfile, output);
         if (exitcode) {
