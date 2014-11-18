@@ -1,7 +1,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternMatcher.h"
 
-#include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubReader.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/PatternBankReader.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubReader.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTRoadReader.h"
 
 static const unsigned MAX_NLAYERS = pattern_type().size();  // ought to be 8

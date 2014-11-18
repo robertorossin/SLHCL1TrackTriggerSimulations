@@ -21,7 +21,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
     // _________________________________________________________________________
     // For writing
     TTTrackWriter writer(verbose_);
-    if (writer.init(out, prefixTrack_, suffix_)) {
+    if (writer.init(reader.getChain(), out, prefixTrack_, suffix_)) {
         std::cout << Error() << "Failed to initialize TTTrackWriter." << std::endl;
         return 1;
     }
@@ -36,7 +36,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
         if (reader.loadTree(ievt) < 0)  break;
         reader.getEntry(ievt);
 
-        const unsigned nroads = reader.vr_hitRs->size();
+        const unsigned nroads = reader.vr_bankIndex->size();
         if (verbose_>1 && ievt%5000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7i, fitting: %7i", ievt, nKept, nPassed) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # roads: " << nroads << std::endl;
 
@@ -60,7 +60,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
             if (verbose_>2)  std::cout << Debug() << "... " << std::endl;
 
             TTTrack track;  // FIXME
-            float pt = std::abs(1.0/tparam.curvature);
+            float pt = std::abs(0.003 * 3.8 / tparam.rinv);
             GlobalVector gv(
                 pt * std::cos(tparam.phi0),
                 pt * std::sin(tparam.phi0),
@@ -89,7 +89,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
 
     if (verbose_)  std::cout << Info() << "Processed " << nEvents_ << " events, kept " << nKept << ", fitted " << nPassed << std::endl;
 
-    long long nentries = writer.write();
+    long long nentries = writer.writeTree();
     assert(nentries == nKept);
 
     return 0;
