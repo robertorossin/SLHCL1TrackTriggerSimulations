@@ -259,7 +259,7 @@ bool TTTrack::checkValidArgsForSet(unsigned int nPar, const std::string& fcn) co
 
 
 std::ostream& operator<<(std::ostream& o, const TTTrackParam& tparam) {
-    o << "curvature: " << tparam.curvature << " phi0: " << tparam.phi0 << " cottheta: " << tparam.cottheta << " z0: " << tparam.z0 << " d0: " << tparam.d0 << " chi2: " << tparam.chi2 << " " << " ndof: " << tparam.ndof << " ";
+    o << "rinv: " << tparam.rinv << " phi0: " << tparam.phi0 << " cottheta: " << tparam.cottheta << " z0: " << tparam.z0 << " d0: " << tparam.d0 << " chi2: " << tparam.chi2 << " " << " ndof: " << tparam.ndof << " ";
     return o;
 }
 

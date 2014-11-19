@@ -21,25 +21,26 @@ struct TTPattern {
 // of the stubs in those superstrips. The stub indices are serialized,
 // each accompanied by a superstrip id. One or more stubs can be in any
 // superstrip.
-// Note that nSuperstrips is NOT the size of superstripIds vector. nSuperstrips
-// is the number of superstrips in the pattern. The size of superstripIds
-// vector is the number of stubs in all superstrips in the road.
+// Note that nsuperstrips is NOT the size of stubSuperstripIds vector.
+// nsuperstrips is the number of superstrips in the pattern. The size of
+// stubSuperstripIds vector is the number of stubs in all superstrips in
+// the road.
 // TTRoad is not a POD type due to the use of std::vector.
 class TTRoad {
   public:
     // Constructors
     TTRoad()
-    : bankIndex_(0), triggerTowerId_(0), nSuperstrips_(0),
-      superstripIds_(), stubIndices_() {}
+    : bankIndex_(0), triggerTowerId_(0), nsuperstrips_(0),
+      stubSuperstripIds_(), stubRefs_() {}
 
-    TTRoad(id_type bankIndex, id_type triggerTowerId, count_type nSuperstrips,
-           const std::vector<id_type>& superstripIds, const std::vector<unsigned>& stubIndices)
-    : bankIndex_(bankIndex), triggerTowerId_(triggerTowerId), nSuperstrips_(nSuperstrips),
-      superstripIds_(superstripIds), stubIndices_(stubIndices) {}
+    TTRoad(id_type bankIndex, id_type triggerTowerId, count_type nsuperstrips,
+           const std::vector<id_type>& stubSuperstripIds, const std::vector<unsigned>& stubRefs)
+    : bankIndex_(bankIndex), triggerTowerId_(triggerTowerId), nsuperstrips_(nsuperstrips),
+      stubSuperstripIds_(stubSuperstripIds), stubRefs_(stubRefs) {}
 
     TTRoad(const TTRoad& rhs)
-    : bankIndex_(rhs.bankIndex_), triggerTowerId_(rhs.triggerTowerId_), nSuperstrips_(rhs.nSuperstrips_),
-      superstripIds_(rhs.superstripIds_), stubIndices_(rhs.stubIndices_) {}
+    : bankIndex_(rhs.bankIndex_), triggerTowerId_(rhs.triggerTowerId_), nsuperstrips_(rhs.nsuperstrips_),
+      stubSuperstripIds_(rhs.stubSuperstripIds_), stubRefs_(rhs.stubRefs_) {}
 
     // Destructor
     ~TTRoad() {}
@@ -48,25 +49,25 @@ class TTRoad {
     // none
 
     // Getters
-    id_type bankIndex()                     const { return bankIndex_; }
+    id_type bankIndex()                         const { return bankIndex_; }
 
-    id_type triggerTowerId()                const { return triggerTowerId_; }
+    id_type triggerTowerId()                    const { return triggerTowerId_; }
 
-    count_type nSuperstrips()               const { return nSuperstrips_; }
+    count_type nsuperstrips()                   const { return nsuperstrips_; }
 
-    std::vector<id_type> getSuperstripIds() const { return superstripIds_; }
-    id_type getSuperstripId(int l)          const { return superstripIds_.at(l); }
+    std::vector<id_type> stubSuperstripIds()    const { return stubSuperstripIds_; }
+    id_type stubSuperstripId(int l)             const { return stubSuperstripIds_.at(l); }
 
-    std::vector<unsigned> getStubIndices()  const { return stubIndices_; }
-    unsigned getStubIndex(int l)            const { return stubIndices_.at(l); }
+    std::vector<unsigned> stubRefs()            const { return stubRefs_; }
+    unsigned stubRef(int l)                     const { return stubRefs_.at(l); }
 
 
   private:
     id_type bankIndex_;
     id_type triggerTowerId_;
-    count_type nSuperstrips_;
-    std::vector<id_type>  superstripIds_;
-    std::vector<unsigned> stubIndices_;
+    count_type nsuperstrips_;
+    std::vector<id_type>  stubSuperstripIds_;
+    std::vector<unsigned> stubRefs_;
 };
 
 

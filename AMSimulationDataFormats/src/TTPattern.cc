@@ -17,9 +17,9 @@ std::ostream& operator<<(std::ostream& o, const TTPattern& patt) {
 }
 
 std::ostream& operator<<(std::ostream& o, const TTRoad& road) {
-    o << " Bank index: " << road.bankIndex() << " triggerTowerId: " << road.triggerTowerId() << " # superstrips: " << (unsigned) road.nSuperstrips() << " # stubs: " << road.getStubIndices().size() << " {(superstripId,stub index)}: ";
-    for (unsigned i=0; i<road.getStubIndices().size(); ++i) {
-        o << "(" << road.getSuperstripId(i) << "," << road.getStubIndex(i) << ")" << " ";
+    o << " Bank index: " << road.bankIndex() << " triggerTowerId: " << road.triggerTowerId() << " # superstrips: " << (unsigned) road.nsuperstrips() << " # stubs: " << road.stubRefs().size() << " {(superstripId,index)}: ";
+    for (unsigned i=0; i<road.stubRefs().size(); ++i) {
+        o << "(" << road.stubSuperstripId(i) << "," << road.stubRef(i) << ")" << " ";
     }
     return o;
 }
