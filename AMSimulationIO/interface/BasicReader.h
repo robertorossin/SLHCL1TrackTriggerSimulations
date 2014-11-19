@@ -47,8 +47,9 @@ class BasicReader {
     std::vector<float> *          vb_coordy;
     std::vector<float> *          vb_roughPt;
     std::vector<float> *          vb_trigBend;
+    std::vector<float> *          vb_clusWidth;
     std::vector<unsigned> *       vb_modId;
-    std::vector<int> *            vb_trkId;
+    std::vector<int> *            vb_tpId;
 
   protected:
     TChain* tchain;

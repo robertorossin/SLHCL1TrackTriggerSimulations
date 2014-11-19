@@ -24,8 +24,9 @@ BasicReader::BasicReader(int verbose)
   vb_coordy           (0),
   vb_roughPt          (0),
   vb_trigBend         (0),
+  vb_clusWidth        (0),
   vb_modId            (0),
-  vb_trkId            (0),
+  vb_tpId             (0),
   //
   verbose_(verbose) {}
 
@@ -80,8 +81,9 @@ int BasicReader::init(TString src, bool full) {
     tchain->SetBranchAddress("TTStubs_coordy"   , &(vb_coordy));
     if (full)  tchain->SetBranchAddress("TTStubs_roughPt"  , &(vb_roughPt));
     tchain->SetBranchAddress("TTStubs_trigBend" , &(vb_trigBend));
+  //if (full)  tchain->SetBranchAddress("TTStubs_clusWidth", &(vb_clusWidth));
     tchain->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
-    tchain->SetBranchAddress("TTStubs_trkId"    , &(vb_trkId));
+    tchain->SetBranchAddress("TTStubs_tpId"     , &(vb_tpId));
     return 0;
 }
 
