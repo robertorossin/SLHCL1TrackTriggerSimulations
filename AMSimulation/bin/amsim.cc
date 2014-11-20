@@ -113,15 +113,9 @@ int main(int argc, char **argv) {
         ("bank_triggerTowers"       , po::value<std::vector<unsigned> >(&bankOption.triggerTowers)->default_value(dv_triggerTowers), "Specify the trigger towers")
 
         // Specifically for a track fitter
-        ("fit_pqType"               , po::value<int>(&fitOption.pqType)->default_value(0), "Specify choice of variables for p,q")
-        ("fit_pbins"                , po::value<int>(&fitOption.pbins)->default_value(100), "Specify # of bins for p")
-        ("fit_qbins"                , po::value<int>(&fitOption.qbins)->default_value(100), "Specify # of bins for q")
-        ("fit_pmin"                 , po::value<float>(&fitOption.pmin)->default_value(-1), "Specify min value for p")
-        ("fit_qmin"                 , po::value<float>(&fitOption.qmin)->default_value(-1), "Specify min value for q")
-        ("fit_pmax"                 , po::value<float>(&fitOption.pmax)->default_value(1), "Specify max value for p")
-        ("fit_qmax"                 , po::value<float>(&fitOption.qmax)->default_value(1), "Specify max value for q")
-        ("fit_sigma"                , po::value<float>(&fitOption.sigma)->default_value(3), "Specify resolution for the distance parameter")
-        ("fit_minWeight"            , po::value<float>(&fitOption.minWeight)->default_value(0.1), "Specify minimum weight to create a track")
+        ("fit_maxChi2Red"           , po::value<float>(&fitOption.maxChi2Red)->default_value(999.), "Specify maximum reduced chi-squared")
+        ("fit_minNdof"              , po::value<int>(&fitOption.minNdof)->default_value(0), "Specify minimum degree of freedom")
+        ("fit_mode"                 , po::value<unsigned>(&fitOption.mode)->default_value(0), "Select track fitter config -- 0: Dummy")
         ;
 
     // Hidden options, will be allowed both on command line and in config file,
@@ -161,9 +155,6 @@ int main(int argc, char **argv) {
         std::cerr << e.what() << std::endl;
         return 1;
     }
-
-    // Options found in both PatternBankOption and TrackFitterOption
-    fitOption.nLayers = bankOption.nLayers;
 
     // At least one option needs to be called
     if (!(vm.count("cleanStubs")         ||
