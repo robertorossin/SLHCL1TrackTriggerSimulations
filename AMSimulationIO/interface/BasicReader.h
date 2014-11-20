@@ -1,13 +1,12 @@
-#ifndef AMSimulationIO_TTStubReader_h_
-#define AMSimulationIO_TTStubReader_h_
+#ifndef AMSimulationIO_BasicReader_h_
+#define AMSimulationIO_BasicReader_h_
 
 #include "TChain.h"
 #include "TFile.h"
 #include "TFileCollection.h"
-#include "TObjArray.h"
 #include "TROOT.h"
 #include "TString.h"
-#include "TTreeFormula.h"
+#include "TTree.h"
 #include <memory>
 #include <vector>
 
@@ -15,20 +14,27 @@ namespace slhcl1tt {
 
 
 // _____________________________________________________________________________
-class TTStubReader {
+class BasicReader {
   public:
-    TTStubReader(int verbose=1);
-    ~TTStubReader();
+    BasicReader(int verbose=1);
+    ~BasicReader();
 
     int init(TString src, bool full=true);
 
-    TTreeFormula* addFormula(TString formula);
+    Long64_t loadTree(Long64_t entry) { return tchain->LoadTree(entry); }
 
-    Long64_t loadTree(Long64_t entry);
-
-    Int_t getEntry(Long64_t entry);
+    Int_t getEntry(Long64_t entry) { return tchain->GetEntry(entry); }
 
     TChain* getChain() { return tchain; }
+
+    // genParticle information
+    std::vector<float> *          vp_pt;
+    std::vector<float> *          vp_eta;
+    std::vector<float> *          vp_phi;
+    std::vector<float> *          vp_vx;
+    std::vector<float> *          vp_vy;
+    std::vector<float> *          vp_vz;
+    std::vector<int> *            vp_charge;
 
     // Stub information
     std::vector<float> *          vb_x;
@@ -44,34 +50,22 @@ class TTStubReader {
     std::vector<unsigned> *       vb_modId;
     std::vector<int> *            vb_trkId;
 
-    // genParticle information
-    std::vector<float> *          vp_pt;
-    std::vector<float> *          vp_eta;
-    std::vector<float> *          vp_phi;
-    std::vector<float> *          vp_vx;
-    std::vector<float> *          vp_vy;
-    std::vector<float> *          vp_vz;
-    std::vector<int> *            vp_charge;
-
   protected:
     TChain* tchain;
     int treenumber;
-    TObjArray ttformulas;
     const int verbose_;
 };
 
 
 // _____________________________________________________________________________
-class TTStubCloner {
+class BasicWriter {
   public:
-    TTStubCloner(int verbose=1);
-    ~TTStubCloner();
+    BasicWriter(int verbose=1);
+    ~BasicWriter();
 
-    int init(TChain* chain, TString out);
+    int init(TChain* tchain, TString out);
 
-    void fill();
-
-    Long64_t write();
+    Long64_t writeTree();
 
   protected:
     TFile* tfile;
@@ -82,4 +76,3 @@ class TTStubCloner {
 }  // namespace slhcl1tt
 
 #endif
-

@@ -53,7 +53,7 @@ class TTRoadReader {
     std::vector<float> * vp_vz;
     std::vector<int> *   vp_charge;
 
-  private:
+  protected:
     TChain* tchain;
     int treenumber;
     const int verbose_;
@@ -72,7 +72,7 @@ class TTRoadWriter {
 
     Long64_t write();
 
-  private:
+  protected:
     // Roads
     std::auto_ptr<std::vector<count_type> >               vr_nSuperstrips;
     std::auto_ptr<std::vector<id_type> >                  vr_bankIndex;
