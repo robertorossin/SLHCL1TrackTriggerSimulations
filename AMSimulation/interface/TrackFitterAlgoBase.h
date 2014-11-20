@@ -2,7 +2,8 @@
 #define AMSimulation_TrackFitterAlgoBase_h_
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTSuperstrip.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTTrack.h"
+//#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTTrack.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTTrack2.h"
 using namespace slhcl1tt;
 
 #include <iosfwd>
@@ -14,7 +15,7 @@ class TrackFitterAlgoBase {
     TrackFitterAlgoBase() {}
     ~TrackFitterAlgoBase() {}
 
-    //virtual slhcl1tt::TTTrackParam fit(const std::vector<TTHit>& hits) = 0;
+    //virtual int fit(const std::vector<TTHit>& hits, TTTrack2& track) = 0;
 
 };
 

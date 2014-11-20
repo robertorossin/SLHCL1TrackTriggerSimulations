@@ -5,13 +5,13 @@
 using namespace slhcl1tt;
 
 
-class TrackFitterAlgoLinearized : TrackFitterAlgoBase {
+class TrackFitterAlgoLinearized : public TrackFitterAlgoBase {
   public:
-    TrackFitterAlgoLinearized() {}
+    TrackFitterAlgoLinearized() : TrackFitterAlgoBase() {}
 
     ~TrackFitterAlgoLinearized() {}
 
-    TTTrackParam fit(const std::vector<TTHit>& hits) const;
+    int fit(const std::vector<TTHit>& hits, TTTrack2& track);
 };
 
 #endif

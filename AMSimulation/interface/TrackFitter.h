@@ -4,6 +4,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoLinearized.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoDas.h"
 using namespace slhcl1tt;
 
 
@@ -21,15 +22,18 @@ class TrackFitter {
       verbose_(1) {
 
         // Decide the track fitter to use
+        fitterLin_ = 0;
+        fitterDas_ = 0;
         if (po.mode == 0)
             fitterLin_ = new TrackFitterAlgoLinearized();
-        else  // use an alternative track fitter?
-            fitterLin_ = new TrackFitterAlgoLinearized();
+        else
+            fitterDas_ = new TrackFitterAlgoDas();
     }
 
     // Destructor
     ~TrackFitter() {
         if (fitterLin_) delete fitterLin_;
+        if (fitterDas_) delete fitterDas_;
     }
 
 
@@ -60,8 +64,9 @@ class TrackFitter {
     int maxTracks_;  // max number of tracks per event
     int verbose_;
 
-    // Track Fitter
+    // Track Fitters
     TrackFitterAlgoLinearized * fitterLin_;
+    TrackFitterAlgoDas * fitterDas_;
 };
 
 #endif
