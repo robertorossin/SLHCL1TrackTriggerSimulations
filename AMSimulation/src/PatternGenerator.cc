@@ -1,8 +1,8 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternGenerator.h"
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/CSVFileReader.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubReader.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/PatternBankReader.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubReader.h"
 
 static const unsigned MIN_NGOODSTUBS = 3;
 static const unsigned MAX_NGOODSTUBS = 8;
@@ -72,6 +72,13 @@ int PatternGenerator::makePatterns_fas(TString src) {
     } else {
         TChain* tchain = reader.getChain();
         tchain->SetBranchStatus("*"                 , 0);
+        tchain->SetBranchStatus("genParts_pt"       , 1);
+      //tchain->SetBranchStatus("genParts_eta"      , 1);
+      //tchain->SetBranchStatus("genParts_phi"      , 1);
+      //tchain->SetBranchStatus("genParts_vx"       , 1);
+      //tchain->SetBranchStatus("genParts_vy"       , 1);
+      //tchain->SetBranchStatus("genParts_vz"       , 1);
+      //tchain->SetBranchStatus("genParts_charge"   , 1);
       //tchain->SetBranchStatus("TTStubs_x"         , 1);
       //tchain->SetBranchStatus("TTStubs_y"         , 1);
       //tchain->SetBranchStatus("TTStubs_z"         , 1);
@@ -82,15 +89,9 @@ int PatternGenerator::makePatterns_fas(TString src) {
         tchain->SetBranchStatus("TTStubs_coordy"    , 1);
       //tchain->SetBranchStatus("TTStubs_roughPt"   , 1);
       //tchain->SetBranchStatus("TTStubs_trigBend"  , 1);
+      //tchain->SetBranchStatus("TTStubs_clusWidth" , 1);
         tchain->SetBranchStatus("TTStubs_modId"     , 1);
-      //tchain->SetBranchStatus("TTStubs_trkId"     , 1);
-        tchain->SetBranchStatus("genParts_pt"       , 1);
-      //tchain->SetBranchStatus("genParts_eta"      , 1);
-      //tchain->SetBranchStatus("genParts_phi"      , 1);
-      //tchain->SetBranchStatus("genParts_vx"       , 1);
-      //tchain->SetBranchStatus("genParts_vy"       , 1);
-      //tchain->SetBranchStatus("genParts_vz"       , 1);
-      //tchain->SetBranchStatus("genParts_charge"   , 1);
+      //tchain->SetBranchStatus("TTStubs_tpId"      , 1);
     }
 
     id_type caloSuperstrip, muonSuperstrip, fakeSuperstrip;
@@ -377,7 +378,7 @@ int PatternGenerator::writePatterns_fas(TString out) {
         writer.fillPatternBank();
     }
 
-    long long nentries2 = writer.write();
+    long long nentries2 = writer.writeTree();
     assert(nentries == nentries2);
 
     return 0;

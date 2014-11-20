@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     // and in config file
     std::string input, output, layout, bankfile, roadfile, trackfile;
     long long maxEvents;
-    int minFrequency, maxPatterns, maxRoads, maxHits, maxTracks;
+    int minFrequency, maxPatterns, maxRoads, maxStubs, maxTracks;
     bool nofilter, notrim;
     PatternBankOption bankOption;
     TrackFitterOption fitOption;
@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
         ("bank,B"       , po::value<std::string>(&bankfile), "Specify pattern bank file")
         ("maxPatterns"  , po::value<int>(&maxPatterns)->default_value(-1), "Specfiy max number of patterns")
         ("maxRoads"     , po::value<int>(&maxRoads)->default_value(-1), "Specfiy max number of roads per event")
-        ("maxHits"      , po::value<int>(&maxHits)->default_value(-1), "Specfiy max number of hits per road")
+        ("maxStubs"     , po::value<int>(&maxStubs)->default_value(-1), "Specfiy max number of stubs per superstrip")
 
         // Only for track fitting
         ("maxTracks"    , po::value<int>(&maxTracks)->default_value(-1), "Specfiy max number of tracks per event")
@@ -113,15 +113,9 @@ int main(int argc, char **argv) {
         ("bank_triggerTowers"       , po::value<std::vector<unsigned> >(&bankOption.triggerTowers)->default_value(dv_triggerTowers), "Specify the trigger towers")
 
         // Specifically for a track fitter
-        ("fit_pqType"               , po::value<int>(&fitOption.pqType)->default_value(0), "Specify choice of variables for p,q")
-        ("fit_pbins"                , po::value<int>(&fitOption.pbins)->default_value(100), "Specify # of bins for p")
-        ("fit_qbins"                , po::value<int>(&fitOption.qbins)->default_value(100), "Specify # of bins for q")
-        ("fit_pmin"                 , po::value<float>(&fitOption.pmin)->default_value(-1), "Specify min value for p")
-        ("fit_qmin"                 , po::value<float>(&fitOption.qmin)->default_value(-1), "Specify min value for q")
-        ("fit_pmax"                 , po::value<float>(&fitOption.pmax)->default_value(1), "Specify max value for p")
-        ("fit_qmax"                 , po::value<float>(&fitOption.qmax)->default_value(1), "Specify max value for q")
-        ("fit_sigma"                , po::value<float>(&fitOption.sigma)->default_value(3), "Specify resolution for the distance parameter")
-        ("fit_minWeight"            , po::value<float>(&fitOption.minWeight)->default_value(0.1), "Specify minimum weight to create a track")
+        ("fit_maxChi2Red"           , po::value<float>(&fitOption.maxChi2Red)->default_value(999.), "Specify maximum reduced chi-squared")
+        ("fit_minNdof"              , po::value<int>(&fitOption.minNdof)->default_value(0), "Specify minimum degree of freedom")
+        ("fit_mode"                 , po::value<unsigned>(&fitOption.mode)->default_value(0), "Select track fitter config -- 0: Linearized; 1: Das")
         ;
 
     // Hidden options, will be allowed both on command line and in config file,
@@ -161,9 +155,6 @@ int main(int argc, char **argv) {
         std::cerr << e.what() << std::endl;
         return 1;
     }
-
-    // Options found in both PatternBankOption and TrackFitterOption
-    fitOption.nLayers = bankOption.nLayers;
 
     // At least one option needs to be called
     if (!(vm.count("cleanStubs")         ||
@@ -309,7 +300,7 @@ int main(int argc, char **argv) {
         matcher.setMinFrequency(minFrequency);
         matcher.setMaxPatterns(maxPatterns);
         matcher.setMaxRoads(maxRoads);
-        matcher.setMaxHits(maxHits);
+        matcher.setMaxStubs(maxStubs);
         matcher.setVerbosity(verbose);
         int exitcode = matcher.run(input, bankfile, output);
         if (exitcode) {

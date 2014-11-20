@@ -40,18 +40,6 @@ int StubCleaner::cleanStubs(TString src, TString out) {
     } else {
         TChain* tchain = reader.getChain();
         tchain->SetBranchStatus("*"                 , 0);
-      //tchain->SetBranchStatus("TTStubs_x"         , 1);  // sync with TTStubReader
-      //tchain->SetBranchStatus("TTStubs_y"         , 1);  // sync with TTStubReader
-        tchain->SetBranchStatus("TTStubs_z"         , 1);
-        tchain->SetBranchStatus("TTStubs_r"         , 1);
-        tchain->SetBranchStatus("TTStubs_eta"       , 1);
-        tchain->SetBranchStatus("TTStubs_phi"       , 1);
-        tchain->SetBranchStatus("TTStubs_coordx"    , 1);
-        tchain->SetBranchStatus("TTStubs_coordy"    , 1);
-      //tchain->SetBranchStatus("TTStubs_roughPt"   , 1);  // sync with TTStubReader
-        tchain->SetBranchStatus("TTStubs_trigBend"  , 1);
-        tchain->SetBranchStatus("TTStubs_modId"     , 1);
-        tchain->SetBranchStatus("TTStubs_trkId"     , 1);
         tchain->SetBranchStatus("genParts_pt"       , 1);
         tchain->SetBranchStatus("genParts_eta"      , 1);
         tchain->SetBranchStatus("genParts_phi"      , 1);
@@ -59,15 +47,28 @@ int StubCleaner::cleanStubs(TString src, TString out) {
         tchain->SetBranchStatus("genParts_vy"       , 1);
         tchain->SetBranchStatus("genParts_vz"       , 1);
         tchain->SetBranchStatus("genParts_charge"   , 1);
+      //tchain->SetBranchStatus("TTStubs_x"         , 1);  // sync with BasicReader::init()
+      //tchain->SetBranchStatus("TTStubs_y"         , 1);  // sync with BasicReader::init()
+        tchain->SetBranchStatus("TTStubs_z"         , 1);
+        tchain->SetBranchStatus("TTStubs_r"         , 1);
+        tchain->SetBranchStatus("TTStubs_eta"       , 1);
+        tchain->SetBranchStatus("TTStubs_phi"       , 1);
+        tchain->SetBranchStatus("TTStubs_coordx"    , 1);
+        tchain->SetBranchStatus("TTStubs_coordy"    , 1);
+      //tchain->SetBranchStatus("TTStubs_roughPt"   , 1);  // sync with BasicReader::init()
+        tchain->SetBranchStatus("TTStubs_trigBend"  , 1);
+      //tchain->SetBranchStatus("TTStubs_clusWidth" , 1);  // sync with BasicReader::init()
+        tchain->SetBranchStatus("TTStubs_modId"     , 1);
+        tchain->SetBranchStatus("TTStubs_tpId"      , 1);
     }
 
     // For event selection
     TTreeFormula* ttf_event = reader.addFormula(eventSelect_);
 
     // For writing
-    TTStubCloner cloner(verbose_);
-    if (cloner.init(reader.getChain(), out)) {
-        std::cout << Error() << "Failed to initialize TTStubCloner." << std::endl;
+    TTStubWriter writer(verbose_);
+    if (writer.init(reader.getChain(), out)) {
+        std::cout << Error() << "Failed to initialize TTStubWriter." << std::endl;
         return 1;
     }
 
@@ -75,7 +76,7 @@ int StubCleaner::cleanStubs(TString src, TString out) {
     // _________________________________________________________________________
     // Loop over all events
 
-    const int good_trkId = 1, unmatch_trkId = -1;
+    const int good_tpId = 0, unmatch_tpId = -1;
 
     // Bookkeepers
     int nPassed = 0, nKept = 0;
@@ -90,7 +91,7 @@ int StubCleaner::cleanStubs(TString src, TString out) {
 
         if (!nstubs) {  // skip if no stub
             ++nKept;
-            cloner.fill();
+            writer.fill();
             continue;
         }
 
@@ -136,8 +137,8 @@ int StubCleaner::cleanStubs(TString src, TString out) {
         // Remove multiple stubs in one layer
         std::vector<std::pair<unsigned, float> > vec_index_dist;
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
-            int trkId = reader.vb_trkId->at(l);  // check sim info
-            if (trkId == good_trkId || trkId == unmatch_trkId) {  // also catch stubs that fail to find a matched simTrack
+            int tpId = reader.vb_tpId->at(l);  // check sim info
+            if (tpId == good_tpId || tpId == unmatch_tpId) {  // also catch stubs that fail to find a matched simTrack
                 //float stub_eta = reader.vb_eta->at(l);
                 //float dEta = std::abs(simEta - stub_eta);
                 //if (dEta > 0.8)  // way too far
@@ -189,7 +190,7 @@ int StubCleaner::cleanStubs(TString src, TString out) {
             bool keepstub = true;
 
             moduleId = reader.vb_modId->at(l);
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " trkId: " << reader.vb_trkId->at(l) << std::endl;
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " tpId: " << reader.vb_tpId->at(l) << std::endl;
 
             // Check whether the index l was stored as a good stub
             const unsigned& count = std::count(goodLayerStubs.begin(), goodLayerStubs.end(), l);
@@ -216,7 +217,7 @@ int StubCleaner::cleanStubs(TString src, TString out) {
               //insertSorted(reader.vb_roughPt->begin()  , ipos, ngoodstubs, reader.vb_roughPt->at(l));
                 insertSorted(reader.vb_trigBend->begin() , ipos, ngoodstubs, reader.vb_trigBend->at(l));
                 insertSorted(reader.vb_modId->begin()    , ipos, ngoodstubs, reader.vb_modId->at(l));
-                insertSorted(reader.vb_trkId->begin()    , ipos, ngoodstubs, reader.vb_trkId->at(l));
+                insertSorted(reader.vb_tpId->begin()     , ipos, ngoodstubs, reader.vb_tpId->at(l));
 
                 ++ngoodstubs;  // remember to increment
             }
@@ -254,14 +255,14 @@ int StubCleaner::cleanStubs(TString src, TString out) {
       //reader.vb_roughPt  ->resize(ngoodstubs);
         reader.vb_trigBend ->resize(ngoodstubs);
         reader.vb_modId    ->resize(ngoodstubs);
-        reader.vb_trkId    ->resize(ngoodstubs);
+        reader.vb_tpId     ->resize(ngoodstubs);
 
         ++nKept;
-        cloner.fill();
+        writer.fill();
     }
     if (verbose_)  std::cout << Info() << "Processed and kept " << nKept << " events, passed " << nPassed << std::endl;
 
-    long long nentries = cloner.write();
+    long long nentries = writer.writeTree();
     assert(nentries == nKept);
 
     return 0;
