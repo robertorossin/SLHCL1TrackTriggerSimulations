@@ -2,6 +2,7 @@
 #define AMSimulationIO_TTTrackReader_h_
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTTrack.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTTrack2.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTRoadReader.h"
 
 
@@ -30,6 +31,8 @@ class TTTrackWriter : public BasicWriter {
 
     void fill(const std::vector<TTTrack>& tracks);
 
+    void fill(const std::vector<TTTrack2>& tracks);
+
   protected:
     // Tracks
     std::auto_ptr<std::vector<float> >                  vt_px;
@@ -47,7 +50,10 @@ class TTTrackWriter : public BasicWriter {
     std::auto_ptr<std::vector<float> >                  vt_z0;
     std::auto_ptr<std::vector<float> >                  vt_d0;
     std::auto_ptr<std::vector<float> >                  vt_chi2;
-    std::auto_ptr<std::vector<unsigned> >               vt_ndof;
+    std::auto_ptr<std::vector<int> >                    vt_ndof;
+    std::auto_ptr<std::vector<float> >                  vt_chi2_phi;
+    std::auto_ptr<std::vector<float> >                  vt_chi2_z;
+    std::auto_ptr<std::vector<int> >                    vt_tpId;
     std::auto_ptr<std::vector<unsigned> >               vt_roadRef;
     std::auto_ptr<std::vector<unsigned> >               vt_combRef;
     std::auto_ptr<std::vector<std::vector<unsigned> > > vt_stubRefs;
