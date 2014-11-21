@@ -26,23 +26,24 @@ gStyle.SetPalette(55)  # rainbow color map
 EOS = "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_results/"
 DATE = "20141108"
 
-RES = "SingleMuPlusMinus_sp16_%s"
-#RES = "SingleElePlusMinus_sp16_%s"
-#RES = "SinglePionPlusMinus_sp16_%s"
-#RES = "SingleKaonPlusMinus_sp16_%s"
-
 settings = [
     ("ss256"  ,  87631104, 0.9999),
 ]
 
 settings_tt27 = [
-    ("ss32"  ,   42222520,  0.9034),
-    ("ss64"  ,   16960498,  0.9725),
-    ("ss128" ,    6240499,  0.9931),
-    ("ss256" ,    2042708,  0.9983),
-    ("ss512" ,     637157,  0.9997),
-    ("ss1024",     222227,  0.9999),
+    ("ss32"  ,   42318379, 0.9026),
+    ("ss64"  ,   17008261, 0.9729),
+    ("ss128" ,    6253924, 0.9930),
+    ("ss256" ,    2039355, 0.9981),
+    ("ss512" ,     628771, 0.9996),
+    ("ss1024",     213156, 0.9999),
 ]
+
+results = "SingleMuPlusMinus_sp16_%s"
+#results = "SingleElePlusMinus_sp16_%s"
+#results = "SinglePionPlusMinus_sp16_%s"
+#results = "SingleKaonPlusMinus_sp16_%s"
+
 
 col  = TColor.GetColor("#1f78b4")  # Paired
 fcol = TColor.GetColor("#a6cee3")
@@ -52,13 +53,13 @@ imgdir = "figures_amsim/"
 #imgdir = "figures_amsim/kaon/"
 
 if samples["tt27"]:
-    RES = "SingleMuPlusMinus_sp16_%s_tt27"
     settings = settings_tt27
+    results = "SingleMuPlusMinus_sp16_%s_tt27"
     imgdir = "figures_amsim_tt27/"
 
 if samples["nu140"]:
     EOS = EOS.replace("_results","_results_PU140")
-    RES = "Neutrino_sp16_%s"
+    results = "Neutrino_sp16_%s"
 
     col = TColor.GetColor("#e31a1c")  # Paired
     fcol = TColor.GetColor("#fb9a99")
@@ -66,8 +67,8 @@ if samples["nu140"]:
 
 if samples["tt27_nu140"]:
     EOS = EOS.replace("_results","_results_PU140")
-    RES = "Neutrino_sp16_%s_tt27"
     settings = settings_tt27
+    results = "Neutrino_sp16_%s_tt27"
 
     col = TColor.GetColor("#e31a1c")  # Paired
     fcol = TColor.GetColor("#fb9a99")
@@ -169,7 +170,7 @@ if sections["coverage"]:
         tree.SetBranchStatus("genParts_vz"           , 1)
         tree.SetBranchStatus("genParts_charge"       , 1)
         tree.SetBranchStatus("TTStubs_modId"         , 1)
-        tree.SetBranchStatus("AMTTRoads_nSuperstrips", 1)
+        tree.SetBranchStatus("AMTTRoads_nsuperstrips", 1)
 
         def fill(pt, eta, phi, vz, charge, accept, trigger):
             if accept:
@@ -250,7 +251,7 @@ if sections["coverage"]:
                     continue
 
             # Get trigger results
-            trigger = (ievt.AMTTRoads_nSuperstrips.size() > 0)
+            trigger = (ievt.AMTTRoads_nsuperstrips.size() > 0)
 
             # Loop over stub moduleIds
             moduleIds_by_mlayers = [[], [], [], [], [], []]  # 6 mlayers
@@ -386,8 +387,7 @@ if sections["coverage"]:
     for ss, npatterns, coverage in settings:
         chain.Reset()
 
-        result = (RES % ss) + ("_%s" % DATE)
-        infiles = listdir_fullpath(EOS + "/" + result)
+        infiles = listdir_fullpath(EOS + "/" + (results % ss) + "_" + DATE)
         print ss, len(infiles)
         for f in infiles:
             chain.Add(f)
@@ -439,8 +439,8 @@ if sections["roads"]:
 
     def projectRoads(tree, histos, nentries=1000000000):
         tree.SetBranchStatus("*", 0)
-        tree.SetBranchStatus("AMTTRoads_nSuperstrips"    , 1)
-        tree.SetBranchStatus("AMTTRoads_hitSuperstripIds", 1)
+        tree.SetBranchStatus("AMTTRoads_nsuperstrips"     , 1)
+        tree.SetBranchStatus("AMTTRoads_stubSuperstripIds", 1)
 
         # Loop over events
         for i_ievt, ievt in enumerate(tree):
@@ -449,7 +449,7 @@ if sections["roads"]:
             nroads_per_event = 0
             ncombinations_per_event = 0
 
-            for nSuperstrips, superstripIds in izip(ievt.AMTTRoads_nSuperstrips, ievt.AMTTRoads_hitSuperstripIds):
+            for nsuperstrips, superstripIds in izip(ievt.AMTTRoads_nsuperstrips, ievt.AMTTRoads_stubSuperstripIds):
                 ssidmap = {}
                 for ssid in superstripIds:
                     ssidmap[ssid] = ssidmap.get(ssid, 0) + 1
@@ -457,7 +457,7 @@ if sections["roads"]:
                 nsuperstrips_per_road = len(ssidmap)
                 nroads_per_event += 1
 
-                assert(nsuperstrips_per_road == nSuperstrips)
+                assert(nsuperstrips_per_road == nsuperstrips)
                 histos["nsuperstrips_per_road"].Fill(nsuperstrips_per_road)
 
                 nstubs_per_road = 0
@@ -476,7 +476,7 @@ if sections["roads"]:
                 histos["nstubs_per_road"].Fill(nstubs_per_road)
                 histos["ncombinations_per_road"].Fill(ncombinations_per_road)
 
-            assert(nroads_per_event == ievt.AMTTRoads_nSuperstrips.size())
+            assert(nroads_per_event == ievt.AMTTRoads_nsuperstrips.size())
             histos["nroads_per_event"].Fill(nroads_per_event)
             histos["ncombinations_per_event"].Fill(ncombinations_per_event)
 
@@ -485,6 +485,7 @@ if sections["roads"]:
 
     def drawRoads(histos, setting, banksize, imgdir, logy=False):
         for hname, h in histos.iteritems():
+            h.SetMinimum(0.5)
             draw([h], ytitle="", logy=logy)
             latex.DrawLatex(0.6, 0.185, "%s [%.1fM bank]" % (setting, banksize))
             save(imgdir, "roads_%s_%s" % (hname, setting), dot_root=True)
@@ -494,8 +495,7 @@ if sections["roads"]:
     for ss, npatterns, coverage in settings:
         chain.Reset()
 
-        result = (RES % ss) + ("_%s" % DATE)
-        infiles = listdir_fullpath(EOS + "/" + result)
+        infiles = listdir_fullpath(EOS + "/" + (results % ss) + "_" + DATE)
         print ss, len(infiles)
         for f in infiles:
             chain.Add(f)
