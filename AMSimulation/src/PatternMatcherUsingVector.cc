@@ -73,12 +73,12 @@ int PatternMatcher::makeRoads_vector(TString src, TString bank, TString out) {
 
     // _________________________________________________________________________
     // Get the trigger tower maps
-    //pbreader.getTriggerTowerMaps(triggerTowerMap_, triggerTowerReverseMap_);
-    //
-    //if (triggerTowerMap_.empty() || triggerTowerReverseMap_.empty()) {
-    //    std::cout << Error() << "Failed to load trigger tower maps" << std::endl;
-    //    return 1;
-    //}
+    pbreader.getTriggerTowerMaps(triggerTowerMap_, triggerTowerReverseMap_);
+
+    if (triggerTowerMap_.empty() || triggerTowerReverseMap_.empty()) {
+        std::cout << Error() << "Failed to load trigger tower maps" << std::endl;
+        return 1;
+    }
 
     // _________________________________________________________________________
     // For reading events
@@ -184,11 +184,11 @@ int PatternMatcher::makeRoads_vector(TString src, TString bank, TString out) {
             stub_z = reader.vb_z->at(l);
             stub_trigBend = reader.vb_trigBend->at(l);
 
-            //// Skip if moduleId not in any trigger tower
-            //if (po.requireTriggerTower && triggerTowerReverseMap_.find(moduleId) == triggerTowerReverseMap_.end()) {
-            //    if (verbose_>2)  std::cout << Debug() << "... ... skip moduleId: " << moduleId << " not in any trigger tower." << std::endl;
-            //    continue;
-            //}
+            // Skip if moduleId not in any trigger tower
+            if (po.requireTriggerTower && triggerTowerReverseMap_.find(moduleId) == triggerTowerReverseMap_.end()) {
+                if (verbose_>2)  std::cout << Debug() << "... ... skip moduleId: " << moduleId << " not in any trigger tower." << std::endl;
+                continue;
+            }
 
             // Find superstrip address
             if (po.mode == 2) {  // luciano superstrip
