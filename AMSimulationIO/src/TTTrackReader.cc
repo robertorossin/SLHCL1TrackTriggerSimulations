@@ -11,7 +11,8 @@ TTTrackReader::TTTrackReader(int verbose)
 TTTrackReader::~TTTrackReader() {}
 
 int TTTrackReader::init(TString src, TString prefixRoad, TString prefixTrack, TString suffix) {
-    TTRoadReader::init(src, prefixRoad, suffix);
+    if (TTRoadReader::init(src, prefixRoad, suffix))
+        return 1;
 
     // FIXME
     return 0;
@@ -49,7 +50,8 @@ TTTrackWriter::TTTrackWriter(int verbose)
 TTTrackWriter::~TTTrackWriter() {}
 
 int TTTrackWriter::init(TChain* tchain, TString out, TString prefix, TString suffix) {
-    BasicWriter::init(tchain, out);
+    if (BasicWriter::init(tchain, out))
+        return 1;
 
   //ttree->Branch(prefix + "px"             + suffix, &(*vt_px));
   //ttree->Branch(prefix + "py"             + suffix, &(*vt_py));

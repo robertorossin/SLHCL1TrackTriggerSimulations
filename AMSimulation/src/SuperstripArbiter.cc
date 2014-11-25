@@ -188,17 +188,21 @@ unsigned SuperstripArbiter::superstrip_luciano(unsigned lay, float phi, float et
     unsigned h = 0;
     lay = compressLayer(lay);  // transform lay
 
-    const unsigned n_phi = M_PI*2. / unit_phi + 1e-3;
-    const unsigned n_eta = 2.2*2. / unit_eta + 1e-3;
+    const int n_phi = floor(M_PI*2. / unit_phi + 0.5);
+    const int n_eta = floor(2.2*2.  / unit_eta + 0.5);
+    assert(n_phi > 0 && n_eta > 0);
 
     if (lay < 16) {
         phi += M_PI;  // -M_PI is the lowest phi value
-        eta += 2.2;  // -2.2 is the lowest eta value
+        eta += 2.2;   // -2.2  is the lowest eta value
 
-        phi = (phi < 0.) ? 0. : (phi >= M_PI*2. ? M_PI*2. - 1e-3 : phi);
-        eta = (eta < 0.) ? 0. : (eta >= 2.2*2. ? 2.2*2. - 1e-3 : eta);
+        int i_phi = floor(phi / unit_phi);
+        int i_eta = floor(eta / unit_eta);
 
-        h = (lay * n_eta * n_phi) + unsigned(eta / unit_eta) * n_phi + unsigned(phi / unit_phi);
+        i_phi = (i_phi < 0) ? 0 : (i_phi >= n_phi) ? (n_phi - 1) : i_phi;  // proper range
+        i_eta = (i_eta < 0) ? 0 : (i_eta >= n_eta) ? (n_eta - 1) : i_eta;  // proper range
+
+        h = (lay * n_eta * n_phi) + i_eta * n_phi + i_phi;
 
     } else if (lay < 18) {
         h = lay * n_eta * n_phi;

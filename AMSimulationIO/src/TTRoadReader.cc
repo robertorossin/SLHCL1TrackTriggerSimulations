@@ -17,7 +17,8 @@ TTRoadReader::TTRoadReader(int verbose)
 TTRoadReader::~TTRoadReader() {}
 
 int TTRoadReader::init(TString src, TString prefix, TString suffix) {
-    BasicReader::init(src);
+    if (BasicReader::init(src))
+        return 1;
 
     tchain->SetBranchAddress(prefix + "bankIndex"         + suffix, &(vr_bankIndex));
     tchain->SetBranchAddress(prefix + "triggerTowerId"    + suffix, &(vr_triggerTowerId));
@@ -40,7 +41,8 @@ TTRoadWriter::TTRoadWriter(int verbose)
 TTRoadWriter::~TTRoadWriter() {}
 
 int TTRoadWriter::init(TChain* tchain, TString out, TString prefix, TString suffix) {
-    BasicWriter::init(tchain, out);
+    if (BasicWriter::init(tchain, out))
+        return 1;
 
     ttree->Branch(prefix + "bankIndex"         + suffix, &(*vr_bankIndex));
     ttree->Branch(prefix + "triggerTowerId"    + suffix, &(*vr_triggerTowerId));

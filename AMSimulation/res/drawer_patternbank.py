@@ -38,8 +38,8 @@ if sections["fixed"]:
     #in_superstrips = ["ss256"]
 
     def bookCoverage(bank):
-        superstrips = {}
-        graphs = []
+        superstrips = []
+        graphs = {}
 
         for ss in in_superstrips:
             chain.Reset(); chain2.Reset()
@@ -82,11 +82,13 @@ if sections["fixed"]:
 
                 integral += frequency
 
-            superstrips[ss] = (npatterns, coverage, x_0p9)
-            print ss, superstrips[ss]
+            superstrips.append((ss, npatterns, coverage, x_0p9))
+            print superstrips[-1]
             npoints = len(xvalues)
+            gname = "gr_%s" % ss
             gr = TGraph(npoints, array('d', xvalues), array('d', yvalues))
-            graphs.append(gr)
+            gr.SetName(gname)
+            graphs[gname] = gr
         return (superstrips, graphs)
 
     def drawCoverage(superstrips, graphs, xmin=0, xmax=1e8, tower="tt27"):
@@ -95,31 +97,25 @@ if sections["fixed"]:
         hframe.SetNdivisions(510, "Y")
 
         # Style
-        for i, gr in enumerate(graphs):
+        for i, ss in enumerate(superstrips):
+            gr = graphs["gr_%s" % ss[0]]
             gr.SetLineWidth(2); gr.SetLineStyle(1); gr.SetMarkerSize(0)
             gr.SetLineColor(paletteSet1[i])
+
+        # Legend
+        moveLegend(0.66,0.15,0.96,0.45); legend.Clear()
+        for i, ss in enumerate(superstrips):
+            gr = graphs["gr_%s" % ss[0]]
+            legend.AddEntry(gr, ss[0], "l")
 
         # Draw
         hframe.Draw()
         for y in [0.5, 0.8, 0.9, 0.95, 1.0]:
             line.DrawLine(xmin, y, xmax, y)
-        for i, gr in enumerate(graphs):
+        for i, ss in enumerate(superstrips):
+            gr = graphs["gr_%s" % ss[0]]
             gr.Draw("C")
-
-        # Legend
-        moveLegend(0.66,0.15,0.96,0.45); legend.Clear()
-        for i, gr in enumerate(graphs):
-            ss = in_superstrips[i]
-            legend.AddEntry(gr, ss, "l")
-            gr.SetName("gr_" + ss)
         legend.Draw()
-        if "tt27" in tower:
-            towertext = "Barrel"
-        elif "tt35" in tower:
-            towertext = "Hybrid"
-        elif "tt43" in tower:
-            towertext = "Endcap"
-        latex.DrawLatex(0.56, 0.88, towertext)
         CMS_label()
         save(imgdir, "fixed_sorted_%s" % tower, dot_root=True)
 
@@ -128,21 +124,19 @@ if sections["fixed"]:
         hframe.GetXaxis().SetRangeUser(0, xmax/50)
         for y in [0.5, 0.8, 0.9, 0.95, 1.0]:
             line.DrawLine(xmin, y, xmax/50, y)
-        for i, gr in enumerate(graphs):
+        for i, ss in enumerate(superstrips):
+            gr = graphs["gr_%s" % ss[0]]
             gr.Draw("C")
         legend.Draw()
-        latex.DrawLatex(0.56, 0.88, towertext)
         CMS_label()
         save(imgdir, "fixed_sorted_zoom_%s" % tower)
 
         # Print out
-        for i, gr in enumerate(graphs):
-            ss = in_superstrips[i]
-            print '{0:7} {1:10d}  {2:5.4f}'.format(ss, superstrips[ss][0], superstrips[ss][1])
+        for i, ss in enumerate(superstrips):
+            print '{0:7} {1:10d}  {2:5.4f}'.format(ss[0], ss[1], ss[2])
         print
-        for i, gr in enumerate(graphs):
-            ss = in_superstrips[i]
-            print '{0:7} {1:10d}  {2:5.4f}'.format(ss, superstrips[ss][2], 0.9)
+        for i, ss in enumerate(superstrips):
+            print '{0:7} {1:10d}  {2:5.4f}'.format(ss[0], ss[3], 0.9)
 
         donotdelete = [hframe]
         return donotdelete
@@ -170,8 +164,8 @@ if sections["projective"]:
     #in_superstrips = ["400x0"]
 
     def bookCoverage(bank):
-        superstrips = {}
-        graphs = []
+        superstrips = []
+        graphs = {}
 
         for ss in in_superstrips:
             chain.Reset(); chain2.Reset()
@@ -214,11 +208,13 @@ if sections["projective"]:
 
                 integral += frequency
 
-            superstrips[ss] = (npatterns, coverage, x_0p9)
-            print ss, superstrips[ss]
+            superstrips.append((ss, npatterns, coverage, x_0p9))
+            print superstrips[-1]
             npoints = len(xvalues)
+            gname = "gr_%s" % ss
             gr = TGraph(npoints, array('d', xvalues), array('d', yvalues))
-            graphs.append(gr)
+            gr.SetName(gname)
+            graphs[gname] = gr
         return (superstrips, graphs)
 
     def drawCoverage(superstrips, graphs, xmin=0, xmax=1e8, tower="tt27"):
@@ -227,31 +223,25 @@ if sections["projective"]:
         hframe.SetNdivisions(510, "Y")
 
         # Style
-        for i, gr in enumerate(graphs):
+        for i, ss in enumerate(superstrips):
+            gr = graphs["gr_%s" % ss[0]]
             gr.SetLineWidth(2); gr.SetLineStyle(1); gr.SetMarkerSize(0)
             gr.SetLineColor(paletteSet1[i])
+
+        # Legend
+        moveLegend(0.66,0.15,0.96,0.45); legend.Clear()
+        for i, ss in enumerate(superstrips):
+            gr = graphs["gr_%s" % ss[0]]
+            legend.AddEntry(gr, ss[0], "l")
 
         # Draw
         hframe.Draw()
         for y in [0.5, 0.8, 0.9, 0.95, 1.0]:
             line.DrawLine(xmin, y, xmax, y)
-        for i, gr in enumerate(graphs):
+        for i, ss in enumerate(superstrips):
+            gr = graphs["gr_%s" % ss[0]]
             gr.Draw("C")
-
-        # Legend
-        moveLegend(0.66,0.15,0.96,0.45); legend.Clear()
-        for i, gr in enumerate(graphs):
-            ss = in_superstrips[i]
-            legend.AddEntry(gr, ss, "l")
-            gr.SetName("gr_" + ss)
         legend.Draw()
-        if "tt27" in tower:
-            towertext = "Barrel"
-        elif "tt35" in tower:
-            towertext = "Hybrid"
-        elif "tt43" in tower:
-            towertext = "Endcap"
-        latex.DrawLatex(0.56, 0.88, towertext)
         CMS_label()
         save(imgdir, "projective_sorted_%s" % tower, dot_root=True)
 
@@ -260,21 +250,19 @@ if sections["projective"]:
         hframe.GetXaxis().SetRangeUser(0, xmax/50)
         for y in [0.5, 0.8, 0.9, 0.95, 1.0]:
             line.DrawLine(xmin, y, xmax/50, y)
-        for i, gr in enumerate(graphs):
+        for i, ss in enumerate(superstrips):
+            gr = graphs["gr_%s" % ss[0]]
             gr.Draw("C")
         legend.Draw()
-        latex.DrawLatex(0.56, 0.88, towertext)
         CMS_label()
         save(imgdir, "projective_sorted_zoom_%s" % tower)
 
         # Print out
-        for i, gr in enumerate(graphs):
-            ss = in_superstrips[i]
-            print '{0:7} {1:10d}  {2:5.4f}'.format(ss, superstrips[ss][0], superstrips[ss][1])
+        for i, ss in enumerate(superstrips):
+            print '{0:7} {1:10d}  {2:5.4f}'.format(ss[0], ss[1], ss[2])
         print
-        for i, gr in enumerate(graphs):
-            ss = in_superstrips[i]
-            print '{0:7} {1:10d}  {2:5.4f}'.format(ss, superstrips[ss][2], 0.9)
+        for i, ss in enumerate(superstrips):
+            print '{0:7} {1:10d}  {2:5.4f}'.format(ss[0], ss[3], 0.9)
 
         donotdelete = [hframe]
         return donotdelete
