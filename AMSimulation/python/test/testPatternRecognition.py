@@ -31,7 +31,7 @@ class TestAMSim(unittest.TestCase):
             self.assertTrue(ievt.AMTTRoads_stubRefs.size() in [0, 1, 7, 28])
         #self.assertEqual(n, 63 + 15 * 7 + 0 * 28)
         #self.assertEqual(n, 78)
-        self.assertEqual(n, 77)
+        self.assertEqual(n, 76)
 
     def test_nhits(self):
         tree = self.ttree
@@ -43,7 +43,7 @@ class TestAMSim(unittest.TestCase):
                 self.assertTrue(iroad.size() in [0, 6, 7, 8])
         #self.assertEqual(n, 1031)
         #self.assertEqual(n, 476)
-        self.assertEqual(n, 471)
+        self.assertEqual(n, 465)
 
     def test_nsuperstrips(self):
         tree = self.ttree
