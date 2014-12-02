@@ -13,7 +13,7 @@ generator = cms.EDProducer("FlatRandomOneOverPtGunProducer",
         #XFlatSpread = cms.double(1.5),  ## in mm
         #YFlatSpread = cms.double(1.5),  ## in mm
         #ZFlatSpread = cms.double(150.), ## in mm
-        #ReallyFlat = cms.bool(True),
+        ReallyFlat = cms.bool(True),
     ),
     Verbosity = cms.untracked.int32(0),
     psethack = cms.string('single mu- 1/pt 0.005 to 0.5'),

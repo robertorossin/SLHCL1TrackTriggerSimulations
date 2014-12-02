@@ -133,7 +133,7 @@ std::vector<unsigned> SuperstripStitcher::stitch(const std::vector<unsigned>& la
 
     unsigned ncombo = n_choose_k_ptr->size() / nLayers_;
     unsigned icombo = randNumber_(randEngine_) % ncombo;
-    ret.insert(ret.end(), n_choose_k_ptr->at(icombo * nLayers_), n_choose_k_ptr->at((icombo+1) * nLayers_));
+    ret.insert(ret.end(), n_choose_k_ptr->begin() + (icombo * nLayers_), n_choose_k_ptr->begin() + ((icombo+1) * nLayers_));
     return ret;
 }
 

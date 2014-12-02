@@ -188,8 +188,8 @@ unsigned SuperstripArbiter::superstrip_luciano(unsigned lay, float phi, float et
     unsigned h = 0;
     lay = compressLayer(lay);  // transform lay
 
-    const int n_phi = floor(M_PI*2. / unit_phi + 0.5);
-    const int n_eta = floor(2.2*2.  / unit_eta + 0.5);
+    int n_phi = floor(M_PI*2. / unit_phi + 0.5);
+    int n_eta = floor(2.2*2.  / unit_eta + 0.5);
     assert(n_phi > 0 && n_eta > 0);
 
     if (lay < 16) {

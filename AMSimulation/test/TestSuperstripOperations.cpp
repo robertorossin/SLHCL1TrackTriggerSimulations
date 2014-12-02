@@ -4,82 +4,39 @@ using namespace slhcl1tt;
 
 #include <cppunit/extensions/HelperMacros.h>
 
-// FIXME: implement this
-
-/*
-// Code taken from https://docs.python.org/2/library/itertools.html#itertools.combinations
-static std::vector<std::array<unsigned,8> > combinations(const std::vector<unsigned>& pool, int k) {
-    unsigned n = pool.size();
-    int i, j;
-    std::vector<unsigned> indices;
-    for (i=0; i<k; ++i)
-        indices.push_back(i);
-
-    std::vector<std::array<unsigned,8> > ret;
-    std::array<unsigned,8> ret_inner;
-    while (true) {
-        ret_inner.fill(0);
-        for (i=0; i<k; ++i) {
-            ret_inner.at(i) = pool.at(indices[i]);
-        }
-        ret.push_back(ret_inner);
-
-        //for (i=0; i<k; ++i) {
-        //    std::cout << indices[i] << ",";
-        //}
-        //std::cout << std::endl;
-
-        for (i=k-1; i>=0; --i) {
-            if (indices[i] != i + n - k)
-                break;
-        }
-        if (i == -1) break;
-
-        indices[i] += 1;
-        for (j=i+1; j<k; ++j) {
-            indices[j] = indices[j-1] + 1;
-        }
-    }
-    return ret;
-}
-
 
 class TestSuperstripOperations : public CppUnit::TestFixture  {
 
 CPPUNIT_TEST_SUITE(TestSuperstripOperations);
-CPPUNIT_TEST(testSubLadder);
-CPPUNIT_TEST(testSubModule);
-CPPUNIT_TEST(testHashModule);
-CPPUNIT_TEST(testHash);
-CPPUNIT_TEST(testStitch);
+CPPUNIT_TEST(testArbiterModule);
+CPPUNIT_TEST(testArbiterSuperstrip);
+CPPUNIT_TEST(testArbiterSuperstripLuciano);
+CPPUNIT_TEST(testStitcherStitch);
+CPPUNIT_TEST(testStitcherStitchLayermap);
 CPPUNIT_TEST_SUITE_END();
 
 private:
     SuperstripArbiter *arbiter_;
-    SuperstripHasher *hasher_;
     SuperstripStitcher *stitcher_;
     std::vector<unsigned> values_;
 
 public:
     void setUp() {
-        int nLayers = 6;
-        int nFakeSuperstrips = 3;
+        const unsigned nLayers = 6;
+        const unsigned nFakers = 3;
+
+        const unsigned subLadderSize = 16;
+        const unsigned subModuleSize = 256;
 
         std::vector<unsigned> subLadderVarSize = {8, 16, 32, 16, 16, 32};
         std::vector<unsigned> subModuleVarSize = {256, 256, 256, 256, 512, 512};
         std::vector<unsigned> subLadderECVarSize = {8, 8, 8, 16, 16, 16, 16, 32, 32, 16, 16, 16, 16, 32, 32};
         std::vector<unsigned> subModuleECVarSize = {256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 512, 512, 512, 512};
-        arbiter_ = new SuperstripArbiter(subLadderVarSize, subModuleVarSize, subLadderECVarSize, subModuleECVarSize);
+        arbiter_ = new SuperstripArbiter(subLadderSize, subModuleSize);
+        //arbiter_ = new SuperstripArbiter(subLadderVarSize, subModuleVarSize, subLadderECVarSize, subModuleECVarSize);
         //arbiter_->print();
 
-        //id_type subLadderNBits = msb(32/arbiter_->minSubLadderSize());
-        //id_type subModuleNBits = msb(1024/arbiter_->minSubModuleSize());
-        id_type subLadderNBits = 1;
-        id_type subModuleNBits = 5;
-        hasher_ = new SuperstripHasher(subLadderNBits, subModuleNBits);
-        //hasher_->print();
-
-        stitcher_ = new SuperstripStitcher(nLayers, nFakeSuperstrips, 1);
+        stitcher_ = new SuperstripStitcher(nLayers, nFakers);
 
         // Read module ids
         unsigned i = 0, j = 0;
@@ -105,139 +62,173 @@ public:
 
     void tearDown() {
         delete arbiter_;
-        delete hasher_;
         delete stitcher_;
     }
 
-    void testSubLadder() {
+    void testArbiterModule() {
+        CPPUNIT_ASSERT_EQUAL(     0U, arbiter_->module( 5,    0,    0));
+        CPPUNIT_ASSERT_EQUAL(  1007U, arbiter_->module( 5, 16-1, 63-1));
+        CPPUNIT_ASSERT_EQUAL(  2327U, arbiter_->module( 6, 24-1, 55-1));
+        CPPUNIT_ASSERT_EQUAL(  4163U, arbiter_->module( 7, 34-1, 54-1));
+        CPPUNIT_ASSERT_EQUAL(  5315U, arbiter_->module( 8, 48-1, 24-1));
+        CPPUNIT_ASSERT_EQUAL(  6803U, arbiter_->module( 9, 62-1, 24-1));
+        CPPUNIT_ASSERT_EQUAL(  8627U, arbiter_->module(10, 76-1, 24-1));
+        CPPUNIT_ASSERT_EQUAL(  8628U, arbiter_->module(11,    0,    0));
+        CPPUNIT_ASSERT_EQUAL(  8871U, arbiter_->module(11,  8-1, 40-1));
+        CPPUNIT_ASSERT_EQUAL(  9551U, arbiter_->module(12,  8-1, 40-1));
+        CPPUNIT_ASSERT_EQUAL( 10231U, arbiter_->module(13,  8-1, 40-1));
+        CPPUNIT_ASSERT_EQUAL( 10911U, arbiter_->module(14,  8-1, 40-1));
+        CPPUNIT_ASSERT_EQUAL( 11591U, arbiter_->module(15,  8-1, 40-1));
+        CPPUNIT_ASSERT_EQUAL( 12271U, arbiter_->module(18,  8-1, 40-1));
+        CPPUNIT_ASSERT_EQUAL( 12951U, arbiter_->module(19,  8-1, 40-1));
+        CPPUNIT_ASSERT_EQUAL( 13631U, arbiter_->module(20,  8-1, 40-1));
+        CPPUNIT_ASSERT_EQUAL( 14311U, arbiter_->module(21,  8-1, 40-1));
+        CPPUNIT_ASSERT_EQUAL( 14991U, arbiter_->module(22,  8-1, 40-1));
+        CPPUNIT_ASSERT_EQUAL(  9307U, arbiter_->module(11, 15-1, 80-1));
+        CPPUNIT_ASSERT_EQUAL(  9987U, arbiter_->module(12, 15-1, 80-1));
+        CPPUNIT_ASSERT_EQUAL( 10667U, arbiter_->module(13, 15-1, 80-1));
+        CPPUNIT_ASSERT_EQUAL( 11347U, arbiter_->module(14, 15-1, 80-1));
+        CPPUNIT_ASSERT_EQUAL( 12027U, arbiter_->module(15, 15-1, 80-1));
+        CPPUNIT_ASSERT_EQUAL( 12707U, arbiter_->module(18, 15-1, 80-1));
+        CPPUNIT_ASSERT_EQUAL( 13387U, arbiter_->module(19, 15-1, 80-1));
+        CPPUNIT_ASSERT_EQUAL( 14067U, arbiter_->module(20, 15-1, 80-1));
+        CPPUNIT_ASSERT_EQUAL( 14747U, arbiter_->module(21, 15-1, 80-1));
+        CPPUNIT_ASSERT_EQUAL( 15427U, arbiter_->module(22, 15-1, 80-1));
+    }
+
+    void testArbiterSuperstrip() {
         // half-strip
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->subladder( 50000, 31*2));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->subladder( 60000, 31*2));
-        CPPUNIT_ASSERT_EQUAL(0U, arbiter_->subladder( 70000, 31*2));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->subladder( 80000,  1*2));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->subladder( 90000,  1*2));
-        CPPUNIT_ASSERT_EQUAL(0U, arbiter_->subladder(100000,  1*2));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->subladder(110000, 31*2));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->subladder(120100, 31*2));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->subladder(130200, 31*2));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->subladder(140300, 31*2));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->subladder(150400, 31*2));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->subladder(180500, 31*2));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->subladder(190600, 31*2));
-        CPPUNIT_ASSERT_EQUAL(0U, arbiter_->subladder(200700, 31*2));
-        CPPUNIT_ASSERT_EQUAL(0U, arbiter_->subladder(210800, 31*2));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->subladder(220900,  1*2));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->subladder(111000,  1*2));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->subladder(121100,  1*2));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->subladder(131200,  1*2));
-        CPPUNIT_ASSERT_EQUAL(0U, arbiter_->subladder(141300,  1*2));
-        CPPUNIT_ASSERT_EQUAL(0U, arbiter_->subladder(151400,  1*2));
+        CPPUNIT_ASSERT_EQUAL(     0U, arbiter_->superstrip( 5,    0,    0,  0*2,    0*2));
+        CPPUNIT_ASSERT_EQUAL(     7U, arbiter_->superstrip( 5,    0,    0, 31*2,  959*2));
+        CPPUNIT_ASSERT_EQUAL(  8063U, arbiter_->superstrip( 5, 16-1, 63-1, 31*2,  959*2));
+        CPPUNIT_ASSERT_EQUAL( 18623U, arbiter_->superstrip( 6, 24-1, 55-1, 31*2,  959*2));
+        CPPUNIT_ASSERT_EQUAL( 33311U, arbiter_->superstrip( 7, 34-1, 54-1, 31*2,  959*2));
+        CPPUNIT_ASSERT_EQUAL( 42527U, arbiter_->superstrip( 8, 48-1, 24-1,  1*2, 1015*2));
+        CPPUNIT_ASSERT_EQUAL( 54431U, arbiter_->superstrip( 9, 62-1, 24-1,  1*2, 1015*2));
+        CPPUNIT_ASSERT_EQUAL( 69023U, arbiter_->superstrip(10, 76-1, 24-1,  1*2, 1015*2));
+        CPPUNIT_ASSERT_EQUAL( 69024U, arbiter_->superstrip(11,    0,    0,  0*2,    0*2));
+        CPPUNIT_ASSERT_EQUAL( 69031U, arbiter_->superstrip(11,    0,    0, 31*2,  959*2));
+        CPPUNIT_ASSERT_EQUAL( 70975U, arbiter_->superstrip(11,  8-1, 40-1, 31*2,  959*2));
+        CPPUNIT_ASSERT_EQUAL( 76415U, arbiter_->superstrip(12,  8-1, 40-1, 31*2,  959*2));
+        CPPUNIT_ASSERT_EQUAL( 81855U, arbiter_->superstrip(13,  8-1, 40-1, 31*2,  959*2));
+        CPPUNIT_ASSERT_EQUAL( 87295U, arbiter_->superstrip(14,  8-1, 40-1, 31*2,  959*2));
+        CPPUNIT_ASSERT_EQUAL( 92735U, arbiter_->superstrip(15,  8-1, 40-1, 31*2,  959*2));
+        CPPUNIT_ASSERT_EQUAL( 98175U, arbiter_->superstrip(18,  8-1, 40-1, 31*2,  959*2));
+        CPPUNIT_ASSERT_EQUAL(103615U, arbiter_->superstrip(19,  8-1, 40-1, 31*2,  959*2));
+        CPPUNIT_ASSERT_EQUAL(109055U, arbiter_->superstrip(20,  8-1, 40-1, 31*2,  959*2));
+        CPPUNIT_ASSERT_EQUAL(114495U, arbiter_->superstrip(21,  8-1, 40-1, 31*2,  959*2));
+        CPPUNIT_ASSERT_EQUAL(119935U, arbiter_->superstrip(22,  8-1, 40-1, 31*2,  959*2));
+        CPPUNIT_ASSERT_EQUAL( 74463U, arbiter_->superstrip(11, 15-1, 80-1,  1*2, 1015*2));
+        CPPUNIT_ASSERT_EQUAL( 79903U, arbiter_->superstrip(12, 15-1, 80-1,  1*2, 1015*2));
+        CPPUNIT_ASSERT_EQUAL( 85343U, arbiter_->superstrip(13, 15-1, 80-1,  1*2, 1015*2));
+        CPPUNIT_ASSERT_EQUAL( 90783U, arbiter_->superstrip(14, 15-1, 80-1,  1*2, 1015*2));
+        CPPUNIT_ASSERT_EQUAL( 96223U, arbiter_->superstrip(15, 15-1, 80-1,  1*2, 1015*2));
+        CPPUNIT_ASSERT_EQUAL(101663U, arbiter_->superstrip(18, 15-1, 80-1,  1*2, 1015*2));
+        CPPUNIT_ASSERT_EQUAL(107103U, arbiter_->superstrip(19, 15-1, 80-1,  1*2, 1015*2));
+        CPPUNIT_ASSERT_EQUAL(112543U, arbiter_->superstrip(20, 15-1, 80-1,  1*2, 1015*2));
+        CPPUNIT_ASSERT_EQUAL(117983U, arbiter_->superstrip(21, 15-1, 80-1,  1*2, 1015*2));
+        CPPUNIT_ASSERT_EQUAL(123423U, arbiter_->superstrip(22, 15-1, 80-1,  1*2, 1015*2));
 
         // full-strip
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->subladder( 50000, 31, false));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->subladder( 80000,  1, false));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->subladder(110000, 31, false));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->subladder(220900,  1, false));
+        CPPUNIT_ASSERT_EQUAL( 69023U, arbiter_->superstrip(10, 76-1, 24-1,  1, 1015, false));
+        CPPUNIT_ASSERT_EQUAL(119935U, arbiter_->superstrip(22,  8-1, 40-1, 31,  959, false));
+        CPPUNIT_ASSERT_EQUAL(123423U, arbiter_->superstrip(22, 15-1, 80-1,  1, 1015, false));
     }
 
-    void testSubModule() {
-        // half-strip
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule( 50000,  959*2));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule( 60000,  959*2));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule( 70000,  959*2));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule( 80000, 1015*2));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->submodule( 90000, 1015*2));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->submodule(100000, 1015*2));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule(110000,  959*2));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule(120100,  959*2));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule(130200,  959*2));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule(140300,  959*2));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule(150400,  959*2));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule(180500,  959*2));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule(190600,  959*2));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule(200700,  959*2));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule(210800,  959*2));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule(220900, 1015*2));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule(111000, 1015*2));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->submodule(121100, 1015*2));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->submodule(131200, 1015*2));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->submodule(141300, 1015*2));
-        CPPUNIT_ASSERT_EQUAL(1U, arbiter_->submodule(151400, 1015*2));
+    void testArbiterSuperstripLuciano() {
+        // 400x0
+        CPPUNIT_ASSERT_EQUAL(     0U, arbiter_->superstrip_luciano( 5, -M_PI, -2.2, M_PI/1600., 4.4));
+        CPPUNIT_ASSERT_EQUAL(  1600U, arbiter_->superstrip_luciano( 5,   0.0, -2.2, M_PI/1600., 4.4));
+        CPPUNIT_ASSERT_EQUAL(  3199U, arbiter_->superstrip_luciano( 5,  M_PI, -2.2, M_PI/1600., 4.4));
+        CPPUNIT_ASSERT_EQUAL(     0U, arbiter_->superstrip_luciano( 5, -M_PI,  0.0, M_PI/1600., 4.4));
+        CPPUNIT_ASSERT_EQUAL(  1600U, arbiter_->superstrip_luciano( 5,   0.0,  0.0, M_PI/1600., 4.4));
+        CPPUNIT_ASSERT_EQUAL(  3199U, arbiter_->superstrip_luciano( 5,  M_PI,  0.0, M_PI/1600., 4.4));
+        CPPUNIT_ASSERT_EQUAL(     0U, arbiter_->superstrip_luciano( 5, -M_PI,  2.2, M_PI/1600., 4.4));
+        CPPUNIT_ASSERT_EQUAL(  1600U, arbiter_->superstrip_luciano( 5,   0.0,  2.2, M_PI/1600., 4.4));
+        CPPUNIT_ASSERT_EQUAL(  3199U, arbiter_->superstrip_luciano( 5,  M_PI,  2.2, M_PI/1600., 4.4));
+        CPPUNIT_ASSERT_EQUAL(  6399U, arbiter_->superstrip_luciano( 6,  M_PI, -2.2, M_PI/1600., 4.4));
+        CPPUNIT_ASSERT_EQUAL(  9599U, arbiter_->superstrip_luciano( 7,  M_PI, -2.2, M_PI/1600., 4.4));
+        CPPUNIT_ASSERT_EQUAL( 12799U, arbiter_->superstrip_luciano( 8,  M_PI, -2.2, M_PI/1600., 4.4));
+        CPPUNIT_ASSERT_EQUAL( 15999U, arbiter_->superstrip_luciano( 9,  M_PI, -2.2, M_PI/1600., 4.4));
+        CPPUNIT_ASSERT_EQUAL( 19199U, arbiter_->superstrip_luciano(10,  M_PI, -2.2, M_PI/1600., 4.4));
 
-        // full-strip
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule( 50000,  959, false));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule( 80000, 1015, false));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule(110000,  959, false));
-        CPPUNIT_ASSERT_EQUAL(3U, arbiter_->submodule(220900, 1015, false));
+        // 400x1
+        CPPUNIT_ASSERT_EQUAL( 11200U, arbiter_->superstrip_luciano( 5,   0.0,  0.0, M_PI/1600., 4.4/6));
+        CPPUNIT_ASSERT_EQUAL( 12799U, arbiter_->superstrip_luciano( 5,  M_PI,  0.0, M_PI/1600., 4.4/6));
+        CPPUNIT_ASSERT_EQUAL( 31999U, arbiter_->superstrip_luciano( 6,  M_PI,  0.0, M_PI/1600., 4.4/6));
+        CPPUNIT_ASSERT_EQUAL( 51199U, arbiter_->superstrip_luciano( 7,  M_PI,  0.0, M_PI/1600., 4.4/6));
+        CPPUNIT_ASSERT_EQUAL( 70399U, arbiter_->superstrip_luciano( 8,  M_PI,  0.0, M_PI/1600., 4.4/6));
+        CPPUNIT_ASSERT_EQUAL( 89599U, arbiter_->superstrip_luciano( 9,  M_PI,  0.0, M_PI/1600., 4.4/6));
+        CPPUNIT_ASSERT_EQUAL(108799U, arbiter_->superstrip_luciano(10,  M_PI,  0.0, M_PI/1600., 4.4/6));
     }
 
-    void testHashModule() {
-        std::map<unsigned, unsigned>  hashModuleMap;
-        for (auto& v: values_)
-            hashModuleMap[hasher_->hashModule(v)] = v;
-        CPPUNIT_ASSERT_EQUAL(values_.size(), hashModuleMap.size());
+    void testStitcherStitch() {
+        std::vector<unsigned> input;
+        std::vector<unsigned> output;
 
-        //for (auto& it: hashModuleMap)
-        //    printf("%8u --> %8u\n", it.second, it.first);
+        input  = {5, 6, 7};
+        output = {0, 1, 2, 999999, 999999, 999999};
+        CPPUNIT_ASSERT(output == stitcher_->stitch(input));
 
-        CPPUNIT_ASSERT_EQUAL(    0U, hasher_->hashModule( 50000));
-        CPPUNIT_ASSERT_EQUAL( 1000U, hasher_->hashModule( 50862));
-        CPPUNIT_ASSERT_EQUAL( 2000U, hasher_->hashModule( 60841));
-        CPPUNIT_ASSERT_EQUAL( 3000U, hasher_->hashModule( 72619));
-        CPPUNIT_ASSERT_EQUAL( 4000U, hasher_->hashModule( 70649));
-        CPPUNIT_ASSERT_EQUAL( 6000U, hasher_->hashModule( 90211));
-        CPPUNIT_ASSERT_EQUAL( 8000U, hasher_->hashModule(105615));
-        CPPUNIT_ASSERT_EQUAL(10000U, hasher_->hashModule(130012));
-        CPPUNIT_ASSERT_EQUAL(12000U, hasher_->hashModule(151452));
-        CPPUNIT_ASSERT_EQUAL(14000U, hasher_->hashModule(201412));
-        CPPUNIT_ASSERT_EQUAL(15427U, hasher_->hashModule(221479));
+        input  = {5, 6, 7, 8};
+        output = {0, 1, 2, 3, 999999, 999999};
+        CPPUNIT_ASSERT(output == stitcher_->stitch(input));
+
+        input  = {5, 6, 7, 8, 9};
+        output = {0, 1, 2, 3, 4, 999999};
+        CPPUNIT_ASSERT(output == stitcher_->stitch(input));
+
+        input  = {5, 6, 7, 8, 9, 10};
+        output = {0, 1, 2, 3, 4, 5};
+        CPPUNIT_ASSERT(output == stitcher_->stitch(input));
+
+        input  = {5, 6, 7, 8, 9, 10, 11};
+        output = {0, 1, 3, 4, 5, 6};
+        CPPUNIT_ASSERT(output == stitcher_->stitch(input));
+
+        input  = {5, 6, 7, 8, 9, 10, 11, 12};
+        output = {0, 1, 3, 4, 5, 7};
+        CPPUNIT_ASSERT(output == stitcher_->stitch(input));
+
+        //std::vector<unsigned> output2 = stitcher_->stitch(input);
+        //for (unsigned i=0; i<output2.size(); ++i)
+        //    std::cout << output2.at(i) << ", ";
+        //std::cout << std::endl;
     }
 
-    void testHash() {
-        CPPUNIT_ASSERT_EQUAL( 32103U, hasher_->hash( 827900423));
-        CPPUNIT_ASSERT_EQUAL(106512U, hasher_->hash( 996589584));
-        CPPUNIT_ASSERT_EQUAL(210627U, hasher_->hash(1165361155));
-        CPPUNIT_ASSERT_EQUAL(307494U, hasher_->hash(1337147910));
-        CPPUNIT_ASSERT_EQUAL(397154U, hasher_->hash(1509196290));
-        CPPUNIT_ASSERT_EQUAL(505306U, hasher_->hash(1682866202));
-        CPPUNIT_ASSERT_EQUAL(987393U, hasher_->hash(fakeSuperstripId_));
-        CPPUNIT_ASSERT_EQUAL(987392U, hasher_->hash(fakeSuperstripId1_));
-        CPPUNIT_ASSERT_EQUAL(987393U, hasher_->hash(fakeSuperstripId2_));
-    }
+    void testStitcherStitchLayermap() {
+        std::vector<unsigned> input;
+        std::vector<unsigned> output;
 
-    void testStitch() {
-        std::vector<addr_type> input;
-        std::vector<pattern_type> output;
+        input  = {5, 6, 7};
+        output = {0, 1, 2, 999999, 999999, 999999};
+        CPPUNIT_ASSERT(output == stitcher_->stitch_layermap(input));
 
-        output.clear(); output.resize(1);
-        input     =  {11, 22, 33};
-        output[0] = {{11, 22, 33, fakeSuperstripId_, fakeSuperstripId1_, fakeSuperstripId2_}};  // can use single brace pair only in GCC 4.8
-        CPPUNIT_ASSERT(output == stitcher_->stitch(input));
+        input  = {5, 6, 7, 8};
+        output = {0, 1, 2, 3, 999999, 999999};
+        CPPUNIT_ASSERT(output == stitcher_->stitch_layermap(input));
 
-        output.clear(); output.resize(1);
-        input     =  {11, 22, 33, 44};
-        output[0] = {{11, 22, 33, 44, fakeSuperstripId_, fakeSuperstripId1_}};
-        CPPUNIT_ASSERT(output == stitcher_->stitch(input));
+        input  = {5, 6, 7, 8, 9};
+        output = {0, 1, 2, 3, 4, 999999};
+        CPPUNIT_ASSERT(output == stitcher_->stitch_layermap(input));
 
-        output.clear(); output.resize(1);
-        input     =  {11, 22, 33, 44, 55};
-        output[0] = {{11, 22, 33, 44, 55, fakeSuperstripId_}};
-        CPPUNIT_ASSERT(output == stitcher_->stitch(input));
+        input  = {5, 6, 7, 8, 9, 10};
+        output = {0, 1, 2, 3, 4, 5};
+        CPPUNIT_ASSERT(output == stitcher_->stitch_layermap(input));
 
-        output.clear(); output.resize(1);
-        input     =  {11, 22, 33, 44, 55, 66};
-        output[0] = {{11, 22, 33, 44, 55, 66}};
-        CPPUNIT_ASSERT(output == stitcher_->stitch(input));
+        input  = {5, 6, 7, 8, 9, 10, 11};
+        output = {0, 1, 2, 3, 4, 6};
+        CPPUNIT_ASSERT(output == stitcher_->stitch_layermap(input));
 
-        input     = {11, 22, 33, 44, 55, 66, 77};
-        output    = combinations(input, 6);
-        CPPUNIT_ASSERT(output == stitcher_->stitch(input));
+        input  = {5, 6, 7, 8, 9, 10, 11, 12};
+        output = {0, 1, 2, 3, 7, 6};
+        CPPUNIT_ASSERT(output == stitcher_->stitch_layermap(input));
 
-        input      = {11, 22, 33, 44, 55, 66, 77, 88};
-        output    = combinations(input, 6);
-        CPPUNIT_ASSERT(output == stitcher_->stitch(input));
+        //std::vector<unsigned> output2 = stitcher_->stitch_layermap(input);
+        //for (unsigned i=0; i<output2.size(); ++i)
+        //    std::cout << output2.at(i) << ", ";
+        //std::cout << std::endl;
     }
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(TestSuperstripOperations);
-*/
