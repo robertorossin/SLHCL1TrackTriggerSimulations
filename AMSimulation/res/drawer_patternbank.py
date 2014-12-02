@@ -77,7 +77,9 @@ if sections["fixed"]:
                     xvalues.append(i); yvalues.append(y)
                     print "..", i, y
                     if ((integral + frequency) != count):
-                        print "ERROR: ", integral, frequency, count
+                        print "ERROR: frequency overflow: ", integral + frequency, "!=", count
+                        print "       apply temporary fix."
+                        yvalues = [yy * float(count) / float(integral + frequency) for yy in yvalues]
                     #assert((integral + frequency) == count)
 
                 integral += frequency
@@ -203,7 +205,9 @@ if sections["projective"]:
                     xvalues.append(i); yvalues.append(y)
                     print "..", i, y
                     if ((integral + frequency) != count):
-                        print "ERROR: ", integral, frequency, count
+                        print "ERROR: frequency overflow: ", integral + frequency, "!=", count
+                        print "       apply temporary fix."
+                        yvalues = [yy * float(count) / float(integral + frequency) for yy in yvalues]
                     #assert((integral + frequency) == count)
 
                 integral += frequency
