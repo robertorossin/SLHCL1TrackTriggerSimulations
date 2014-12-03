@@ -6,14 +6,13 @@ from array import array
 import numpy as np
 import os
 
-# FIXME: find quantiles
 
 # ______________________________________________________________________________
 # Configurations
 
 sections = {}
-sections["fixed"     ] = False
-sections["projective"] = True
+sections["fixed"     ] = True
+sections["projective"] = False
 
 drawerInit = DrawerInit()
 gStyle.SetPadRightMargin(0.1)
@@ -22,39 +21,39 @@ EOS = "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_results_PU140/"
 DATE = "20141108"
 
 fixed_settings_tt27 = [
-    ("ss32"  ,   42318379, 0.9026),
-    ("ss64"  ,   17008261, 0.9729),
-    ("ss128" ,    6253924, 0.9930),
-    ("ss256" ,    2039355, 0.9981),
-    ("ss512" ,     628771, 0.9996),
-    ("ss1024",     213156, 0.9999),
+    ("ss32"  ,   54214494,  0.9452),
+    ("ss64"  ,   20262384,  0.9854),
+    ("ss128" ,    7103498,  0.9966),
+    ("ss256" ,    2241139,  0.9992),
+    ("ss512" ,     676611,  0.9999),
+    ("ss1024",     227105,  1.0000),
 ]
 
 fixed_settings_tt27_pt3 = [
-    ("ss32"  ,   29343005,  0.9055),
-    ("ss64"  ,   11854473,  0.9734),
-    ("ss128" ,    4377734,  0.9929),
-    ("ss256" ,    1453179,  0.9980),
-    ("ss512" ,     463751,  0.9994),
-    ("ss1024",     158710,  0.9999),
+    ("ss32"  ,   37413858,  0.9474),
+    ("ss64"  ,   14089133,  0.9859),
+    ("ss128" ,    4967682,  0.9968),
+    ("ss256" ,    1596133,  0.9993),
+    ("ss512" ,     498286,  0.9999),
+    ("ss1024",     168615,  1.0000),
 ]
 
 projective_settings_tt27 = [
-    ("600x0" ,   15808528,  0.9763),
-    ("400x0" ,    4285974,  0.9952),
-    ("200x0" ,     541342,  0.9997),
-    ("200x1" ,    3205364,  0.9955),
-    ("100x2" ,    1615816,  0.9981),
-    ("20x10" ,    1129484,  0.9989),
+    ("600x0" ,   18712072,  0.9870),
+    ("400x0" ,    4867787,  0.9973),
+    ("200x0" ,     604226,  0.9998),
+    ("200x1" ,    3777945,  0.9972),
+    ("100x2" ,    1832087,  0.9990),
+    ("20x10" ,    1223225,  0.9996),
 ]
 
 projective_settings_tt27_pt3 = [
-    ("600x0" ,    5806521,  0.9901),
-    ("400x0" ,    1717472,  0.9980),
-    ("200x0" ,     263322,  0.9998),
-    ("200x1" ,    1883636,  0.9970),
-    ("100x2" ,    1031066,  0.9985),
-    ("20x10" ,     763513,  0.9990),
+    ("600x0" ,    6654240,  0.9946),
+    ("400x0" ,    1922251,  0.9988),
+    ("200x0" ,     292148,  0.9999),
+    ("200x1" ,    2198795,  0.9976),
+    ("100x2" ,    1162501,  0.9991),
+    ("20x10" ,     820585,  0.9996),
 ]
 
 imgdir = "figures_roads/"
@@ -492,14 +491,14 @@ if sections["projective"]:
 
 
     # Barrel 2 GeV
-    #settings = projective_settings_tt27
-    #results = "Neutrino_lu%s_tt27"
-    #(superstrips, graphs) = bookRate(settings, results)
-    #d = drawRate(superstrips, graphs, xmax=5e7, tower="tt27")
+    settings = projective_settings_tt27
+    results = "Neutrino_lu%s_tt27"
+    (superstrips, graphs) = bookRate(settings, results)
+    d = drawRate(superstrips, graphs, xmax=5e7, tower="tt27")
 
     # Barrel 3 GeV
-    settings = projective_settings_tt27_pt3
-    results = "Neutrino_lu%s_tt27_pt3"
-    (superstrips, graphs) = bookRate(settings, results)
-    d = drawRate(superstrips, graphs, xmax=5e7, tower="tt27_pt3")
+    #settings = projective_settings_tt27_pt3
+    #results = "Neutrino_lu%s_tt27_pt3"
+    #(superstrips, graphs) = bookRate(settings, results)
+    #d = drawRate(superstrips, graphs, xmax=5e7, tower="tt27_pt3")
 
