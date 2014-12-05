@@ -2,14 +2,6 @@
 
 import json
 
-#class Coord:
-#    def __init__(self, z, r, eta, phi, sensorSpacing):
-#        self.z = z
-#        self.r = r
-#        self.eta = eta
-#        self.phi = phi
-#        self.sensorSpacing = sensorSpacing
-
 mymap = {}
 with open("../data/module_coordinates.csv", "r") as f:
     for line in f:
