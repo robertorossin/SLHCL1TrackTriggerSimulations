@@ -60,22 +60,22 @@ if sections["fixed"]:
             npoints = 200
             every = npatterns / npoints
 
-            xvalues, yvalues = [], []
+            xvalues, yvalues, zvalues = [], [], []
             x, x_0p9, integral = 0, 0, 0
             for i in xrange(npatterns):
                 chain.GetEntry(i)
                 frequency = chain.frequency
                 if i == x:
                     y = float(integral) / float(count) * coverage
-                    xvalues.append(i); yvalues.append(y)
-                    print "..", i, y
+                    xvalues.append(i); yvalues.append(y); zvalues.append(frequency)
+                    print "..", i, y, frequency
                     if y < 0.9:  x_0p9 = x
                     x += every
 
                 elif i == npatterns - 1:
                     y = float(integral) / float(count) * coverage
-                    xvalues.append(i); yvalues.append(y)
-                    print "..", i, y
+                    xvalues.append(i); yvalues.append(y); zvalues.append(frequency)
+                    print "..", i, y, frequency
                     if ((integral + frequency) != count):
                         print "ERROR: frequency overflow: ", integral + frequency, "!=", count
                         print "       apply temporary fix."
@@ -89,6 +89,10 @@ if sections["fixed"]:
             npoints = len(xvalues)
             gname = "gr_%s" % ss
             gr = TGraph(npoints, array('d', xvalues), array('d', yvalues))
+            gr.SetName(gname)
+            graphs[gname] = gr
+            gname = "gr_freq_%s" % ss
+            gr = TGraph(npoints, array('d', xvalues), array('d', zvalues))
             gr.SetName(gname)
             graphs[gname] = gr
         return (superstrips, graphs)
@@ -143,15 +147,64 @@ if sections["fixed"]:
         donotdelete = [hframe]
         return donotdelete
 
+    def drawFrequency(superstrips, graphs, xmin=0, xmax=1e8, tower="tt27"):
+        hframe = TH1F("hframe", "; # of patterns; min frequency", 100, xmin, xmax)
+        hframe.SetStats(0); hframe.SetMinimum(0.5); hframe.SetMaximum(1e5)
+        hframe.SetNdivisions(510, "Y")
+
+        # Style
+        for i, ss in enumerate(superstrips):
+            gr = graphs["gr_freq_%s" % ss[0]]
+            gr.SetLineWidth(2); gr.SetLineStyle(1); gr.SetMarkerSize(0)
+            gr.SetLineColor(paletteSet1[i])
+
+        # Legend
+        moveLegend(0.66,0.15,0.96,0.45); legend.Clear()
+        for i, ss in enumerate(superstrips):
+            gr = graphs["gr_freq_%s" % ss[0]]
+            legend.AddEntry(gr, ss[0], "l")
+
+        # Draw
+        hframe.Draw()
+        gPad.SetLogy(1)
+        for i, ss in enumerate(superstrips):
+            gr = graphs["gr_freq_%s" % ss[0]]
+            gr.Draw("C")
+        legend.Draw()
+        CMS_label()
+        save(imgdir, "fixed_freq_%s" % tower, dot_root=True)
+
+        # Zoom in
+        hframe.Draw()
+        hframe.GetXaxis().SetRangeUser(0, xmax/50)
+        for i, ss in enumerate(superstrips):
+            gr = graphs["gr_freq_%s" % ss[0]]
+            gr.Draw("C")
+        legend.Draw()
+        CMS_label()
+        save(imgdir, "fixed_freq_zoom_%s" % tower)
+
+        gPad.SetLogy(0)
+        donotdelete = [hframe]
+        return donotdelete
+
     # Barrel 2 GeV
     bank = "patternBank_sp16_%s_tt27_400M.root"
     (superstrips, graphs) = bookCoverage(bank)
     d = drawCoverage(superstrips, graphs, xmax=5e7, tower="tt27")
+    d = drawFrequency(superstrips, graphs, xmax=5e7, tower="tt27")
 
     # Barrel 3 GeV
     #bank = "patternBank_sp16_%s_tt27_pt3_400M.root"
     #(superstrips, graphs) = bookCoverage(bank)
     #d = drawCoverage(superstrips, graphs, xmax=5e7, tower="tt27_pt3")
+    #d = drawFrequency(superstrips, graphs, xmax=5e7, tower="tt27_pt3")
+
+    # Barrel 10 GeV
+    #bank = "patternBank_sp16_%s_tt27_pt10_400M.root"
+    #(superstrips, graphs) = bookCoverage(bank)
+    #d = drawCoverage(superstrips, graphs, xmax=5e7, tower="tt27_pt10")
+    #d = drawFrequency(superstrips, graphs, xmax=5e7, tower="tt27_pt10")
 
 
 # ______________________________________________________________________________
@@ -188,22 +241,22 @@ if sections["projective"]:
             npoints = 200
             every = npatterns / npoints
 
-            xvalues, yvalues = [], []
+            xvalues, yvalues, zvalues = [], [], []
             x, x_0p9, integral = 0, 0, 0
             for i in xrange(npatterns):
                 chain.GetEntry(i)
                 frequency = chain.frequency
                 if i == x:
                     y = float(integral) / float(count) * coverage
-                    xvalues.append(i); yvalues.append(y)
-                    print "..", i, y
+                    xvalues.append(i); yvalues.append(y); zvalues.append(frequency)
+                    print "..", i, y, frequency
                     if y < 0.9:  x_0p9 = x
                     x += every
 
                 elif i == npatterns - 1:
                     y = float(integral) / float(count) * coverage
-                    xvalues.append(i); yvalues.append(y)
-                    print "..", i, y
+                    xvalues.append(i); yvalues.append(y); zvalues.append(frequency)
+                    print "..", i, y, frequency
                     if ((integral + frequency) != count):
                         print "ERROR: frequency overflow: ", integral + frequency, "!=", count
                         print "       apply temporary fix."
@@ -217,6 +270,10 @@ if sections["projective"]:
             npoints = len(xvalues)
             gname = "gr_%s" % ss
             gr = TGraph(npoints, array('d', xvalues), array('d', yvalues))
+            gr.SetName(gname)
+            graphs[gname] = gr
+            gname = "gr_freq_%s" % ss
+            gr = TGraph(npoints, array('d', xvalues), array('d', zvalues))
             gr.SetName(gname)
             graphs[gname] = gr
         return (superstrips, graphs)
@@ -271,12 +328,62 @@ if sections["projective"]:
         donotdelete = [hframe]
         return donotdelete
 
+    def drawFrequency(superstrips, graphs, xmin=0, xmax=1e8, tower="tt27"):
+        hframe = TH1F("hframe", "; # of patterns; min frequency", 100, xmin, xmax)
+        hframe.SetStats(0); hframe.SetMinimum(0.5); hframe.SetMaximum(1e5)
+        hframe.SetNdivisions(510, "Y")
+
+        # Style
+        for i, ss in enumerate(superstrips):
+            gr = graphs["gr_freq_%s" % ss[0]]
+            gr.SetLineWidth(2); gr.SetLineStyle(1); gr.SetMarkerSize(0)
+            gr.SetLineColor(paletteSet1[i])
+
+        # Legend
+        moveLegend(0.66,0.15,0.96,0.45); legend.Clear()
+        for i, ss in enumerate(superstrips):
+            gr = graphs["gr_freq_%s" % ss[0]]
+            legend.AddEntry(gr, ss[0], "l")
+
+        # Draw
+        hframe.Draw()
+        gPad.SetLogy(1)
+        for i, ss in enumerate(superstrips):
+            gr = graphs["gr_freq_%s" % ss[0]]
+            gr.Draw("C")
+        legend.Draw()
+        CMS_label()
+        save(imgdir, "projective_freq_%s" % tower, dot_root=True)
+
+        # Zoom in
+        hframe.Draw()
+        hframe.GetXaxis().SetRangeUser(0, xmax/50)
+        for i, ss in enumerate(superstrips):
+            gr = graphs["gr_freq_%s" % ss[0]]
+            gr.Draw("C")
+        legend.Draw()
+        CMS_label()
+        save(imgdir, "projective_freq_zoom_%s" % tower)
+
+        gPad.SetLogy(0)
+        donotdelete = [hframe]
+        return donotdelete
+
     # Barrel 2 GeV
     bank = "patternBank_lu%s_tt27_400M.root"
     (superstrips, graphs) = bookCoverage(bank)
     d = drawCoverage(superstrips, graphs, xmax=5e7, tower="tt27")
+    d = drawFrequency(superstrips, graphs, xmax=5e7, tower="tt27")
 
     # Barrel 3 GeV
     #bank = "patternBank_lu%s_tt27_pt3_400M.root"
     #(superstrips, graphs) = bookCoverage(bank)
     #d = drawCoverage(superstrips, graphs, xmax=5e7, tower="tt27_pt3")
+    #d = drawFrequency(superstrips, graphs, xmax=5e7, tower="tt27_pt3")
+
+    # Barrel 10 GeV
+    #bank = "patternBank_lu%s_tt27_pt10_400M.root"
+    #(superstrips, graphs) = bookCoverage(bank)
+    #d = drawCoverage(superstrips, graphs, xmax=5e7, tower="tt27_pt10")
+    #d = drawFrequency(superstrips, graphs, xmax=5e7, tower="tt27_pt10")
+

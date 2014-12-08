@@ -21,14 +21,14 @@ class Hit(object):
 def make_pattern(hits):
     pat = []
     for h in hits:
-        ss = superstrip_luciano(h.iLayer, h.phi, h.eta, M_PI/800., 4.4) - h.iLayer * 1600 - 800
+        ss = superstrip_luciano(h.iLayer, h.phi, h.eta, M_PI/800., 4.4) - (h.iLayer * 1600 + 800)
         pat.append(ss)
         #print ss, h.phi, h.eta
     return tuple(pat)
 
 
 # Open file
-hitsfile = "hits.txt"
+hitsfile = "hits1.txt"
 prefix = ""
 seqfile = prefix + "patternBankSequential.txt"
 outfile = prefix + "patternBank.txt"
@@ -39,7 +39,9 @@ sorted_bank = []
 with open(hitsfile) as f:
     bank = Counter()
 
-    for line in f:
+    nStep = 10000
+    curSize, prevSize = 0, 0
+    for i_line, line in enumerate(f):
         tokens = line.split(",")
         tokens = [float(t.strip()) for t in tokens]
 
@@ -55,6 +57,12 @@ with open(hitsfile) as f:
 
         if pattern not in bank:
             unsorted_bank.append(pattern)
+
+        if (i_line % nStep) == 0:
+            curSize = len(bank)
+            coverage = 1.-(curSize-prevSize)/float(nStep);
+            print i_line, "tracks generated,", curSize, "patterns - coverage:", coverage
+            prevSize = curSize
 
         bank[pattern] += 1
 
