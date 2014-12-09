@@ -25,7 +25,9 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
         npatterns = maxPatterns_;
 
     id_type fakeSuperstrip;
-    if (po.mode == 2) {  // luciano superstrip
+    if (po.mode == 3) {  // luciano superstrip ver 2
+        fakeSuperstrip = arbiter_ -> superstrip_rational(27, 0, 0, po.unitScale);
+    } else if (po.mode == 2) {  // luciano superstrip
         fakeSuperstrip = arbiter_ -> superstrip_luciano(27, 0, 0, po.unitPhi, po.unitEta);
     } else {
         fakeSuperstrip = arbiter_ -> superstrip(27, 0, 0, 0, 0);
@@ -202,7 +204,9 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
             }
 
             // Find superstrip address
-            if (po.mode == 2) {  // luciano superstrip
+            if (po.mode == 3) {  // luciano superstrip ver 2
+                ssId = arbiter_ -> superstrip_rational(lay, stub_phi, stub_eta, po.unitScale);
+            } else if (po.mode == 2) {  // luciano superstrip
                 ssId = arbiter_ -> superstrip_luciano(lay, stub_phi, stub_eta, po.unitPhi, po.unitEta);
             } else {
                 ssId = arbiter_ -> superstrip(lay, lad, mod, col, row);

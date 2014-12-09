@@ -55,7 +55,11 @@ int PatternGenerator::makePatterns_map(TString src) {
     }
 
     id_type caloSuperstrip, muonSuperstrip, fakeSuperstrip;
-    if (po.mode == 2) {  // luciano superstrip
+    if (po.mode == 3) {  // luciano superstrip ver 2
+        caloSuperstrip = arbiter_ -> superstrip_rational(25, 0, 0, po.unitScale);
+        muonSuperstrip = arbiter_ -> superstrip_rational(26, 0, 0, po.unitScale);
+        fakeSuperstrip = arbiter_ -> superstrip_rational(27, 0, 0, po.unitScale);
+    } else if (po.mode == 2) {  // luciano superstrip
         caloSuperstrip = arbiter_ -> superstrip_luciano(25, 0, 0, po.unitPhi, po.unitEta);
         muonSuperstrip = arbiter_ -> superstrip_luciano(26, 0, 0, po.unitPhi, po.unitEta);
         fakeSuperstrip = arbiter_ -> superstrip_luciano(27, 0, 0, po.unitPhi, po.unitEta);
@@ -197,7 +201,9 @@ int PatternGenerator::makePatterns_map(TString src) {
             stub_phi = reader.vb_phi->at(l);
 
             // Find superstrip address
-            if (po.mode == 2) {  // luciano superstrip
+            if (po.mode == 3) {  // luciano superstrip ver 2
+                ssId = arbiter_ -> superstrip_rational(lay, stub_phi, stub_eta, po.unitScale);
+            } else if (po.mode == 2) {  // luciano superstrip
                 ssId = arbiter_ -> superstrip_luciano(lay, stub_phi, stub_eta, po.unitPhi, po.unitEta);
             } else {
                 ssId = arbiter_ -> superstrip(lay, lad, mod, col, row);

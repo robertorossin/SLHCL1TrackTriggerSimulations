@@ -98,6 +98,7 @@ int main(int argc, char **argv) {
         ("bank_maxPhi"              , po::value<float>(&bankOption.maxPhi)->default_value( M_PI), "Specify max phi (from -pi to pi)")
         ("bank_dividePhi"           , po::value<unsigned>(&dividePhi)->default_value(400), "Specify the number of phi divisions in one trigger tower in simplified geometry")
         ("bank_divideEta"           , po::value<unsigned>(&divideEta)->default_value(0), "Specify the number of eta divisions in one trigger tower in simplified geometry")
+        ("bank_unitScale"           , po::value<float>(&bankOption.unitScale)->default_value(1.0), "Specify the scale factor for superstrip size in simplified geometry")
         ("bank_subLadderSize"       , po::value<unsigned>(&bankOption.subLadderSize)->default_value(4), "Specify the size of a subladder (a.k.a. segment)")
         ("bank_subModuleSize"       , po::value<unsigned>(&bankOption.subModuleSize)->default_value(8), "Specify the size of a submodule (a.k.a. superstrip)")
         ("bank_nLayers"             , po::value<unsigned>(&bankOption.nLayers)->default_value(6), "Specify # of layers")
