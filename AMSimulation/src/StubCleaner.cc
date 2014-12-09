@@ -139,21 +139,34 @@ int StubCleaner::cleanStubs(TString src, TString out) {
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
             int tpId = reader.vb_tpId->at(l);  // check sim info
             if (tpId == good_tpId || tpId == unmatch_tpId) {  // also catch stubs that fail to find a matched simTrack
-                //float stub_eta = reader.vb_eta->at(l);
-                //float dEta = std::abs(simEta - stub_eta);
-                //if (dEta > 0.8)  // way too far
-                //    continue;
+                float stub_r = reader.vb_r->at(l);
 
-                float bendPhi = simPhi - 0.3*3.8*reader.vb_r->at(l)*1e-2 * (simCharge/simPt) / 2.0;
-                float dX = simVx + reader.vb_r->at(l) * (std::cos(bendPhi) - std::cos(reader.vb_phi->at(l)));
-                float dY = simVy + reader.vb_r->at(l) * (std::sin(bendPhi) - std::sin(reader.vb_phi->at(l)));
-                float dZ = simVz + reader.vb_r->at(l) * std::sinh(simEta) - reader.vb_z->at(l);  // cot(theta) = sinh(eta)
-                float dR = std::sqrt(dX*dX + dY*dY + dZ*dZ);
-                vec_index_dist.push_back(std::make_pair(l, dR));
+                float idealPhi = simPhi - 0.3*3.8*stub_r*1e-2 * (simCharge/simPt) / 2.0;
+                float idealZ = stub_r * std::sinh(simEta);
+
+                // Apply cuts
+                // FIXME: All the values are hardcoded
+                // FIXME: These cuts do not take into account the vertex position in xy
+                //float dRPhi = std::abs(stub_r * (idealPhi - reader.vb_phi->at(l)));
+                //if (std::abs(simEta) < 1.1/3) {
+                //    if ((stub_r <  23.0000 + 2. && dRPhi > 0.040) ||
+                //        (stub_r <  35.7368 + 2. && dRPhi > 0.070) ||
+                //        (stub_r <  50.8000 + 2. && dRPhi > 0.130) ||
+                //        (stub_r <  68.6000 + 2. && dRPhi > 0.240) ||
+                //        (stub_r <  88.7901 + 2. && dRPhi > 0.450) ||
+                //        (stub_r < 108.0000 + 2. && dRPhi > 0.780))
+                //        continue;
+                //}
+
+                float dX = simVx + stub_r * (std::cos(idealPhi) - std::cos(reader.vb_phi->at(l)));
+                float dY = simVy + stub_r * (std::sin(idealPhi) - std::sin(reader.vb_phi->at(l)));
+                float dZ = simVz + idealZ - reader.vb_z->at(l);  // cot(theta) = sinh(eta)
+                float dist = std::sqrt(dX*dX + dY*dY + dZ*dZ);
+                vec_index_dist.push_back(std::make_pair(l, dist));
             }
         }
 
-        // Sort: smallest dR to largest
+        // Sort: smallest dist to largest
         std::sort(vec_index_dist.begin(), vec_index_dist.end(), sortByFloat);
 
         // Select only one stub per layer
@@ -169,7 +182,7 @@ int StubCleaner::cleanStubs(TString src, TString out) {
                 lay16    = compressLayer(lay);
                 assert(lay16 < 16);
 
-                // For each layer, takes the stub with min dR to simTrack
+                // For each layer, takes the stub with min dist to simTrack
                 if (goodLayerStubs.at(lay16) == 999999 && dist < 26.0) {  // CUIDADO: gets rid of stubs due to loopers
                     goodLayerStubs.at(lay16) = l;
                 }
