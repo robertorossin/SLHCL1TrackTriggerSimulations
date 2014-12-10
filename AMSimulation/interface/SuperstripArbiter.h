@@ -42,7 +42,7 @@ class SuperstripArbiter {
                                 const float unit_phi, const float unit_eta) const;
 
     unsigned superstrip_rational(unsigned lay, float phi, float eta,
-                                 const float scale) const;
+                                 const float unit_scale) const;
 
     // Debug
     void print();

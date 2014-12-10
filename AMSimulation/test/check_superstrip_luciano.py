@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 from ROOT import gROOT
-gROOT.LoadMacro("superstrip_luciano.C")
-gROOT.LoadMacro("../interface/HelperMath.h")
+gROOT.LoadMacro("../interface/HelperMath.h")  # implement etaFromRhoZ in python?
+gROOT.LoadMacro("superstrip_luciano.C+O")
+gROOT.LoadMacro("superstrip_rational.C+O")
 
-from ROOT import superstrip_luciano, etaFromRhoZ, M_PI
+from ROOT import M_PI, etaFromRhoZ, superstrip_luciano, superstrip_rational
 from collections import Counter
 
 # Luciano's hit class
@@ -22,13 +23,14 @@ def make_pattern(hits):
     pat = []
     for h in hits:
         ss = superstrip_luciano(h.iLayer, h.phi, h.eta, M_PI/800., 4.4) - (h.iLayer * 1600 + 800)
+        #ss = superstrip_rational(h.iLayer, h.phi, h.eta, 1.0)
         pat.append(ss)
         #print ss, h.phi, h.eta
     return tuple(pat)
 
 
 # Open file
-hitsfile = "hits1.txt"
+hitsfile = "hits2.txt"
 prefix = ""
 seqfile = prefix + "patternBankSequential.txt"
 outfile = prefix + "patternBank.txt"
