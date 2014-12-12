@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
         // Specifically for a track fitter
         ("fit_maxChi2Red"           , po::value<float>(&fitOption.maxChi2Red)->default_value(999.), "Specify maximum reduced chi-squared")
         ("fit_minNdof"              , po::value<int>(&fitOption.minNdof)->default_value(0), "Specify minimum degree of freedom")
-        ("fit_mode"                 , po::value<unsigned>(&fitOption.mode)->default_value(0), "Select track fitter config -- 0: Linearized; 1: Das")
+        ("fit_mode"                 , po::value<unsigned>(&fitOption.mode)->default_value(2), "Select track fitter config -- 0: Linearized; 1: Das; 2: Retina")
         ;
 
     // Hidden options, will be allowed both on command line and in config file,
