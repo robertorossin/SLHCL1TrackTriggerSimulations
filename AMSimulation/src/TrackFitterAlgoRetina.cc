@@ -35,9 +35,9 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
   const int eta_range  = (int) triggerTower / 8;
 
   int trigTow_type = 0;
-  if ( eta_range==2 || eta_range==5 )  
+  if ( eta_range==1 || eta_range==4 )  
     trigTow_type = 1;
-  else if ( eta_range==1 || eta_range==6 )  
+  else if ( eta_range==0 || eta_range==5 )  
     trigTow_type = 2;
 
   // --- Constants used in X+-X- transformation:
@@ -337,7 +337,7 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
       z0  = -q/p;
 
       // This is because we fit fabs(z):
-      if ( eta_range < 4 ){
+      if ( eta_range < 3 ){
 	cottheta = -cottheta;
 	z0 = -z0;
       }
