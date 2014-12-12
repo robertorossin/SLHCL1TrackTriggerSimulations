@@ -20,9 +20,13 @@ struct TTSuperstrip {
 // Nominally, it corresponds to the smallest unit of measurement in the detector.
 // A POD type is used to reduce memory consumption.
 struct TTHit {
+    unsigned int id;
+    float x;
+    float y;
+    float z;
+    float rho;
     float r;
     float phi;
-    float z;
     float rError;
     float phiError;
     float zError;
