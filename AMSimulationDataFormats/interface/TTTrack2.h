@@ -50,6 +50,9 @@ class TTTrack2 {
         tpId_     = tpId;
     }
 
+    void addStubRef(unsigned aStub) { stubRefs_.push_back(aStub); }
+    void setStubRefs(const std::vector<unsigned>& aStubs) { stubRefs_ = aStubs; }
+
     // Getters
     float rinv()                                const { return rinv_; }
 
