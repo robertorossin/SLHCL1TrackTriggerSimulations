@@ -14,7 +14,6 @@ using namespace slhcl1tt;
 // OUTPUT  : Tracks
 
 class TrackFitter {
-
   public:
     // Constructor
     TrackFitter(TrackFitterOption option)
@@ -25,27 +24,26 @@ class TrackFitter {
 
         // Decide the track fitter to use
         fitterLin_    = 0;
-	fitterDas_    = 0;
-	fitterRetina_ = 0;
-	switch ( po.mode ) {
-	case 1:
-	  fitterDas_ = new TrackFitterAlgoDas();
-	  break;
-	case 2:
-	  fitterRetina_ = new TrackFitterAlgoRetina();
-	  break;
-	default:
-	  fitterLin_ = new TrackFitterAlgoLinearized();
-	  break;
-	}
-
+        fitterDas_    = 0;
+        fitterRetina_ = 0;
+        switch (po.mode) {
+        case 1:
+            fitterDas_ = new TrackFitterAlgoDas();
+            break;
+        case 2:
+            fitterRetina_ = new TrackFitterAlgoRetina();
+            break;
+        default:
+            fitterLin_ = new TrackFitterAlgoLinearized();
+            break;
+        }
     }
 
     // Destructor
     ~TrackFitter() {
-      if (fitterLin_)    delete fitterLin_;
-      if (fitterDas_)    delete fitterDas_;
-      if (fitterRetina_) delete fitterRetina_;
+        if (fitterLin_)    delete fitterLin_;
+        if (fitterDas_)    delete fitterDas_;
+        if (fitterRetina_) delete fitterRetina_;
     }
 
 
@@ -80,6 +78,6 @@ class TrackFitter {
     TrackFitterAlgoLinearized * fitterLin_;
     TrackFitterAlgoDas *        fitterDas_;
     TrackFitterAlgoRetina *     fitterRetina_;
-  };
+};
 
 #endif
