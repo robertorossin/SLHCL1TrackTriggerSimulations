@@ -33,8 +33,8 @@ class TrackFitterAlgoRetina : public TrackFitterAlgoBase {
   };
 
   void initialize();
-  void rotateHits(std::vector<TTHit>& hits, double angle);
-  void confTrans(std::vector<TTHit>& hits);
+  void rotateHits(std::vector<xyPoint>& hits, double angle);
+  void confTrans(std::vector<xyPoint>& hits);
 
 
  public:
@@ -43,7 +43,8 @@ class TrackFitterAlgoRetina : public TrackFitterAlgoBase {
 
   ~TrackFitterAlgoRetina();
 
-  int fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& tracks);
+  //int fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& tracks);
+  int fit(unsigned triggerTowerId, unsigned eventNum, unsigned roadRef, const std::vector<TTHit>& hits, std::vector<TTTrack2>& tracks);
 
 };
 

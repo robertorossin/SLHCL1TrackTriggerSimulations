@@ -12,7 +12,7 @@ TrackFitterAlgoRetina::~TrackFitterAlgoRetina(){
 }
 
 
-int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& tracks){
+int TrackFitterAlgoRetina::fit(unsigned triggerTowerId, unsigned eventNum, unsigned roadRef, const std::vector<TTHit>& hits, std::vector<TTTrack2>& tracks){
 
   int exitcode = 0;
 
@@ -26,13 +26,13 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
   //  std::cout << "  x = " << hits[ihit].x
   //            << "  \ty = " << hits[ihit].y
   //            << "  \tz = " << hits[ihit].z
-  //            << "  \trho = " << hits[ihit].rho << std::endl;
+  //            << "  \trho = " << hits[ihit].r << std::endl;
   //}
 
 
   // --- Determine in which phi sector and eta range the trigger tower is:
-  const int phi_sector = triggerTower%8;
-  const int eta_range  = (int) triggerTower / 8;
+  const int phi_sector = triggerTowerId % 8;
+  const int eta_range  = triggerTowerId / 8;
 
   int trigTow_type = 0;
   if ( eta_range==1 || eta_range==4 )
@@ -45,16 +45,25 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
   double y1 =  0.0046296296296296294; // 0.5/108.
 
 
+  // Use xyPoint instead of TTHit
+  std::vector < xyPoint > hits_XY;
+  std::vector < xyPoint > hits_RZ;
+
+  for (unsigned int ihit=0; ihit<hits.size(); ++ihit){
+    hits_XY.emplace_back(xyPoint{hits[ihit].x(), hits[ihit].y(), ihit});
+  }
+
+
   // ===========================================================================
   //  XY fit
   // ===========================================================================
 
   // --- Phi sector rotation:
-  rotateHits(hits, rot_angle[phi_sector]);
+  rotateHits(hits_XY, rot_angle[phi_sector]);
 
 
   // --- Conformal transformation:
-  confTrans(hits);
+  confTrans(hits_XY);
 
 
   //
@@ -93,7 +102,7 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
     sigma_step1[7] = config[trigTow_type]["xy_sigma8_step1"];
 
 
-  Retina retinaXY_step1(hits, pbins_step1+2, qbins_step1+2,
+  Retina retinaXY_step1(hits_XY, pbins_step1+2, qbins_step1+2,
                         pmin_step1-pstep_step1, pmax_step1+pstep_step1,
                         qmin_step1-qstep_step1, qmax_step1+qstep_step1,
                         sigma_step1, minWeight_step1, XY);
@@ -101,7 +110,7 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
   // --- Fill the retina and find maxima:
   retinaXY_step1.fillGrid();
   retinaXY_step1.findMaxima();
-  //retinaXY_step1.dumpGrid(event,1);
+  //retinaXY_step1.dumpGrid(eventNum,1);
   //retinaXY_step1.printMaxima();
 
 
@@ -112,8 +121,6 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
   //
   // --- Second step -----------------------------------------------------------
   //
-
-  std::vector < TTHit > hits_RZ;
 
   double pbins_step2 = config[trigTow_type]["xy_pbins_step2"];
   double qbins_step2 = config[trigTow_type]["xy_qbins_step2"];
@@ -153,7 +160,7 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
       sigma_step2[7] = config[trigTow_type]["xy_sigma8_step2"];
 
 
-    Retina retinaXY_step2(hits, pbins_step2+2, qbins_step2+2,
+    Retina retinaXY_step2(hits_XY, pbins_step2+2, qbins_step2+2,
                           pmin_step2-pstep_step2, pmax_step2+pstep_step2,
                           qmin_step2-qstep_step2, qmax_step2+qstep_step2,
                           sigma_step2, minWeight_step2, XY);
@@ -161,7 +168,7 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
     // --- Fill the retina and find maxima:
     retinaXY_step2.fillGrid();
     retinaXY_step2.findMaxima();
-    //retinaXY_step2.dumpGrid(event,2,imax);
+    //retinaXY_step2.dumpGrid(eventNum,2,imax);
     //retinaXY_step2.printMaxima();
 
     pqPoint bestpqXY_step2 = retinaXY_step2.getBestPQ();
@@ -177,11 +184,11 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
     hits_RZ.clear();
     for (unsigned int ihit=0; ihit<hits.size(); ++ihit){
 
-      double dist   = fabs(hits[ihit].y-p*hits[ihit].x-q)/sqrt(1.+p*p);
+      double dist   = fabs(hits_XY[ihit].y-p*hits_XY[ihit].x-q)/sqrt(1.+p*p);
       double weight = exp(-0.5*dist*dist/(sigma_step2[0]*sigma_step2[0]));
 
       if ( weight>0.5 ){
-        hits_RZ.push_back(hits[ihit]);
+        hits_RZ.emplace_back(xyPoint{fabs(hits[ihit].z), hits[ihit].r, ihit});  // NB: we are using fabs(z) !!!!
       }
       //cout << ihit << " - " << dist << "  " << weight << endl;
 
@@ -259,7 +266,7 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
 
     retinaRZ_step1.fillGrid();
     retinaRZ_step1.findMaxima();
-    //retinaRZ_step1.dumpGrid(event,imax);
+    //retinaRZ_step1.dumpGrid(eventNum,imax);
     //retinaRZ_step1.printMaxima();
 
 
@@ -319,7 +326,7 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
 
       retinaRZ_step2.fillGrid();
       retinaRZ_step2.findMaxima();
-      //retinaRZ_step2.dumpGrid(event,2,10+imax_RZ);
+      //retinaRZ_step2.dumpGrid(eventNum,2,10+imax_RZ);
       //retinaRZ_step2.printMaxima();
 
       pqPoint bestpqRZ_step2 = retinaRZ_step2.getBestPQ();
@@ -345,12 +352,12 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
       if ( !std::isnan(c) && !std::isnan(phi) && !std::isnan(cottheta) && !std::isnan(z0) &&
            cottheta != -9999. && z0 != -9999. ){
 
-        TTTrack2 trk;
+        TTTrack2 trk(roadRef, 0, std::vector<unsigned>());
         trk.setTrackParams(c, phi, cottheta, z0, 0., 0., 0, 0., 0.);
         for(unsigned int ihit=0; ihit<hits_RZ.size(); ihit++)
-          trk.addStubRef(hits_RZ[ihit].id);
+          trk.addStubRef(hits[hits_RZ[ihit].hitRef].ref);
 
-        tracks.emplace_back(trk);
+        tracks.push_back(trk);
       }
 
 
@@ -363,7 +370,7 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
   return exitcode;
 }
 
-void TrackFitterAlgoRetina::rotateHits(std::vector<TTHit>& hits, double angle){
+void TrackFitterAlgoRetina::rotateHits(std::vector<xyPoint>& hits, double angle){
 
   for (unsigned int ihit=0; ihit<hits.size(); ihit++) {
     double x = hits[ihit].x*cos(angle) - hits[ihit].y*sin(angle);
@@ -374,7 +381,7 @@ void TrackFitterAlgoRetina::rotateHits(std::vector<TTHit>& hits, double angle){
 
 }
 
-void TrackFitterAlgoRetina::confTrans(std::vector<TTHit>& hits){
+void TrackFitterAlgoRetina::confTrans(std::vector<xyPoint>& hits){
 
   for (unsigned int ihit=0; ihit<hits.size(); ihit++) {
     double R2 = hits[ihit].x*hits[ihit].x + hits[ihit].y*hits[ihit].y;

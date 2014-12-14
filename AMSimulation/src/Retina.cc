@@ -9,7 +9,7 @@
 #include "TCanvas.h"
 #include "TRandom3.h"
 
-Retina::Retina(std::vector<TTHit> hits_, unsigned int pbins_, unsigned int qbins_,
+Retina::Retina(std::vector<xyPoint> hits_, unsigned int pbins_, unsigned int qbins_,
                double pmin_, double pmax_, double qmin_, double qmax_,
                std::vector<double> sigma_, double minWeight_, FitView view_) :
   hits(hits_),
@@ -75,8 +75,8 @@ double Retina::getResponseXpXm(double x_plus, double x_minus) {
 
   for (unsigned int kr = 0; kr < hits_tot; kr++) {
 
-    double x = ( view == XY ? hits[kr].x : std::fabs(hits[kr].z) );   // NB: we are using fabs(z) !!!!
-    double y = ( view == XY ? hits[kr].y : hits[kr].rho );
+    double x = hits[kr].x;
+    double y = hits[kr].y;
 
     double sigma_local = sigma[0];
 

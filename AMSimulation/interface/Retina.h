@@ -1,9 +1,14 @@
 #ifndef AMSimulation_Retina_h_
 #define AMSimulation_Retina_h_
 
-#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTSuperstrip.h"
-using namespace slhcl1tt;
+#include <vector>
 
+
+struct xyPoint {
+  double x;
+  double y;
+  unsigned hitRef;
+};
 
 struct pqPoint_i {
   int p;
@@ -22,7 +27,7 @@ class Retina {
 
  private:
 
-  std::vector<TTHit> hits;
+  std::vector<xyPoint> hits;
   unsigned int pbins;
   unsigned int qbins;
   double pmin;
@@ -46,7 +51,7 @@ class Retina {
 
  public:
 
-  Retina(std::vector<TTHit> hits_, unsigned int pbins_, unsigned int qbins_,
+  Retina(std::vector<xyPoint> hits_, unsigned int pbins_, unsigned int qbins_,
          double pmin_, double pmax_, double qmin_, double qmax_,
          std::vector<double> sigma_, double minWeight_, FitView view_);
   ~Retina();
