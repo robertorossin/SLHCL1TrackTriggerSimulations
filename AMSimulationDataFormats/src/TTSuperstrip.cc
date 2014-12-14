@@ -10,7 +10,7 @@ std::ostream& operator<<(std::ostream& o, const TTSuperstrip& ss) {
 }
 
 std::ostream& operator<<(std::ostream& o, const TTHit& hit) {
-    o << "r: " << hit.r << " phi: " << hit.phi << " z: " << hit.z
+    o << "ref: " << hit.ref << " r: " << hit.r << " phi: " << hit.phi << " z: " << hit.z
       << " r_err: " << hit.rError << " phi_err: " << hit.phiError << " z_err: " << hit.zError
       << " ";
     return o;
