@@ -18,26 +18,26 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
 
   if(hits.size()>1024){
     std::cout << "ERROR : too many stubs for fitting!" << std::endl;
-    return exitcode;
+    return 1;
   }
 
-  
+
   //for(unsigned int ihit=0; ihit<hits.size(); ihit++){
-  //  std::cout << "  x = " << hits[ihit].x 
-  //	      << "  \ty = " << hits[ihit].y
-  //	      << "  \tz = " << hits[ihit].z
-  //	      << "  \trho = " << hits[ihit].rho << std::endl;
+  //  std::cout << "  x = " << hits[ihit].x
+  //            << "  \ty = " << hits[ihit].y
+  //            << "  \tz = " << hits[ihit].z
+  //            << "  \trho = " << hits[ihit].rho << std::endl;
   //}
-  
+
 
   // --- Determine in which phi sector and eta range the trigger tower is:
   const int phi_sector = triggerTower%8;
   const int eta_range  = (int) triggerTower / 8;
 
   int trigTow_type = 0;
-  if ( eta_range==1 || eta_range==4 )  
+  if ( eta_range==1 || eta_range==4 )
     trigTow_type = 1;
-  else if ( eta_range==0 || eta_range==5 )  
+  else if ( eta_range==0 || eta_range==5 )
     trigTow_type = 2;
 
   // --- Constants used in X+-X- transformation:
@@ -52,11 +52,11 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
   // --- Phi sector rotation:
   rotateHits(hits, rot_angle[phi_sector]);
 
-  
-  // --- Conformal transformation: 
+
+  // --- Conformal transformation:
   confTrans(hits);
 
- 
+
   //
   // --- First step ------------------------------------------------------------
   //
@@ -68,35 +68,35 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
   double pmax_step1  = config[trigTow_type]["xy_pmax_step1"];
   double qmin_step1  = config[trigTow_type]["xy_qmin_step1"];
   double qmax_step1  = config[trigTow_type]["xy_qmax_step1"];
-  
+
   double minWeight_step1 = config[trigTow_type]["xy_threshold_step1"];
 
   double pstep_step1 = (pmax_step1-pmin_step1)/pbins_step1;
   double qstep_step1 = (qmax_step1-qmin_step1)/qbins_step1;
 
   std::vector <double> sigma_step1(8,0.25*sqrt(pstep_step1*pstep_step1+qstep_step1*qstep_step1));
-  if ( config[trigTow_type]["xy_sigma1_step1"] != 0. ) 
+  if ( config[trigTow_type]["xy_sigma1_step1"] != 0. )
     sigma_step1[0] = config[trigTow_type]["xy_sigma1_step1"];
-  if ( config[trigTow_type]["xy_sigma2_step1"] != 0. ) 
+  if ( config[trigTow_type]["xy_sigma2_step1"] != 0. )
     sigma_step1[1] = config[trigTow_type]["xy_sigma2_step1"];
-  if ( config[trigTow_type]["xy_sigma3_step1"] != 0. ) 
+  if ( config[trigTow_type]["xy_sigma3_step1"] != 0. )
     sigma_step1[2] = config[trigTow_type]["xy_sigma3_step1"];
-  if ( config[trigTow_type]["xy_sigma4_step1"] != 0. ) 
+  if ( config[trigTow_type]["xy_sigma4_step1"] != 0. )
     sigma_step1[3] = config[trigTow_type]["xy_sigma4_step1"];
-  if ( config[trigTow_type]["xy_sigma5_step1"] != 0. ) 
+  if ( config[trigTow_type]["xy_sigma5_step1"] != 0. )
     sigma_step1[4] = config[trigTow_type]["xy_sigma5_step1"];
-  if ( config[trigTow_type]["xy_sigma6_step1"] != 0. ) 
+  if ( config[trigTow_type]["xy_sigma6_step1"] != 0. )
     sigma_step1[5] = config[trigTow_type]["xy_sigma6_step1"];
-  if ( config[trigTow_type]["xy_sigma7_step1"] != 0. ) 
+  if ( config[trigTow_type]["xy_sigma7_step1"] != 0. )
     sigma_step1[6] = config[trigTow_type]["xy_sigma7_step1"];
-  if ( config[trigTow_type]["xy_sigma8_step1"] != 0. ) 
+  if ( config[trigTow_type]["xy_sigma8_step1"] != 0. )
     sigma_step1[7] = config[trigTow_type]["xy_sigma8_step1"];
 
 
-  Retina retinaXY_step1(hits, pbins_step1+2, qbins_step1+2, 
-			pmin_step1-pstep_step1, pmax_step1+pstep_step1, 
-			qmin_step1-qstep_step1, qmax_step1+qstep_step1, 
-			sigma_step1, minWeight_step1, XY);
+  Retina retinaXY_step1(hits, pbins_step1+2, qbins_step1+2,
+                        pmin_step1-pstep_step1, pmax_step1+pstep_step1,
+                        qmin_step1-qstep_step1, qmax_step1+qstep_step1,
+                        sigma_step1, minWeight_step1, XY);
 
   // --- Fill the retina and find maxima:
   retinaXY_step1.fillGrid();
@@ -104,7 +104,7 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
   //retinaXY_step1.dumpGrid(event,1);
   //retinaXY_step1.printMaxima();
 
-  
+
   // --- Get first step maxima:
   std::vector <pqPoint> maximaXY_step1 = retinaXY_step1.getMaxima();
 
@@ -114,7 +114,7 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
   //
 
   std::vector < TTHit > hits_RZ;
-  
+
   double pbins_step2 = config[trigTow_type]["xy_pbins_step2"];
   double qbins_step2 = config[trigTow_type]["xy_qbins_step2"];
 
@@ -128,35 +128,35 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
     double pmax_step2 = maximaXY_step1[imax].p + config[trigTow_type]["xy_zoom_step2"]*pstep_step1;
     double qmin_step2 = maximaXY_step1[imax].q - config[trigTow_type]["xy_zoom_step2"]*qstep_step1;
     double qmax_step2 = maximaXY_step1[imax].q + config[trigTow_type]["xy_zoom_step2"]*qstep_step1;
-   
+
     double pstep_step2 = (pmax_step2-pmin_step2)/pbins_step2;
     double qstep_step2 = (qmax_step2-qmin_step2)/qbins_step2;
-    
+
     double minWeight_step2 = config[trigTow_type]["xy_threshold_step2"];
 
     std::vector <double> sigma_step2(8,0.25*sqrt(pstep_step2*pstep_step2+qstep_step2*qstep_step2));
-    if ( config[trigTow_type]["xy_sigma1_step2"] != 0. ) 
+    if ( config[trigTow_type]["xy_sigma1_step2"] != 0. )
       sigma_step2[0] = config[trigTow_type]["xy_sigma1_step2"];
-    if ( config[trigTow_type]["xy_sigma2_step2"] != 0. ) 
+    if ( config[trigTow_type]["xy_sigma2_step2"] != 0. )
       sigma_step2[1] = config[trigTow_type]["xy_sigma2_step2"];
-    if ( config[trigTow_type]["xy_sigma3_step2"] != 0. ) 
+    if ( config[trigTow_type]["xy_sigma3_step2"] != 0. )
       sigma_step2[2] = config[trigTow_type]["xy_sigma3_step2"];
-    if ( config[trigTow_type]["xy_sigma4_step2"] != 0. ) 
+    if ( config[trigTow_type]["xy_sigma4_step2"] != 0. )
       sigma_step2[3] = config[trigTow_type]["xy_sigma4_step2"];
-    if ( config[trigTow_type]["xy_sigma5_step2"] != 0. ) 
+    if ( config[trigTow_type]["xy_sigma5_step2"] != 0. )
       sigma_step2[4] = config[trigTow_type]["xy_sigma5_step2"];
-    if ( config[trigTow_type]["xy_sigma6_step2"] != 0. ) 
+    if ( config[trigTow_type]["xy_sigma6_step2"] != 0. )
       sigma_step2[5] = config[trigTow_type]["xy_sigma6_step2"];
-    if ( config[trigTow_type]["xy_sigma7_step2"] != 0. ) 
+    if ( config[trigTow_type]["xy_sigma7_step2"] != 0. )
       sigma_step2[6] = config[trigTow_type]["xy_sigma7_step2"];
-    if ( config[trigTow_type]["xy_sigma8_step2"] != 0. ) 
+    if ( config[trigTow_type]["xy_sigma8_step2"] != 0. )
       sigma_step2[7] = config[trigTow_type]["xy_sigma8_step2"];
 
 
-    Retina retinaXY_step2(hits, pbins_step2+2, qbins_step2+2, 
-			  pmin_step2-pstep_step2, pmax_step2+pstep_step2, 
-			  qmin_step2-qstep_step2, qmax_step2+qstep_step2, 
-			  sigma_step2, minWeight_step2, XY);
+    Retina retinaXY_step2(hits, pbins_step2+2, qbins_step2+2,
+                          pmin_step2-pstep_step2, pmax_step2+pstep_step2,
+                          qmin_step2-qstep_step2, qmax_step2+qstep_step2,
+                          sigma_step2, minWeight_step2, XY);
 
     // --- Fill the retina and find maxima:
     retinaXY_step2.fillGrid();
@@ -176,12 +176,12 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
     // --- Associate stubs to this maxumum:
     hits_RZ.clear();
     for (unsigned int ihit=0; ihit<hits.size(); ++ihit){
-      
+
       double dist   = fabs(hits[ihit].y-p*hits[ihit].x-q)/sqrt(1.+p*p);
       double weight = exp(-0.5*dist*dist/(sigma_step2[0]*sigma_step2[0]));
 
       if ( weight>0.5 ){
-    	hits_RZ.push_back(hits[ihit]);
+        hits_RZ.push_back(hits[ihit]);
       }
       //cout << ihit << " - " << dist << "  " << weight << endl;
 
@@ -197,7 +197,7 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
     // --- Invert the conformal transformation and get the track parameters:
     double a = -0.5*p/q;
     double b =  0.5/q;
-    
+
     double c   = 1./sqrt(a*a+b*b);
     double phi = atan(p);
     //if (phi<0.)
@@ -213,7 +213,7 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
 
     double cottheta = -9999.;
     double z0       = -9999.;
-    
+
 
     //
     // --- First step ----------------------------------------------------------
@@ -234,28 +234,28 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
     for (unsigned int ilayer=0; ilayer<8; ++ilayer)
       sigma_step1[ilayer] = 0.5*sqrt(pstep_step1*pstep_step1+qstep_step1*qstep_step1);
 
-    if ( config[trigTow_type]["rz_sigma1_step1"] != 0. ) 
+    if ( config[trigTow_type]["rz_sigma1_step1"] != 0. )
       sigma_step1[0] = config[trigTow_type]["rz_sigma1_step1"];
-    if ( config[trigTow_type]["rz_sigma2_step1"] != 0. ) 
+    if ( config[trigTow_type]["rz_sigma2_step1"] != 0. )
       sigma_step1[1] = config[trigTow_type]["rz_sigma2_step1"];
-    if ( config[trigTow_type]["rz_sigma3_step1"] != 0. ) 
+    if ( config[trigTow_type]["rz_sigma3_step1"] != 0. )
       sigma_step1[2] = config[trigTow_type]["rz_sigma3_step1"];
-    if ( config[trigTow_type]["rz_sigma4_step1"] != 0. ) 
+    if ( config[trigTow_type]["rz_sigma4_step1"] != 0. )
       sigma_step1[3] = config[trigTow_type]["rz_sigma4_step1"];
-    if ( config[trigTow_type]["rz_sigma5_step1"] != 0. ) 
+    if ( config[trigTow_type]["rz_sigma5_step1"] != 0. )
       sigma_step1[4] = config[trigTow_type]["rz_sigma5_step1"];
-    if ( config[trigTow_type]["rz_sigma6_step1"] != 0. ) 
+    if ( config[trigTow_type]["rz_sigma6_step1"] != 0. )
       sigma_step1[5] = config[trigTow_type]["rz_sigma6_step1"];
-    if ( config[trigTow_type]["rz_sigma7_step1"] != 0. ) 
+    if ( config[trigTow_type]["rz_sigma7_step1"] != 0. )
       sigma_step1[6] = config[trigTow_type]["rz_sigma7_step1"];
-    if ( config[trigTow_type]["rz_sigma8_step1"] != 0. ) 
+    if ( config[trigTow_type]["rz_sigma8_step1"] != 0. )
       sigma_step1[7] = config[trigTow_type]["rz_sigma8_step1"];
 
 
-    Retina retinaRZ_step1(hits_RZ, pbins_step1+2, qbins_step1+2, 
-			  pmin_step1-pstep_step1, pmax_step1+pstep_step1, 
-			  qmin_step1-qstep_step1, qmax_step1+qstep_step1, 
-			  sigma_step1, minWeight_step1, RZ);
+    Retina retinaRZ_step1(hits_RZ, pbins_step1+2, qbins_step1+2,
+                          pmin_step1-pstep_step1, pmax_step1+pstep_step1,
+                          qmin_step1-qstep_step1, qmax_step1+qstep_step1,
+                          sigma_step1, minWeight_step1, RZ);
 
     retinaRZ_step1.fillGrid();
     retinaRZ_step1.findMaxima();
@@ -267,7 +267,7 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
     std::vector <pqPoint> maximaRZ_step1 = retinaRZ_step1.getMaxima();
     //pqPoint bestpqRZ_step1 = retinaRZ_step1.getBestPQ();
 
-    
+
     //
     // --- Second step ---------------------------------------------------------
     //
@@ -278,44 +278,44 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
     // Zoom around first step maxima
     for (unsigned int imax_RZ=0; imax_RZ<maximaRZ_step1.size(); ++imax_RZ){
       if (maximaRZ_step1[imax].w == -1.) continue;
- 
+
       double pmin_step2 = maximaRZ_step1[imax_RZ].p - config[trigTow_type]["rz_zoom_step2"]*pstep_step1;
       double pmax_step2 = maximaRZ_step1[imax_RZ].p + config[trigTow_type]["rz_zoom_step2"]*pstep_step1;
       double qmin_step2 = maximaRZ_step1[imax_RZ].q - config[trigTow_type]["rz_zoom_step2"]*qstep_step1;
       double qmax_step2 = maximaRZ_step1[imax_RZ].q + config[trigTow_type]["rz_zoom_step2"]*qstep_step1;
-   
+
       double pstep_step2 = (pmax_step2-pmin_step2)/pbins_step2;
       double qstep_step2 = (qmax_step2-qmin_step2)/qbins_step2;
-    
+
       double minWeight_step2 = config[trigTow_type]["rz_threshold_step2"];
 
 
       std::vector <double> sigma_step2(8,0.5*sqrt(pstep_step2*pstep_step2+qstep_step2*qstep_step2));
       for (unsigned int ilayer=3; ilayer<6; ++ilayer)
-	sigma_step2[ilayer] = 6.*sqrt(pstep_step2*pstep_step2+qstep_step2*qstep_step2);
+        sigma_step2[ilayer] = 6.*sqrt(pstep_step2*pstep_step2+qstep_step2*qstep_step2);
 
-      if ( config[trigTow_type]["rz_sigma1_step2"] != 0. ) 
-	sigma_step2[0] = config[trigTow_type]["rz_sigma1_step2"];
-      if ( config[trigTow_type]["rz_sigma2_step2"] != 0. ) 
-	sigma_step2[1] = config[trigTow_type]["rz_sigma2_step2"];
-      if ( config[trigTow_type]["rz_sigma3_step2"] != 0. ) 
-	sigma_step2[2] = config[trigTow_type]["rz_sigma3_step2"];
-      if ( config[trigTow_type]["rz_sigma4_step2"] != 0. ) 
-	sigma_step2[3] = config[trigTow_type]["rz_sigma4_step2"];
-      if ( config[trigTow_type]["rz_sigma5_step2"] != 0. ) 
-	sigma_step2[4] = config[trigTow_type]["rz_sigma5_step2"];
-      if ( config[trigTow_type]["rz_sigma6_step2"] != 0. ) 
-	sigma_step2[5] = config[trigTow_type]["rz_sigma6_step2"];
-      if ( config[trigTow_type]["rz_sigma7_step2"] != 0. ) 
-	sigma_step2[6] = config[trigTow_type]["rz_sigma7_step2"];
-      if ( config[trigTow_type]["rz_sigma8_step2"] != 0. ) 
-	sigma_step2[7] = config[trigTow_type]["rz_sigma8_step2"];
+      if ( config[trigTow_type]["rz_sigma1_step2"] != 0. )
+        sigma_step2[0] = config[trigTow_type]["rz_sigma1_step2"];
+      if ( config[trigTow_type]["rz_sigma2_step2"] != 0. )
+        sigma_step2[1] = config[trigTow_type]["rz_sigma2_step2"];
+      if ( config[trigTow_type]["rz_sigma3_step2"] != 0. )
+        sigma_step2[2] = config[trigTow_type]["rz_sigma3_step2"];
+      if ( config[trigTow_type]["rz_sigma4_step2"] != 0. )
+        sigma_step2[3] = config[trigTow_type]["rz_sigma4_step2"];
+      if ( config[trigTow_type]["rz_sigma5_step2"] != 0. )
+        sigma_step2[4] = config[trigTow_type]["rz_sigma5_step2"];
+      if ( config[trigTow_type]["rz_sigma6_step2"] != 0. )
+        sigma_step2[5] = config[trigTow_type]["rz_sigma6_step2"];
+      if ( config[trigTow_type]["rz_sigma7_step2"] != 0. )
+        sigma_step2[6] = config[trigTow_type]["rz_sigma7_step2"];
+      if ( config[trigTow_type]["rz_sigma8_step2"] != 0. )
+        sigma_step2[7] = config[trigTow_type]["rz_sigma8_step2"];
 
 
-      Retina retinaRZ_step2(hits_RZ, pbins_step2+2, qbins_step2+2, 
-			    pmin_step2-pstep_step2, pmax_step2+pstep_step2, 
-			    qmin_step2-qstep_step2, qmax_step2+qstep_step2, 
-			    sigma_step2, minWeight_step2, RZ);
+      Retina retinaRZ_step2(hits_RZ, pbins_step2+2, qbins_step2+2,
+                            pmin_step2-pstep_step2, pmax_step2+pstep_step2,
+                            qmin_step2-qstep_step2, qmax_step2+qstep_step2,
+                            sigma_step2, minWeight_step2, RZ);
 
       retinaRZ_step2.fillGrid();
       retinaRZ_step2.findMaxima();
@@ -338,24 +338,21 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
 
       // This is because we fit fabs(z):
       if ( eta_range < 3 ){
-	cottheta = -cottheta;
-	z0 = -z0;
+        cottheta = -cottheta;
+        z0 = -z0;
       }
 
       if ( !std::isnan(c) && !std::isnan(phi) && !std::isnan(cottheta) && !std::isnan(z0) &&
-	   cottheta != -9999. && z0 != -9999. ){
-	
-	TTTrack2 trk;
-	trk.setTrackParams(c, phi, cottheta, z0, 0., 0., 0, 0., 0.);
-	for(unsigned int ihit=0; ihit<hits_RZ.size(); ihit++)
-	  trk.addStubRef(hits_RZ[ihit].id);
-      
-	tracks.emplace_back(trk);
+           cottheta != -9999. && z0 != -9999. ){
 
-	exitcode = 0;
+        TTTrack2 trk;
+        trk.setTrackParams(c, phi, cottheta, z0, 0., 0., 0, 0., 0.);
+        for(unsigned int ihit=0; ihit<hits_RZ.size(); ihit++)
+          trk.addStubRef(hits_RZ[ihit].id);
 
+        tracks.emplace_back(trk);
       }
- 
+
 
     } // imax_RZ loop
 
@@ -364,11 +361,10 @@ int TrackFitterAlgoRetina::fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& 
 
 
   return exitcode;
-  
 }
 
 void TrackFitterAlgoRetina::rotateHits(std::vector<TTHit>& hits, double angle){
-  
+
   for (unsigned int ihit=0; ihit<hits.size(); ihit++) {
     double x = hits[ihit].x*cos(angle) - hits[ihit].y*sin(angle);
     double y = hits[ihit].x*sin(angle) + hits[ihit].y*cos(angle);
@@ -379,7 +375,7 @@ void TrackFitterAlgoRetina::rotateHits(std::vector<TTHit>& hits, double angle){
 }
 
 void TrackFitterAlgoRetina::confTrans(std::vector<TTHit>& hits){
-  
+
   for (unsigned int ihit=0; ihit<hits.size(); ihit++) {
     double R2 = hits[ihit].x*hits[ihit].x + hits[ihit].y*hits[ihit].y;
     hits[ihit].x /= R2;
@@ -406,7 +402,6 @@ void TrackFitterAlgoRetina::initialize(){
   config[0]["xy_sigma2_step1"]    =  0.;
   config[0]["xy_sigma3_step1"]    =  0.;
   config[0]["xy_sigma4_step1"]    =  0.;
-  config[0]["xy_sigma2_step1"]    =  0.;
   config[0]["xy_sigma5_step1"]    =  0.;
   config[0]["xy_sigma6_step1"]    =  0.;
   config[0]["xy_sigma7_step1"]    =  0.;
@@ -429,7 +424,6 @@ void TrackFitterAlgoRetina::initialize(){
   config[0]["rz_sigma2_step1"]    =  0.;
   config[0]["rz_sigma3_step1"]    =  0.;
   config[0]["rz_sigma4_step1"]    =  0.;
-  config[0]["rz_sigma2_step1"]    =  0.;
   config[0]["rz_sigma5_step1"]    =  0.;
   config[0]["rz_sigma6_step1"]    =  0.;
   config[0]["rz_sigma7_step1"]    =  0.;
@@ -440,7 +434,7 @@ void TrackFitterAlgoRetina::initialize(){
   config[0]["rz_threshold_step2"] =  4.;
   config[0]["rz_sigma1_step2"]    =  0.;
   config[0]["rz_sigma2_step2"]    =  0.;
-  
+
   // --- Hybrid trigger tower:
   config[1]["xy_pbins_step1"]     = 40.;
   config[1]["xy_qbins_step1"]     = 40.;
@@ -453,7 +447,6 @@ void TrackFitterAlgoRetina::initialize(){
   config[1]["xy_sigma2_step1"]    =  0.;
   config[1]["xy_sigma3_step1"]    =  0.;
   config[1]["xy_sigma4_step1"]    =  0.;
-  config[1]["xy_sigma2_step1"]    =  0.;
   config[1]["xy_sigma5_step1"]    =  0.;
   config[1]["xy_sigma6_step1"]    =  0.;
   config[1]["xy_sigma7_step1"]    =  0.;
@@ -476,7 +469,6 @@ void TrackFitterAlgoRetina::initialize(){
   config[1]["rz_sigma2_step1"]    =  0.;
   config[1]["rz_sigma3_step1"]    =  0.;
   config[1]["rz_sigma4_step1"]    =  0.;
-  config[1]["rz_sigma2_step1"]    =  0.;
   config[1]["rz_sigma5_step1"]    =  0.;
   config[1]["rz_sigma6_step1"]    =  0.;
   config[1]["rz_sigma7_step1"]    =  0.;
@@ -487,7 +479,7 @@ void TrackFitterAlgoRetina::initialize(){
   config[1]["rz_threshold_step2"] =  4.5;
   config[1]["rz_sigma1_step2"]    =  0.;
   config[1]["rz_sigma2_step2"]    =  0.;
-  
+
   // --- Forward trigger tower:
   config[2]["xy_pbins_step1"]     = 40.;
   config[2]["xy_qbins_step1"]     = 40.;
@@ -500,7 +492,6 @@ void TrackFitterAlgoRetina::initialize(){
   config[2]["xy_sigma2_step1"]    =  0.;
   config[2]["xy_sigma3_step1"]    =  0.;
   config[2]["xy_sigma4_step1"]    =  0.;
-  config[2]["xy_sigma2_step1"]    =  0.;
   config[2]["xy_sigma5_step1"]    =  0.;
   config[2]["xy_sigma6_step1"]    =  0.;
   config[2]["xy_sigma7_step1"]    =  0.;
@@ -523,7 +514,6 @@ void TrackFitterAlgoRetina::initialize(){
   config[2]["rz_sigma2_step1"]    =  0.;
   config[2]["rz_sigma3_step1"]    =  0.;
   config[2]["rz_sigma4_step1"]    =  0.;
-  config[2]["rz_sigma2_step1"]    =  0.;
   config[2]["rz_sigma5_step1"]    =  0.;
   config[2]["rz_sigma6_step1"]    =  0.;
   config[2]["rz_sigma7_step1"]    =  0.;
@@ -534,6 +524,6 @@ void TrackFitterAlgoRetina::initialize(){
   config[2]["rz_threshold_step2"] = 4.5;
   config[2]["rz_sigma1_step2"]    = 0.;
   config[2]["rz_sigma2_step2"]    = 0.;
-  
+
 
 }

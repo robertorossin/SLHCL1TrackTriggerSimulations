@@ -1,8 +1,17 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Retina.h"
 
-Retina::Retina(std::vector<TTHit> hits_, unsigned int pbins_, unsigned int qbins_, 
-	       double pmin_, double pmax_, double qmin_, double qmax_, 
-	       std::vector<double> sigma_, double minWeight_, FitView view_) :
+#include <iostream>
+#include <string>
+
+#include "TMath.h"
+#include "TStyle.h"
+#include "TH2D.h"
+#include "TCanvas.h"
+#include "TRandom3.h"
+
+Retina::Retina(std::vector<TTHit> hits_, unsigned int pbins_, unsigned int qbins_,
+               double pmin_, double pmax_, double qmin_, double qmax_,
+               std::vector<double> sigma_, double minWeight_, FitView view_) :
   hits(hits_),
   pbins(pbins_),
   qbins(qbins_),
@@ -39,7 +48,7 @@ void Retina::fillGrid() {
       double p_value = pmin + pbinsize * (i + 0.5);
       double q_value = qmin + qbinsize * (j + 0.5);
       Grid[i][j] = getResponseXpXm(p_value, q_value);
-      //std::cout << i << " " << j << " p = " << p_value << " q = " << q_value << " w = " << Grid[i][j] << std::endl;    
+      //std::cout << i << " " << j << " p = " << p_value << " q = " << q_value << " w = " << Grid[i][j] << std::endl;
     }
   }
 }
@@ -49,7 +58,7 @@ double Retina::getResponseXpXm(double x_plus, double x_minus) {
   double Rij = 0.;
   unsigned int hits_tot = hits.size();
 
-  // *** This is always assuming barrel hits, it has to be checked 
+  // *** This is always assuming barrel hits, it has to be checked
   double y0 = 23.0;
   double y1 = 108.0;
   if ( view == XY ){
@@ -65,7 +74,7 @@ double Retina::getResponseXpXm(double x_plus, double x_minus) {
   const double q = y0 - p*x0;
 
   for (unsigned int kr = 0; kr < hits_tot; kr++) {
-    
+
     double x = ( view == XY ? hits[kr].x : std::fabs(hits[kr].z) );   // NB: we are using fabs(z) !!!!
     double y = ( view == XY ? hits[kr].y : hits[kr].rho );
 
@@ -83,7 +92,7 @@ double Retina::getResponseXpXm(double x_plus, double x_minus) {
   }
   if (Rij < 1e-6) return 1e-6;
   else return Rij;
-  
+
 }
 
 
@@ -91,12 +100,12 @@ void Retina::dumpGrid(int eventNum, int step, int imax) {
 
 //  std::cout << std::endl;
 //  std::cout << "Dumping the retina ... " << std::endl;
-//  std::cout << " p range = " << pmin << " --> " << pmax << std::endl; 
-//  std::cout << "   p bins = " << pbins << std::endl; 
-//  std::cout << "   p step = " << pbinsize << std::endl; 
-//  std::cout << " q range = " << qmin << " --> " << qmax << std::endl; 
-//  std::cout << "   q bins = " << qbins << std::endl; 
-//  std::cout << "   q step = " << qbinsize << std::endl; 
+//  std::cout << " p range = " << pmin << " --> " << pmax << std::endl;
+//  std::cout << "   p bins = " << pbins << std::endl;
+//  std::cout << "   p step = " << pbinsize << std::endl;
+//  std::cout << " q range = " << qmin << " --> " << qmax << std::endl;
+//  std::cout << "   q bins = " << qbins << std::endl;
+//  std::cout << "   q step = " << qbinsize << std::endl;
 //  std::cout << " sigma = " << sigma[0] << std::endl;
 //  std::cout << " minWeight = " << minWeight << std::endl;
 //  for (unsigned int i = 0; i < pbins; i++){
@@ -130,28 +139,27 @@ void Retina::dumpGrid(int eventNum, int step, int imax) {
 }
 
 
-
 void Retina::findMaxima() {
 
   for (unsigned int i = 1; i < pbins-1; i++) {
     for (unsigned int j = 1; j < qbins-1; j++) {
       if (    Grid[i][j] > Grid[i-1][j]
-	   && Grid[i][j] > Grid[i+1][j]
-	   && Grid[i][j] > Grid[i][j-1]
-	   && Grid[i][j] > Grid[i][j+1]
+           && Grid[i][j] > Grid[i+1][j]
+           && Grid[i][j] > Grid[i][j-1]
+           && Grid[i][j] > Grid[i][j+1]
 
-	   && Grid[i][j] > Grid[i+1][j+1]
-	   && Grid[i][j] > Grid[i+1][j-1]
-	   && Grid[i][j] > Grid[i-1][j-1]
-	   && Grid[i][j] > Grid[i-1][j+1]
-	   ) {
-	if (Grid[i][j] < minWeight) continue; // cleaning
-	pqPoint_i point_i;
-	point_i.p = i;
-	point_i.q = j;
-	//std::cout << "not interpolated " << Grid[i][j] << std::endl;
-	pqPoint point_interpolated = findMaximumInterpolated(point_i, Grid[i][j]);
-	pqCollection.push_back(point_interpolated);
+           && Grid[i][j] > Grid[i+1][j+1]
+           && Grid[i][j] > Grid[i+1][j-1]
+           && Grid[i][j] > Grid[i-1][j-1]
+           && Grid[i][j] > Grid[i-1][j+1]
+         ) {
+        if (Grid[i][j] < minWeight) continue; // cleaning
+        pqPoint_i point_i;
+        point_i.p = i;
+        point_i.q = j;
+        //std::cout << "not interpolated " << Grid[i][j] << std::endl;
+        pqPoint point_interpolated = findMaximumInterpolated(point_i, Grid[i][j]);
+        pqCollection.push_back(point_interpolated);
       }
     }
   }
@@ -166,44 +174,45 @@ pqPoint Retina::findMaximumInterpolated(pqPoint_i point_i, double w) {
   double p_mean = 0.;
   double q_mean = 0.;
 
-  p_mean = (pmin + pbinsize * (p_i - 0.5)) * Grid[p_i-1][q_i] +
-           (pmin + pbinsize * (p_i + 0.5)) * Grid[p_i][q_i] +
-           (pmin + pbinsize * (p_i + 1.5)) * Grid[p_i+1][q_i];
+  p_mean =  (pmin + pbinsize * (p_i - 0.5)) * Grid[p_i-1][q_i] +
+            (pmin + pbinsize * (p_i + 0.5)) * Grid[p_i][q_i]   +
+            (pmin + pbinsize * (p_i + 1.5)) * Grid[p_i+1][q_i];
 
   p_mean += (pmin + pbinsize * (p_i - 0.5)) * Grid[p_i-1][q_i-1] +
-  	    (pmin + pbinsize * (p_i + 0.5)) * Grid[p_i][q_i-1] +
+            (pmin + pbinsize * (p_i + 0.5)) * Grid[p_i][q_i-1]   +
             (pmin + pbinsize * (p_i + 1.5)) * Grid[p_i+1][q_i-1];
 
   p_mean += (pmin + pbinsize * (p_i - 0.5)) * Grid[p_i-1][q_i+1] +
-            (pmin + pbinsize * (p_i + 0.5)) * Grid[p_i][q_i+1] +
-  	    (pmin + pbinsize * (p_i + 1.5)) * Grid[p_i+1][q_i+1];
+            (pmin + pbinsize * (p_i + 0.5)) * Grid[p_i][q_i+1]   +
+            (pmin + pbinsize * (p_i + 1.5)) * Grid[p_i+1][q_i+1];
 
-  p_mean /= (Grid[p_i-1][q_i] + Grid[p_i][q_i] + Grid[p_i+1][q_i] +
-  	     Grid[p_i-1][q_i-1] + Grid[p_i][q_i-1] + Grid[p_i+1][q_i-1] +
-  	     Grid[p_i-1][q_i+1] + Grid[p_i][q_i+1] + Grid[p_i+1][q_i+1]);
+  p_mean /= (Grid[p_i-1][q_i]   + Grid[p_i][q_i]   + Grid[p_i+1][q_i]   +
+             Grid[p_i-1][q_i-1] + Grid[p_i][q_i-1] + Grid[p_i+1][q_i-1] +
+             Grid[p_i-1][q_i+1] + Grid[p_i][q_i+1] + Grid[p_i+1][q_i+1]);
 
 
   q_mean =  (qmin + qbinsize * (q_i - 0.5)) * Grid[p_i][q_i-1] +
-  	    (qmin + qbinsize * (q_i + 0.5)) * Grid[p_i][q_i] +
-  	    (qmin + qbinsize * (q_i + 1.5)) * Grid[p_i][q_i+1];
+            (qmin + qbinsize * (q_i + 0.5)) * Grid[p_i][q_i]   +
+            (qmin + qbinsize * (q_i + 1.5)) * Grid[p_i][q_i+1];
 
   q_mean += (qmin + qbinsize * (q_i - 0.5)) * Grid[p_i-1][q_i-1] +
-  	    (qmin + qbinsize * (q_i + 0.5)) * Grid[p_i-1][q_i] +
-  	    (qmin + qbinsize * (q_i + 1.5)) * Grid[p_i-1][q_i+1];
+            (qmin + qbinsize * (q_i + 0.5)) * Grid[p_i-1][q_i]   +
+            (qmin + qbinsize * (q_i + 1.5)) * Grid[p_i-1][q_i+1];
 
   q_mean += (qmin + qbinsize * (q_i - 0.5)) * Grid[p_i+1][q_i-1] +
-  	    (qmin + qbinsize * (q_i + 0.5)) * Grid[p_i+1][q_i] +
-  	    (qmin + qbinsize * (q_i + 1.5)) * Grid[p_i+1][q_i+1];
+            (qmin + qbinsize * (q_i + 0.5)) * Grid[p_i+1][q_i]   +
+            (qmin + qbinsize * (q_i + 1.5)) * Grid[p_i+1][q_i+1];
 
-  q_mean /= (Grid[p_i][q_i-1] + Grid[p_i][q_i] + Grid[p_i][q_i+1] +
-	     Grid[p_i-1][q_i-1] + Grid[p_i-1][q_i] + Grid[p_i-1][q_i+1] +
-	     Grid[p_i+1][q_i-1] + Grid[p_i+1][q_i] + Grid[p_i+1][q_i+1]);
+  q_mean /= (Grid[p_i][q_i-1]   + Grid[p_i][q_i]   + Grid[p_i][q_i+1]   +
+             Grid[p_i-1][q_i-1] + Grid[p_i-1][q_i] + Grid[p_i-1][q_i+1] +
+             Grid[p_i+1][q_i-1] + Grid[p_i+1][q_i] + Grid[p_i+1][q_i+1]);
+
 
   pqPoint point_o;
   point_o.p = p_mean;
   point_o.q = q_mean;
   point_o.w = w;
-  //	std::cout << "interpolated " << Grid[p_mean][j] << std::endl;
+  //std::cout << "interpolated " << Grid[p_mean][j] << std::endl;
   return point_o;
 }
 
@@ -233,7 +242,7 @@ pqPoint Retina::getBestPQ() {
       bestPQ = pqCollection[i];
     }
   }
-  //	std::cout << " bestPQp " << bestPQ.p << "   bestPQq = " << bestPQ.q << " best w" << bestPQ.w << std::endl;
+  //std::cout << " bestPQp " << bestPQ.p << "   bestPQq = " << bestPQ.q << " best w" << bestPQ.w << std::endl;
   return bestPQ;
 }
 
