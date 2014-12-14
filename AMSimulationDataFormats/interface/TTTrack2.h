@@ -14,19 +14,19 @@ class TTTrack2 {
     TTTrack2()
     : rinv_(-999999.), phi0_(-999999.), cottheta_(-999999.), z0_(-999999.), d0_(-999999.),
       chi2_(-999999.), ndof_(-1), chi2_phi_(-999999.), chi2_z_(-999999.),
-      tpId_(-1),
+      tpId_(-1), triggerTowerId_(99),
       roadRef_(), combRef_(), stubRefs_() {}
 
     TTTrack2(unsigned roadRef, unsigned combRef, const std::vector<unsigned>& stubRefs)
     : rinv_(-999999.), phi0_(-999999.), cottheta_(-999999.), z0_(-999999.), d0_(-999999.),
       chi2_(-999999.), ndof_(-1), chi2_phi_(-999999.), chi2_z_(-999999.),
-      tpId_(-1),
+      tpId_(-1), triggerTowerId_(99),
       roadRef_(roadRef), combRef_(combRef), stubRefs_(stubRefs) {}
 
     TTTrack2(const TTTrack2& rhs)
     : rinv_(rhs.rinv_), phi0_(rhs.phi0_), cottheta_(rhs.cottheta_), z0_(rhs.z0_), d0_(rhs.d0_),
       chi2_(rhs.chi2_), ndof_(rhs.ndof_), chi2_phi_(rhs.chi2_phi_), chi2_z_(rhs.chi2_z_),
-      tpId_(rhs.tpId_),
+      tpId_(rhs.tpId_), triggerTowerId_(rhs.triggerTowerId_),
       roadRef_(rhs.roadRef_), combRef_(rhs.combRef_), stubRefs_(rhs.stubRefs_) {}
 
     // Destructor
@@ -46,9 +46,11 @@ class TTTrack2 {
         chi2_z_   = chi2_z;
     }
 
-    void setTpId(int tpId) {
-        tpId_     = tpId;
-    }
+    void setTpId(int tpId)                                { tpId_ = tpId; }
+    void setTriggerTowerId(unsigned triggerTowerId)       { triggerTowerId_ = triggerTowerId; }
+
+    void addStubRef(unsigned aStub)                       { stubRefs_.push_back(aStub); }
+    void setStubRefs(const std::vector<unsigned>& aStubs) { stubRefs_ = aStubs; }
 
     // Getters
     float rinv()                                const { return rinv_; }
@@ -71,6 +73,8 @@ class TTTrack2 {
 
     int   tpId()                                const { return tpId_; }
 
+    unsigned triggerTowerId()                   const { return triggerTowerId_; }
+
     unsigned roadRef()                          const { return roadRef_; }
 
     unsigned combRef()                          const { return combRef_; }
@@ -78,15 +82,15 @@ class TTTrack2 {
     std::vector<unsigned> stubRefs()            const { return stubRefs_; }
     unsigned stubRef(int l)                     const { return stubRefs_.at(l); }
 
-    float pt(float B=3.8)                       const { return std::abs(0.003 * B / rinv()); }
+    float pt(float B=3.8)                       const { return std::abs(0.003 * B / rinv()); }  // assume r is in cm, B is in Tesla
     float theta()                               const { return std::atan(1.0 / cottheta()); }
     float eta()                                 const { return -std::log(tan(theta()/2.0)); }
     float phi()                                 const { return phi0(); }
-    float px()                                  const { return pt() * cos(phi0()); }
-    float py()                                  const { return pt() * sin(phi0()); }
+    float px()                                  const { return pt() * std::cos(phi0()); }
+    float py()                                  const { return pt() * std::sin(phi0()); }
     float pz()                                  const { return pt() * cottheta(); }
-    float vx()                                  const { return 0.; }
-    float vy()                                  const { return 0.; }
+    float vx()                                  const { return 0.; }  // dummy
+    float vy()                                  const { return 0.; }  // dummy
     float vz()                                  const { return z0(); }
 
 
@@ -101,6 +105,7 @@ class TTTrack2 {
     float chi2_phi_;
     float chi2_z_;
     int   tpId_;
+    unsigned triggerTowerId_;
     unsigned roadRef_;
     unsigned combRef_;
     std::vector<unsigned> stubRefs_;

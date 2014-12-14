@@ -30,7 +30,7 @@ class TTRoad {
   public:
     // Constructors
     TTRoad()
-    : bankIndex_(0), triggerTowerId_(0), nsuperstrips_(0),
+    : bankIndex_(0), triggerTowerId_(99), nsuperstrips_(0),
       stubSuperstripIds_(), stubRefs_() {}
 
     TTRoad(id_type bankIndex, id_type triggerTowerId, count_type nsuperstrips,
