@@ -58,7 +58,9 @@ if sections["control"]:
     nbinsy, ymin, ymax = 1500/5,   0., 150.
     nbinsz, zmin, zmax = 1500/5, -30., 120.
 
-    visualmap = json.load(open("../data/module_vertices.json"), object_pairs_hook=convert_key_to_int)
+    vertexmap = json.load(open("../data/module_vertices.json"), object_pairs_hook=convert_key_to_int)
+
+    rmeans = b_rcoord_luciano_m
 
     def clone_tpolyline(l):
         n, x, y = l.GetN(), l.GetX(), l.GetY()
@@ -110,7 +112,7 @@ if sections["control"]:
         for tt in towers:
             for k in ttmap[tt]:
                 for kk in [k, -k]:
-                    ll = make_tpolyline(visualmap[kk], view)
+                    ll = make_tpolyline(vertexmap[kk], view)
                     ll.SetLineStyle(1); ll.SetLineWidth(2)
                     if tt == 27:
                         if isPSModule(k):
@@ -191,7 +193,6 @@ if sections["control"]:
                 j_ievt += 1
 
         # Read from Luciano
-        rBarrel = [0.2243, 0.3557, 0.5059, 0.6833, 0.9, 1.077]
         j_ievt = 0
         with open(infilelu) as f:
             for line in f:
@@ -200,8 +201,8 @@ if sections["control"]:
                 stubs = line.split(",")
                 assert(len(stubs) == 13)
                 stubs = stubs[1:]
-                for i, r in enumerate(rBarrel):
-                    phi = float(stubs[2*i]) / rBarrel[i]
+                for i, r in enumerate(rmeans):
+                    phi = float(stubs[2*i]) / rmeans[i]
                     z = float(stubs[2*i+1])
                     hxy2.Fill(r*cos(phi)*1e2, r*sin(phi)*1e2)
                     hzr2.Fill(z*1e2, r*1e2)

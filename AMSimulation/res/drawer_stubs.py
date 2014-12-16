@@ -16,7 +16,7 @@ sections["multiplicity"] = True
 
 drawerInit = DrawerInit()
 
-infiles = ["/uscms_data/d2/jiafu/L1TrackTrigger/CRAB_amsim_luciano/stubs_barrel_2M.2.root"]
+infiles = ["/uscms_data/d2/jiafu/L1TrackTrigger/CRAB_amsim_luciano/stubs_barrel_2M.3.root"]
 infilestxt = "/uscms_data/d2/jiafu/L1TrackTrigger/CRAB_amsim_luciano/input_bank_barrel_20141105.txt"
 
 col  = TColor.GetColor("#1f78b4")  # Paired
@@ -266,11 +266,11 @@ if sections["multiplicity"]:
 
                     deltaPhi = - 0.3*3.8*r*1e-2 * (simCharge/simPt) / 2.0
                     idealPhi = simPhi + deltaPhi
-                    idealZ = simVZ + r*sinh(simEta)  # cot(theta) = sinh(eta) = pz/pt
+                    idealZ = r*sinh(simEta)  # cot(theta) = sinh(eta) = pz/pt
 
                     histos["phiresidual_clean_%s" % layer].Fill(phi - idealPhi)
                     histos["xresidual_clean_%s" % layer].Fill(r * (phi - idealPhi))
-                    histos["zresidual_clean_%s" % layer].Fill(z - idealZ)
+                    histos["zresidual_clean_%s" % layer].Fill(z - (idealZ + simVZ))
 
                 assert(len(ievt2.TTStubs_r) >= len(ievt.TTStubs_r))
                 nstubs = [0, 0, 0, 0, 0, 0]
@@ -282,11 +282,11 @@ if sections["multiplicity"]:
 
                     deltaPhi = - 0.3*3.8*r*1e-2 * (simCharge/simPt) / 2.0
                     idealPhi = simPhi + deltaPhi
-                    idealZ = simVZ + r*sinh(simEta)  # cot(theta) = sinh(eta) = pz/pt
+                    idealZ = r*sinh(simEta)  # cot(theta) = sinh(eta) = pz/pt
 
                     histos["phiresidual_%s" % layer].Fill(phi - idealPhi)
                     histos["xresidual_%s" % layer].Fill(r * (phi - idealPhi))
-                    histos["zresidual_%s" % layer].Fill(z - idealZ)
+                    histos["zresidual_%s" % layer].Fill(z - (idealZ + simVZ))
                     nstubs[ii] += 1
 
                 for i in xrange(5,11):
