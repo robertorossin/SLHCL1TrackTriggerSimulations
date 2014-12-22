@@ -10,6 +10,16 @@ bool sortByFloat(const std::pair<unsigned, float>& lhs, const std::pair<unsigned
     return lhs.second < rhs.second;
 }
 
+bool sortByUnsignedThenFloat(const std::pair<unsigned, std::pair<unsigned, float> >& lhs,
+                             const std::pair<unsigned, std::pair<unsigned, float> >& rhs) {
+    // Primary condition
+    if (lhs.second.first < rhs.second.first)  return true;
+    if (lhs.second.first > rhs.second.first)  return false;
+
+    // Secondary condition
+    return lhs.second.second < rhs.second.second;
+}
+
 template<typename RandomAccessIterator, typename Size, typename T>
 void insertSorted(RandomAccessIterator first, Size pos, Size len, const T value) {
     first += len;
@@ -116,13 +126,14 @@ int StubCleaner::cleanStubs(TString src, TString out) {
 
         // Check sim info
         assert(reader.vp_pt->size() == 1);
-        float simPt    = reader.vp_pt->front();
-        float simEta   = reader.vp_eta->front();
-        float simPhi   = reader.vp_phi->front();
-        float simVx    = reader.vp_vx->front();
-        float simVy    = reader.vp_vy->front();
-        float simVz    = reader.vp_vz->front();
-        int simCharge  = reader.vp_charge->front();
+        float simPt       = reader.vp_pt->front();
+        float simEta      = reader.vp_eta->front();
+        float simPhi      = reader.vp_phi->front();
+        //float simVx       = reader.vp_vx->front();
+        //float simVy       = reader.vp_vy->front();
+        float simVz       = reader.vp_vz->front();
+        int   simCharge   = reader.vp_charge->front();
+        float simCotTheta = std::sinh(simEta);
 
         // Apply pt, eta, phi requirements
         bool sim = (po.minPt  <= simPt  && simPt  <= po.maxPt  &&
@@ -135,55 +146,62 @@ int StubCleaner::cleanStubs(TString src, TString out) {
 
         // _____________________________________________________________________
         // Remove multiple stubs in one layer
-        std::vector<std::pair<unsigned, float> > vec_index_dist;
+
+        std::vector<std::pair<unsigned, std::pair<unsigned, float> > > vec_index_dist;
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
             int tpId = reader.vb_tpId->at(l);  // check sim info
-            if (tpId == good_tpId || tpId == unmatch_tpId) {  // also catch stubs that fail to find a matched simTrack
-                float stub_r = reader.vb_r->at(l);
-
-                float idealPhi = simPhi - 0.3*3.8*stub_r*1e-2 * (simCharge/simPt) / 2.0;
-                float idealZ = stub_r * std::sinh(simEta);
-
-                // Apply cuts
-                // FIXME: All the values are hardcoded
-                // FIXME: These cuts do not take into account the vertex position in xy
-                //float dRPhi = std::abs(stub_r * (idealPhi - reader.vb_phi->at(l)));
-                //if (std::abs(simEta) < 1.1/3) {
-                //    if ((stub_r <  23.0000 + 2. && dRPhi > 0.040) ||
-                //        (stub_r <  35.7368 + 2. && dRPhi > 0.070) ||
-                //        (stub_r <  50.8000 + 2. && dRPhi > 0.130) ||
-                //        (stub_r <  68.6000 + 2. && dRPhi > 0.240) ||
-                //        (stub_r <  88.7901 + 2. && dRPhi > 0.450) ||
-                //        (stub_r < 108.0000 + 2. && dRPhi > 0.780))
-                //        continue;
-                //}
-
-                float dX = simVx + stub_r * (std::cos(idealPhi) - std::cos(reader.vb_phi->at(l)));
-                float dY = simVy + stub_r * (std::sin(idealPhi) - std::sin(reader.vb_phi->at(l)));
-                float dZ = simVz + idealZ - reader.vb_z->at(l);  // cot(theta) = sinh(eta)
-                float dist = std::sqrt(dX*dX + dY*dY + dZ*dZ);
-                vec_index_dist.push_back(std::make_pair(l, dist));
+            if (tpId != good_tpId && tpId != unmatch_tpId) {  // also catch stubs that fail to find a matched simTrack
+                continue;
             }
+
+            unsigned moduleId = reader.vb_modId->at(l);
+            unsigned lay16    = compressLayer(decodeLayer(moduleId));
+            assert(lay16 < 16);
+
+            float stub_r   = reader.vb_r->at(l);  // rho, i.e. 2D radius, not 3D
+            float stub_phi = reader.vb_phi->at(l);
+            float stub_z   = reader.vb_z->at(l);
+            unsigned interior = picky_ -> findInterior(lay16, stub_z, stub_r);
+
+            // CUIDADO: simVx and simVy are not used currently
+            float idealPhi = simPhi - 0.3*3.8*stub_r*1e-2 * (simCharge/simPt) / 2.0;
+            float idealZ   = simVz + stub_r * simCotTheta;
+            float idealR   = (stub_z - simVz) / simCotTheta;  // for endcap
+
+            float deltaPhi = std::abs(stub_phi - idealPhi);
+            float deltaZ   = std::abs(stub_z - idealZ);
+            float deltaR   = std::abs(stub_r - idealR);  // for endcap
+
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " r: " << stub_r << " phi: " << stub_phi << " stub_z: " << stub_z << " interior: " << interior << std::endl;
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " lay16: " << lay16 << " deltaPhi: " << deltaPhi << " deltaZ: " << deltaZ << " deltaR: " << deltaR << std::endl;
+
+            if (!(picky_ -> applyCuts(lay16, deltaPhi, deltaZ, deltaR))) {
+                if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " fail cut!" << std::endl;
+                continue;
+            }
+
+            float deltaX = stub_r * (std::cos(stub_phi) - std::cos(idealPhi));
+            float deltaY = stub_r * (std::sin(stub_phi) - std::sin(idealPhi));
+            float dist = std::sqrt(deltaX*deltaX + deltaY*deltaY + deltaZ*deltaZ);
+
+            vec_index_dist.push_back(std::make_pair(l, std::make_pair(interior, dist)));
         }
 
         // Sort: smallest dist to largest
-        std::sort(vec_index_dist.begin(), vec_index_dist.end(), sortByFloat);
+        std::sort(vec_index_dist.begin(), vec_index_dist.end(), sortByUnsignedThenFloat);
 
         // Select only one stub per layer
         std::vector<unsigned> goodLayerStubs(16, 999999);
         if (vec_index_dist.size()) {
-            id_type moduleId, lay, lay16;
             for (unsigned ll=0; (ll<vec_index_dist.size()) && keep; ++ll) {
                 unsigned l = vec_index_dist.at(ll).first;
-                float dist = vec_index_dist.at(ll).second;
+                float dist = vec_index_dist.at(ll).second.second;
 
-                moduleId = reader.vb_modId->at(l);
-                lay      = decodeLayer(moduleId);
-                lay16    = compressLayer(lay);
-                assert(lay16 < 16);
+                unsigned moduleId = reader.vb_modId->at(l);
+                unsigned lay16    = compressLayer(decodeLayer(moduleId));
 
                 // For each layer, takes the stub with min dist to simTrack
-                if (goodLayerStubs.at(lay16) == 999999 && dist < 26.0) {  // CUIDADO: gets rid of stubs due to loopers
+                if (goodLayerStubs.at(lay16) == 999999 && dist < 26.0) {  // gets rid of stubs due to loopers
                     goodLayerStubs.at(lay16) = l;
                 }
             }
@@ -198,17 +216,17 @@ int StubCleaner::cleanStubs(TString src, TString out) {
         // _____________________________________________________________________
         // Now make keep-or-ignore decision per stub
         unsigned ngoodstubs = 0;
-        id_type moduleId;
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
             bool keepstub = true;
 
-            moduleId = reader.vb_modId->at(l);
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " tpId: " << reader.vb_tpId->at(l) << std::endl;
+            unsigned moduleId = reader.vb_modId->at(l);
 
             // Check whether the index l was stored as a good stub
             const unsigned& count = std::count(goodLayerStubs.begin(), goodLayerStubs.end(), l);
             if (!count)  // do not keep even if filter_ is false
                 keepstub = false;
+
+            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " keep? " << keepstub << std::endl;
 
             if (keepstub) {
                 // Keep and do something similar to insertion sort
@@ -234,7 +252,6 @@ int StubCleaner::cleanStubs(TString src, TString out) {
 
                 ++ngoodstubs;  // remember to increment
             }
-            if (verbose_>2)  std::cout << Debug() << "... ... stub: " << l << " keep? " << keepstub << std::endl;
         }
         assert(ngoodstubs <= nstubs);
 

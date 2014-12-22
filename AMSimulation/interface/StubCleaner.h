@@ -5,6 +5,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HelperMath.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Picky.h"
 using namespace slhcl1tt;
 
 
@@ -21,6 +22,8 @@ class StubCleaner {
       verbose_(1) {
 
         eventSelect_ = "(1)";  // always on
+
+        picky_ = new Picky();
     }
 
     // Destructor
@@ -53,6 +56,9 @@ class StubCleaner {
 
     // Event selection
     TString eventSelect_;
+
+    // Picky
+    Picky * picky_;
 };
 
 #endif
