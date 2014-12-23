@@ -10,20 +10,21 @@ import os
 # Configurations
 
 samples = {}
-samples["nu140"     ] = False
-samples["tt27"      ] = True
-samples["tt27_nu140"] = False
+samples["nu140"       ] = False
+samples["tttt140"     ] = False
+samples["tt27"        ] = False
+samples["tt27_nu140"  ] = True
+samples["tt27_tttt140"] = False
 
 sections = {}
-sections["coverage"     ] = True
-sections["roads"        ] = False
+sections["coverage"     ] = False
+sections["roads"        ] = True
 
 drawerInit = DrawerInit()
 gStyle.SetNumberContours(100)
 gStyle.SetPalette(55)  # rainbow color map
 
 
-EOS = "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_results/"
 DATE = "20141108"
 
 settings = [
@@ -31,19 +32,19 @@ settings = [
 ]
 
 settings_tt27 = [
-    ("ss32"  ,   42318379, 0.9026),
-    ("ss64"  ,   17008261, 0.9729),
-    ("ss128" ,    6253924, 0.9930),
-    ("ss256" ,    2039355, 0.9981),
-    ("ss512" ,     628771, 0.9996),
-    ("ss1024",     213156, 0.9999),
+    ("ss32"  ,   54214494,  0.9452),
+    ("ss64"  ,   20262384,  0.9854),
+    ("ss128" ,    7103498,  0.9966),
+    ("ss256" ,    2241139,  0.9992),
+    ("ss512" ,     676611,  0.9999),
+    ("ss1024",     227105,  1.0000)
 ]
 
+EOS = "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_results/"
 results = "SingleMuPlusMinus_sp16_%s"
 #results = "SingleElePlusMinus_sp16_%s"
 #results = "SinglePionPlusMinus_sp16_%s"
 #results = "SingleKaonPlusMinus_sp16_%s"
-
 
 col  = TColor.GetColor("#1f78b4")  # Paired
 fcol = TColor.GetColor("#a6cee3")
@@ -57,22 +58,31 @@ if samples["tt27"]:
     results = "SingleMuPlusMinus_sp16_%s_tt27"
     imgdir = "figures_amsim_tt27/"
 
-if samples["nu140"]:
-    EOS = EOS.replace("_results","_results_PU140")
-    results = "Neutrino_sp16_%s"
-
-    col = TColor.GetColor("#e31a1c")  # Paired
+if samples["nu140"] or samples["tt27_nu140"]:
+    EOS  = EOS.replace("_results","_results_PU140")
+    col  = TColor.GetColor("#e31a1c")  # Paired
     fcol = TColor.GetColor("#fb9a99")
-    imgdir = "figures_amsim_nu140/"
 
-if samples["tt27_nu140"]:
-    EOS = EOS.replace("_results","_results_PU140")
-    settings = settings_tt27
-    results = "Neutrino_sp16_%s_tt27"
+    if samples["nu140"]:
+        results = "Neutrino_sp16_%s"
+        imgdir = "figures_amsim_nu140/"
+    else:
+        settings = settings_tt27
+        results = "Neutrino_sp16_%s_tt27"
+        imgdir = "figures_amsim_nu140_tt27/"
 
-    col = TColor.GetColor("#e31a1c")  # Paired
-    fcol = TColor.GetColor("#fb9a99")
-    imgdir = "figures_amsim_tt27_nu140/"
+if samples["tttt140"] or samples["tt27_tttt140"]:
+    EOS  = EOS.replace("_results","_results_PU140")
+    col  = TColor.GetColor("#6a3d9a")  # Paired
+    fcol = TColor.GetColor("#cab2d6")
+
+    if samples["nu140"]:
+        results = "TTbarTTbar_sp16_%s"
+        imgdir = "figures_amsim_tttt140/"
+    else:
+        settings = settings_tt27
+        results = "TTbarTTbar_sp16_%s_tt27"
+        imgdir = "figures_amsim_tttt140_tt27/"
 
 
 # Number of events
@@ -101,7 +111,7 @@ def listdir_fullpath(d):
 if sections["coverage"]:
 
     latex.SetTextSize(0.036)
-    if samples["nu140"] or samples["tt27_nu140"]:
+    if samples["nu140"] or samples["tt27_nu140"] or samples["tttt140"] or samples["tt27_tttt140"]:
         print "ERROR!"
         exit
 
@@ -162,7 +172,7 @@ if sections["coverage"]:
             histos["ac_"+hname] = TProfile2D("ac_"+hname, "; #eta; #phi; %s" % ac_ytitle, 60, -3, 3, 64, -3.2, 3.2, 0., 2., "")
         return histos
 
-    def projectCoverage(tree, histos, nentries=1000000000, val=""):
+    def projectCoverage(tree, histos, npatterns, nentries=1000000000, val=""):
         tree.SetBranchStatus("*", 0)
         tree.SetBranchStatus("genParts_pt"           , 1)
         tree.SetBranchStatus("genParts_eta"          , 1)
@@ -170,7 +180,7 @@ if sections["coverage"]:
         tree.SetBranchStatus("genParts_vz"           , 1)
         tree.SetBranchStatus("genParts_charge"       , 1)
         tree.SetBranchStatus("TTStubs_modId"         , 1)
-        tree.SetBranchStatus("AMTTRoads_nsuperstrips", 1)
+        tree.SetBranchStatus("AMTTRoads_bankIndex"   , 1)
 
         def fill(pt, eta, phi, vz, charge, accept, trigger):
             if accept:
@@ -251,7 +261,10 @@ if sections["coverage"]:
                     continue
 
             # Get trigger results
-            trigger = (ievt.AMTTRoads_nsuperstrips.size() > 0)
+            trigger = False
+            for bankIndex in ievt.AMTTRoads_bankIndex:
+                if bankIndex < npatterns:
+                    trigger = True
 
             # Loop over stub moduleIds
             moduleIds_by_mlayers = [[], [], [], [], [], []]  # 6 mlayers
@@ -275,13 +288,11 @@ if sections["coverage"]:
                     count_by_tt = {}
                     for moduleId in combination:
                         for tt in ttrmap[moduleId]:
-                            if samples["tt27"]:
-                                if not (tt == 27):
-                                    continue
-                            # Idiom for incrementing
-                            # See: http://www.gis.sdsu.edu/~gawron/compling/course_core/assignments/dictionary_discussion.htm
                             count_by_tt[tt] = count_by_tt.get(tt, 0) + 1
                     for tt, count in count_by_tt.iteritems():
+                        if samples["tt27"]:
+                            if not (tt == 27):
+                                continue
                         if count == 6:
                             accept = True
                             break
@@ -299,7 +310,7 @@ if sections["coverage"]:
         tree.SetBranchStatus("*", 1)
         return
 
-    def drawCoverage(histos, setting, banksize, hnlambda, imgdir):
+    def drawCoverage(histos, setting, npatterns, hnlambda, imgdir):
         for hvar in ["pt", "ppt", "eta", "phi", "vz", "charge"]:
             ymax = 1.2
 
@@ -347,9 +358,9 @@ if sections["coverage"]:
             moveLegend(0.48,0.22,0.94,0.34); legend.Clear()
             if hvar == "pt" or hvar == "ppt":
                 writeme = [
-                    "0.00 #leq |#eta| < 0.73",
-                    "0.73 #leq |#eta| < 1.47",
-                    "1.47 #leq |#eta| < 2.20",
+                    "0.000 #leq |#eta| < 0.733",
+                    "0.733 #leq |#eta| < 1.467",
+                    "1.467 #leq |#eta| < 2.200",
                 ]
             else:
                 writeme = [
@@ -362,7 +373,7 @@ if sections["coverage"]:
                 legend.AddEntry(histos[hnlambda(hname1)], writeme[i], "lp")
             legend.Draw()
 
-            latex.DrawLatex(0.6, 0.185, "%s [%.1fM bank]" % (setting, banksize))
+            latex.DrawLatex(0.6, 0.185, "%s [%.1fM bank]" % (setting, npatterns*1e-6))
             CMS_label()
             save(imgdir, "coverage_%s_%s" % (hnlambda(hname), setting), dot_root=True)
 
@@ -375,7 +386,7 @@ if sections["coverage"]:
         draw2D([h], stats=False)
 
         latex.DrawLatex(0.6, 0.235, "20 #leq p_{T} < #infty  GeV")
-        latex.DrawLatex(0.6, 0.185, "%s [%.1fM bank]" % (setting, banksize))
+        latex.DrawLatex(0.6, 0.185, "%s [%.1fM bank]" % (setting, npatterns*1e-6))
         save(imgdir, "coverage_%s_%s" % (hnlambda(hname), setting), dot_root=True)
 
         gPad.SetRightMargin(oldRightMargin)
@@ -393,11 +404,10 @@ if sections["coverage"]:
             chain.Add(f)
 
         histos = bookCoverage()
-        projectCoverage(chain, histos, nentries=nentries)
+        projectCoverage(chain, histos, npatterns, nentries=nentries)
         setting = ss.replace("_", " ")
-        banksize = 1e-6*npatterns
-        drawCoverage(histos, setting, banksize, lambda x: x, imgdir)
-        drawCoverage(histos, setting, banksize, lambda x: "ac_"+x, imgdir)
+        drawCoverage(histos, setting, npatterns, lambda x: x, imgdir)
+        drawCoverage(histos, setting, npatterns, lambda x: "ac_"+x, imgdir)
         histos.clear()
 
 
@@ -407,7 +417,7 @@ if sections["coverage"]:
 if sections["roads"]:
 
     latex.SetTextSize(0.036)
-    if not (samples["nu140"] or samples["tt27_nu140"]):
+    if not(samples["nu140"] or samples["tt27_nu140"] or samples["tttt140"] or samples["tt27_tttt140"]):
         print "ERROR!"
         exit
 
@@ -437,8 +447,9 @@ if sections["roads"]:
             v.SetLineColor(col); v.SetFillColor(fcol)
         return histos
 
-    def projectRoads(tree, histos, nentries=1000000000):
+    def projectRoads(tree, histos, npatterns, nentries=1000000000):
         tree.SetBranchStatus("*", 0)
+        tree.SetBranchStatus("AMTTRoads_bankIndex"        , 1)
         tree.SetBranchStatus("AMTTRoads_nsuperstrips"     , 1)
         tree.SetBranchStatus("AMTTRoads_stubSuperstripIds", 1)
 
@@ -449,45 +460,47 @@ if sections["roads"]:
             nroads_per_event = 0
             ncombinations_per_event = 0
 
-            for nsuperstrips, superstripIds in izip(ievt.AMTTRoads_nsuperstrips, ievt.AMTTRoads_stubSuperstripIds):
-                ssidmap = {}
-                for ssid in superstripIds:
-                    ssidmap[ssid] = ssidmap.get(ssid, 0) + 1
+            for bankIndex, nsuperstrips, superstripIds in izip(ievt.AMTTRoads_bankIndex, ievt.AMTTRoads_nsuperstrips, ievt.AMTTRoads_stubSuperstripIds):
 
-                nsuperstrips_per_road = len(ssidmap)
-                nroads_per_event += 1
+                if bankIndex < npatterns:
+                    ssidmap = {}
+                    for ssid in superstripIds:
+                        ssidmap[ssid] = ssidmap.get(ssid, 0) + 1
 
-                assert(nsuperstrips_per_road == nsuperstrips)
-                histos["nsuperstrips_per_road"].Fill(nsuperstrips_per_road)
+                    nsuperstrips_per_road = len(ssidmap)
+                    nroads_per_event += 1
 
-                nstubs_per_road = 0
-                ncombinations_per_road = 1
+                    assert(nsuperstrips_per_road == nsuperstrips)
+                    histos["nsuperstrips_per_road"].Fill(nsuperstrips_per_road)
 
-                for k, v in ssidmap.iteritems():
-                    nstubs_per_superstrip = v
-                    nstubs_per_road += v
-                    ncombinations_per_road *= v
+                    nstubs_per_road = 0
+                    ncombinations_per_road = 1
 
-                    histos["nstubs_per_superstrip"].Fill(nstubs_per_superstrip)
+                    for k, v in ssidmap.iteritems():
+                        nstubs_per_superstrip = v
+                        nstubs_per_road += v
+                        ncombinations_per_road *= v
 
-                ncombinations_per_event += ncombinations_per_road
+                        histos["nstubs_per_superstrip"].Fill(nstubs_per_superstrip)
 
-                assert(nstubs_per_road == superstripIds.size())
-                histos["nstubs_per_road"].Fill(nstubs_per_road)
-                histos["ncombinations_per_road"].Fill(ncombinations_per_road)
+                    ncombinations_per_event += ncombinations_per_road
 
-            assert(nroads_per_event == ievt.AMTTRoads_nsuperstrips.size())
+                    assert(nstubs_per_road == superstripIds.size())
+                    histos["nstubs_per_road"].Fill(nstubs_per_road)
+                    histos["ncombinations_per_road"].Fill(ncombinations_per_road)
+
+            assert(nroads_per_event <= ievt.AMTTRoads_nsuperstrips.size())
             histos["nroads_per_event"].Fill(nroads_per_event)
             histos["ncombinations_per_event"].Fill(ncombinations_per_event)
 
         tree.SetBranchStatus("*", 1)
         return
 
-    def drawRoads(histos, setting, banksize, imgdir, logy=False):
+    def drawRoads(histos, setting, npatterns, imgdir, logy=False):
         for hname, h in histos.iteritems():
             h.SetMinimum(0.5)
             draw([h], ytitle="", logy=logy)
-            latex.DrawLatex(0.6, 0.185, "%s [%.1fM bank]" % (setting, banksize))
+            latex.DrawLatex(0.6, 0.185, "%s [%.1fM bank]" % (setting, npatterns*1e-6))
             save(imgdir, "roads_%s_%s" % (hname, setting), dot_root=True)
 
 
@@ -501,8 +514,7 @@ if sections["roads"]:
             chain.Add(f)
 
         histos = bookRoads()
-        projectRoads(chain, histos, nentries=nentries/1000)
+        projectRoads(chain, histos, npatterns, nentries=nentries/1000)
         setting = ss.replace("_", " ")
-        banksize = 1e-6*npatterns
-        drawRoads(histos, setting, banksize, imgdir, logy=True)
+        drawRoads(histos, setting, npatterns, imgdir, logy=True)
         histos.clear()
