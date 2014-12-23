@@ -215,39 +215,43 @@ unsigned SuperstripArbiter::superstrip_luciano(unsigned lay, float phi, float et
     return h;
 }
 
-unsigned SuperstripArbiter::superstrip_rational(unsigned lay, float phi, float eta,
-                                                const float unit_scale) const {
+unsigned SuperstripArbiter::superstrip_rational(unsigned lay, float phi, float z,
+                                                const float scale_phi, const float divide_z) const {
     unsigned h = 0;
     lay = compressLayer(lay);  // transform lay
 
     static const float units_phi[6] = {0.00381, 0.00439, 0.00459, 0.00485, 0.00523, 0.00575};
-    static const float units_eta[6] = {4.4, 4.4, 4.4, 4.4, 4.4, 4.4};
-    float unit_phi = units_phi[0] * unit_scale;
-    float unit_eta = units_eta[0] * 1.0;  // unaffected by 'unit_scale'
+    static const float edges_z[6*2] = {-6.712700,26.979900, -6.779690,36.704800, -5.254170,47.751099, -9.531830,59.410301, -9.531830,78.737198, -9.531830,88.993500};
+
+    float unit_phi = units_phi[0] * scale_phi;                    // innermost has the smallest unit
+    float unit_z   = (edges_z[2*5+1] - edges_z[2*5]) / divide_z;  // outermost has the largest unit
+    //if (unit_phi > M_PI*2.)  unit_phi = M_PI*2.;
+    //if (unit_z   > 2.2*2. )  unit_z   = 2.2*2.;
     int n_phi = floor(M_PI*2. / unit_phi + 0.5);
-    int n_eta = floor(2.2*2.  / unit_eta + 0.5);
-    assert(n_phi > 0 && n_eta > 0);
+    int n_z   = divide_z;
+    assert(n_phi > 0 && n_z > 0);
 
-    if (lay < 16) {
-        unit_phi = units_phi[lay] * unit_scale;
-        unit_eta = units_eta[lay] * 1.0;  // unaffected by 'unit_scale'
+    if (lay < 6) {  // barrel only
+        unit_phi = units_phi[lay] * scale_phi;
+        unit_z   = (edges_z[2*lay+1] - edges_z[2*lay]) / divide_z;
+        //if (unit_phi > M_PI*2.)  unit_phi = M_PI*2.;
+        //if (unit_z   > 2.2*2. )  unit_z   = 2.2*2.;
 
-        phi += M_PI;  // -M_PI is the lowest phi value
-        eta += 2.2;   // -2.2  is the lowest eta value
+        phi -= -M_PI;           // -M_PI is the lowest phi value
+        z   -= edges_z[2*lay];  // lowest z value in trigger tower
 
         int i_phi = floor(phi / unit_phi);
-        int i_eta = floor(eta / unit_eta);
-
+        int i_z   = floor(z   / unit_z);
         i_phi = (i_phi < 0) ? 0 : (i_phi >= n_phi) ? (n_phi - 1) : i_phi;  // proper range
-        i_eta = (i_eta < 0) ? 0 : (i_eta >= n_eta) ? (n_eta - 1) : i_eta;  // proper range
+        i_z   = (i_z   < 0) ? 0 : (i_z   >= n_z  ) ? (n_z   - 1) : i_z  ;  // proper range
 
-        h = (lay * n_eta * n_phi) + i_eta * n_phi + i_phi;
+        h = (lay * n_z * n_phi) + i_z * n_phi + i_phi;
 
     } else if (lay < 18) {
-        h = lay * n_eta * n_phi;
+        h = lay * n_z * n_phi;
 
     } else {
-        h = 18 * n_eta * n_phi;
+        h = 18 * n_z * n_phi;
 
     }
 

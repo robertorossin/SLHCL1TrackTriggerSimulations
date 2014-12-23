@@ -26,7 +26,7 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
 
     id_type fakeSuperstrip;
     if (po.mode == 3) {  // luciano superstrip ver 2
-        fakeSuperstrip = arbiter_ -> superstrip_rational(27, 0, 0, po.unitScale);
+        fakeSuperstrip = arbiter_ -> superstrip_rational(27, 0, 0, po.scalePhi, po.divideZ);
     } else if (po.mode == 2) {  // luciano superstrip
         fakeSuperstrip = arbiter_ -> superstrip_luciano(27, 0, 0, po.unitPhi, po.unitEta);
     } else {
@@ -176,7 +176,7 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
 
         // Loop over reconstructed stubs
         id_type ssId, moduleId, lay, lad, mod, col, row;  // declare the usual suspects
-        float stub_r, stub_eta, stub_phi, stub_z, stub_trigBend;
+        float stub_r, stub_phi, stub_z, stub_eta, stub_trigBend;
         for (unsigned l=0; l<nstubs; ++l) {
 
             // Break moduleId into lay, lad, mod
@@ -190,11 +190,11 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
             col = halfStripRound(reader.vb_coordy->at(l));
             row = halfStripRound(reader.vb_coordx->at(l));
 
-            // global r, eta, phi, z
-            stub_r = reader.vb_r->at(l);
-            stub_eta = reader.vb_eta->at(l);
+            // global coordinates
+            stub_r   = reader.vb_r->at(l);
             stub_phi = reader.vb_phi->at(l);
-            stub_z = reader.vb_z->at(l);
+            stub_z   = reader.vb_z->at(l);
+            stub_eta = reader.vb_eta->at(l);
             stub_trigBend = reader.vb_trigBend->at(l);
 
             // Skip if moduleId not in any trigger tower
@@ -205,7 +205,7 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
 
             // Find superstrip address
             if (po.mode == 3) {  // luciano superstrip ver 2
-                ssId = arbiter_ -> superstrip_rational(lay, stub_phi, stub_eta, po.unitScale);
+                ssId = arbiter_ -> superstrip_rational(lay, stub_phi, stub_z, po.scalePhi, po.divideZ);
             } else if (po.mode == 2) {  // luciano superstrip
                 ssId = arbiter_ -> superstrip_luciano(lay, stub_phi, stub_eta, po.unitPhi, po.unitEta);
             } else {
@@ -219,7 +219,7 @@ int PatternMatcher::makeRoads_fas(TString src, TString bank, TString out) {
             //superstripBooleans.at(ssId) = true;
 
             if (verbose_>2) {
-                std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " r: " << stub_r << " eta: " << stub_eta << " phi: " << stub_phi << std::endl;
+                std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " r: " << stub_r << " phi: " << stub_phi << " z: " << stub_z << " eta: " << stub_eta << std::endl;
                 std::cout << Debug() << "... ... stub: " << l << " ssId: " << ssId << std::endl;
             }
         }

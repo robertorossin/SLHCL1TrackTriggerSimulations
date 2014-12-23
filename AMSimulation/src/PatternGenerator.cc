@@ -81,7 +81,7 @@ int PatternGenerator::makePatterns_fas(TString src) {
       //tchain->SetBranchStatus("genParts_charge"   , 1);
       //tchain->SetBranchStatus("TTStubs_x"         , 1);
       //tchain->SetBranchStatus("TTStubs_y"         , 1);
-      //tchain->SetBranchStatus("TTStubs_z"         , 1);
+        tchain->SetBranchStatus("TTStubs_z"         , 1);
         tchain->SetBranchStatus("TTStubs_r"         , 1);
         tchain->SetBranchStatus("TTStubs_eta"       , 1);
         tchain->SetBranchStatus("TTStubs_phi"       , 1);
@@ -96,9 +96,9 @@ int PatternGenerator::makePatterns_fas(TString src) {
 
     id_type caloSuperstrip, muonSuperstrip, fakeSuperstrip;
     if (po.mode == 3) {  // luciano superstrip ver 2
-        caloSuperstrip = arbiter_ -> superstrip_rational(25, 0, 0, po.unitScale);
-        muonSuperstrip = arbiter_ -> superstrip_rational(26, 0, 0, po.unitScale);
-        fakeSuperstrip = arbiter_ -> superstrip_rational(27, 0, 0, po.unitScale);
+        caloSuperstrip = arbiter_ -> superstrip_rational(25, 0, 0, po.scalePhi, po.divideZ);
+        muonSuperstrip = arbiter_ -> superstrip_rational(26, 0, 0, po.scalePhi, po.divideZ);
+        fakeSuperstrip = arbiter_ -> superstrip_rational(27, 0, 0, po.scalePhi, po.divideZ);
     } else if (po.mode == 2) {  // luciano superstrip
         caloSuperstrip = arbiter_ -> superstrip_luciano(25, 0, 0, po.unitPhi, po.unitEta);
         muonSuperstrip = arbiter_ -> superstrip_luciano(26, 0, 0, po.unitPhi, po.unitEta);
@@ -173,7 +173,7 @@ int PatternGenerator::makePatterns_fas(TString src) {
 
         // Quick loop over reconstructed stubs
         id_type ssId, moduleId, lay, lad, mod, col, row;  // declare the usual suspects
-        float stub_r, stub_eta, stub_phi;
+        float stub_r, stub_phi, stub_z, stub_eta;
         for (unsigned l=0; (l<nstubs) && keep; ++l) {
             moduleId = reader.vb_modId->at(l);
 
@@ -236,14 +236,15 @@ int PatternGenerator::makePatterns_fas(TString src) {
             col = halfStripRound(reader.vb_coordy->at(l));
             row = halfStripRound(reader.vb_coordx->at(l));
 
-            // global r, eta, phi
-            stub_r = reader.vb_r->at(l);
-            stub_eta = reader.vb_eta->at(l);
+            // global coordinates
+            stub_r   = reader.vb_r->at(l);
             stub_phi = reader.vb_phi->at(l);
+            stub_z   = reader.vb_z->at(l);
+            stub_eta = reader.vb_eta->at(l);
 
             // Find superstrip address
             if (po.mode == 3) {  // luciano superstrip ver 2
-                ssId = arbiter_ -> superstrip_rational(lay, stub_phi, stub_eta, po.unitScale);
+                ssId = arbiter_ -> superstrip_rational(lay, stub_phi, stub_z, po.scalePhi, po.divideZ);
             } else if (po.mode == 2) {  // luciano superstrip
                 ssId = arbiter_ -> superstrip_luciano(lay, stub_phi, stub_eta, po.unitPhi, po.unitEta);
             } else {
@@ -261,7 +262,7 @@ int PatternGenerator::makePatterns_fas(TString src) {
             }
 
             if (verbose_>2) {
-                std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " r: " << stub_r << " eta: " << stub_eta << " phi: " << stub_phi << std::endl;
+                std::cout << Debug() << "... ... stub: " << l << " moduleId: " << moduleId << " col: " << col << " row: " << row << " r: " << stub_r << " phi: " << stub_phi << " z: " << stub_z << " eta: " << stub_eta << std::endl;
                 std::cout << Debug() << "... ... stub: " << l << " ssId: " << ssId << " towers: ";
                 if (po.requireTriggerTower) {
                     const std::vector<unsigned>& towerIds = triggerTowerReverseMap_.at(moduleId);
