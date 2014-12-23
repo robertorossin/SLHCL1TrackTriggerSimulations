@@ -317,7 +317,7 @@ if sections["control"]:
 
 
     indir = "/uscms_data/d2/jiafu/L1TrackTrigger/CMSSW_6_2_0_SLHC12_patch1/src/SLHCL1TrackTriggerSimulations/Configuration/test/control/"
-    infile = indir + "stubs_barrel_pt%i.0.root"
+    infile = indir + "stubs_barrel_pt%i.1.root"
     indirlu = "/uscms_data/d2/jiafu/L1TrackTrigger/external/fromLuciano/LucianosToy-v0.3/jftest/"
     infilelu = indirlu + "hits_pt%i.txt"
 

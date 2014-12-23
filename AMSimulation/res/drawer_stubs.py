@@ -10,6 +10,7 @@ from math import sqrt, pi, sin, cos, tan, sinh
 
 sections = {}
 sections["residual"     ] = False
+sections["rcoord"       ] = False
 sections["interval"     ] = False
 sections["multiplicity" ] = True
 sections["multiplicity2"] = False
@@ -71,7 +72,7 @@ if sections["residual"]:
         return histos
 
     # Exactly 6 stubs
-    cut = "@TTStubs_r.size()==6"
+    cut = "(@TTStubs_r.size()==6)"
 
     # Barrel
     phimaxs = [0.006, 0.008, 0.010, 0.014, 0.018, 0.024]
@@ -89,6 +90,36 @@ if sections["residual"]:
         var = "TTStubs_z[%i] - (genParts_vz[0] + TTStubs_r[%i] * sinh(genParts_eta[0]))" % (ii,ii)  # cot(theta) = sinh(eta) = pz/pt
         xtitle = "stub z_{%s} - ideal z_{%s} [cm]" % (layer,layer)
         p0 = struct("zresidual_%s" % layer, var, cut, xtitle, 240, -zmaxs[ii], zmaxs[ii], col, fcol)
+        histos = doit([p0], imgdir)
+        print histos[0].h.Integral(), histos[0].h.GetRMS()
+
+
+# ______________________________________________________________________________
+if sections["rcoord"]:
+
+    def doit(x, imgdir=None, logy=False, ymax=2000000./4/2):
+        histos = book(x)
+        project(tree, histos, nentries=nentries, drawOverflow=False, drawUnderflow=False)
+        histos[0].h.SetMaximum(ymax / 1.4)
+        draw(histos, logy=logy)
+        save(imgdir, x[0].name)
+        return histos
+
+    # Exactly 6 stubs
+    cut = "(@TTStubs_r.size()==6)"
+
+    # Barrel
+    rmeans = b_rcoord_cmssw
+
+    for i in xrange(5,11):
+        layer = "b%i" % i
+        ii = i-5
+        r = rmeans[ii]
+
+        var = "TTStubs_r"
+        xtitle = "stub r_{%s} [cm]" % layer
+        cut2 = "(%i<=TTStubs_modId && TTStubs_modId<%i)" % (i*10000, (i+1)*10000)
+        p0 = struct("rcoord_%s" % layer, var, cut+"*"+cut2, xtitle, 250, r-2.5, r+2.5, col, fcol)
         histos = doit([p0], imgdir)
         print histos[0].h.Integral(), histos[0].h.GetRMS()
 
@@ -213,7 +244,7 @@ if sections["multiplicity"]:
     #xcuts = [0.030, 0.070, 0.130, 0.270, 0.540, 0.810]
     #zcuts = [0.150, 0.300, 0.300, 5.000, 5.000, 5.000]
     xcuts = [0.040, 0.070, 0.130, 0.240, 0.450, 0.780]
-    zcuts = [0.200, 0.300, 0.400, 3.000, 3.500, 4.000]
+    zcuts = [0.300, 0.400, 0.500, 3.000, 3.500, 4.000]
 
     def bookLayer():
         histos = {}

@@ -8,11 +8,12 @@ from math import atan2
 # Configurations
 
 samples = {}
-samples["nu140"        ] = True
+samples["nu140"        ] = False
 samples["tt140"        ] = False
-samples["tttt140"      ] = False
+samples["tttt140"      ] = True
 
 sections = {}
+sections["trkParts"    ] = False
 sections["occupancy"   ] = True
 sections["distribution"] = False
 
@@ -41,6 +42,12 @@ if samples["tt140"]:
     fcol = TColor.GetColor("#cab2d6")
     imgdir = "figures_pileup2_tt140/"
 
+# 4tops (140PU)
+if samples["tttt140"]:
+    infiles = ["/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_ntuple/PU140/TTbarTTbar_E2023TTI_PU140_TuneCUEP6S1_ntuple.2.root"]
+    col  = TColor.GetColor("#6a3d9a")  # Paired
+    fcol = TColor.GetColor("#cab2d6")
+    imgdir = "figures_pileup2_tttt140/"
 
 # Number of events
 nentries = 1000
@@ -65,6 +72,41 @@ ttrmap = get_reverse_map(ttmap)
 coordmap = json.load(open("../data/module_coordinates.json"), object_pairs_hook=convert_key_to_int)
 
 vertexmap = json.load(open("../data/module_vertices.json"), object_pairs_hook=convert_key_to_int)
+
+
+if sections["trkParts"]:
+
+    def doit(x, imgdir=None, logy=False):
+        histos = book(x)
+        project(tree, histos, nentries=nentries, drawOverflow=False, drawUnderflow=False)
+        draw(histos, logy=logy)
+        save(imgdir, x[0].name)
+        return histos
+
+    cut = "trkParts_primary * (0.785398 <= trkParts_phi && trkParts_phi <= 1.57079) * (0 <= trkParts_eta && trkParts_eta <= 0.733333)"
+
+    writehistos = []
+
+    p0 = struct("trkParts_size", "Sum$(%s)" % cut, "", "# trkParts", 1000, 0, 1000, col, fcol)
+    histos = doit([p0], imgdir, logy=True)
+    histos[0].h.SetName(p0.name); writehistos.append(histos[0].h)
+
+    p0 = struct("trkParts_pt", "trkParts_pt", cut, "trkPart p_{T} [GeV]", 1000, 0., 200, col, fcol)
+    histos = doit([p0], imgdir, logy=True)
+    histos[0].h.SetName(p0.name); writehistos.append(histos[0].h)
+
+    p0 = struct("trkParts_eta", "trkParts_eta", cut, "trkPart #eta", 1200, -3.0, 3.0, col, fcol)
+    histos = doit([p0], imgdir, logy=True)
+    histos[0].h.SetName(p0.name); writehistos.append(histos[0].h)
+
+    p0 = struct("trkParts_phi", "trkParts_phi", cut, "trkPart #phi", 1280, -3.2, 3.2, col, fcol)
+    histos = doit([p0], imgdir, logy=True)
+    histos[0].h.SetName(p0.name); writehistos.append(histos[0].h)
+
+    f = TFile.Open(imgdir+"trkParts_histos.root", "RECREATE")
+    for h in writehistos:
+        h.Write()
+    f.Close()
 
 
 # ______________________________________________________________________________
