@@ -41,6 +41,9 @@ class SuperstripArbiter {
     unsigned superstrip_luciano(unsigned lay, float phi, float eta,
                                 const float unit_phi, const float unit_eta) const;
 
+    unsigned superstrip_rational(unsigned lay, float phi, float z,
+                                 const float scale_phi, const float divide_z) const;
+
     // Debug
     void print();
 

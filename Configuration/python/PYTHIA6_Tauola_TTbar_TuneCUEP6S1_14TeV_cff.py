@@ -1,11 +1,11 @@
 import FWCore.ParameterSet.Config as cms
 
-source = cms.Source("LHESource",
-    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/s/sviret/public/LHE/4tops_SM_10000_events.lhe'),
-)
+source = cms.Source("EmptySource")
 
-from Configuration.Generator.PythiaUEZ2starSettings_cfi import *
+#from Configuration.Generator.Pythia6CUEP6S1Settings_cfi import *
+from SLHCL1TrackTriggerSimulations.Configuration.Pythia6CUEP6S1Settings_cfi import *
 from GeneratorInterface.ExternalDecays.TauolaSettings_cff import *
+
 generator = cms.EDFilter("Pythia6GeneratorFilter",
     pythiaHepMCVerbosity = cms.untracked.bool(False),
     maxEventsToPrint = cms.untracked.int32(0),
@@ -22,16 +22,20 @@ generator = cms.EDFilter("Pythia6GeneratorFilter",
     ),
     UseExternalGenerators = cms.untracked.bool(True),
     PythiaParameters = cms.PSet(
-        pythiaUESettingsBlock,
-        processParameters = cms.vstring('MSEL=0         ! User defined processes',
+        pythia6CUEP6S1SettingsBlock,
+        processParameters = cms.vstring(
+            'MSEL=0         ! User defined processes',
+            'MSUB(81)  = 1     ! qqbar to QQbar',
+            'MSUB(82)  = 1     ! gg to QQbar',
+            'MSTP(7)   = 6     ! flavor = top',
             'PMAS(6,1) = 172.5  ! top quark mass',
-            'MSTJ(1)=1       ! Fragmentation/hadronization on or off',
-            'MSTP(61)=1      ! Parton showering on or off'),
+        ),
         # This is a vector of ParameterSet names to be read, in this order
-        parameterSets = cms.vstring('pythiaUESettings', 
-            'processParameters')
+        parameterSets = cms.vstring(
+            'pythia6CUEP6S1Settings',
+            'processParameters',
+        ),
     )
 )
 
 ProductionFilterSequence = cms.Sequence(generator)
-

@@ -1,13 +1,14 @@
 #include <cmath>
+//#include <iostream>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
 
+// Default parameters: 400x0
 unsigned superstrip_luciano(unsigned lay, float phi, float eta,
-             const float unit_phi=M_PI/1600., const float unit_eta=4.4) {  // default: 400x0
-
+                            const float unit_phi=M_PI/1600., const float unit_eta=4.4) {
     unsigned h = 0;
     //lay = compressLayer(lay);  // transform lay
 
@@ -37,4 +38,3 @@ unsigned superstrip_luciano(unsigned lay, float phi, float eta,
 
     return h;
 }
-

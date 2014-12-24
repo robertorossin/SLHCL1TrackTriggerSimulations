@@ -15,6 +15,8 @@ struct PatternBankOption {
     float maxPhi;  // from -pi to pi
     float unitPhi;
     float unitEta;
+    float scalePhi;
+    float divideZ;
     unsigned subLadderSize;  // 1, 2, 4, 8, 16, 32
     unsigned subModuleSize;  // 1, 2, 4, 8, 16, 32, 64, 128, 256, 512
     unsigned nLayers;

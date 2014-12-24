@@ -11,7 +11,8 @@ with open("../data/module_vertices.csv", "r") as f:
         assert(len(values) == 13)
 
         # Convert to int or float
-        values = [float(x) if "." in x else int(x) for x in values]
+        #values = [float(x) if "." in x else int(x) for x in values]
+        values = [round(float(x),4) if "." in x else int(x) for x in values]
 
         key = values[0]
         values = values[1:]
