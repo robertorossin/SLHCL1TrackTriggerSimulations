@@ -13,49 +13,73 @@ samples = {}
 samples["nu140"       ] = False
 samples["tttt140"     ] = False
 samples["tt27"        ] = False
-samples["tt27_nu140"  ] = True
-samples["tt27_tttt140"] = False
+samples["tt27_nu140"  ] = False
+samples["tt27_tttt140"] = True
 
 sections = {}
 sections["coverage"     ] = False
 sections["roads"        ] = True
+sections["summary"      ] = False
 
 drawerInit = DrawerInit()
 gStyle.SetNumberContours(100)
 gStyle.SetPalette(55)  # rainbow color map
 
 
-DATE = "20141108"
+#DATE = "20141108"
+DATE = "20141222"
 
 settings = [
-    ("ss256"  ,  87631104, 0.9999),
+    ("sp16_ss256" , 87631104,  0.9999),
 ]
 
+#settings_tt27 = [
+#    ("sp16_ss32"  , 54214494,  0.9452),
+#    ("sp16_ss64"  , 20262384,  0.9854),
+#    ("sp16_ss128" ,  7103498,  0.9966),
+#    ("sp16_ss256" ,  2241139,  0.9992),
+#    ("sp16_ss512" ,   676611,  0.9999),
+#    ("sp16_ss1024",   227105,  1.0000),
+#]
+
+#settings_tt27 = [
+#    ("sp16_ss64"  ,  5002400,  0.9),
+#    ("sp16_ss128" ,  1314880,  0.9),
+#    ("sp16_ss256" ,   344890,  0.9),
+#    ("sp16_ss512" ,    92530,  0.9),
+#    ("sp16_ss1024",    27940,  0.9),
+#]
+
+#settings_tt27 = [
+#    ("lu600x0"  ,  2033820,  0.9),
+#    ("lu400x0"  ,   486640,  0.9),
+#    ("lu200x0"  ,    70130,  0.9),
+#    ("lu200x1"  ,   295470,  0.9),
+#    ("lu100x2"  ,   205440,  0.9),
+#    ("lu20x10"  ,   198990,  0.9),
+#]
+
 settings_tt27 = [
-    ("ss32"  ,   54214494,  0.9452),
-    ("ss64"  ,   20262384,  0.9854),
-    ("ss128" ,    7103498,  0.9966),
-    ("ss256" ,    2241139,  0.9992),
-    ("ss512" ,     676611,  0.9999),
-    ("ss1024",     227105,  1.0000)
+    ("sf0p7_nz1",   107500,  0.9),
+    ("sf0p7_nz2",   590260,  0.9),
+    ("sf1_nz1"  ,    44810,  0.9),
+    ("sf1_nz2"  ,   252920,  0.9),
+    ("sf1_nz4"  ,  1180040,  0.9),
+    ("sf2_nz1"  ,     9730,  0.9),
+    ("sf2_nz2"  ,    52720,  0.9),
+    ("sf2_nz4"  ,   270890,  0.9),
 ]
 
 EOS = "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC12p1_results/"
-results = "SingleMuPlusMinus_sp16_%s"
-#results = "SingleElePlusMinus_sp16_%s"
-#results = "SinglePionPlusMinus_sp16_%s"
-#results = "SingleKaonPlusMinus_sp16_%s"
+results = "SingleMuPlusMinus_%s"
 
 col  = TColor.GetColor("#1f78b4")  # Paired
 fcol = TColor.GetColor("#a6cee3")
 imgdir = "figures_amsim/"
-#imgdir = "figures_amsim/ele/"
-#imgdir = "figures_amsim/pion/"
-#imgdir = "figures_amsim/kaon/"
 
 if samples["tt27"]:
     settings = settings_tt27
-    results = "SingleMuPlusMinus_sp16_%s_tt27"
+    results = "SingleMuPlusMinus_%s_tt27"
     imgdir = "figures_amsim_tt27/"
 
 if samples["nu140"] or samples["tt27_nu140"]:
@@ -64,11 +88,11 @@ if samples["nu140"] or samples["tt27_nu140"]:
     fcol = TColor.GetColor("#fb9a99")
 
     if samples["nu140"]:
-        results = "Neutrino_sp16_%s"
+        results = "Neutrino_%s"
         imgdir = "figures_amsim_nu140/"
     else:
         settings = settings_tt27
-        results = "Neutrino_sp16_%s_tt27"
+        results = "Neutrino_%s_tt27"
         imgdir = "figures_amsim_nu140_tt27/"
 
 if samples["tttt140"] or samples["tt27_tttt140"]:
@@ -76,12 +100,13 @@ if samples["tttt140"] or samples["tt27_tttt140"]:
     col  = TColor.GetColor("#6a3d9a")  # Paired
     fcol = TColor.GetColor("#cab2d6")
 
-    if samples["nu140"]:
-        results = "TTbarTTbar_sp16_%s"
+    if samples["tttt140"]:
+        results = "TTbarTTbar_%s"
         imgdir = "figures_amsim_tttt140/"
     else:
         settings = settings_tt27
-        results = "TTbarTTbar_sp16_%s_tt27"
+        #results = "TTbarTTbar_%s_tt27"
+        results = "TTbarTTbar_%s_tt27_pt3"
         imgdir = "figures_amsim_tttt140_tt27/"
 
 
@@ -103,6 +128,17 @@ ttrmap = get_reverse_map(ttmap)
 
 def listdir_fullpath(d):
     return [os.path.join(d, f) for f in os.listdir(d) if f.endswith(".root")]
+
+def parse_ss_to_setting(ss):
+    if "sp" in ss:
+        ss = ss.replace("sp16_", "")
+    elif "lu" in ss:
+        ss = ss.replace("lu", "")
+    elif "sf" in ss:
+        ss = ss.replace("sf", "sf=").replace("_nz", ",nz=")
+        ss = ss.replace("0p", "0.")
+    ss = ss.replace("_", " ")
+    return ss
 
 
 # ______________________________________________________________________________
@@ -310,7 +346,8 @@ if sections["coverage"]:
         tree.SetBranchStatus("*", 1)
         return
 
-    def drawCoverage(histos, setting, npatterns, hnlambda, imgdir):
+    def drawCoverage(histos, ss, npatterns, hnlambda, imgdir):
+        setting = parse_ss_to_setting(ss)
         for hvar in ["pt", "ppt", "eta", "phi", "vz", "charge"]:
             ymax = 1.2
 
@@ -373,9 +410,9 @@ if sections["coverage"]:
                 legend.AddEntry(histos[hnlambda(hname1)], writeme[i], "lp")
             legend.Draw()
 
-            latex.DrawLatex(0.6, 0.185, "%s [%.1fM bank]" % (setting, npatterns*1e-6))
+            latex.DrawLatex(0.6, 0.185, "%s [%.2fM bank]" % (setting, npatterns*1e-6))
             CMS_label()
-            save(imgdir, "coverage_%s_%s" % (hnlambda(hname), setting), dot_root=True)
+            save(imgdir, "coverage_%s_%s" % (hnlambda(hname), ss), dot_root=True)
 
         # TH2F
         oldRightMargin = gPad.GetRightMargin()
@@ -386,8 +423,8 @@ if sections["coverage"]:
         draw2D([h], stats=False)
 
         latex.DrawLatex(0.6, 0.235, "20 #leq p_{T} < #infty  GeV")
-        latex.DrawLatex(0.6, 0.185, "%s [%.1fM bank]" % (setting, npatterns*1e-6))
-        save(imgdir, "coverage_%s_%s" % (hnlambda(hname), setting), dot_root=True)
+        latex.DrawLatex(0.6, 0.185, "%s [%.2fM bank]" % (setting, npatterns*1e-6))
+        save(imgdir, "coverage_%s_%s" % (hnlambda(hname), ss), dot_root=True)
 
         gPad.SetRightMargin(oldRightMargin)
         donotdelete = [tboxes]
@@ -405,9 +442,8 @@ if sections["coverage"]:
 
         histos = bookCoverage()
         projectCoverage(chain, histos, npatterns, nentries=nentries)
-        setting = ss.replace("_", " ")
-        drawCoverage(histos, setting, npatterns, lambda x: x, imgdir)
-        drawCoverage(histos, setting, npatterns, lambda x: "ac_"+x, imgdir)
+        drawCoverage(histos, ss, npatterns, lambda x: x, imgdir)
+        drawCoverage(histos, ss, npatterns, lambda x: "ac_"+x, imgdir)
         histos.clear()
 
 
@@ -421,26 +457,37 @@ if sections["roads"]:
         print "ERROR!"
         exit
 
+    def modify_binning(nbins, xmin, xmax):
+        binsize = (xmax - xmin) / nbins
+        return (nbins + 1, xmin - (binsize/2.), xmax + (binsize/2.))
+
+
     def bookRoads():
         histos = {}
 
         hname = "nroads_per_event"
-        histos[hname] = TH1F(hname, "; # roads per event"       , 50, 0, 200)
+        nbins, xmin, xmax = modify_binning(150, 0., 300.)
+        histos[hname] = TH1F(hname, "; # roads per event"       , nbins, xmin, xmax)
 
         hname = "nsuperstrips_per_road"
-        histos[hname] = TH1F(hname, "; # superstrips per road"  , 20, 0,  20)
+        nbins, xmin, xmax = modify_binning(20, 0., 20.)
+        histos[hname] = TH1F(hname, "; # superstrips per road"  , nbins, xmin, xmax)
 
         hname = "nstubs_per_superstrip"
-        histos[hname] = TH1F(hname, "; # stubs per superstrip"  , 30, 0,  30)
+        nbins, xmin, xmax = modify_binning(50, 0., 50.)
+        histos[hname] = TH1F(hname, "; # stubs per superstrip"  , nbins, xmin, xmax)
 
         hname = "nstubs_per_road"
-        histos[hname] = TH1F(hname, "; # stubs per road"        , 40, 0,  40)
+        nbins, xmin, xmax = modify_binning(50, 0., 50.)
+        histos[hname] = TH1F(hname, "; # stubs per road"        , nbins, xmin, xmax)
 
         hname = "ncombinations_per_road"
-        histos[hname] = TH1F(hname, "; # combinations per road" , 60, 0, 300)
+        nbins, xmin, xmax = modify_binning(100, 0., 400.)
+        histos[hname] = TH1F(hname, "; # combinations per road" , nbins, xmin, xmax)
 
         hname = "ncombinations_per_event"
-        histos[hname] = TH1F(hname, "; # combinations per event", 80, 0, 800)
+        nbins, xmin, xmax = modify_binning(150, 0., 1200.)
+        histos[hname] = TH1F(hname, "; # combinations per event", nbins, xmin, xmax)
 
         for k, v in histos.iteritems():
             v.SetLineWidth(2); v.SetMarkerSize(0)
@@ -496,12 +543,13 @@ if sections["roads"]:
         tree.SetBranchStatus("*", 1)
         return
 
-    def drawRoads(histos, setting, npatterns, imgdir, logy=False):
+    def drawRoads(histos, ss, npatterns, imgdir, logy=False):
+        setting = parse_ss_to_setting(ss)
         for hname, h in histos.iteritems():
             h.SetMinimum(0.5)
             draw([h], ytitle="", logy=logy)
-            latex.DrawLatex(0.6, 0.185, "%s [%.1fM bank]" % (setting, npatterns*1e-6))
-            save(imgdir, "roads_%s_%s" % (hname, setting), dot_root=True)
+            latex.DrawLatex(0.6, 0.185, "%s [%.2fM bank]" % (setting, npatterns*1e-6))
+            save(imgdir, "roads_%s_%s" % (hname, ss), dot_root=True)
 
 
     # __________________________________________________________________________
@@ -515,6 +563,93 @@ if sections["roads"]:
 
         histos = bookRoads()
         projectRoads(chain, histos, npatterns, nentries=nentries/1000)
-        setting = ss.replace("_", " ")
-        drawRoads(histos, setting, npatterns, imgdir, logy=True)
+        drawRoads(histos, ss, npatterns, imgdir, logy=True)
         histos.clear()
+
+
+# ______________________________________________________________________________
+# Summary
+
+if sections["summary"]:
+
+    from collections import OrderedDict
+    gStyle.SetNdivisions(520, "XYZ")
+
+    latex2 = TLatex()
+    latex2.SetNDC(0)
+    latex2.SetTextFont(42)
+    latex2.SetTextSize(0.03)
+
+    def parse_fixed(lines):
+        k, x, y = [line.split() for line in lines]
+        od = OrderedDict()
+        for i in xrange(len(x)):
+            if x[i] == "-1" or y[i] == "-1":
+                continue
+            od["%s" % (k[i])] = (float(x[i].replace(",","")), float(y[i].replace(",","")))
+        return od
+
+    def parse_projective(lines):
+        return parse_fixed(lines)
+
+    def parse_rational(lines):
+        k1, k2, x, y = [line.split() for line in lines]
+        od = OrderedDict()
+        for i in xrange(len(x)):
+            if x[i] == "-1" or y[i] == "-1":
+                continue
+            od["(sf%s,nz%s)" % (k1[i], k2[i])] = (float(x[i].replace(",","")), float(y[i].replace(",","")))
+        return od
+
+
+    def draw(plines, col=kBlack):
+        gr = TGraph(len(plines))
+        i = 0
+        for k, v in plines.iteritems():
+            print k, "-->", v
+            gr.SetPoint(i, v[1], v[0])
+            i += 1
+
+        hframe = TH1F("hframe", "; <# combinations / BX>; # patterns", 100, 3e0, 1e3)
+        ymin, ymax = 5e3, 5e6
+        hframe.SetStats(0); hframe.SetMinimum(ymin); hframe.SetMaximum(ymax)
+        gr.SetMarkerStyle(21); gr.SetMarkerSize(1.2); gr.SetMarkerColor(col)
+
+        hframe.Draw()
+        gPad.SetLogx(1); gPad.SetLogy(1); gPad.SetGridx(1); gPad.SetGridy(1)
+        gr.Draw("p")
+        for k, v in plines.iteritems():
+            latex2.DrawLatex(v[1], v[0], "  #color[%i]{%s}" % (col,k))
+        CMS_label()
+        #save(imgdir, "summary")
+        #gPad.SetLogx(0); gPad.SetLogy(0); gPad.SetGridx(0); gPad.SetGridy(0)
+
+        donotdelete = [hframe, gr]
+        return donotdelete
+
+
+    lines_fixed = [
+        "ss32	ss64	ss128	ss256	ss512	ss1024",
+        "-1	5,002,400	1,314,880	344,890	92,530	27,940",
+        "-1.0	18.7	38.3	75.6	147.8	397.9",
+    ]
+    plines_fixed = parse_fixed(lines_fixed)
+    #d = draw(plines_fixed, col=blkrgb[3])
+
+    lines_projective = [
+        "600x0	400x0	200x0	200x1	100x2	20x10",
+        "2,033,820	486,640	70,130	295,470	205,440	198,990",
+        "11.7	17.5	47.2	33.6	42.6	79.2",
+    ]
+    plines_projective = parse_projective(lines_projective)
+    #d = draw(plines_projective, col=blkrgb[2])
+
+    lines_rational = [
+        "0.7	0.7	0.7	1	1	1	2	2	2",
+        "1	2	4	1	2	4	1	2	4",
+        "107,500	590,260	           -1	44,810	252,920	1,180,040	9,730	52,720	270,890",
+        "33.4	18.4	-1.0	68.5	33.2	16.9	194.6	90.9	46.1",
+    ]
+    plines_rational = parse_rational(lines_rational)
+    d = draw(plines_rational, col=blkrgb[1])
+
