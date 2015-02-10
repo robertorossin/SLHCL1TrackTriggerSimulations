@@ -83,11 +83,19 @@ if sections["trkParts"]:
         save(imgdir, x[0].name)
         return histos
 
-    cut = "trkParts_primary * (0.785398 <= trkParts_phi && trkParts_phi <= 1.57079) * (0 <= trkParts_eta && trkParts_eta <= 0.733333)"
+    cut = "(trkParts_primary) * (0.785398 <= trkParts_phi && trkParts_phi <= 1.57079) * (0 <= trkParts_eta && trkParts_eta <= 0.733333)"
 
     writehistos = []
 
     p0 = struct("trkParts_size", "Sum$(%s)" % cut, "", "# trkParts", 1000, 0, 1000, col, fcol)
+    histos = doit([p0], imgdir, logy=True)
+    histos[0].h.SetName(p0.name); writehistos.append(histos[0].h)
+
+    p0 = struct("trkParts_size_pt2", "Sum$(%s * %s)" % (cut, "(trkParts_pt > 2)"), "", "# trkPartsi (p_{T}>2)", 1000, 0, 1000, col, fcol)
+    histos = doit([p0], imgdir, logy=True)
+    histos[0].h.SetName(p0.name); writehistos.append(histos[0].h)
+
+    p0 = struct("trkParts_size_pt3", "Sum$(%s * %s)" % (cut, "(trkParts_pt > 3)"), "", "# trkPartsi (p_{T}>3)", 1000, 0, 1000, col, fcol)
     histos = doit([p0], imgdir, logy=True)
     histos[0].h.SetName(p0.name); writehistos.append(histos[0].h)
 
@@ -141,6 +149,12 @@ if sections["occupancy"]:
             hname = "nstubs_per_superstrip_b%i" % i
             histos[hname] = TH1F(hname, "; # stubs/superstrip/layer/tower/BX; Entries", nbins/10+1, xmin-0.5, xmax/10+0.5)
 
+            hname = "nmodules_b%i" % i
+            histos[hname] = TH1F(hname, "; # modules/layer/tower/BX; Entries", nbins/2+1, xmin-0.5, xmax/2+0.5)
+
+            hname = "nstubs_per_module_b%i" % i
+            histos[hname] = TH1F(hname, "; # stubs/module/layer/tower/BX; Entries", nbins/2+1, xmin-0.5, xmax/2+0.5)
+
         for k, v in histos.iteritems():
             v.SetLineColor(col); v.SetLineWidth(2); v.SetFillColor(fcol)
         return histos
@@ -151,11 +165,11 @@ if sections["occupancy"]:
         tree.SetBranchStatus("TTStubs_z"             , 1)
         tree.SetBranchStatus("TTStubs_modId"         , 1)
 
-        superstrips_all = []
+        superstripIds_all = []
         phimins, phimaxs = [], []
         zmins, zmaxs = [], []
         for i in xrange(5,11):
-            superstrips_all.append(set())
+            superstripIds_all.append(set())
             phimins.append(9999.); phimaxs.append(-9999.)
             zmins.append(9999.); zmaxs.append(-9999.)
 
@@ -175,7 +189,7 @@ if sections["occupancy"]:
             for j in xrange(1024):
                 phi = phi0 + (phi1 - phi0)/1024. * j
                 ss = superstrip_rational(ilay, phi, 0., 1.0)
-                superstrips_all[ilay].add(ss)
+                superstripIds_all[ilay].add(ss)
                 if phimins[ilay] > phi:  phimins[ilay] = phi
                 if phimaxs[ilay] < phi:  phimaxs[ilay] = phi
             if zmins[ilay] > z0: zmins[ilay] = z0
@@ -183,7 +197,7 @@ if sections["occupancy"]:
 
         for i in xrange(5,11):
             ii = i-5
-            print "b%i" % i, len(superstrips_all[ii]), "phi=[%f,%f]" % (phimins[ii], phimaxs[ii]), "z=[%f,%f]" % (zmins[ii], zmaxs[ii])
+            print "b%i" % i, len(superstripIds_all[ii]), "phi=[%f,%f]" % (phimins[ii], phimaxs[ii]), "z=[%f,%f]" % (zmins[ii], zmaxs[ii])
 
         groups = []
 
@@ -200,7 +214,7 @@ if sections["occupancy"]:
                     lay = decodeLayer(moduleId)
                     ilay = lay-5
                     ss = superstrip_rational(ilay, phi, 0., 1.0)
-                    groups[ilay].append(ss)
+                    groups[ilay].append((moduleId,ss))
 
                     if phimins[ilay] > phi or phimaxs[ilay] < phi:
                         print "WARNING: phi not in b%i range: %f" % (lay,phi)
@@ -211,23 +225,22 @@ if sections["occupancy"]:
                 ii = i-5
                 nstubs = len(groups[ii])
 
-                superstrips = {}
-                for ss in groups[ii]:
-                    superstrips[ss] = superstrips.get(ss, 0) + 1
+                moduleIds = {}
+                superstripIds = {}
+                for moduleId, ss in groups[ii]:
+                    moduleIds[moduleId] = moduleIds.get(moduleId, 0) + 1
+                    superstripIds[ss] = superstripIds.get(ss, 0) + 1
 
-                hname = "nstubs_b%i" % i
-                histos[hname].Fill(nstubs)
+                histos["nstubs_b%i" % i].Fill(nstubs)
 
-                hname = "nsuperstrips_b%i" % i
-                histos[hname].Fill(len(superstrips))
+                histos["nmodules_b%i" % i].Fill(len(moduleIds))
+                for moduleId in ttmap[tt]:
+                    histos["nstubs_per_module_b%i" % i].Fill(moduleIds.get(moduleId, 0))
 
-                #hname = "nstubs_per_superstrip_b%i" % i
-                #for k, v in superstrips_all[i].iteritems():
-                #    histos[hname].Fill(v)
+                histos["nsuperstrips_b%i" % i].Fill(len(superstripIds))
 
-                hname = "nstubs_per_superstrip_b%i" % i
-                for ss in superstrips_all[ii]:
-                    histos[hname].Fill(superstrips.get(ss, 0))
+                for ss in superstripIds_all[ii]:
+                    histos["nstubs_per_superstrip_b%i" % i].Fill(superstripIds.get(ss, 0))
 
             del groups[:]  # clear groups
 
@@ -264,6 +277,8 @@ if sections["occupancy"]:
     d = drawLayer(histos, tt, lambda x: x, imgdir)
     d = drawLayer(histos, tt, lambda x: "nsuperstrips_"+x[7:], imgdir)
     d = drawLayer(histos, tt, lambda x: "nstubs_per_superstrip_"+x[7:], imgdir, logy=True)
+    d = drawLayer(histos, tt, lambda x: "nmodules_"+x[7:], imgdir)
+    d = drawLayer(histos, tt, lambda x: "nstubs_per_module_"+x[7:], imgdir, logy=True)
 
 
 # ______________________________________________________________________________
