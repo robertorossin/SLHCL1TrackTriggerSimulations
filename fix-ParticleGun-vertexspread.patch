@@ -1,48 +1,51 @@
 diff --git a/IOMC/ParticleGuns/interface/FlatRandomOneOverPtGunProducer.h b/IOMC/ParticleGuns/interface/FlatRandomOneOverPtGunProducer.h
-index d2c6bdc..09102f5 100644
+index d2c6bdc..fcea6a5 100644
 --- a/IOMC/ParticleGuns/interface/FlatRandomOneOverPtGunProducer.h
 +++ b/IOMC/ParticleGuns/interface/FlatRandomOneOverPtGunProducer.h
-@@ -26,6 +26,10 @@ namespace edm
+@@ -26,6 +26,11 @@ namespace edm
      
      double            fMinOneOverPt   ;
      double            fMaxOneOverPt   ;
 +    double            fXFlatSpread   ;
 +    double            fYFlatSpread   ;
 +    double            fZFlatSpread   ;
++    bool              fRandomCharge  ;
 +    bool              fReallyFlat    ;
  
    };
  } 
 diff --git a/IOMC/ParticleGuns/interface/FlatRandomPtGunProducer.h b/IOMC/ParticleGuns/interface/FlatRandomPtGunProducer.h
-index 5d0e022..4ee0410 100644
+index 5d0e022..bf2e2b8 100644
 --- a/IOMC/ParticleGuns/interface/FlatRandomPtGunProducer.h
 +++ b/IOMC/ParticleGuns/interface/FlatRandomPtGunProducer.h
-@@ -27,6 +27,9 @@ namespace edm
+@@ -27,6 +27,10 @@ namespace edm
      
      double            fMinPt   ;
      double            fMaxPt   ;
 +    double            fXFlatSpread   ;
 +    double            fYFlatSpread   ;
 +    double            fZFlatSpread   ;
++    bool              fRandomCharge  ;
  
    };
  } 
 diff --git a/IOMC/ParticleGuns/src/FlatRandomOneOverPtGunProducer.cc b/IOMC/ParticleGuns/src/FlatRandomOneOverPtGunProducer.cc
-index ff29a0d..7363193 100644
+index ff29a0d..8e17ef9 100644
 --- a/IOMC/ParticleGuns/src/FlatRandomOneOverPtGunProducer.cc
 +++ b/IOMC/ParticleGuns/src/FlatRandomOneOverPtGunProducer.cc
-@@ -22,6 +22,10 @@ FlatRandomOneOverPtGunProducer::FlatRandomOneOverPtGunProducer(const edm::Parame
+@@ -22,6 +22,11 @@ FlatRandomOneOverPtGunProducer::FlatRandomOneOverPtGunProducer(const edm::Parame
    
    fMinOneOverPt = pgun_params.getParameter<double>("MinOneOverPt");
    fMaxOneOverPt = pgun_params.getParameter<double>("MaxOneOverPt");
 +  fXFlatSpread  = pgun_params.exists("XFlatSpread") ? pgun_params.getParameter<double>("XFlatSpread") : 0.;
 +  fYFlatSpread  = pgun_params.exists("YFlatSpread") ? pgun_params.getParameter<double>("YFlatSpread") : 0.;
 +  fZFlatSpread  = pgun_params.exists("ZFlatSpread") ? pgun_params.getParameter<double>("ZFlatSpread") : 0.;
++  fRandomCharge = pgun_params.exists("RandomCharge")? pgun_params.getParameter<bool>  ("RandomCharge"): false;
 +  fReallyFlat   = pgun_params.exists("ReallyFlat")  ? pgun_params.getParameter<bool>  ("ReallyFlat")  : false;
    
    produces<HepMCProduct>();
    produces<GenEventInfoProduct>();
-@@ -50,7 +54,10 @@ void FlatRandomOneOverPtGunProducer::produce(Event &e, const EventSetup& es) {
+@@ -50,7 +55,10 @@ void FlatRandomOneOverPtGunProducer::produce(Event &e, const EventSetup& es) {
    //
    // 1st, primary vertex
    //
@@ -54,7 +57,7 @@ index ff29a0d..7363193 100644
  
    // loop over particles
    //
-@@ -60,6 +67,8 @@ void FlatRandomOneOverPtGunProducer::produce(Event &e, const EventSetup& es) {
+@@ -60,10 +68,14 @@ void FlatRandomOneOverPtGunProducer::produce(Event &e, const EventSetup& es) {
      double xx     = fRandomGenerator->fire(0.0,1.0);
      double pt     = std::exp((1.-xx)*std::log(fMinOneOverPt)+
  			     xx*std::log(fMaxOneOverPt)) ;
@@ -63,21 +66,28 @@ index ff29a0d..7363193 100644
      double eta    = fRandomGenerator->fire(fMinEta, fMaxEta) ;
      double phi    = fRandomGenerator->fire(fMinPhi, fMaxPhi) ;
      if (pt != 0) pt = 1./pt;
+     int PartID = fPartIDs[ip] ;
++    if (fRandomCharge && (fRandomGenerator->fire(0, 1) < 0.5))
++        PartID = - PartID;
+     const HepPDT::ParticleData* 
+       PData = fPDGTable->particle(HepPDT::ParticleID(abs(PartID))) ;
+     double mass   = PData->mass().value() ;
 diff --git a/IOMC/ParticleGuns/src/FlatRandomPtGunProducer.cc b/IOMC/ParticleGuns/src/FlatRandomPtGunProducer.cc
-index 7794763..8dbc826 100644
+index 7794763..57c6c70 100644
 --- a/IOMC/ParticleGuns/src/FlatRandomPtGunProducer.cc
 +++ b/IOMC/ParticleGuns/src/FlatRandomPtGunProducer.cc
-@@ -29,6 +29,9 @@ FlatRandomPtGunProducer::FlatRandomPtGunProducer(const ParameterSet& pset) :
+@@ -29,6 +29,10 @@ FlatRandomPtGunProducer::FlatRandomPtGunProducer(const ParameterSet& pset) :
    
     fMinPt = pgun_params.getParameter<double>("MinPt");
     fMaxPt = pgun_params.getParameter<double>("MaxPt");
 +   fXFlatSpread  = pgun_params.exists("XFlatSpread") ? pgun_params.getParameter<double>("XFlatSpread") : 0.;
 +   fYFlatSpread  = pgun_params.exists("YFlatSpread") ? pgun_params.getParameter<double>("YFlatSpread") : 0.;
 +   fZFlatSpread  = pgun_params.exists("ZFlatSpread") ? pgun_params.getParameter<double>("ZFlatSpread") : 0.;
++   fRandomCharge = pgun_params.exists("RandomCharge")? pgun_params.getParameter<bool>  ("RandomCharge"): false;
    
    produces<HepMCProduct>();
    produces<GenEventInfoProduct>();
-@@ -59,7 +62,10 @@ void FlatRandomPtGunProducer::produce(Event &e, const EventSetup& es)
+@@ -59,7 +63,10 @@ void FlatRandomPtGunProducer::produce(Event &e, const EventSetup& es)
     //
     // 1st, primary vertex
     //
@@ -89,3 +99,12 @@ index 7794763..8dbc826 100644
  
     // loop over particles
     //
+@@ -71,6 +78,8 @@ void FlatRandomPtGunProducer::produce(Event &e, const EventSetup& es)
+        double eta    = fRandomGenerator->fire(fMinEta, fMaxEta) ;
+        double phi    = fRandomGenerator->fire(fMinPhi, fMaxPhi) ;
+        int PartID = fPartIDs[ip] ;
++       if (fRandomCharge && (fRandomGenerator->fire(0, 1) < 0.5))
++           PartID = - PartID;
+        const HepPDT::ParticleData* 
+           PData = fPDGTable->particle(HepPDT::ParticleID(abs(PartID))) ;
+        double mass   = PData->mass().value() ;
