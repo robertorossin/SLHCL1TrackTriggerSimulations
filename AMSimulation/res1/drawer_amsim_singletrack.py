@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from rootdrawing import *
+from parser import *
 from helper import *
 import itertools
 
@@ -294,54 +295,48 @@ def drawCoverage(histos, options, hnlambda):
     return
 
 
+def sitrepCoverage(histos, options):
+    print "--- SITREP ---------------------------------------------------------"
+    print "--- Using tt{0}, pu{1}, ss={2}, npatterns={3}, coverage={4}".format(options.tower, options.pu, options.ss, options.npatterns, options.coverage)
+    print "eta=[{1:.3f},{2:.3f}], phi=[{3:.3f},{4:.3f}]".format(options.tower,
+          options.etamin, options.etamax, options.phimin, options.phimax)
+
+
 # ______________________________________________________________________________
 # Main function
 def main(options):
 
     # Init
-    # FIXME: read text file?
     drawerInit = DrawerInit()
     tchain = TChain("ntupler/tree", "")
-    tchain.Add(options.infile)
+    tchain.AddFileInfoList(options.tfilecoll.GetList())
 
     # Process
     histos = bookCoverage()
     projectCoverage(tchain, histos, options)
     drawCoverage(histos, options, lambda x: "coverage_"+x)
     drawCoverage(histos, options, lambda x: "efficiency_"+x)
+    sitrepCoverage(histos,options)
 
 
 # ______________________________________________________________________________
 if __name__ == '__main__':
 
-    # Get input arguments
-    import argparse
-    outdir = (sys.argv[0].replace("drawer_", "figures_"))[:-3]
-
+    # Setup argument parser
     parser = argparse.ArgumentParser()
-    parser.add_argument("infile", help="input .root file")
+
+    # Add default arguments
+    add_drawer_arguments(parser)
+
+    # Add more arguments
     parser.add_argument("ss", help="short name of superstrip definition (e.g. ss256)")
     parser.add_argument("npatterns", type=int, help="number of patterns to reach the desired coverage")
     parser.add_argument("--coverage", type=float, default=0.9, help="desired coverage (default: %(default)s)")
-    parser.add_argument("--tower", type=int, default=27, help="trigger tower (default: %(default)s)")
-    parser.add_argument("--outdir", default=outdir, help="output directory (default: %(default)s)")
-    parser.add_argument("-n", "--nentries", type=int, default=100000, help="number of entries (default: %(default)s)")
-    parser.add_argument("-b", "--batch", action="store_true", help="batch mode without graphics (default: %(default)s)")
-    parser.add_argument("-v", "--verbosity", action="count", default=0, help="verbosity (default: %(default)s)")
+
+    # Parse default arguments
     options = parser.parse_args()
-    #print options
-
-    # Create outdir if necessary
-    if not options.outdir.endswith("/"):
-        options.outdir += "/"
-    if gSystem.AccessPathName(options.outdir):
-        gSystem.mkdir(options.outdir)
-
-    # Check input arguments
-    if not options.infile.endswith(".root"):
-        raise ValueError("infile must be a .root file")
-    if options.batch:
-        gROOT.SetBatch(True)
+    parse_drawer_options(options)
+    options.pu = 0  # assume zero pileup
 
     # Calculate trigger tower fiducial region
     if options.tower != 99:
@@ -355,8 +350,6 @@ if __name__ == '__main__':
         else:
             options.phimin = -2*pi -pi/2 + (2*pi/8) * iphi
             options.phimax = -2*pi -pi/2 + (2*pi/8) * (iphi+1)
-        print "--- Using tt{0}: eta=[{1:.3f},{2:.3f}], phi=[{3:.3f},{4:.3f}]".format(options.tower,
-            options.etamin, options.etamax, options.phimin, options.phimax)
 
     # Call the main function
     main(options)

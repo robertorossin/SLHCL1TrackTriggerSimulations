@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from rootdrawing import *
+from parser import *
 from helper import *
 from array import array
 
@@ -53,7 +54,7 @@ def bookRoads():
     for i in xrange(6):
         hname = "nstubs_per_layer_%i" % i
         nbins, xmin, xmax = modify_binning(50, 0., 50.)
-        histos[hname] = TH1F(hname, "; # stubs/layer/road/tower/BX; Entries", nbins, xmin, xmax)
+        histos[hname] = TH1F(hname, "; # stubs/layer/road/tower/BX; Entries" , nbins, xmin, xmax)
 
     # Style
     for k, v in histos.iteritems():
@@ -66,6 +67,7 @@ def bookRoads():
 def projectRoads(tree, histos, options):
     tree.SetBranchStatus("*", 0)
     tree.SetBranchStatus("AMTTRoads_bankIndex"        , 1)
+    tree.SetBranchStatus("AMTTRoads_triggerTowerId"   , 1)
     tree.SetBranchStatus("AMTTRoads_nsuperstrips"     , 1)
     tree.SetBranchStatus("AMTTRoads_stubSuperstripIds", 1)
     tree.SetBranchStatus("AMTTRoads_stubRefs"         , 1)
@@ -79,9 +81,10 @@ def projectRoads(tree, histos, options):
 
         stubmap = {}
 
-        for bankIndex, nsuperstrips, superstripIds, stubRefs in izip(evt.AMTTRoads_bankIndex, evt.AMTTRoads_nsuperstrips, evt.AMTTRoads_stubSuperstripIds, evt.AMTTRoads_stubRefs):
+        for bankIndex, tt, nsuperstrips, superstripIds, stubRefs in izip(evt.AMTTRoads_bankIndex, evt.AMTTRoads_triggerTowerId, evt.AMTTRoads_nsuperstrips, evt.AMTTRoads_stubSuperstripIds, evt.AMTTRoads_stubRefs):
 
-            if bankIndex < options.npatterns:
+            # FIXME: replace 99 by options.tower
+            if tt == 99 and bankIndex < options.npatterns:
                 ssidmap = {}
                 for ssid in superstripIds:
                     ssidmap[ssid] = ssidmap.get(ssid, 0) + 1
@@ -154,8 +157,12 @@ def drawRoads(histos, options, logy=True):
         ps.SetX1NDC(newX1NDC)
         ps.SetY1NDC(newY1NDC)
 
+        h.stats = []
+        h.stats.append(h.GetMean())
         for iq, q in enumerate(in_quantiles):
             ps.AddText("%i%% CI = %6.4g" % (int(q*100), quantiles[iq]))
+            h.stats.append(quantiles[iq])
+
         h.SetStats(0)
         #gPad.Modified(); gPad.Update()
         ps.Draw()
@@ -253,52 +260,52 @@ def drawRoads(histos, options, logy=True):
     return
 
 
+def sitrepRoads(histos,options):
+    print "--- SITREP ---------------------------------------------------------"
+    print "--- Using tt{0}, pu{1}, ss={2}, npatterns={3}".format(options.tower, options.pu, options.ss, options.npatterns)
+    print "--- Variable, mean, 95%% CI, 99%% CI:"
+    h = histos["nroads_per_event"]
+    print "nroads per event\t{0:6.4g}\t{1:6.4g}\t{2:6.4g}".format(*h.stats)
+    h = histos["nstubs_per_road"]
+    print "nstubs per road \t{0:6.4g}\t{1:6.4g}\t{2:6.4g}".format(*h.stats)
+    h = histos["ncombinations_per_road"]
+    print "ncombs per road \t{0:6.4g}\t{1:6.4g}\t{2:6.4g}".format(*h.stats)
+    h = histos["ncombinations_per_event"]
+    print "ncombs per event \t{0:6.4g}\t{1:6.4g}\t{2:6.4g}".format(*h.stats)
+
+
 # ______________________________________________________________________________
 # Main function
 def main(options):
 
     # Init
-    # FIXME: read text file?
     drawerInit = DrawerInit()
     tchain = TChain("ntupler/tree", "")
-    tchain.Add(options.infile)
+    tchain.AddFileInfoList(options.tfilecoll.GetList())
 
     # Process
     histos = bookRoads()
     projectRoads(tchain, histos, options)
     drawRoads(histos, options)
+    sitrepRoads(histos,options)
 
 
 # ______________________________________________________________________________
 if __name__ == '__main__':
 
-    # Get input arguments
-    import argparse
-    outdir = (sys.argv[0].replace("drawer_", "figures_"))[:-3]
-
+    # Setup argument parser
     parser = argparse.ArgumentParser()
-    parser.add_argument("infile", help="input .root file")
+
+    # Add default arguments
+    add_drawer_arguments(parser)
+
+    # Add more arguments
     parser.add_argument("ss", help="short name of superstrip definition (e.g. ss256)")
     parser.add_argument("npatterns", type=int, help="number of patterns to reach the desired coverage")
-    parser.add_argument("--tower", type=int, default=27, help="trigger tower (default: %(default)s)")
-    parser.add_argument("--outdir", default=outdir, help="output directory (default: %(default)s)")
-    parser.add_argument("-n", "--nentries", type=int, default=100000, help="number of entries (default: %(default)s)")
-    parser.add_argument("-b", "--batch", action="store_true", help="batch mode without graphics (default: %(default)s)")
-    parser.add_argument("-v", "--verbosity", action="count", default=0, help="verbosity (default: %(default)s)")
+
+    # Parse default arguments
     options = parser.parse_args()
-    #print options
-
-    # Create outdir if necessary
-    if not options.outdir.endswith("/"):
-        options.outdir += "/"
-    if gSystem.AccessPathName(options.outdir):
-        gSystem.mkdir(options.outdir)
-
-    # Check input arguments
-    if not options.infile.endswith(".root"):
-        raise ValueError("infile must be a .root file")
-    if options.batch:
-        gROOT.SetBatch(True)
+    parse_drawer_options(options)
 
     # Call the main function
     main(options)
