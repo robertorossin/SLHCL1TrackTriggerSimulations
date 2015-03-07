@@ -1,17 +1,11 @@
-#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTPattern.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTHit.h"
 #include <iostream>
-
 
 namespace slhcl1tt {
 
-std::ostream& operator<<(std::ostream& o, const TTSuperstrip& ss) {
-    o << "id: " << ss.id << " bit: " << ss.bit << " ";
-    return o;
-}
-
 std::ostream& operator<<(std::ostream& o, const TTHit& hit) {
     o << "ref: " << hit.ref << " r: " << hit.r << " phi: " << hit.phi << " z: " << hit.z
-      << " r_err: " << hit.rError << " phi_err: " << hit.phiError << " z_err: " << hit.zError
+      << " err_r: " << hit.rError << " err_phi: " << hit.phiError << " err_z: " << hit.zError
       << " ";
     return o;
 }
