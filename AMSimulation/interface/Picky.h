@@ -3,32 +3,30 @@
 
 #include <vector>
 
+
 namespace slhcl1tt {
 
 class Picky {
   public:
-    // Constructors
+    // Constructor
     Picky();
 
     // Destructor
     ~Picky() {}
 
-    // Operators
-    void setTrack(float pt, float eta, float phi, float vz, int charge);  // unused
-    bool applyCuts(unsigned lay16, const float& absdphi, const float& absdz, const float& absdr);
-    unsigned findInterior(unsigned lay16, const float& z, const float& r);
+    // Functions
+    // Apply cuts on dphi, dr and dz, depending on layer (compressed to 0-15)
+    // The absolute values of dphi, dr and dz are used.
+    bool applyCuts(unsigned lay16, const float dphi, const float dr, const float dz);
+
+    // Decide the rank based on r (in barrel) or z (in endcap), depending on layer (compressed to 0-15)
+    unsigned findRank(unsigned lay16, const float r, const float z);
 
     // Debug
     void print();
 
   private:
     // Member data
-    float simPt_;
-    float simEta_;
-    float simPhi_;
-    float simVZ_;
-    int   simCharge_;
-
     std::vector<float>  barrel_r_coords_;
     std::vector<float>  barrel_phi_cuts_;
     std::vector<float>  barrel_z_cuts_;

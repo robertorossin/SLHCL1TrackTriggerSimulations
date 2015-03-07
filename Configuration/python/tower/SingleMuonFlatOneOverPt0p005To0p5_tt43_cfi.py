@@ -5,18 +5,19 @@ generator = cms.EDProducer("FlatRandomOneOverPtGunProducer",
     PGunParameters = cms.PSet(
         MaxOneOverPt = cms.double(0.5),
         MinOneOverPt = cms.double(0.005),
-        PartID = cms.vint32(-13),
-        MaxEta = cms.double(2.5),
-        MaxPhi = cms.double(3.14159265359),
-        MinEta = cms.double(-2.5),
-        MinPhi = cms.double(-3.14159265359),
+        PartID = cms.vint32(13),
+        MaxEta = cms.double(2.2),
+        MaxPhi = cms.double(3.14159265359/2),
+        MinEta = cms.double(4.4/3),
+        MinPhi = cms.double(3.14159265359/4),
         #XFlatSpread = cms.double(1.5),  ## in mm
         #YFlatSpread = cms.double(1.5),  ## in mm
         #ZFlatSpread = cms.double(150.), ## in mm
+        RandomCharge = cms.bool(True),
         ReallyFlat = cms.bool(True),
     ),
     Verbosity = cms.untracked.int32(0),
-    psethack = cms.string('single mu+ 1/pt 0.005 to 0.5'),
+    psethack = cms.string('single muon+/- 1/pt 0.005 to 0.5 tower 43'),
     AddAntiParticle = cms.bool(False),
     firstRun = cms.untracked.uint32(1)
 )

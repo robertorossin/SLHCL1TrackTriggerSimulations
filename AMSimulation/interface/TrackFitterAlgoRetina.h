@@ -44,7 +44,7 @@ class TrackFitterAlgoRetina : public TrackFitterAlgoBase {
   ~TrackFitterAlgoRetina();
 
   //int fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& tracks);
-  int fit(unsigned triggerTowerId, unsigned eventNum, unsigned roadRef, const std::vector<TTHit>& hits, std::vector<TTTrack2>& tracks);
+  int fit(unsigned tower, unsigned eventNum, unsigned roadRef, const std::vector<TTHit>& hits, std::vector<TTTrack2>& tracks);
 
 };
 
