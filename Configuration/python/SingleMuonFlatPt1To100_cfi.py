@@ -13,10 +13,11 @@ generator = cms.EDProducer("FlatRandomPtGunProducer",
         #XFlatSpread = cms.double(1.5),  ## in mm
         #YFlatSpread = cms.double(1.5),  ## in mm
         #ZFlatSpread = cms.double(150.), ## in mm
+        RandomCharge = cms.bool(True),
         #ReallyFlat = cms.bool(True),
     ),
     Verbosity = cms.untracked.int32(0),
-    psethack = cms.string('single mu- pt 1 to 100'),
+    psethack = cms.string('single muon+/- pt 1 to 100'),
     AddAntiParticle = cms.bool(False),
     firstRun = cms.untracked.uint32(1)
 )
