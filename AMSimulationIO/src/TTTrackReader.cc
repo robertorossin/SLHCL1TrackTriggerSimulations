@@ -42,8 +42,8 @@ TTTrackWriter::TTTrackWriter(int verbose)
   vt_chi2_phi     (new std::vector<float>()),
   vt_chi2_z       (new std::vector<float>()),
   vt_tpId         (new std::vector<int>()),
+  vt_tower        (new std::vector<unsigned>()),
   vt_roadRef      (new std::vector<unsigned>()),
-  vt_combRef      (new std::vector<unsigned>()),
   vt_stubRefs     (new std::vector<std::vector<unsigned> >()) {}
 
 
@@ -72,8 +72,8 @@ int TTTrackWriter::init(TChain* tchain, TString out, TString prefix, TString suf
     ttree->Branch(prefix + "chi2_phi"       + suffix, &(*vt_chi2_phi));
     ttree->Branch(prefix + "chi2_z"         + suffix, &(*vt_chi2_z));
     ttree->Branch(prefix + "tpId"           + suffix, &(*vt_tpId));
+    ttree->Branch(prefix + "tower"          + suffix, &(*vt_tower));
     ttree->Branch(prefix + "roadRef"        + suffix, &(*vt_roadRef));
-    ttree->Branch(prefix + "combRef"        + suffix, &(*vt_combRef));
     ttree->Branch(prefix + "stubRefs"       + suffix, &(*vt_stubRefs));
     return 0;
 }
@@ -98,8 +98,8 @@ void TTTrackWriter::fill(const std::vector<TTTrack>& tracks) {
     vt_chi2_phi        ->clear();
     vt_chi2_z          ->clear();
     vt_tpId            ->clear();
+    vt_tower           ->clear();
     vt_roadRef         ->clear();
-    vt_combRef         ->clear();
     vt_stubRefs        ->clear();
 
     const unsigned ntracks = tracks.size();
@@ -128,8 +128,8 @@ void TTTrackWriter::fill(const std::vector<TTTrack>& tracks) {
         vt_chi2_phi        ->push_back(-999999.);  // dummy
         vt_chi2_z          ->push_back(-999999.);  // dummy
         vt_tpId            ->push_back(-1);        // dummy
+        //vt_tower           ->push_back(track.getSector());
         vt_roadRef         ->push_back(track.getRoadRef());
-        vt_combRef         ->push_back(track.getCombinationRef());
         vt_stubRefs        ->push_back(track.getStubRefs());
     }
 
@@ -157,8 +157,8 @@ void TTTrackWriter::fill(const std::vector<TTTrack2>& tracks) {
     vt_chi2_phi        ->clear();
     vt_chi2_z          ->clear();
     vt_tpId            ->clear();
+    vt_tower           ->clear();
     vt_roadRef         ->clear();
-    vt_combRef         ->clear();
     vt_stubRefs        ->clear();
 
     const unsigned ntracks = tracks.size();
@@ -184,8 +184,8 @@ void TTTrackWriter::fill(const std::vector<TTTrack2>& tracks) {
         vt_chi2_phi        ->push_back(track.chi2_phi());
         vt_chi2_z          ->push_back(track.chi2_z());
         vt_tpId            ->push_back(track.tpId());
+        vt_tower           ->push_back(track.tower());
         vt_roadRef         ->push_back(track.roadRef());
-        vt_combRef         ->push_back(track.combRef());
         vt_stubRefs        ->push_back(track.stubRefs());
     }
 
