@@ -12,7 +12,7 @@ TrackFitterAlgoRetina::~TrackFitterAlgoRetina(){
 }
 
 
-int TrackFitterAlgoRetina::fit(unsigned triggerTowerId, unsigned eventNum, unsigned roadRef, const std::vector<TTHit>& hits, std::vector<TTTrack2>& tracks){
+int TrackFitterAlgoRetina::fit(unsigned tower, unsigned eventNum, unsigned roadRef, const std::vector<TTHit>& hits, std::vector<TTTrack2>& tracks){
 
   int exitcode = 0;
 
@@ -31,8 +31,8 @@ int TrackFitterAlgoRetina::fit(unsigned triggerTowerId, unsigned eventNum, unsig
 
 
   // --- Determine in which phi sector and eta range the trigger tower is:
-  const int phi_sector = triggerTowerId % 8;
-  const int eta_range  = triggerTowerId / 8;
+  const int phi_sector = tower % 8;
+  const int eta_range  = tower / 8;
 
   int trigTow_type = 0;
   if ( eta_range==1 || eta_range==4 )
@@ -352,12 +352,14 @@ int TrackFitterAlgoRetina::fit(unsigned triggerTowerId, unsigned eventNum, unsig
       if ( !std::isnan(c) && !std::isnan(phi) && !std::isnan(cottheta) && !std::isnan(z0) &&
            cottheta != -9999. && z0 != -9999. ){
 
-        TTTrack2 trk(roadRef, 0, std::vector<unsigned>());
-        trk.setTrackParams(c, phi, cottheta, z0, 0., 0., 0, 0., 0.);
+        TTTrack2 atrack;
+        atrack.setRoadRef(roadRef);
+        atrack.setTower(tower);
+        atrack.setTrackParams(c, phi, cottheta, z0, 0., 0., 0, 0., 0.);
         for(unsigned int ihit=0; ihit<hits_RZ.size(); ihit++)
-          trk.addStubRef(hits[hits_RZ[ihit].hitRef].ref);
+          atrack.addStubRef(hits[hits_RZ[ihit].hitRef].ref);
 
-        tracks.push_back(trk);
+        tracks.push_back(atrack);
       }
 
 
