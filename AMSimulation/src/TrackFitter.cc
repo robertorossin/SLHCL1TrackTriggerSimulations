@@ -136,7 +136,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
 
                 fitstatus = fitterRetina_->fit(tower, ievt, iroad, hits, tracks);
 
-                if (verbose_>2)  std::cout << Debug() << "... ... road: " << iroad << " # tracks: " << tracks.size() << " status: " << fitstatus << std::endl;
+                if (verbose_>3)  std::cout << Debug() << "... ... road: " << iroad << " # tracks: " << tracks.size() << " status: " << fitstatus << std::endl;
 
                 /// Debug
                 if (verbose_>3 && tracks.size()>0) {
@@ -207,7 +207,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 for (unsigned icomb=0; icomb<combinations.size(); ++icomb) {
                     const std::vector<unsigned>& stubRefs = combinations.at(icomb);
 
-                    if (verbose_>2) {
+                    if (verbose_>3) {
                         std::cout << Debug() << "... ... ... comb: " << icomb << " stubRefs: ";
                         std::copy(stubRefs.begin(), stubRefs.end(), std::ostream_iterator<unsigned>(std::cout, " "));
                         std::cout << std::endl;
@@ -244,13 +244,14 @@ int TrackFitter::makeTracks(TString src, TString out) {
                         fitstatus = fitterLin_->fit(hits, atrack);
                     tracks.push_back(atrack);
 
-                    if (verbose_>2)  std::cout << Debug() << "... ... ... track: " << icomb << " status: " << fitstatus << std::endl;
+                    if (verbose_>3)  std::cout << Debug() << "... ... ... track: " << icomb << " status: " << fitstatus << std::endl;
                 }
             }  // loop over the roads
 
             break;
         }
 
+        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # tracks: " << tracks.size() << std::endl;
         if (verbose_>3) {
             for (unsigned itrack=0; itrack!=tracks.size(); ++itrack) {
                 std::cout << "... ... track: " << itrack << " " << tracks.at(itrack) << std::endl;
