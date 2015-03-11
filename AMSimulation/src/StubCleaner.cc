@@ -143,14 +143,16 @@ int StubCleaner::cleanStubs(TString src, TString out) {
 
         // Check sim info
         assert(reader.vp_pt->size() == 1);
-        float simPt       = reader.vp_pt->front();
-        float simEta      = reader.vp_eta->front();
-        float simPhi      = reader.vp_phi->front();
-        //float simVx       = reader.vp_vx->front();
-        //float simVy       = reader.vp_vy->front();
-        float simVz       = reader.vp_vz->front();
-        int   simCharge   = reader.vp_charge->front();
-        float simCotTheta = std::sinh(simEta);
+        float simPt           = reader.vp_pt->front();
+        float simEta          = reader.vp_eta->front();
+        float simPhi          = reader.vp_phi->front();
+        //float simVx           = reader.vp_vx->front();
+        //float simVy           = reader.vp_vy->front();
+        float simVz           = reader.vp_vz->front();
+        int   simCharge       = reader.vp_charge->front();
+
+        float simCotTheta     = std::sinh(simEta);
+        float simChargeOverPt = float(simCharge)/simPt;
 
         // Apply pt, eta, phi requirements
         bool sim = (po_.minPt  <= simPt  && simPt  <= po_.maxPt  &&
@@ -159,7 +161,7 @@ int StubCleaner::cleanStubs(TString src, TString out) {
         if (!sim)
             keep = false;
 
-        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " simPt: " << simPt << " simEta: " << simEta << " simPhi: " << simPhi << " keep? " << keep << std::endl;
+        if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " simPt: " << simPt << " simEta: " << simEta << " simPhi: " << simPhi << " simVz: " << simVz << " simChargeOverPt: " << simChargeOverPt << " keep? " << keep << std::endl;
 
         // _____________________________________________________________________
         // Remove multiple stubs in one layer
@@ -186,14 +188,16 @@ int StubCleaner::cleanStubs(TString src, TString out) {
             assert(lay16 < 16);
 
             // CUIDADO: simVx and simVy are not used in the calculation
-            float idealPhi = calcIdealPhi(simPhi, simCharge/simPt, stub_r);
+            float idealPhi = calcIdealPhi(simPhi, simChargeOverPt, stub_r);
             float idealZ   = simVz + stub_r * simCotTheta;
             float idealR   = stub_r;
 
             if (lay16 >= 6) {  // for endcap
                 idealR     = (stub_z - simVz) / simCotTheta;
+                if (lay16 >= 11)
+                    idealR = -idealR;  // make sure R is positive for negative endcap
                 assert(idealR > 0);
-                idealPhi   = calcIdealPhi(simPhi, simCharge/simPt, idealR);
+                idealPhi   = calcIdealPhi(simPhi, simChargeOverPt, idealR);
                 idealZ     = stub_z;
             }
 
