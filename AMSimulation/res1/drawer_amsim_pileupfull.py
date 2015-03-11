@@ -66,11 +66,11 @@ def bookRoads():
 
 def projectRoads(tree, histos, options):
     tree.SetBranchStatus("*", 0)
-    tree.SetBranchStatus("AMTTRoads_bankIndex"        , 1)
-    tree.SetBranchStatus("AMTTRoads_triggerTowerId"   , 1)
-    tree.SetBranchStatus("AMTTRoads_nsuperstrips"     , 1)
-    tree.SetBranchStatus("AMTTRoads_stubSuperstripIds", 1)
-    tree.SetBranchStatus("AMTTRoads_stubRefs"         , 1)
+    tree.SetBranchStatus("AMTTRoads_patternRef"   , 1)
+    tree.SetBranchStatus("AMTTRoads_tower"        , 1)
+    tree.SetBranchStatus("AMTTRoads_nstubs"       , 1)
+    tree.SetBranchStatus("AMTTRoads_superstripIds", 1)
+    tree.SetBranchStatus("AMTTRoads_stubRefs"     , 1)
 
     # Loop over events
     for ievt, evt in enumerate(tree):
@@ -79,20 +79,29 @@ def projectRoads(tree, histos, options):
         nroads_per_event = 0
         ncombinations_per_event = 0
 
-        stubmap = {}
+        stubmap = {}  # per event
 
-        for bankIndex, tt, nsuperstrips, superstripIds, stubRefs in izip(evt.AMTTRoads_bankIndex, evt.AMTTRoads_triggerTowerId, evt.AMTTRoads_nsuperstrips, evt.AMTTRoads_stubSuperstripIds, evt.AMTTRoads_stubRefs):
+        for patternRef, tower, nstubs, superstripIds, stubRefs in izip(evt.AMTTRoads_patternRef, evt.AMTTRoads_tower, evt.AMTTRoads_nstubs, evt.AMTTRoads_superstripIds, evt.AMTTRoads_stubRefs):
 
-            # FIXME: replace 99 by options.tower
-            if tt == 99 and bankIndex < options.npatterns:
-                ssidmap = {}
-                for ssid in superstripIds:
-                    ssidmap[ssid] = ssidmap.get(ssid, 0) + 1
-                for stub in stubRefs:
-                    stubmap[stub] = stubmap.get(stub, 0) + 1
+            if tower == options.tower and patternRef < options.npatterns:
+                ssidmap = {}  # per road
+
+                # superstripIds[i] is the i-th superstrip ID in the pattern (or road)
+                # stubRefs[i][j] is the j-th stub REF  in the i-th superstrip in the pattern (or road)
+                l = 0
+                for ssid, ssid_stubRefs in izip(superstripIds, stubRefs):
+                    for stub in ssid_stubRefs:
+                        ssidmap[(l,ssid)] = ssidmap.get((l,ssid), 0) + 1
+
+                        stubmap[stub] = stubmap.get(stub, 0) + 1
+
+                    nstubs_per_layer = ssid_stubRefs.size()
+                    histos["nstubs_per_layer_%i" % l].Fill(nstubs_per_layer)
+
+                    l += 1
 
                 nsuperstrips_per_road = len(ssidmap)
-                assert(nsuperstrips_per_road == nsuperstrips)
+                assert(nsuperstrips_per_road == 6)
                 histos["nsuperstrips_per_road"].Fill(nsuperstrips_per_road)
 
                 nstubs_per_road = 0
@@ -101,17 +110,12 @@ def projectRoads(tree, histos, options):
                 for k, v in ssidmap.iteritems():
                     nstubs_per_superstrip = v
                     nstubs_per_road += v
-                    ncombinations_per_road *= v
+                    if v != 0:
+                        ncombinations_per_road *= v
 
                     histos["nstubs_per_superstrip"].Fill(nstubs_per_superstrip)
 
-                # Per layer
-                # FIXME: is sorted correctly?
-                for ik, k in enumerate(sorted(ssidmap.keys())):
-                    nstubs_per_layer = ssidmap[k]
-                    histos["nstubs_per_layer_%i" % ik].Fill(nstubs_per_layer)
-
-                assert(nstubs_per_road == superstripIds.size())
+                assert(nstubs_per_road == nstubs)
                 histos["nstubs_per_road"].Fill(nstubs_per_road)
 
                 histos["ncombinations_per_road"].Fill(ncombinations_per_road)
@@ -119,7 +123,7 @@ def projectRoads(tree, histos, options):
                 nroads_per_event += 1
                 ncombinations_per_event += ncombinations_per_road
 
-        assert(nroads_per_event <= evt.AMTTRoads_nsuperstrips.size())
+        assert(nroads_per_event <= evt.AMTTRoads_stubRefs.size())
         histos["nroads_per_event"].Fill(nroads_per_event)
 
         nstubs_per_event = len(stubmap)
