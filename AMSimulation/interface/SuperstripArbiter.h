@@ -56,6 +56,7 @@ class SuperstripArbiter {
     unsigned           fixedwidth_bit_rshift2_;
     unsigned           projective_nx_;
     unsigned           projective_nz_;
+    unsigned           projective_max_nx_;
     std::vector<float> projective_phiBins_;
     std::vector<float> projective_zBins_;
     float              fountain_sf_;
