@@ -17,10 +17,6 @@ donotdelete = []  # persist in memory
 
 # ______________________________________________________________________________
 def bookRoads():
-    def modify_binning(nbins, xmin, xmax):
-        binsize = (xmax - xmin) / nbins
-        return (nbins + 1, xmin - (binsize/2.), xmax + (binsize/2.))
-
     histos = {}
 
     hname = "nroads_per_event"
@@ -57,9 +53,9 @@ def bookRoads():
         histos[hname] = TH1F(hname, "; # stubs/layer/road/tower/BX; Entries" , nbins, xmin, xmax)
 
     # Style
-    for k, v in histos.iteritems():
-        v.SetLineWidth(2); v.SetMarkerSize(0)
-        v.SetLineColor(col); v.SetFillColor(fcol)
+    for hname, h in histos.iteritems():
+        h.SetLineWidth(2); h.SetMarkerSize(0)
+        h.SetLineColor(col); h.SetFillColor(fcol)
     donotdelete.append(histos)
     return histos
 
