@@ -43,6 +43,7 @@ SuperstripArbiter::SuperstripArbiter()
   fixedwidth_bit_rshift2_(0),
   projective_nx_(0),
   projective_nz_(0),
+  projective_max_nx_(0),
   fountain_sf_(0.),
   fountain_nz_(0),
   fountain_max_nx_(0) {
@@ -206,10 +207,14 @@ void SuperstripArbiter::setDefinition(TString definition, unsigned tt, const Tri
 
         for (unsigned i=0; i<phiMins_.size(); ++i) {
             projective_phiBins_.at(i) = M_PI / 4. / projective_nx_;  // constant
+            //projective_phiBins_.at(i) = (phiMaxs_.at(i) - phiMins_.at(i)) / projective_nx_;  // variable
             projective_zBins_  .at(i) = (zMaxs_.at(i) - zMins_.at(i)) / projective_nz_;
-        }
 
-        nsuperstripsPerLayer_ = projective_nx_ * projective_nz_;
+            unsigned nx = round_to_uint((phiMaxs_.at(i) - phiMins_.at(i)) / projective_phiBins_.at(i));
+            if (projective_max_nx_ < nx)
+                projective_max_nx_ = nx;
+        }
+        nsuperstripsPerLayer_ = projective_max_nx_ * projective_nz_;
         break;
 
     case SuperstripType::FOUNTAIN:
@@ -311,7 +316,7 @@ unsigned SuperstripArbiter::superstripFixedwidth(unsigned moduleId, float strip,
 unsigned SuperstripArbiter::superstripProjective(unsigned moduleId, float r, float phi, float z, float ds) const {
     unsigned lay16    = compressLayer(decodeLayer(moduleId));
 
-    int n_phi = projective_nx_;
+    int n_phi = projective_max_nx_;
     int n_z   = projective_nz_;
 
     int i_phi = std::floor((phi - phiMins_.at(lay16)) / projective_phiBins_.at(lay16));

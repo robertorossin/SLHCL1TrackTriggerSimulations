@@ -112,8 +112,8 @@ int NTupleMaker::writeTree(TString out) {
         connectors.back()->connect(chain_roads_);
     }
 
+    // FIXME: tracks are commented out for now
     //chain_tracks_->SetBranchStatus("*", 0);
-    //chain_tracks_->SetBranchStatus("AMTTRoads_*", 1);
     //chain_tracks_->SetBranchStatus("AMTTTracks_*", 1);
     //TObjArray* branches_tracks = chain_tracks_->GetListOfBranches();
     //for (int i=0; i<branches_tracks->GetEntries(); ++i) {
@@ -134,6 +134,7 @@ int NTupleMaker::writeTree(TString out) {
         assert(chain_roads_->LoadTree(ievt) >= 0);
         chain_roads_->GetEntry(ievt);
 
+        // FIXME: tracks are commented out for now
         //assert(chain_tracks_->LoadTree(ievt) >= 0);
         //chain_tracks_->GetEntry(ievt);
 

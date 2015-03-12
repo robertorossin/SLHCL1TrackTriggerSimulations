@@ -196,23 +196,33 @@ int PatternMatcher::makeRoads(TString src, TString out) {
 
 
         // _____________________________________________________________________
-        // Start pattern recognition
-        hitBuffer_.clear();
-        std::fill(hitBuffer_bool_.begin(), hitBuffer_bool_.end(), false);
+        // Skip stubs
 
         std::vector<bool> stubsNotInTower;  // true: not in this trigger tower
-
-        // Loop over reconstructed stubs
         for (unsigned istub=0; istub<nstubs; ++istub) {
             unsigned moduleId = reader.vb_modId   ->at(istub);
 
             // Skip if not in this trigger tower
             bool isNotInTower = (ttrmap.find(moduleId) == ttrmap.end());
             stubsNotInTower.push_back(isNotInTower);
+        }
 
+        // Null stub information for those that are not in this trigger tower
+        reader.nullStubs(stubsNotInTower);
+
+
+        // _____________________________________________________________________
+        // Start pattern recognition
+        hitBuffer_.clear();
+        std::fill(hitBuffer_bool_.begin(), hitBuffer_bool_.end(), false);
+
+        // Loop over reconstructed stubs
+        for (unsigned istub=0; istub<nstubs; ++istub) {
+            bool isNotInTower = stubsNotInTower.at(istub);
             if (isNotInTower)
                 continue;
 
+            unsigned moduleId = reader.vb_modId   ->at(istub);
             float    strip    = reader.vb_coordx  ->at(istub);  // in full-strip unit
             float    segment  = reader.vb_coordy  ->at(istub);  // in full-strip unit
 
@@ -242,9 +252,6 @@ int PatternMatcher::makeRoads(TString src, TString out) {
                 std::cout << Debug() << "... ... stub: " << istub << " ssId: " << ssId << " ssIdHash: " << ssIdHash << std::endl;
             }
         }
-
-        // Null stub information for those that are not in this trigger tower
-        reader.nullStubs(stubsNotInTower);
 
         // Limit the number of stubs per superstrip
         for (std::map<unsigned, std::vector<unsigned> >::iterator it=hitBuffer_.begin();

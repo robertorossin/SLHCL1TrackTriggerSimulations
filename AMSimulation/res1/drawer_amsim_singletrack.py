@@ -93,7 +93,7 @@ def projectCoverage(tree, histos, options):
     tree.SetBranchStatus("genParts_vz"           , 1)
     tree.SetBranchStatus("genParts_charge"       , 1)
     tree.SetBranchStatus("TTStubs_modId"         , 1)
-    tree.SetBranchStatus("AMTTRoads_bankIndex"   , 1)
+    tree.SetBranchStatus("AMTTRoads_patternRef"  , 1)
 
     def fill(pt, eta, phi, vz, charge, accept, trigger):
         if accept:
@@ -169,8 +169,8 @@ def projectCoverage(tree, histos, options):
 
         # Get trigger results
         trigger = False
-        for bankIndex in evt.AMTTRoads_bankIndex:
-            if bankIndex < options.npatterns:
+        for patternRef in evt.AMTTRoads_patternRef:
+            if patternRef < options.npatterns:
                 trigger = True
 
         # Loop over stub moduleIds
