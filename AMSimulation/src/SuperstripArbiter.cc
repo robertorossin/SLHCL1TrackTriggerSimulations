@@ -55,8 +55,28 @@ SuperstripArbiter::SuperstripArbiter()
         9.99999, 9.99999, 9.99999, 9.99999, 9.99999,
         9.99999, 9.99999, 9.99999, 9.99999, 9.99999
     };
-
     assert(phiWidths_.size() == 16);
+
+    // Average radii [cm] in the 6 barrel layers
+    rMeans_ = {
+        22.5913, 35.4772, 50.5402, 68.3101, 88.5002, 107.71
+    };
+    assert(rMeans_.size() == 6);
+
+    // Strip pitchs [um] in the 6 barrel layers
+    float pitches[6] = {100., 100., 100., 90., 90., 90.};
+    // Module thicknesses [cm] in the 6 barrel layers
+    float thicknesses[6] = {0.26, 0.16, 0.16, 0.18, 0.18, 0.18};
+
+    // Constants used for global phi corrections
+    // r * dphi / dr ~= pitch * ds / thickness
+    // dphi ~= (pitch [um] / thickness [cm] / r [cm]) * (1e2/1e6) [cm/um] * ds * dr [cm]
+    // --> drCorr constant = pitch * thickness /r * 1e-4
+    drCorrs_.clear();
+    drCorrs_.resize(6);
+    for (unsigned i=0; i<6; ++i) {
+        drCorrs_[i] = pitches[i] / thicknesses[i] / rMeans_[i] * 1e-4;
+    }
 }
 
 // _____________________________________________________________________________
@@ -332,6 +352,10 @@ unsigned SuperstripArbiter::superstripProjective(unsigned moduleId, float r, flo
 // _____________________________________________________________________________
 unsigned SuperstripArbiter::superstripFountain(unsigned moduleId, float r, float phi, float z, float ds) const {
     unsigned lay16    = compressLayer(decodeLayer(moduleId));
+
+    // For barrel, correct phi based on ds and dr
+    //if (lay16 < 6)
+    //    phi = phi + drCorrs_.at(lay16) * ds * (r - rMeans_.at(lay16));
 
     int n_phi = fountain_max_nx_;
     int n_z   = fountain_nz_;
