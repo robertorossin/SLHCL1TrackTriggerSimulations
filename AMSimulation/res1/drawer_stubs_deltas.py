@@ -80,7 +80,7 @@ def bookStubs():
 
     # Style
     for hname, h in histos.iteritems():
-        if "vs" not in hname:
+        if "vs_" not in hname:
             h.SetLineWidth(2); h.SetMarkerSize(0)
             h.SetLineColor(col); h.SetFillColor(fcol)
         else:
@@ -156,7 +156,7 @@ def projectStubs(tree, histos, options):
 
 def drawStubs(histos, options):
     for hname, h in histos.iteritems():
-        if "vs" not in hname:
+        if "vs_" not in hname:
             # TH1F
             h.SetMaximum(h.GetMaximum() * 1.4); h.SetMinimum(0)
             h.SetStats(1); h.Draw("hist")
