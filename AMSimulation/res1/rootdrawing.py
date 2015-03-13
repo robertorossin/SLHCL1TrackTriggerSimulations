@@ -3,7 +3,7 @@ tmpargv = sys.argv[:]  # [:] for a copy, not reference
 sys.argv = []
 
 import ROOT
-from ROOT import TH1, TH1F, TH2F, TProfile, TProfile2D, TFile, TChain, TCanvas, TPad, TLegend, TLatex, TLine, TBox, TGraph, TGraphAsymmErrors, gROOT, gInterpreter, gStyle, gSystem, gPad
+from ROOT import TH1, TH1F, TH2F, TProfile, TProfile2D, TFile, TChain, TCanvas, TPad, TLegend, TLatex, TLine, TBox, TGraph, TGraphErrors, TGraphAsymmErrors, gROOT, gInterpreter, gStyle, gSystem, gPad
 from rootcolors import *
 sys.argv = tmpargv
 
@@ -12,6 +12,7 @@ import os
 from math import sqrt, pi
 from random import randint
 from itertools import izip
+from array import array
 
 # ______________________________________________________________________________
 # Init
@@ -310,6 +311,10 @@ def draw2D(histos, logx=False, logy=False, logz=False, palette=True, stats=True)
 # ______________________________________________________________________________
 # Auxiliary
 
+def modify_binning(nbins, xmin, xmax):
+    binsize = (xmax - xmin) / nbins
+    return (nbins + 1, xmin - (binsize/2.), xmax + (binsize/2.))
+
 def moveLegend(x1, y1, x2, y2):
     # SetX1NDC, SetX2NDC etc don't update if the tlegend is not drawn first
     # SetX1, SetX2 etc don't update if the tlegend has already been drawn
@@ -343,11 +348,13 @@ def getMaximum(histos):
         maxima.append(h.h.GetMaximum())
     return max(maxima)
 
-def save(imgdir, imgname, dot_root=False):
-    gPad.RedrawAxis()
+def save(imgdir, imgname, redraw_axis=True, dot_pdf=True, dot_root=False):
+    if redraw_axis:
+        gPad.RedrawAxis()
     #gPad.Modified(); gPad.Update()
-    gPad.Print(imgdir+imgname+".pdf")
     gPad.Print(imgdir+imgname+".png")
+    if dot_pdf:
+        gPad.Print(imgdir+imgname+".pdf")
     if dot_root:
         gPad.Print(imgdir+imgname+".root")
 

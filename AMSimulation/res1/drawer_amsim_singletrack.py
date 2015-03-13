@@ -63,17 +63,16 @@ def bookCoverage():
         histos[hname]       = TProfile(hname, "; charge; %s" % ytitle,      5, -2.5, 2.5, 0., 2., "")
 
     # Style
-    for k, v in histos.iteritems():
-        v.SetLineWidth(2); v.SetFillStyle(0)
-        v.SetMarkerStyle(24); v.SetMarkerSize(0.9)
+    for hname, h in histos.iteritems():
+        h.SetLineWidth(2); h.SetFillStyle(0)
+        h.SetMarkerStyle(24); h.SetMarkerSize(0.9)
 
-        hname = v.GetName()
         i = int(hname[-1])
         hname = hname[:-2]
         if hname.endswith("pt"):
-            v.SetMarkerColor(colors1[i % 3]); v.SetLineColor(colors1[i % 3])
+            h.SetMarkerColor(colors1[i % 3]); h.SetLineColor(colors1[i % 3])
         else:
-            v.SetMarkerColor(colors2[i % 3]); v.SetLineColor(colors2[i % 3])
+            h.SetMarkerColor(colors2[i % 3]); h.SetLineColor(colors2[i % 3])
     donotdelete.append(histos)
     return histos
 

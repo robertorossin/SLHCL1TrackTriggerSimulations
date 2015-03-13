@@ -2,6 +2,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternGenerator.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternMatcher.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitter.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternAnalyzer.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/NTupleMaker.h"
 
 #include "boost/program_options.hpp"
@@ -36,9 +37,10 @@ int main(int argc, char **argv) {
         ("help,h"              , "Produce help message")
         ("cleanStubs,C"        , "Clean stubs and pick one unique stub per layer")
         ("generateBank,G"      , "Generate associative memory pattern bank")
-        ("mergeBank,M"         , "Merge associative memory pattern bank")
         ("patternRecognition,R", "Run associative memory pattern recognition")
         ("trackFitting,T"      , "Perform track fitting")
+        ("analyzeBank,A"       , "Analyze associative memory pattern bank")
+        ("mergeBank,M"         , "Merge associative memory pattern banks")
         ("write,W"             , "Write full ntuple")
         ("verbosity,v"         , po::value<int>(&verbose)->default_value(1), "Verbosity level (-1 = very quiet; 0 = quiet, 1 = verbose, 2+ = debug)")
         ("no-color"            , "Turn off colored text")
@@ -140,11 +142,12 @@ int main(int argc, char **argv) {
     // At least one option needs to be called
     if (!(vm.count("cleanStubs")         ||
           vm.count("generateBank")       ||
-          vm.count("mergeBank")          ||
           vm.count("patternRecognition") ||
           vm.count("trackFitting")       ||
+          vm.count("analyzeBank")        ||
+          vm.count("mergeBank")          ||
           vm.count("write")              ) ) {
-        std::cout << "Must select one of '-C', '-G', '-M', '-R', '-T' or 'W'" << std::endl;
+        std::cout << "Must select one of '-C', '-G', '-R', '-T', '-A', '-M' or 'W'" << std::endl;
         std::cout << visible << std::endl;
         return 1;
     }
@@ -202,9 +205,6 @@ int main(int argc, char **argv) {
 
         std::cout << "Pattern bank generation " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
 
-    } else if (vm.count("mergeBank")) {
-        std::cout << "NOT IMPLEMENTED" << std::endl;
-
     } else if (vm.count("patternRecognition")) {
         std::cout << Color("magenta") << "Parsed pattern bank options:" << EndColor() << std::endl;
         std::cout << bankOption << std::endl;
@@ -243,6 +243,27 @@ int main(int argc, char **argv) {
         }
 
         std::cout << "Track fitting " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
+
+    } else if (vm.count("analyzeBank")) {
+        std::cout << Color("magenta") << "Parsed pattern bank options:" << EndColor() << std::endl;
+        std::cout << bankOption << std::endl;
+        std::cout << Color("magenta") << "Start pattern bank analysis..." << EndColor() << std::endl;
+
+        PatternAnalyzer analyzer(bankOption);
+        analyzer.setNEvents(maxEvents);
+        analyzer.setMinFrequency(minFrequency);
+        analyzer.setMaxPatterns(maxPatterns);
+        analyzer.setVerbosity(verbose);
+        int exitcode = analyzer.run(input, bankfile, datadir, output);
+        if (exitcode) {
+            std::cerr << "An error occurred during pattern bank analysis. Exiting." << std::endl;
+            return exitcode;
+        }
+
+        std::cout << "Pattern bank analysis " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
+
+    } else if (vm.count("mergeBank")) {
+        std::cout << "NOT IMPLEMENTED" << std::endl;
 
     } else if (vm.count("write")) {
         std::cout << Color("magenta") << "Start writing full ntuple..." << EndColor() << std::endl;

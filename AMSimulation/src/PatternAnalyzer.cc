@@ -1,22 +1,21 @@
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternGenerator.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternAnalyzer.h"
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/PatternBankReader.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubReader.h"
 
 static const unsigned MIN_NGOODSTUBS = 3;
 static const unsigned MAX_NGOODSTUBS = 8;
-static const unsigned MAX_FREQUENCY = 0xffffffff;  // unsigned
 
 namespace {
 // Comparator
-bool sortByFrequency(const std::pair<pattern_type, unsigned>& lhs, const std::pair<pattern_type, unsigned>& rhs) {
-    return lhs.second > rhs.second;
+bool sortByInvPt(const std::pair<pattern_type, Attributes *>& lhs, const std::pair<pattern_type, Attributes *>& rhs) {
+    return (lhs.second)->invPt.getMean() < (rhs.second)->invPt.getMean();
 }
 }
 
 
 // _____________________________________________________________________________
-int PatternGenerator::setupTriggerTower(TString datadir) {
+int PatternAnalyzer::setupTriggerTower(TString datadir) {
     TString csvfile1 = datadir + "trigger_sector_map.csv";
     TString csvfile2 = datadir + "trigger_sector_boundaries.csv";
 
@@ -41,7 +40,7 @@ int PatternGenerator::setupTriggerTower(TString datadir) {
 }
 
 // _____________________________________________________________________________
-int PatternGenerator::setupSuperstrip() {
+int PatternAnalyzer::setupSuperstrip() {
     try {
         arbiter_ -> setDefinition(po_.superstrip, po_.tower, ttmap_);
 
@@ -55,8 +54,58 @@ int PatternGenerator::setupSuperstrip() {
 }
 
 // _____________________________________________________________________________
+int PatternAnalyzer::loadPatterns(TString bank) {
+    if (verbose_)  std::cout << Info() << "Loading patterns from " << bank << std::endl;
+
+    // _________________________________________________________________________
+    // For reading pattern bank
+    PatternBankReader pbreader(verbose_);
+    if (pbreader.init(bank)) {
+        std::cout << Error() << "Failed to initialize PatternBankReader." << std::endl;
+        return 1;
+    }
+
+    long long npatterns = pbreader.getPatterns();
+    if (npatterns > maxPatterns_)
+        npatterns = maxPatterns_;
+    assert(npatterns > 0);
+
+    // Allocate memory
+    patternAttributes_.clear();
+    patternAttributes_.resize(npatterns);
+
+    // _________________________________________________________________________
+    // Load the patterns
+
+    pattern_type patt;
+    patt.fill(0);
+    std::pair<std::map<pattern_type, Attributes *>::iterator,bool> ret;
+
+    for (long long ipatt=0; ipatt<npatterns; ++ipatt) {
+        pbreader.getPattern(ipatt);
+        if (pbreader.pb_frequency < minFrequency_)
+            break;
+
+        assert(pbreader.pb_superstripIds->size() == po_.nLayers);
+
+        // Make the pattern
+        std::copy(pbreader.pb_superstripIds->begin(), pbreader.pb_superstripIds->end(), patt.begin());
+
+        // Insert the pattern
+        ret = patternBank_map_.insert(std::make_pair(patt, &(patternAttributes_.at(ipatt))));
+
+        if (!ret.second) {
+            std::cout << Warning() << "Failed to insert: " << patt << std::endl;
+        }
+    }
+    if (verbose_)  std::cout << Info() << "Successfully loaded " << npatterns << " patterns." << std::endl;
+
+    return 0;
+}
+
+// _____________________________________________________________________________
 // Make the patterns
-int PatternGenerator::makePatterns(TString src) {
+int PatternAnalyzer::makePatterns(TString src) {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events and generating patterns." << std::endl;
 
     // _________________________________________________________________________
@@ -71,12 +120,12 @@ int PatternGenerator::makePatterns(TString src) {
         TChain* tchain = reader.getChain();
         tchain->SetBranchStatus("*"                 , 0);
         tchain->SetBranchStatus("genParts_pt"       , 1);
-      //tchain->SetBranchStatus("genParts_eta"      , 1);
-      //tchain->SetBranchStatus("genParts_phi"      , 1);
-      //tchain->SetBranchStatus("genParts_vx"       , 1);
-      //tchain->SetBranchStatus("genParts_vy"       , 1);
-      //tchain->SetBranchStatus("genParts_vz"       , 1);
-      //tchain->SetBranchStatus("genParts_charge"   , 1);
+        tchain->SetBranchStatus("genParts_eta"      , 1);
+        tchain->SetBranchStatus("genParts_phi"      , 1);
+        tchain->SetBranchStatus("genParts_vx"       , 1);
+        tchain->SetBranchStatus("genParts_vy"       , 1);
+        tchain->SetBranchStatus("genParts_vz"       , 1);
+        tchain->SetBranchStatus("genParts_charge"   , 1);
       //tchain->SetBranchStatus("TTStubs_x"         , 1);
       //tchain->SetBranchStatus("TTStubs_y"         , 1);
         tchain->SetBranchStatus("TTStubs_z"         , 1);
@@ -96,35 +145,31 @@ int PatternGenerator::makePatterns(TString src) {
     // Get trigger tower reverse map
     const std::map<unsigned, bool>& ttrmap = ttmap_ -> getTriggerTowerReverseMap(po_.tower);
 
+    // _________________________________________________________________________
+    // Book histograms
+    TH1::AddDirectory(kFALSE);
+    histogram2Ds["diff_invPt_vs_invPt1"] = new TH2F("diff_invPt_vs_invPt1", "; signed 1/p_{T} [1/GeV]; Diff from mean value of road [1/GeV]", 1000, -0.5, 0.5, 1000, -0.05, 0.05);
+    histogram2Ds["diff_invPt_vs_invPt2"] = new TH2F("diff_invPt_vs_invPt2", "; signed 1/p_{T} [1/GeV]; Diff from linear approx [1/GeV]", 1000, -0.5, 0.5, 1000, -0.05, 0.05);
+
 
     // _________________________________________________________________________
     // Loop over all events
 
-    patternBank_map_.clear();
     pattern_type patt;
     patt.fill(0);
 
     // Bookkeepers
-    float coverage = 0.;
-    long int bankSize = 0, bankSizeOld = -100000, nKeptOld = -100000;
     long int nRead = 0, nKept = 0;
+
+    // Cache
+    std::vector<std::pair<float, Attributes *> >  cache;  // save pointer to the attr for every valid track
 
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         if (reader.loadTree(ievt) < 0)  break;
         reader.getEntry(ievt);
 
-        // Running estimate of coverage
-        if (verbose_>1 && ievt%100000==0) {
-            bankSize = patternBank_map_.size();
-            coverage = 1.0 - float(bankSize - bankSizeOld) / float(nKept - nKeptOld);
-
-            std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld, # patterns: %7ld, coverage: %7.5f", ievt, nKept, bankSize, coverage) << std::endl;
-
-            bankSizeOld = bankSize;
-            nKeptOld = nKept;
-        }
-
         const unsigned nstubs = reader.vb_modId->size();
+        if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
         if (nstubs < MIN_NGOODSTUBS) {  // skip if not enough stubs
@@ -137,8 +182,20 @@ int PatternGenerator::makePatterns(TString src) {
             return 1;
         }
 
+        // Check sim info
+        assert(reader.vp_pt->size() == 1);
+        float simPt           = reader.vp_pt->front();
+        float simEta          = reader.vp_eta->front();
+        float simPhi          = reader.vp_phi->front();
+        //float simVx           = reader.vp_vx->front();
+        //float simVy           = reader.vp_vy->front();
+        float simVz           = reader.vp_vz->front();
+        int   simCharge       = reader.vp_charge->front();
+
+        float simCotTheta     = std::sinh(simEta);
+        float simChargeOverPt = float(simCharge)/simPt;
+
         // Apply track pt requirement
-        float simPt = reader.vp_pt->front();
         if (simPt < po_.minPt || po_.maxPt < simPt) {
             ++nRead;
             continue;
@@ -157,7 +214,6 @@ int PatternGenerator::makePatterns(TString src) {
             continue;
         }
         assert(nstubs == po_.nLayers);
-
 
         // _____________________________________________________________________
         // Start generating patterns
@@ -188,10 +244,24 @@ int PatternGenerator::makePatterns(TString src) {
                 std::cout << Debug() << "... ... stub: " << istub << " moduleId: " << moduleId << " strip: " << strip << " segment: " << segment << " r: " << stub_r << " phi: " << stub_phi << " z: " << stub_z << " ds: " << stub_ds << std::endl;
                 std::cout << Debug() << "... ... stub: " << istub << " ssId: " << ssId << std::endl;
             }
+
         }
 
-        // Insert pattern into the bank
-        ++patternBank_map_[patt];
+        // Find pattern in the bank
+        std::map<pattern_type, Attributes *>::iterator found = patternBank_map_.find(patt);
+        if (found != patternBank_map_.end()) {
+            Attributes * attr = found->second;
+            ++ attr->n;
+            attr->invPt.fill(simChargeOverPt);
+            attr->cotTheta.fill(simCotTheta);
+            attr->phi.fill(simPhi);
+            attr->z0.fill(simVz);
+
+            cache.push_back(std::make_pair(simChargeOverPt, attr));
+
+        } else {
+            //std::cout << Warning() << "Failed to find: " << patt << std::endl;
+        }
 
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " patt: " << patt << std::endl;
 
@@ -199,22 +269,18 @@ int PatternGenerator::makePatterns(TString src) {
         ++nRead;
     }
 
-    if (verbose_)  std::cout << Info() << Form("Read: %7ld, kept: %7ld, # patterns: %7lu, coverage: %7.5f", nRead, nKept, patternBank_map_.size(), coverage) << std::endl;
-
-    // Save these numbers
-    coverage_       = coverage;
-    coverage_count_ = nKept;
+    if (verbose_)  std::cout << Info() << Form("Read: %7ld, kept: %7ld", nRead, nKept) << std::endl;
 
 
     // _________________________________________________________________________
-    // Sort by frequency
+    // Sort by mean invPt
 
     // Convert map to vector of pairs
     const unsigned origSize = patternBank_map_.size();
     //patternBank_pairs_.reserve(patternBank_map_.size());  // can cause bad_alloc
     //patternBank_pairs_.insert(patternBank_pairs_.end(), patternBank_map_.begin(), patternBank_map_.end());
 
-    for (std::map<pattern_type, unsigned>::const_iterator it = patternBank_map_.begin();
+    for (std::map<pattern_type, Attributes *>::const_iterator it = patternBank_map_.begin();
          it != patternBank_map_.end(); ) {  // should not cause bad_alloc
         patternBank_pairs_.push_back(*it);
         it = patternBank_map_.erase(it);
@@ -222,23 +288,36 @@ int PatternGenerator::makePatterns(TString src) {
     assert(patternBank_pairs_.size() == origSize);
 
     // Clear map and release memory
-    std::map<pattern_type, unsigned> mapEmpty;
+    std::map<pattern_type, Attributes *> mapEmpty;
     patternBank_map_.clear();
     patternBank_map_.swap(mapEmpty);
 
-    // Sort by frequency
-    std::stable_sort(patternBank_pairs_.begin(), patternBank_pairs_.end(), sortByFrequency);
+    // Sort by invPt
+    std::stable_sort(patternBank_pairs_.begin(), patternBank_pairs_.end(), sortByInvPt);
 
-    if (verbose_>2) {
-        for (unsigned i=0; i<patternBank_pairs_.size(); ++i) {
-            const std::pair<pattern_type, unsigned>& apair = patternBank_pairs_.at(i);
-            std::cout << Debug() << "... patt: " << i << "  " << apair.first << " freq: " << apair.second << std::endl;
-        }
+    // Assign sorted pattern id
+    for (unsigned i=0; i<patternBank_pairs_.size(); ++i) {
+        patternBank_pairs_.at(i).second->id = i;
     }
 
-    unsigned highest_freq = patternBank_pairs_.size() ? patternBank_pairs_.front().second : 0;
-    if (verbose_)  std::cout << Info() << "Generated " << patternBank_pairs_.size() << " patterns, highest freq: " << highest_freq << std::endl;
-    assert(patternBank_pairs_.front().second <= MAX_FREQUENCY);
+
+    // _________________________________________________________________________
+    // Fill histograms
+
+    // CUIDADO: this assumes all the pattern attributes are populated well (ntracks > npatterns)
+    const unsigned npatterns = patternBank_pairs_.size();
+    for (std::vector<std::pair<float, Attributes *> >::const_iterator it=cache.begin();
+         it!=cache.end(); ++it) {
+
+        float approx = 1.0 / po_.minPt * (-1. + 2./(npatterns-1) * it->second->id);
+        if (it->second->n <= 1)
+            std::cout << Warning() << "Too few entries: " << it->second->n << " id: " << it->second->id << std::endl;
+        if (verbose_>3)
+            std::cout << Debug() << "... good evt: " << it-cache.begin() << " invPt: " << it->first << " mean: " << it->second->invPt.getMean() << " id: " << it->second->id << " approx: " << approx << std::endl;
+
+        histogram2Ds["diff_invPt_vs_invPt1"]->Fill(it->first, it->first - it->second->invPt.getMean());
+        histogram2Ds["diff_invPt_vs_invPt2"]->Fill(it->first, it->first - approx);
+    }
 
     return 0;
 }
@@ -246,7 +325,7 @@ int PatternGenerator::makePatterns(TString src) {
 
 // _____________________________________________________________________________
 // Output patterns into a TTree
-int PatternGenerator::writePatterns(TString out) {
+int PatternAnalyzer::writePatterns(TString out) {
 
     // _________________________________________________________________________
     // For writing
@@ -258,8 +337,8 @@ int PatternGenerator::writePatterns(TString out) {
 
     // _________________________________________________________________________
     // Save pattern bank statistics
-    *(writer.pb_coverage)   = coverage_;
-    *(writer.pb_count)      = coverage_count_;
+    *(writer.pb_coverage)   = 0.;  // dummy
+    *(writer.pb_count)      = 0;   // dummy
     *(writer.pb_tower)      = po_.tower;
     *(writer.pb_superstrip) = po_.superstrip;
     writer.fillPatternBankInfo();
@@ -268,48 +347,46 @@ int PatternGenerator::writePatterns(TString out) {
     // Save pattern bank
     const long long npatterns = patternBank_pairs_.size();
 
-    // Bookkeepers
-    unsigned nKept = 0;
-    unsigned freq = MAX_FREQUENCY, oldFreq = MAX_FREQUENCY;
-    int n90=0, n95=0, n99=0;
-
     for (long long ipatt=0; ipatt<npatterns; ++ipatt) {
         if (verbose_>1 && ipatt%100==0) {
-            float coverage = float(nKept) / coverage_count_ * coverage_;
-            if (coverage < 0.90 + 1e-5)
-                n90 = ipatt;
-            else if (coverage < 0.95 + 1e-5)
-                n95 = ipatt;
-            else if (coverage < 0.99 + 1e-5)
-                n99 = ipatt;
-
-            std::cout << Debug() << Form("... Writing event: %7lld, sorted coverage: %7.5f", ipatt, coverage) << std::endl;
+            std::cout << Debug() << Form("... Writing event: %7lld", ipatt) << std::endl;
         }
 
-        freq = patternBank_pairs_.at(ipatt).second;
-
-        // Check whether patterns are indeed sorted by frequency
-        assert(oldFreq >= freq);
-        oldFreq = freq;
-        nKept += freq;
-
-        if (freq < (unsigned) minFrequency_)  // cut off
-            break;
+        const Attributes * attr = patternBank_pairs_.at(ipatt).second;
 
         writer.pb_superstripIds->clear();
         const pattern_type& patt = patternBank_pairs_.at(ipatt).first;
         for (unsigned ilayer=0; ilayer<po_.nLayers; ++ilayer) {
             writer.pb_superstripIds->push_back(patt.at(ilayer));
         }
-        *(writer.pb_frequency) = freq;
+        *(writer.pb_frequency)      = attr->n;
+
+        *(writer.pb_invPt_mean)     = attr->invPt.getMean();
+        *(writer.pb_invPt_sigma)    = attr->invPt.getSigma();
+        *(writer.pb_cotTheta_mean)  = attr->cotTheta.getMean();
+        *(writer.pb_cotTheta_sigma) = attr->cotTheta.getSigma();
+        *(writer.pb_phi_mean)       = attr->phi.getMean();
+        *(writer.pb_phi_sigma)      = attr->phi.getSigma();
+        *(writer.pb_z0_mean)        = attr->z0.getMean();
+        *(writer.pb_z0_sigma)       = attr->z0.getSigma();
+
         writer.fillPatternBank();
+        writer.fillPatternAttributes();
+    }
+
+    // Also write histograms
+    for (std::map<TString, TH1F *>::const_iterator it=histograms.begin();
+         it!=histograms.end(); ++it) {
+        if (it->second)  it->second->SetDirectory(gDirectory);
+    }
+
+    for (std::map<TString, TH2F *>::const_iterator it=histogram2Ds.begin();
+         it!=histogram2Ds.end(); ++it) {
+        if (it->second)  it->second->SetDirectory(gDirectory);
     }
 
     long long nentries = writer.writeTree();
     assert(npatterns == nentries);
-    assert(coverage_count_ == nKept);
-
-    if (verbose_)  std::cout << Info() << "After sorting by frequency, N(90% cov)=" << n90 << ", N(95% cov)=" << n95 << ", N(99% cov)=" << n99 << std::endl;
 
     return 0;
 }
@@ -317,7 +394,7 @@ int PatternGenerator::writePatterns(TString out) {
 
 // _____________________________________________________________________________
 // Main driver
-int PatternGenerator::run(TString src, TString datadir, TString out) {
+int PatternAnalyzer::run(TString src, TString bank, TString datadir, TString out) {
     int exitcode = 0;
     Timing(1);
 
@@ -326,6 +403,10 @@ int PatternGenerator::run(TString src, TString datadir, TString out) {
     Timing();
 
     exitcode = setupSuperstrip();
+    if (exitcode)  return exitcode;
+    Timing();
+
+    exitcode = loadPatterns(bank);
     if (exitcode)  return exitcode;
     Timing();
 

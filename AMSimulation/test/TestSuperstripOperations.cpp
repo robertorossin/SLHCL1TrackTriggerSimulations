@@ -55,7 +55,7 @@ unsigned superstrip_projective(unsigned lay, float phi, float z,
     static const float edges_z[6*2] = {-6.7127,26.9799,-6.7797,36.7048,-5.2542,47.7511,-9.5318,59.4103,-9.5318,78.7372,-9.5318,88.9935};
     float unit_z   = (edges_z[2*5+1] - edges_z[2*5]) / divide_z;  // outermost has the largest unit
 
-    int n_phi = floor(M_PI / 4. / unit_phi + 0.5);
+    int n_phi = floor((edges_phi[2*lay+1] - edges_phi[2*lay]) / unit_phi + 0.5);
     int n_z   = divide_z;
     assert(n_phi > 0 && n_z > 0);
 
@@ -67,7 +67,7 @@ unsigned superstrip_projective(unsigned lay, float phi, float z,
 
         int i_phi = floor(phi / unit_phi);
         int i_z   = floor(z   / unit_z);
-        i_phi = (i_phi < 0) ? 0 : (i_phi >= n_phi) ? (n_phi - 1) : i_phi;  // proper range
+        //i_phi = (i_phi < 0) ? 0 : (i_phi >= n_phi) ? (n_phi - 1) : i_phi;  // proper range
         i_z   = (i_z   < 0) ? 0 : (i_z   >= n_z  ) ? (n_z   - 1) : i_z  ;  // proper range
 
         h = i_z * n_phi + i_phi;
@@ -301,32 +301,6 @@ public:
                         //std::cout << moduleId << " " << r << " " << phi << " " << z << " " << ds << std::endl;
 
                         CPPUNIT_ASSERT_EQUAL(ss200, ss);
-                    }
-                }
-            }
-        }
-
-        if (true) {
-            TString ss = "nx400_nz2";
-            arbiter_ -> setDefinition(ss, tt_, ttmap_);
-            arbiter_ -> print();
-
-            for (unsigned i=0; i<6; ++i) {
-                unsigned moduleId = (5+i) * 10000;
-                float r = 20.;  // dummy
-                float ds = 0.;  // dummy
-
-                for (unsigned j=0; j<101; ++j) {
-                    float phi = edges_phi[i*2] + (edges_phi[i*2+1] - edges_phi[i*2]) / 100. * j;
-
-                    for (unsigned k=0; k<101; ++k) {
-                        float z = edges_z[i*2] + (edges_z[i*2+1] - edges_z[i*2]) / 100 * k;
-
-                        unsigned ss = arbiter_ -> superstripGlobal(moduleId, r, phi, z, ds);
-                        unsigned ss400 = superstrip_projective(i, phi, z, M_PI / 4. / 400., 2.);
-                        //std::cout << moduleId << " " << r << " " << phi << " " << z << " " << ds << std::endl;
-
-                        CPPUNIT_ASSERT_EQUAL(ss400, ss);
                     }
                 }
             }

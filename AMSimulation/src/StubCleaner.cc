@@ -100,7 +100,7 @@ int StubCleaner::cleanStubs(TString src, TString out) {
     // _________________________________________________________________________
     // Loop over all events
 
-    const int good_tpId = 0, unmatch_tpId = -1;
+    const int good_tpId = 0;
 
     // Bookkeepers
     long int nRead = 0, nKept = 0;
@@ -171,11 +171,8 @@ int StubCleaner::cleanStubs(TString src, TString out) {
         std::vector<std::pair<unsigned, std::pair<unsigned, float> > > vec_index_dist;
         for (unsigned istub=0; (istub<nstubs) && keep; ++istub) {
             int tpId = reader.vb_tpId->at(istub);  // check sim info
-            if (tpId != good_tpId && tpId != unmatch_tpId) {
-                // Keep stubs that are matched to the generated track and
-                // those that fail to be matched to any simTrack
+            if (tpId != good_tpId)
                 continue;
-            }
 
             unsigned moduleId = reader.vb_modId   ->at(istub);
 
@@ -187,16 +184,17 @@ int StubCleaner::cleanStubs(TString src, TString out) {
             unsigned lay16    = compressLayer(decodeLayer(moduleId));
             assert(lay16 < 16);
 
-            // CUIDADO: simVx and simVy are not used in the calculation
+            // CUIDADO: simVx and simVy are currently not used in the calculation
+            //          therefore d0 is assumed to be zero, and z0 is assumed to be equal to vz
             float idealPhi = calcIdealPhi(simPhi, simChargeOverPt, stub_r);
             float idealZ   = simVz + stub_r * simCotTheta;
             float idealR   = stub_r;
 
             if (lay16 >= 6) {  // for endcap
                 idealR     = (stub_z - simVz) / simCotTheta;
-                if (lay16 >= 11)
-                    idealR = -idealR;  // make sure R is positive for negative endcap
-                assert(idealR > 0);
+                if (idealR <= 0) {
+                    std::cout << Warning() << "Stub ideal r <= 0! moduleId: " << moduleId << " r: " << stub_r << " z: " << stub_z << " simVz: " << simVz << " simCotTheta: " << simCotTheta << std::endl;
+                }
                 idealPhi   = calcIdealPhi(simPhi, simChargeOverPt, idealR);
                 idealZ     = stub_z;
             }

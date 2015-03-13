@@ -80,6 +80,12 @@ class SuperstripArbiter {
 
     // phiWidths[i] is the phiWidth of the i-th layer
     std::vector<float> phiWidths_;
+
+    // rMeans[i] is the mean radius of the i-th layer (barrel only)
+    std::vector<float> rMeans_;
+
+    // drCorr[i] is the constant used for global phi correction
+    std::vector<float> drCorrs_;
 };
 
 }  // namespace slhcl1tt
