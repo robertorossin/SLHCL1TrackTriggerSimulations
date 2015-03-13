@@ -28,11 +28,21 @@ class PatternBankReader {
 
     Long64_t getPatterns() const { return ttree->GetEntries(); }
 
+    // Pattern attributes
+    float                          pb_invPt_mean;
+    float                          pb_invPt_sigma;
+    float                          pb_cotTheta_mean;
+    float                          pb_cotTheta_sigma;
+    float                          pb_phi_mean;
+    float                          pb_phi_sigma;
+    float                          pb_z0_mean;
+    float                          pb_z0_sigma;
+
     // Pattern bank statistics
-    float                   pb_coverage;
-    unsigned                pb_count;
-    unsigned                pb_tower;
-    std::string *           pb_superstrip;
+    float                          pb_coverage;
+    unsigned                       pb_count;
+    unsigned                       pb_tower;
+    std::string *                  pb_superstrip;
 
     // Pattern bank
     frequency_type                 pb_frequency;
@@ -42,6 +52,7 @@ class PatternBankReader {
     TFile* tfile;
     TTree* ttree;   // for pattern bank
     TTree* ttree2;  // for pattern bank statistics
+    TTree* ttree3;  // for pattern attributes
     const int verbose_;
 };
 
@@ -54,11 +65,23 @@ class PatternBankWriter {
 
     int init(TString out);
 
+    void fillPatternAttributes();
+
     void fillPatternBankInfo();  // must be called before fillPatternBank()
 
     void fillPatternBank();
 
     Long64_t writeTree();
+
+    // Pattern attributes
+    std::auto_ptr<float>                         pb_invPt_mean;
+    std::auto_ptr<float>                         pb_invPt_sigma;
+    std::auto_ptr<float>                         pb_cotTheta_mean;
+    std::auto_ptr<float>                         pb_cotTheta_sigma;
+    std::auto_ptr<float>                         pb_phi_mean;
+    std::auto_ptr<float>                         pb_phi_sigma;
+    std::auto_ptr<float>                         pb_z0_mean;
+    std::auto_ptr<float>                         pb_z0_sigma;
 
     // Pattern bank statistics
     std::auto_ptr<float>                         pb_coverage;
@@ -74,6 +97,7 @@ class PatternBankWriter {
     TFile* tfile;
     TTree* ttree;   // for pattern bank
     TTree* ttree2;  // for pattern bank statistics
+    TTree* ttree3;  // for pattern attributes
     const int verbose_;
 };
 
