@@ -145,6 +145,12 @@ int PatternAnalyzer::makePatterns(TString src) {
     // Get trigger tower reverse map
     const std::map<unsigned, bool>& ttrmap = ttmap_ -> getTriggerTowerReverseMap(po_.tower);
 
+    // _________________________________________________________________________
+    // Book histograms
+    TH1::AddDirectory(kFALSE);
+    histogram2Ds["diff_invPt_vs_invPt1"] = new TH2F("diff_invPt_vs_invPt1", "; signed 1/p_{T} [1/GeV]; Diff from mean value of road [1/GeV]", 1000, -0.5, 0.5, 1000, -0.05, 0.05);
+    histogram2Ds["diff_invPt_vs_invPt2"] = new TH2F("diff_invPt_vs_invPt2", "; signed 1/p_{T} [1/GeV]; Diff from linear approx [1/GeV]", 1000, -0.5, 0.5, 1000, -0.05, 0.05);
+
 
     // _________________________________________________________________________
     // Loop over all events
@@ -154,6 +160,9 @@ int PatternAnalyzer::makePatterns(TString src) {
 
     // Bookkeepers
     long int nRead = 0, nKept = 0;
+
+    // Cache
+    std::vector<std::pair<float, Attributes *> >  cache;  // save pointer to the attr for every valid track
 
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         if (reader.loadTree(ievt) < 0)  break;
@@ -248,6 +257,8 @@ int PatternAnalyzer::makePatterns(TString src) {
             attr->phi.fill(simPhi);
             attr->z0.fill(simVz);
 
+            cache.push_back(std::make_pair(simChargeOverPt, attr));
+
         } else {
             //std::cout << Warning() << "Failed to find: " << patt << std::endl;
         }
@@ -281,14 +292,31 @@ int PatternAnalyzer::makePatterns(TString src) {
     patternBank_map_.clear();
     patternBank_map_.swap(mapEmpty);
 
-    // Sort by frequency
+    // Sort by invPt
     std::stable_sort(patternBank_pairs_.begin(), patternBank_pairs_.end(), sortByInvPt);
 
-    if (verbose_>2) {
-        for (unsigned i=0; i<patternBank_pairs_.size(); ++i) {
-            const auto& pair = patternBank_pairs_.at(i);
-            std::cout << Debug() << "... patt: " << i << "  " << pair.first << " freq: " << pair.second << std::endl;
-        }
+    // Assign sorted pattern id
+    for (unsigned i=0; i<patternBank_pairs_.size(); ++i) {
+        patternBank_pairs_.at(i).second->id = i;
+    }
+
+
+    // _________________________________________________________________________
+    // Fill histograms
+
+    // CUIDADO: this assumes all the pattern attributes are populated well (ntracks > npatterns)
+    const unsigned npatterns = patternBank_pairs_.size();
+    for (std::vector<std::pair<float, Attributes *> >::const_iterator it=cache.begin();
+         it!=cache.end(); ++it) {
+
+        float approx = 1.0 / po_.minPt * (-1. + 2./(npatterns-1) * it->second->id);
+        if (it->second->n <= 1)
+            std::cout << Warning() << "Too few entries: " << it->second->n << " id: " << it->second->id << std::endl;
+        if (verbose_>3)
+            std::cout << Debug() << "... good evt: " << it-cache.begin() << " invPt: " << it->first << " mean: " << it->second->invPt.getMean() << " id: " << it->second->id << " approx: " << approx << std::endl;
+
+        histogram2Ds["diff_invPt_vs_invPt1"]->Fill(it->first, it->first - it->second->invPt.getMean());
+        histogram2Ds["diff_invPt_vs_invPt2"]->Fill(it->first, it->first - approx);
     }
 
     return 0;
@@ -344,6 +372,17 @@ int PatternAnalyzer::writePatterns(TString out) {
 
         writer.fillPatternBank();
         writer.fillPatternAttributes();
+    }
+
+    // Also write histograms
+    for (std::map<TString, TH1F *>::const_iterator it=histograms.begin();
+         it!=histograms.end(); ++it) {
+        if (it->second)  it->second->SetDirectory(gDirectory);
+    }
+
+    for (std::map<TString, TH2F *>::const_iterator it=histogram2Ds.begin();
+         it!=histogram2Ds.end(); ++it) {
+        if (it->second)  it->second->SetDirectory(gDirectory);
     }
 
     long long nentries = writer.writeTree();

@@ -9,6 +9,9 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Attributes.h"
 using namespace slhcl1tt;
 
+#include "TH1F.h"
+#include "TH2F.h"
+
 
 class PatternAnalyzer {
   public:
@@ -74,6 +77,10 @@ class PatternAnalyzer {
     std::vector<Attributes>                             patternAttributes_;
     std::map<pattern_type, Attributes *>                patternBank_map_;
     std::vector<std::pair<pattern_type, Attributes *> > patternBank_pairs_;
+
+    // Histograms
+    std::map<TString, TH1F *>  histograms;
+    std::map<TString, TH2F *>  histogram2Ds;
 };
 
 #endif
