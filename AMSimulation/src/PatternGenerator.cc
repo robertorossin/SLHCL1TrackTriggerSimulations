@@ -1,6 +1,5 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternGenerator.h"
 
-#include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/CSVFileReader.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/PatternBankReader.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubReader.h"
 
@@ -115,7 +114,6 @@ int PatternGenerator::makePatterns(TString src) {
         reader.getEntry(ievt);
 
         // Running estimate of coverage
-        const unsigned nstubs = reader.vb_modId->size();
         if (verbose_>1 && ievt%100000==0) {
             bankSize = patternBank_map_.size();
             coverage = 1.0 - float(bankSize - bankSizeOld) / float(nKept - nKeptOld);
@@ -126,6 +124,7 @@ int PatternGenerator::makePatterns(TString src) {
             nKeptOld = nKept;
         }
 
+        const unsigned nstubs = reader.vb_modId->size();
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
         if (nstubs < MIN_NGOODSTUBS) {  // skip if not enough stubs
@@ -232,8 +231,8 @@ int PatternGenerator::makePatterns(TString src) {
 
     if (verbose_>2) {
         for (unsigned i=0; i<patternBank_pairs_.size(); ++i) {
-            const auto& pair = patternBank_pairs_.at(i);
-            std::cout << Debug() << "... patt: " << i << "  " << pair.first << " freq: " << pair.second << std::endl;
+            const std::pair<pattern_type, unsigned>& apair = patternBank_pairs_.at(i);
+            std::cout << Debug() << "... patt: " << i << "  " << apair.first << " freq: " << apair.second << std::endl;
         }
     }
 

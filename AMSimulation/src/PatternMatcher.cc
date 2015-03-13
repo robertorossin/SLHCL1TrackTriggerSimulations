@@ -99,13 +99,7 @@ int PatternMatcher::loadPatterns(TString bank) {
             }
         }
     }
-
-    if ((unsigned) npatterns == patternBank_.size()) {
-        if (verbose_)  std::cout << Info() << "Successfully loaded " << npatterns << " patterns." << std::endl;
-    } else {
-        std::cout << Error() << "Failed to load all patterns: " << patternBank_.size() << " vs " << npatterns << std::endl;
-        return 1;
-    }
+    if (verbose_)  std::cout << Info() << "Successfully loaded " << npatterns << " patterns." << std::endl;
 
     return 0;
 }
