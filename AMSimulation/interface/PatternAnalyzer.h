@@ -11,6 +11,7 @@ using namespace slhcl1tt;
 
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TProfile.h"
 
 
 class PatternAnalyzer {
@@ -79,8 +80,9 @@ class PatternAnalyzer {
     std::vector<std::pair<pattern_type, Attributes *> > patternBank_pairs_;
 
     // Histograms
-    std::map<TString, TH1F *>  histograms;
-    std::map<TString, TH2F *>  histogram2Ds;
+    std::map<TString, TH1F *>     histograms;
+    std::map<TString, TH2F *>     histogram2Ds;
+    std::map<TString, TProfile *> histogramPRs;
 };
 
 #endif
