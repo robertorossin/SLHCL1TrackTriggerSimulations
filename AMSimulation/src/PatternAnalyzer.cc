@@ -150,6 +150,8 @@ int PatternAnalyzer::makePatterns(TString src) {
     TH1::AddDirectory(kFALSE);
     histogram2Ds["diff_invPt_vs_invPt1"] = new TH2F("diff_invPt_vs_invPt1", "; signed 1/p_{T} [1/GeV]; Diff from mean value of road [1/GeV]", 1000, -0.5, 0.5, 1000, -0.05, 0.05);
     histogram2Ds["diff_invPt_vs_invPt2"] = new TH2F("diff_invPt_vs_invPt2", "; signed 1/p_{T} [1/GeV]; Diff from linear approx [1/GeV]", 1000, -0.5, 0.5, 1000, -0.05, 0.05);
+    histogramPRs["diff_invPt_pr_invPt1"] = new TProfile("diff_invPt_pr_invPt1", "; signed 1/p_{T} [1/GeV]; Diff from mean value of road [1/GeV]", 1000, -0.5, 0.5, "s");
+    histogramPRs["diff_invPt_pr_invPt2"] = new TProfile("diff_invPt_pr_invPt2", "; signed 1/p_{T} [1/GeV]; Diff from linear approx [1/GeV]", 1000, -0.5, 0.5, "s");
 
 
     // _________________________________________________________________________
@@ -315,8 +317,11 @@ int PatternAnalyzer::makePatterns(TString src) {
         if (verbose_>3)
             std::cout << Debug() << "... good evt: " << it-cache.begin() << " invPt: " << it->first << " mean: " << it->second->invPt.getMean() << " id: " << it->second->id << " approx: " << approx << std::endl;
 
-        histogram2Ds["diff_invPt_vs_invPt1"]->Fill(it->first, it->first - it->second->invPt.getMean());
-        histogram2Ds["diff_invPt_vs_invPt2"]->Fill(it->first, it->first - approx);
+        // Mean is like a measured quantity. Usually difference is defined as "measured" - "true"
+        histogram2Ds["diff_invPt_vs_invPt1"]->Fill(it->first, it->second->invPt.getMean() - it->first);
+        histogram2Ds["diff_invPt_vs_invPt2"]->Fill(it->first, approx - it->first);
+        histogramPRs["diff_invPt_pr_invPt1"]->Fill(it->first, it->second->invPt.getMean() - it->first);
+        histogramPRs["diff_invPt_pr_invPt2"]->Fill(it->first, approx - it->first);
     }
 
     return 0;
@@ -374,7 +379,8 @@ int PatternAnalyzer::writePatterns(TString out) {
         writer.fillPatternAttributes();
     }
 
-    // Also write histograms
+    // _________________________________________________________________________
+    // Write histograms
     for (std::map<TString, TH1F *>::const_iterator it=histograms.begin();
          it!=histograms.end(); ++it) {
         if (it->second)  it->second->SetDirectory(gDirectory);
@@ -382,6 +388,11 @@ int PatternAnalyzer::writePatterns(TString out) {
 
     for (std::map<TString, TH2F *>::const_iterator it=histogram2Ds.begin();
          it!=histogram2Ds.end(); ++it) {
+        if (it->second)  it->second->SetDirectory(gDirectory);
+    }
+
+    for (std::map<TString, TProfile *>::const_iterator it=histogramPRs.begin();
+         it!=histogramPRs.end(); ++it) {
         if (it->second)  it->second->SetDirectory(gDirectory);
     }
 

@@ -13,7 +13,7 @@ def bookPatterns():
 
     hname = "npatterns"
     nbinsx, xmin, xmax = 1000, -0.5, 0.5
-    h = histos[hname] = TH1F(hname, "; signed 1/p_{T} [1/GeV]; # patterns", nbinsx, xmin, xmax)
+    h = histos[hname] = TH1F(hname, "; <signed 1/p_{T}> [1/GeV]; # patterns", nbinsx, xmin, xmax)
     h.SetLineColor(kBlue)
 
     donotdelete.append(histos)
@@ -31,10 +31,18 @@ def checkoutPatterns(tfile, histos, options):
         return h
 
     hname = "diff_invPt_vs_invPt1"
-    histos[hname] = style(tfile.Get(hname))
+    h = histos[hname] = style(tfile.Get(hname))
 
     hname = "diff_invPt_vs_invPt2"
-    histos[hname] = style(tfile.Get(hname))
+    h = histos[hname] = style(tfile.Get(hname))
+
+    hname = "diff_invPt_pr_invPt1"
+    h = histos[hname] = style(tfile.Get(hname))
+    h.SetMinimum(-0.05); h.SetMaximum(0.05)
+
+    hname = "diff_invPt_pr_invPt2"
+    h = histos[hname] = style(tfile.Get(hname))
+    h.SetMinimum(-0.05); h.SetMaximum(0.05)
 
 def projectPatterns(tree, histos, options):
     tree.SetBranchStatus("*", 0)
@@ -63,33 +71,59 @@ def projectPatterns(tree, histos, options):
 
     hname = "gr_invPt_meanrms_vs_id"
     h = histos[hname] = style(TGraphErrors(len(x), x, y, zeroes, ey))
+    h.SetName(hname)
     h.SetTitle("; sorted pattern ID; <signed 1/p_{T}> [1/GeV]")
 
     hname = "gr_invPt_rms_vs_id"
     h = histos[hname] = style(TGraphErrors(len(x), x, zeroes, zeroes, ey))
+    h.SetName(hname)
     h.SetTitle("; sorted pattern ID; #sigma(signed 1/p_{T}) [1/GeV]")
+    h.SetMinimum(-0.03); h.SetMaximum(0.03)
+
+    hname = "gr_invPt_rms_vs_mean"
+    h = histos[hname] = style(TGraphErrors(len(x), y, zeroes, zeroes, ey))
+    h.SetName(hname)
+    h.SetTitle("; <signed 1/p_{T}> [1/GeV]; #sigma(signed 1/p_{T}) [1/GeV]")
+    h.SetMinimum(-0.03); h.SetMaximum(0.03)
 
     tree.SetBranchStatus("*", 1)
     return
 
 def drawPatterns(histos, options):
     for hname, h in histos.iteritems():
-        if "vs_" not in hname:
-            # TH1F
-            h.SetMaximum(h.GetMaximum() * 1.4); h.SetMinimum(0)
-            h.SetStats(1); h.Draw("hist")
-            CMS_label()
-            save(options.outdir, hname, dot_root=True)
-        elif "gr_" not in hname:
-            # TH2F
-            h.SetStats(0); h.Draw()
-            CMS_label()
-            save(options.outdir, hname, dot_root=True, dot_pdf=False)
+        if "gr_" not in hname:
+            if "vs_" not in hname and "pr_" not in hname:
+                # TH1F
+                h.SetMaximum(h.GetMaximum() * 1.4); h.SetMinimum(0)
+                h.SetStats(1); h.Draw("hist")
+                CMS_label()
+                save(options.outdir, hname, dot_root=True)
+            elif "pr_" not in hname:
+                # TH2F
+                h.SetStats(0); h.Draw()
+                CMS_label()
+                save(options.outdir, hname, dot_root=True, dot_pdf=False)
+            else:
+                # TProfile
+                h.SetStats(1); h.Draw()
+                print hname, h.GetRMS(1), h.GetRMS(2)
+                CMS_label()
+                save(options.outdir, hname, dot_root=True, dot_pdf=False)
         else:
             # TGraph
             h.Draw("A3")
             CMS_label()
             save(options.outdir, hname, redraw_axis=False, dot_root=True, dot_pdf=False)
+
+    # Specialized
+    hnames = ["diff_invPt_vs_invPt1", "diff_invPt_vs_invPt2"]
+    for hname in hnames:
+        h = histos[hname]
+        hname += "_colz"
+        h.SetStats(0); h.Draw("colz")
+        CMS_label()
+        save(options.outdir, hname, dot_root=True, dot_pdf=False)
+
 
 def sitrepPatterns(histos,options):
     pass
