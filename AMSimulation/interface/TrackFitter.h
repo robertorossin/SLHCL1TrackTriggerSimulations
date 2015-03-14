@@ -26,8 +26,8 @@ class TrackFitter {
         if (po_.mode=="ATF4")      fitterATF_ = new TrackFitterAlgoATF(false);
         else if (po_.mode=="ATF5") fitterATF_ = new TrackFitterAlgoATF(true);
         else if (po_.mode=="PCA4") fitterLin_ = new TrackFitterAlgoLinearized();
+        else if (po_.mode=="PCA5") fitterLin_ = new TrackFitterAlgoLinearized();
         else if (po_.mode=="RET")  fitterRetina_ = new TrackFitterAlgoRetina();
-        
     }
 
     // Destructor
