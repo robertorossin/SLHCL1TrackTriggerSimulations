@@ -63,6 +63,10 @@ int TrackFitter::makeTracks(TString src, TString out) {
         std::cout << Error() << "Failed to initialize TTTrackWriter." << std::endl;
         return 1;
     }
+    
+    //  _________________________________________________________________________
+    // Initialize fitter outside loop when necessary
+    if (po_.mode=="PCA4") fitterLin_->loadVD("matrixVD_0_pt_10_more.txt");
 
     // _________________________________________________________________________
     // Loop over all events
@@ -177,8 +181,11 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 }
 
             }  // loop over the roads
-
-        } else if (po_.mode=="ATF4" || po_.mode=="ATF5" || po_.mode=="PCA4" || po_.mode=="PCA5") {
+            
+        }
+        
+        else if (po_.mode=="ATF4" || po_.mode=="ATF5" || po_.mode=="PCA4")
+        {
             // _________________________________________________________________
             // Track fitters taking fit combinations
 
@@ -235,10 +242,14 @@ int TrackFitter::makeTracks(TString src, TString out) {
                     atrack.setStubRefs(stubRefs);
 
                     if (po_.mode=="ATF4" || po_.mode=="ATF5")
+                    {
                         fitstatus = fitterATF_->fit(hits, atrack);
-                    else if (po_.mode=="PCA4" || po_.mode=="PCA5")
+                    }
+                    else if (po_.mode=="PCA4")
+                    {
                         fitstatus = fitterLin_->fit(hits, atrack);
-
+                    }
+                        
                     tracks.push_back(atrack);
 
                     if (verbose_>3)  std::cout << Debug() << "... ... ... track: " << icomb << " status: " << fitstatus << std::endl;
