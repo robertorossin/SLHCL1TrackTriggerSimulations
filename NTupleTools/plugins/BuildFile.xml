@@ -1,5 +1,5 @@
-<use   name="FWCore/Framework"/>
-<use   name="FWCore/ParameterSet"/>
+<export>
+</export>
 <library   name="SLHCL1TrackTriggerSimulationsNTupleTools_plugins" file="*.cc">
-  <flags   EDM_PLUGIN="1"/>
+  <use   name="SLHCL1TrackTriggerSimulations/NTupleTools"/>
 </library>
