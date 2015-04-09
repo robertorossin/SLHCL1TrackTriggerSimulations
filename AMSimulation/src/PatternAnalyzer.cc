@@ -114,31 +114,6 @@ int PatternAnalyzer::makePatterns(TString src) {
     if (reader.init(src, false)) {
         std::cout << Error() << "Failed to initialize TTStubReader." << std::endl;
         return 1;
-
-    } else {
-        // Only read certain branches
-        TChain* tchain = reader.getChain();
-        tchain->SetBranchStatus("*"                 , 0);
-        tchain->SetBranchStatus("genParts_pt"       , 1);
-        tchain->SetBranchStatus("genParts_eta"      , 1);
-        tchain->SetBranchStatus("genParts_phi"      , 1);
-        tchain->SetBranchStatus("genParts_vx"       , 1);
-        tchain->SetBranchStatus("genParts_vy"       , 1);
-        tchain->SetBranchStatus("genParts_vz"       , 1);
-        tchain->SetBranchStatus("genParts_charge"   , 1);
-      //tchain->SetBranchStatus("TTStubs_x"         , 1);
-      //tchain->SetBranchStatus("TTStubs_y"         , 1);
-        tchain->SetBranchStatus("TTStubs_z"         , 1);
-        tchain->SetBranchStatus("TTStubs_r"         , 1);
-      //tchain->SetBranchStatus("TTStubs_eta"       , 1);
-        tchain->SetBranchStatus("TTStubs_phi"       , 1);
-        tchain->SetBranchStatus("TTStubs_coordx"    , 1);
-        tchain->SetBranchStatus("TTStubs_coordy"    , 1);
-        tchain->SetBranchStatus("TTStubs_trigBend"  , 1);
-      //tchain->SetBranchStatus("TTStubs_roughPt"   , 1);
-      //tchain->SetBranchStatus("TTStubs_clusWidth" , 1);
-        tchain->SetBranchStatus("TTStubs_modId"     , 1);
-      //tchain->SetBranchStatus("TTStubs_tpId"      , 1);
     }
 
     // _________________________________________________________________________

@@ -42,7 +42,8 @@ BasicReader::BasicReader(int verbose)
   vb_coordy           (0),
   vb_trigBend         (0),
   vb_roughPt          (0),
-  vb_clusWidth        (0),
+  vb_clusWidth0       (0),
+  vb_clusWidth1       (0),
   vb_modId            (0),
   vb_tpId             (0),
   //
@@ -82,43 +83,45 @@ int BasicReader::init(TString src, bool full) {
     assert(tchain != 0);
     treenumber = tchain->GetTreeNumber();
 
-    tchain->SetBranchAddress("genParts_pt"      , &(vp_pt));
-    tchain->SetBranchAddress("genParts_eta"     , &(vp_eta));
-    tchain->SetBranchAddress("genParts_phi"     , &(vp_phi));
-    tchain->SetBranchAddress("genParts_vx"      , &(vp_vx));
-    tchain->SetBranchAddress("genParts_vy"      , &(vp_vy));
-    tchain->SetBranchAddress("genParts_vz"      , &(vp_vz));
-    tchain->SetBranchAddress("genParts_charge"  , &(vp_charge));
-    if (full)  tchain->SetBranchAddress("TTStubs_x"        , &(vb_x));
-    if (full)  tchain->SetBranchAddress("TTStubs_y"        , &(vb_y));
-    tchain->SetBranchAddress("TTStubs_z"        , &(vb_z));
-    tchain->SetBranchAddress("TTStubs_r"        , &(vb_r));
-    tchain->SetBranchAddress("TTStubs_eta"      , &(vb_eta));
-    tchain->SetBranchAddress("TTStubs_phi"      , &(vb_phi));
-    tchain->SetBranchAddress("TTStubs_coordx"   , &(vb_coordx));
-    tchain->SetBranchAddress("TTStubs_coordy"   , &(vb_coordy));
-    tchain->SetBranchAddress("TTStubs_trigBend" , &(vb_trigBend));
-  //if (full)  tchain->SetBranchAddress("TTStubs_roughPt"  , &(vb_roughPt));
-  //if (full)  tchain->SetBranchAddress("TTStubs_clusWidth", &(vb_clusWidth));
-    tchain->SetBranchAddress("TTStubs_modId"    , &(vb_modId));
-    tchain->SetBranchAddress("TTStubs_tpId"     , &(vb_tpId));
+    tchain->SetBranchAddress("genParts_pt"       , &(vp_pt));
+    tchain->SetBranchAddress("genParts_eta"      , &(vp_eta));
+    tchain->SetBranchAddress("genParts_phi"      , &(vp_phi));
+    tchain->SetBranchAddress("genParts_vx"       , &(vp_vx));
+    tchain->SetBranchAddress("genParts_vy"       , &(vp_vy));
+    tchain->SetBranchAddress("genParts_vz"       , &(vp_vz));
+    tchain->SetBranchAddress("genParts_charge"   , &(vp_charge));
+    if (full)  tchain->SetBranchAddress("TTStubs_x"         , &(vb_x));
+    if (full)  tchain->SetBranchAddress("TTStubs_y"         , &(vb_y));
+    tchain->SetBranchAddress("TTStubs_z"         , &(vb_z));
+    tchain->SetBranchAddress("TTStubs_r"         , &(vb_r));
+    tchain->SetBranchAddress("TTStubs_eta"       , &(vb_eta));
+    tchain->SetBranchAddress("TTStubs_phi"       , &(vb_phi));
+    tchain->SetBranchAddress("TTStubs_coordx"    , &(vb_coordx));
+    tchain->SetBranchAddress("TTStubs_coordy"    , &(vb_coordy));
+    tchain->SetBranchAddress("TTStubs_trigBend"  , &(vb_trigBend));
+    if (full)  tchain->SetBranchAddress("TTStubs_roughPt"   , &(vb_roughPt));
+    if (full)  tchain->SetBranchAddress("TTStubs_clusWidth0", &(vb_clusWidth0));
+    if (full)  tchain->SetBranchAddress("TTStubs_clusWidth1", &(vb_clusWidth1));
+    tchain->SetBranchAddress("TTStubs_modId"     , &(vb_modId));
+    tchain->SetBranchAddress("TTStubs_tpId"      , &(vb_tpId));
     return 0;
 }
 
 void BasicReader::nullStubs(const std::vector<bool>& nulling) {
-    nullVectorElements(vb_x        , nulling);
-    nullVectorElements(vb_y        , nulling);
-    nullVectorElements(vb_z        , nulling);
-    nullVectorElements(vb_r        , nulling);
-    nullVectorElements(vb_eta      , nulling);
-    nullVectorElements(vb_phi      , nulling);
-    nullVectorElements(vb_coordx   , nulling);
-    nullVectorElements(vb_coordy   , nulling);
-    nullVectorElements(vb_trigBend , nulling);
-  //nullVectorElements(vb_roughPt  , nulling);
-  //nullVectorElements(vb_clusWidth, nulling);
-  //nullVectorElements(vb_modId    , nulling);  // don't null this guy
-    nullVectorElements(vb_tpId     , nulling);
+    nullVectorElements(vb_x         , nulling);
+    nullVectorElements(vb_y         , nulling);
+    nullVectorElements(vb_z         , nulling);
+    nullVectorElements(vb_r         , nulling);
+    nullVectorElements(vb_eta       , nulling);
+    nullVectorElements(vb_phi       , nulling);
+    nullVectorElements(vb_coordx    , nulling);
+    nullVectorElements(vb_coordy    , nulling);
+    nullVectorElements(vb_trigBend  , nulling);
+    nullVectorElements(vb_roughPt   , nulling);
+    nullVectorElements(vb_clusWidth0, nulling);
+    nullVectorElements(vb_clusWidth1, nulling);
+  //nullVectorElements(vb_modId     , nulling);  // don't null this guy
+    nullVectorElements(vb_tpId      , nulling);
 }
 
 
