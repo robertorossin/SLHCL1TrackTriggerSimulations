@@ -27,6 +27,16 @@ ntupleGenMET = cms.EDProducer('NTupleGenMET',
     maxN = cms.uint32(999999)
 )
 
+from SLHCL1TrackTriggerSimulations.NTupleTools.BeamSpotFromSim_cfi import BeamSpotFromSim
+
+ntupleBeamSpot = cms.EDProducer('NTupleBeamSpot',
+    inputTag = cms.InputTag('BeamSpotFromSim', 'BeamSpot'),
+    prefix = cms.string('beamSpot@'),
+    suffix = cms.string(''),
+    cut = cms.string(''),
+    maxN = cms.uint32(999999)
+)
+
 ntupleGenEventInfo = cms.EDProducer('NTupleGenEventInfo',
     genEventInfo = cms.InputTag('generator'),
     pileupInfo = cms.InputTag('addPileupInfo'),
@@ -37,7 +47,7 @@ ntupleGenEventInfo = cms.EDProducer('NTupleGenEventInfo',
     suffix = cms.string(''),
 )
 
-#ntupleGen = cms.Sequence((prunedGenParticles * ntupleGenParticles) * ntupleGenJets * ntupleGenMET * ntupleGenEventInfo)
-#ntupleGen = cms.Sequence((prunedGenParticles * ntupleGenParticles) * ntupleGenEventInfo)
-ntupleGen = cms.Sequence(ntupleGenParticles * ntupleGenEventInfo)
+#ntupleGen = cms.Sequence((prunedGenParticles * ntupleGenParticles) * ntupleGenJets * ntupleGenMET * (BeamSpotFromSim * ntupleBeamSpot) * ntupleGenEventInfo)
+#ntupleGen = cms.Sequence((prunedGenParticles * ntupleGenParticles) * (BeamSpotFromSim * ntupleBeamSpot) * ntupleGenEventInfo)
+ntupleGen = cms.Sequence(ntupleGenParticles * (BeamSpotFromSim * ntupleBeamSpot) * ntupleGenEventInfo)
 
