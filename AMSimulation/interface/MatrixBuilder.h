@@ -12,7 +12,7 @@ class MatrixBuilder {
     // Constructor
     MatrixBuilder(ProgramOption po)
     : po_(po),
-      nEvents_(999999999), verbose_(1) {
+      nEvents_(po.maxEvents), verbose_(po.verbose) {
 
         // Initialize
         ttmap_   = new TriggerTowerMap();
@@ -23,21 +23,13 @@ class MatrixBuilder {
         if (ttmap_)     delete ttmap_;
     }
 
-
-    // Setters
-    void setNEvents(long long n)    { if (n != -1)  nEvents_ = n > 0 ? n : 0; }
-    void setVerbosity(int v)        { verbose_ = v; }
-
-    // Getters
-    // none
-
     // Main driver
-    int run(TString src, TString datadir, TString out);
+    int run();
 
 
   private:
     // Member functions
-    // Setup trigger tower and superstrip definitions
+    // Setup trigger tower
     int setupTriggerTower(TString datadir);
 
     // Build matrices
@@ -46,10 +38,8 @@ class MatrixBuilder {
     // Write matrices
     int writeMatrices(TString out);
 
-    // Configurations
-    const ProgramOption po_;
-
     // Program options
+    const ProgramOption po_;
     long long nEvents_;
     int verbose_;
 

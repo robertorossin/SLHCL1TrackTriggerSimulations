@@ -66,8 +66,8 @@ int PatternAnalyzer::loadPatterns(TString bank) {
     }
 
     long long npatterns = pbreader.getPatterns();
-    if (npatterns > maxPatterns_)
-        npatterns = maxPatterns_;
+    if (npatterns > po_.maxPatterns)
+        npatterns = po_.maxPatterns;
     assert(npatterns > 0);
 
     // Allocate memory
@@ -83,7 +83,7 @@ int PatternAnalyzer::loadPatterns(TString bank) {
 
     for (long long ipatt=0; ipatt<npatterns; ++ipatt) {
         pbreader.getPattern(ipatt);
-        if (pbreader.pb_frequency < minFrequency_)
+        if (pbreader.pb_frequency < po_.minFrequency)
             break;
 
         assert(pbreader.pb_superstripIds->size() == po_.nLayers);
@@ -380,11 +380,11 @@ int PatternAnalyzer::writePatterns(TString out) {
 
 // _____________________________________________________________________________
 // Main driver
-int PatternAnalyzer::run(TString src, TString bank, TString datadir, TString out) {
+int PatternAnalyzer::run() {
     int exitcode = 0;
     Timing(1);
 
-    exitcode = setupTriggerTower(datadir);
+    exitcode = setupTriggerTower(po_.datadir);
     if (exitcode)  return exitcode;
     Timing();
 
@@ -392,15 +392,15 @@ int PatternAnalyzer::run(TString src, TString bank, TString datadir, TString out
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = loadPatterns(bank);
+    exitcode = loadPatterns(po_.bankfile);
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = makePatterns(src);
+    exitcode = makePatterns(po_.input);
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = writePatterns(out);
+    exitcode = writePatterns(po_.output);
     if (exitcode)  return exitcode;
     Timing();
 

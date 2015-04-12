@@ -135,19 +135,19 @@ int MatrixBuilder::writeMatrices(TString out) {
 
 // _____________________________________________________________________________
 // Main driver
-int MatrixBuilder::run(TString src, TString datadir, TString out) {
+int MatrixBuilder::run() {
     int exitcode = 0;
     Timing(1);
 
-    exitcode = setupTriggerTower(datadir);
+    exitcode = setupTriggerTower(po_.datadir);
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = buildMatrices(src);
+    exitcode = buildMatrices(po_.input);
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = writeMatrices(out);
+    exitcode = writeMatrices(po_.output);
     if (exitcode)  return exitcode;
     Timing();
 

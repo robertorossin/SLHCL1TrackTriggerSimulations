@@ -32,7 +32,8 @@ class NTupleMaker {
     // Constructor
     NTupleMaker(ProgramOption po)
     : po_(po),
-      nEvents_(999999999), trim_(true), verbose_(1) {
+      nEvents_(po.maxEvents), verbose_(po.verbose),
+      trim_(true) {
 
         makeLeafMap();
     }
@@ -40,16 +41,12 @@ class NTupleMaker {
     // Destructor
     ~NTupleMaker() {}
 
+    // Main driver
+    int run();
 
-    // Setters
-    void setNEvents(long long n)  { if (n != -1)  nEvents_ = n > 0 ? n : 0; }
-    void setTrim(bool b)          { trim_ = b; }
-    void setVerbosity(int v)      { verbose_ = v; }
 
-    // Getters
-    // none
-
-    // Functions
+  private:
+    // Member functions
     int readRoads(TString src);
 
     int readTracks(TString src);
@@ -58,10 +55,6 @@ class NTupleMaker {
 
     int writeTree(TString out);
 
-    // Main driver
-    int run(TString src, TString roadfile, TString trackfile, TString out);
-
-  private:
     // Connect branch
     class BranchConnector {
       public:
@@ -82,19 +75,17 @@ class NTupleMaker {
         T* ptr_object_;
     };
 
-    // Private functions
     void makeLeafMap();
+
     void makeConnector(const TBranch*, TTree*);
 
-
-  private:
-    // Configurations
-    const ProgramOption po_;
-
     // Program options
+    const ProgramOption po_;
     long long nEvents_;
-    bool trim_;  // do not keep every branch
     int verbose_;
+
+    // Configurations
+    bool trim_;  // do not keep every branch
 
     // Containers
     TChain * chain_;

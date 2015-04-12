@@ -47,7 +47,6 @@ int main(int argc, char **argv) {
     // and in config file
     po::options_description config("Configuration");
     config.add_options()
-        ("verbosity,v"  , po::value<int>(&option.verbose)->default_value(1), "Verbosity level (-1 = very quiet; 0 = quiet, 1 = verbose, 2+ = debug)")
         ("input,i"      , po::value<std::string>(&option.input)->required(), "Specify input files")
         ("output,o"     , po::value<std::string>(&option.output)->required(), "Specify output file")
         ("bank,b"       , po::value<std::string>(&option.bankfile), "Specify pattern bank file")
@@ -55,7 +54,9 @@ int main(int argc, char **argv) {
         ("roads"        , po::value<std::string>(&option.roadfile), "Specify file containing the roads")
         ("tracks"       , po::value<std::string>(&option.trackfile), "Specify file containing the tracks")
 
+        ("verbosity,v"  , po::value<int>(&option.verbose)->default_value(1), "Verbosity level (-1 = very quiet; 0 = quiet, 1 = verbose, 2+ = debug)")
         ("maxEvents,n"  , po::value<long long>(&option.maxEvents)->default_value(-1), "Specfiy max number of events")
+
         ("nLayers"      , po::value<unsigned>(&option.nLayers)->default_value(6), "Specify # of layers")
         ("nFakers"      , po::value<unsigned>(&option.nFakers)->default_value(0), "Specify # of fake superstrips")
         ("nDCBits"      , po::value<unsigned>(&option.nDCBits)->default_value(0), "Specify # of DC bits")
@@ -80,13 +81,13 @@ int main(int argc, char **argv) {
         ("maxVz"        , po::value<float>(&option.maxVz)->default_value( 300.), "Specify max vertex z (cm)")
 
         // Only for bank generation
-        ("minFrequency" , po::value<int>(&option.minFrequency)->default_value(1), "Specify min frequency of a pattern to be valid")
+        ("minFrequency" , po::value<int>(&option.minFrequency)->default_value(1), "Specify min frequency of a pattern to be stored or read")
 
         // Only for pattern matching
-        ("maxPatterns"  , po::value<long int>(&option.maxPatterns)->default_value(-1), "Specfiy max number of patterns")
+        ("maxPatterns"  , po::value<long int>(&option.maxPatterns)->default_value(999999999), "Specfiy max number of patterns")
         ("maxMisses"    , po::value<int>(&option.maxMisses)->default_value(0), "Specify max number of allowed misses")
-        ("maxStubs"     , po::value<int>(&option.maxStubs)->default_value(-1), "Specfiy max number of stubs per superstrip")
-        ("maxRoads"     , po::value<int>(&option.maxRoads)->default_value(-1), "Specfiy max number of roads per event")
+        ("maxStubs"     , po::value<int>(&option.maxStubs)->default_value(999999999), "Specfiy max number of stubs per superstrip")
+        ("maxRoads"     , po::value<int>(&option.maxRoads)->default_value(999999999), "Specfiy max number of roads per event")
 
         // Only for matrix building
         ("hitbits"      , po::value<unsigned>(&option.hitbits)->default_value(0), "Specify hit bits")
@@ -94,8 +95,8 @@ int main(int argc, char **argv) {
         // Only for track fitting
         ("maxChi2"      , po::value<float>(&option.maxChi2)->default_value(999.), "Specify maximum reduced chi-squared")
         ("minNdof"      , po::value<int>(&option.minNdof)->default_value(1), "Specify minimum degree of freedom")
-        ("maxCombs"     , po::value<int>(&option.maxCombs)->default_value(-1), "Specfiy max number of combinations per road")
-        ("maxTracks"    , po::value<int>(&option.maxTracks)->default_value(-1), "Specfiy max number of tracks per event")
+        ("maxCombs"     , po::value<int>(&option.maxCombs)->default_value(999999999), "Specfiy max number of combinations per road")
+        ("maxTracks"    , po::value<int>(&option.maxTracks)->default_value(999999999), "Specfiy max number of tracks per event")
         ;
 
     // Hidden options, will be allowed both on command line and in config file,
@@ -142,20 +143,21 @@ int main(int argc, char **argv) {
         po::notify(vm);
     } catch (const boost::program_options::error& e) {
         std::cerr << e.what() << std::endl;
-        return 1;
+        return EXIT_FAILURE;
     }
 
-    // At least one option needs to be called
-    if (!(vm.count("stubCleaning")       ||
-          vm.count("bankGeneration")     ||
-          vm.count("patternRecognition") ||
-          vm.count("matrixBuilding")     ||
-          vm.count("trackFitting")       ||
-          vm.count("bankAnalysis")       ||
-          vm.count("write")              ) ) {
-        std::cout << "Must select one of '-C', '-B', '-R', '-M', '-T', '-A', or 'W'" << std::endl;
-        std::cout << visible << std::endl;
-        return 1;
+    // Exactly one of these options must be selected
+    int vmcount = vm.count("stubCleaning")       +
+                  vm.count("bankGeneration")     +
+                  vm.count("patternRecognition") +
+                  vm.count("matrixBuilding")     +
+                  vm.count("trackFitting")       +
+                  vm.count("bankAnalysis")       +
+                  vm.count("write")              ;
+    if (vmcount != 1) {
+        std::cerr << "ERROR: Must select exactly one of '-C', '-B', '-R', '-M', '-T', '-A', or 'W'" << std::endl;
+        //std::cout << visible << std::endl;
+        return EXIT_FAILURE;
     }
 
     if (vm.count("no-color")) {
@@ -166,7 +168,10 @@ int main(int argc, char **argv) {
         slhcl1tt::ShowTiming();
     }
 
-    // Restrict the integer ranges
+    // Update options
+    if (option.maxEvents < 0)
+        option.maxEvents = std::numeric_limits<long long>::max();
+
     option.nLayers = std::min(std::max(3u, option.nLayers), 8u);
     option.nFakers = std::min(std::max(0u, option.nFakers), 3u);
     option.nDCBits = std::min(std::max(0u, option.nDCBits), 4u);
@@ -174,6 +179,9 @@ int main(int argc, char **argv) {
     // Add options
     option.datadir = std::getenv("CMSSW_BASE");
     option.datadir += "/src/SLHCL1TrackTriggerSimulations/AMSimulation/data/";
+
+    if (option.verbose>1)
+        std::cout << option << std::endl << std::endl;
 
 
     // _________________________________________________________________________
@@ -183,114 +191,79 @@ int main(int argc, char **argv) {
         std::cout << Color("magenta") << "Start stub cleaning..." << EndColor() << std::endl;
 
         StubCleaner cleaner(option);
-        //cleaner.setNEvents(maxEvents);
-        //cleaner.setVerbosity(verbose);
-        //int exitcode = cleaner.run(input, output);
-        int exitcode = cleaner.run(option.input, option.output);
+        int exitcode = cleaner.run();
         if (exitcode) {
             std::cerr << "An error occurred during stub cleaning. Exiting." << std::endl;
             return exitcode;
         }
-
         std::cout << "Stub cleaning " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
 
     } else if (vm.count("bankGeneration")) {
         std::cout << Color("magenta") << "Start pattern bank generation..." << EndColor() << std::endl;
 
         PatternGenerator generator(option);
-        //generator.setNEvents(maxEvents);
-        //generator.setMinFrequency(minFrequency);
-        //generator.setVerbosity(verbose);
-        //int exitcode = generator.run(input, datadir, output);
-        int exitcode = generator.run(option.input, option.datadir, option.output);
+        int exitcode = generator.run();
         if (exitcode) {
             std::cerr << "An error occurred during pattern bank generation. Exiting." << std::endl;
             return exitcode;
         }
-
         std::cout << "Pattern bank generation " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
 
     } else if (vm.count("patternRecognition")) {
         std::cout << Color("magenta") << "Start pattern recognition..." << EndColor() << std::endl;
 
         PatternMatcher matcher(option);
-        //matcher.setNEvents(maxEvents);
-        //matcher.setMinFrequency(minFrequency);
-        //matcher.setMaxPatterns(maxPatterns);
-        //matcher.setMaxMisses(maxMisses);
-        //matcher.setMaxStubs(maxStubs);
-        //matcher.setMaxRoads(maxRoads);
-        //matcher.setVerbosity(verbose);
-        //int exitcode = matcher.run(input, bankfile, datadir, output);
-        int exitcode = matcher.run(option.input, option.bankfile, option.datadir, option.output);
+        int exitcode = matcher.run();
         if (exitcode) {
             std::cerr << "An error occurred during pattern recognition. Exiting." << std::endl;
             return exitcode;
         }
-
         std::cout << "Pattern recognition " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
 
     } else if (vm.count("matrixBuilding")) {
-        std::cout << Color("magenta") << "Start matrix building..." << EndColor() << std::endl;
+        std::cout << Color("magenta") << "Start PCA matrix building..." << EndColor() << std::endl;
 
         MatrixBuilder builder(option);
-        int exitcode = builder.run(option.input, option.datadir, option.output);
+        int exitcode = builder.run();
         if (exitcode) {
-            std::cerr << "An error occurred during matrix building. Exiting." << std::endl;
+            std::cerr << "An error occurred during PCA matrix building. Exiting." << std::endl;
             return exitcode;
         }
-
         std::cout << "Matrix building " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
 
     } else if (vm.count("trackFitting")) {
         std::cout << Color("magenta") << "Start track fitting..." << EndColor() << std::endl;
 
         TrackFitter fitter(option);
-        //fitter.setNEvents(maxEvents);
-        //fitter.setMaxCombinations(maxCombs);
-        //fitter.setMaxTracks(maxTracks);
-        //fitter.setVerbosity(verbose);
-        //int exitcode = fitter.run(input, output);
-        int exitcode = fitter.run(option.input, option.output);
+        int exitcode = fitter.run();
         if (exitcode) {
             std::cerr << "An error occurred during track fitting. Exiting." << std::endl;
             return exitcode;
         }
-
         std::cout << "Track fitting " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
 
     } else if (vm.count("bankAnalysis")) {
         std::cout << Color("magenta") << "Start pattern bank analysis..." << EndColor() << std::endl;
 
         PatternAnalyzer analyzer(option);
-        //analyzer.setNEvents(maxEvents);
-        //analyzer.setMinFrequency(minFrequency);
-        //analyzer.setMaxPatterns(maxPatterns);
-        //analyzer.setVerbosity(verbose);
-        //int exitcode = analyzer.run(input, bankfile, datadir, output);
-        int exitcode = analyzer.run(option.input, option.bankfile, option.datadir, option.output);
+        int exitcode = analyzer.run();
         if (exitcode) {
             std::cerr << "An error occurred during pattern bank analysis. Exiting." << std::endl;
             return exitcode;
         }
-
         std::cout << "Pattern bank analysis " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
 
     } else if (vm.count("write")) {
         std::cout << Color("magenta") << "Start writing full ntuple..." << EndColor() << std::endl;
 
         NTupleMaker writer(option);
-        //writer.setNEvents(maxEvents);
-        //writer.setTrim(!notrim);
-        //writer.setVerbosity(verbose);
-        //int exitcode = writer.run(input, roadfile, trackfile, output);
-        int exitcode = writer.run(option.input, option.roadfile, option.trackfile, option.output);
+        int exitcode = writer.run();
         if (exitcode) {
             std::cerr << "An error occurred during writing full ntuple. Exiting." << std::endl;
             return exitcode;
         }
-
         std::cout << "Writing full ntuple " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
+
     }
 
     return EXIT_SUCCESS;

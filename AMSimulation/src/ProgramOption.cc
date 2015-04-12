@@ -14,8 +14,7 @@ std::ostream& operator<<(std::ostream& o, const std::vector<T>& v) {
 }
 
 std::ostream& operator<<(std::ostream& o, const ProgramOption& po) {
-    o << "verbose: "        << po.verbose
-
+    o << "Parsed program options --"
       << "  input: "        << po.input
       << "  output: "       << po.output
       << "  bankfile: "     << po.bankfile
@@ -23,7 +22,9 @@ std::ostream& operator<<(std::ostream& o, const ProgramOption& po) {
       << "  roadfile: "     << po.roadfile
       << "  trackfile: "    << po.trackfile
 
+      << "  verbose: "      << po.verbose
       << "  maxEvents: "    << po.maxEvents
+
       << "  nLayers: "      << po.nLayers
       << "  nFakers: "      << po.nFakers
       << "  nDCBits: "      << po.nDCBits

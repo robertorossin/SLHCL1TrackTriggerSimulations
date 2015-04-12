@@ -8,8 +8,6 @@
 namespace slhcl1tt {
 
 struct ProgramOption {
-    int         verbose;
-
     std::string input;
     std::string output;
     std::string bankfile;
@@ -17,7 +15,9 @@ struct ProgramOption {
     std::string roadfile;
     std::string trackfile;
 
+    int         verbose;
     long long   maxEvents;
+
     unsigned    nLayers;
     unsigned    nFakers;
     unsigned    nDCBits;

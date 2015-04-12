@@ -59,32 +59,6 @@ int StubCleaner::cleanStubs(TString src, TString out) {
     if (reader.init(src, false)) {
         std::cout << Error() << "Failed to initialize TTStubReader." << std::endl;
         return 1;
-
-    } else {
-        // Only read certain branches
-        TChain* tchain = reader.getChain();
-        tchain->SetBranchStatus("*"                 , 0);
-        tchain->SetBranchStatus("genParts_pt"       , 1);
-        tchain->SetBranchStatus("genParts_eta"      , 1);
-        tchain->SetBranchStatus("genParts_phi"      , 1);
-        tchain->SetBranchStatus("genParts_vx"       , 1);
-        tchain->SetBranchStatus("genParts_vy"       , 1);
-        tchain->SetBranchStatus("genParts_vz"       , 1);
-        tchain->SetBranchStatus("genParts_charge"   , 1);
-      //tchain->SetBranchStatus("TTStubs_x"         , 1);  // sync with BasicReader::init()
-      //tchain->SetBranchStatus("TTStubs_y"         , 1);  // sync with BasicReader::init()
-        tchain->SetBranchStatus("TTStubs_z"         , 1);
-        tchain->SetBranchStatus("TTStubs_r"         , 1);
-        tchain->SetBranchStatus("TTStubs_eta"       , 1);
-        tchain->SetBranchStatus("TTStubs_phi"       , 1);
-        tchain->SetBranchStatus("TTStubs_coordx"    , 1);
-        tchain->SetBranchStatus("TTStubs_coordy"    , 1);
-        tchain->SetBranchStatus("TTStubs_trigBend"  , 1);
-      //tchain->SetBranchStatus("TTStubs_roughPt"   , 1);  // sync with BasicReader::init()
-      //tchain->SetBranchStatus("TTStubs_clusWidth0", 1);  // sync with BasicReader::init()
-      //tchain->SetBranchStatus("TTStubs_clusWidth1", 1);  // sync with BasicReader::init()
-        tchain->SetBranchStatus("TTStubs_modId"     , 1);
-        tchain->SetBranchStatus("TTStubs_tpId"      , 1);
     }
 
     // For event selection
@@ -158,7 +132,8 @@ int StubCleaner::cleanStubs(TString src, TString out) {
         // Apply pt, eta, phi requirements
         bool sim = (po_.minPt  <= simPt  && simPt  <= po_.maxPt  &&
                     po_.minEta <= simEta && simEta <= po_.maxEta &&
-                    po_.minPhi <= simPhi && simPhi <= po_.maxPhi);
+                    po_.minPhi <= simPhi && simPhi <= po_.maxPhi &&
+                    po_.minVz  <= simVz  && simVz  <= po_.maxVz);
         if (!sim)
             keep = false;
 
@@ -346,11 +321,11 @@ int StubCleaner::cleanStubs(TString src, TString out) {
 
 // _____________________________________________________________________________
 // Main driver
-int StubCleaner::run(TString src, TString out) {
+int StubCleaner::run() {
     int exitcode = 0;
     Timing(1);
 
-    exitcode = cleanStubs(src, out);
+    exitcode = cleanStubs(po_.input, po_.output);
     if (exitcode)  return exitcode;
     Timing();
 

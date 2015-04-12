@@ -69,8 +69,8 @@ int PatternMatcher::loadPatterns(TString bank) {
     }
 
     long long npatterns = pbreader.getPatterns();
-    if (npatterns > maxPatterns_)
-        npatterns = maxPatterns_;
+    if (npatterns > po_.maxPatterns)
+        npatterns = po_.maxPatterns;
     assert(npatterns > 0);
 
     // Allocate memory
@@ -82,7 +82,7 @@ int PatternMatcher::loadPatterns(TString bank) {
 
     for (long long ipatt=0; ipatt<npatterns; ++ipatt) {
         pbreader.getPattern(ipatt);
-        if (pbreader.pb_frequency < minFrequency_)
+        if (pbreader.pb_frequency < po_.minFrequency)
             break;
 
         assert(pbreader.pb_superstripIds->size() == po_.nLayers);
@@ -225,8 +225,8 @@ int PatternMatcher::makeRoads(TString src, TString out) {
         // Limit the number of stubs per superstrip
         for (std::map<unsigned, std::vector<unsigned> >::iterator it=hitBuffer_.begin();
              it!=hitBuffer_.end(); ++it) {
-            if (it->second.size() > (unsigned) maxStubs_)
-                it->second.resize(maxStubs_);
+            if (it->second.size() > (unsigned) po_.maxStubs)
+                it->second.resize(po_.maxStubs);
         }
 
 
@@ -248,10 +248,10 @@ int PatternMatcher::makeRoads(TString src, TString out) {
                     ++nMisses;
 
                 // Skip if more misses than allowed
-                if (nMisses > maxMisses_)
+                if (nMisses > po_.maxMisses)
                     break;
             }
-            if (nMisses <= maxMisses_)
+            if (nMisses <= po_.maxMisses)
                 firedPatterns.push_back(itpatt - patternBank_.begin());
         }
 
@@ -301,7 +301,7 @@ int PatternMatcher::makeRoads(TString src, TString out) {
 
             if (verbose_>2)  std::cout << Debug() << "... ... road: " << roads.size() - 1 << " " << aroad << std::endl;
 
-            if (roads.size() >= (unsigned) maxRoads_)
+            if (roads.size() >= (unsigned) po_.maxRoads)
                 break;
         }
 
@@ -323,11 +323,11 @@ int PatternMatcher::makeRoads(TString src, TString out) {
 
 // _____________________________________________________________________________
 // Main driver
-int PatternMatcher::run(TString src, TString bank, TString datadir, TString out) {
+int PatternMatcher::run() {
     int exitcode = 0;
     Timing(1);
 
-    exitcode = setupTriggerTower(datadir);
+    exitcode = setupTriggerTower(po_.datadir);
     if (exitcode)  return exitcode;
     Timing();
 
@@ -335,11 +335,11 @@ int PatternMatcher::run(TString src, TString bank, TString datadir, TString out)
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = loadPatterns(bank);
+    exitcode = loadPatterns(po_.bankfile);
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = makeRoads(src, out);
+    exitcode = makeRoads(po_.input, po_.output);
     if (exitcode)  return exitcode;
     Timing();
 

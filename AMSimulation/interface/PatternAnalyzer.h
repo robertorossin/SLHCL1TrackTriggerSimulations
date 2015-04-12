@@ -19,7 +19,7 @@ class PatternAnalyzer {
     // Constructor
     PatternAnalyzer(ProgramOption po)
     : po_(po),
-      nEvents_(999999999), minFrequency_(1), maxPatterns_(999999999), verbose_(1) {
+      nEvents_(po.maxEvents), verbose_(po.verbose) {
 
         // Initialize
         ttmap_   = new TriggerTowerMap();
@@ -32,18 +32,8 @@ class PatternAnalyzer {
         if (arbiter_)   delete arbiter_;
     }
 
-
-    // Setters
-    void setNEvents(long long n)    { if (n != -1)  nEvents_ = n > 0 ? n : 0; }
-    void setMinFrequency(int n)     { minFrequency_ = n > 1 ? n : 1; }
-    void setMaxPatterns(int n)      { if (n != -1)  maxPatterns_ = n > 0 ? n : 0; }
-    void setVerbosity(int v)        { verbose_ = v; }
-
-    // Getters
-    // none
-
     // Main driver
-    int run(TString src, TString bank, TString datadir, TString out);
+    int run();
 
 
   private:
@@ -61,13 +51,9 @@ class PatternAnalyzer {
     // Write pattern bank
     int writePatterns(TString out);
 
-    // Configurations
-    const ProgramOption po_;
-
     // Program options
+    const ProgramOption po_;
     long long nEvents_;
-    int minFrequency_;  // min frequency of patterns to be read out
-    int maxPatterns_;   // max number of patterns
     int verbose_;
 
     // Operators

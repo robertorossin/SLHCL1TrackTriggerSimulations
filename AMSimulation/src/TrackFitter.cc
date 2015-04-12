@@ -188,10 +188,13 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 const unsigned tower = reader.vr_tower->at(iroad);
                 const unsigned nstubs = reader.vr_nstubs->at(iroad);
 
-                const std::vector<std::vector<unsigned> >& combinations = arrangeCombinations(reader.vr_stubRefs->at(iroad)); // get combinations of stubRefs
+                std::vector<std::vector<unsigned> > combinations = arrangeCombinations(reader.vr_stubRefs->at(iroad)); // get combinations of stubRefs
 
                 for (unsigned icomb=0; icomb<combinations.size(); ++icomb)
                     assert(combinations.at(icomb).size() == reader.vr_stubRefs->at(iroad).size());
+
+                if (combinations.size() > (unsigned) po_.maxCombs)
+                    combinations.resize(po_.maxCombs);
 
                 if (verbose_>2) {
                     std::cout << Debug() << "... ... road: " << iroad << " tower: " << tower << " # stubs: " << nstubs << " # combinations: " << combinations.size() << std::endl;
@@ -237,7 +240,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
                     if (po_.algo=="ATF4" || po_.algo=="ATF5")
                         fitstatus = fitterATF_->fit(hits, atrack);
                     else if (po_.algo=="PCA4" || po_.algo=="PCA5")
-                        fitstatus = fitterLin_->fit(hits, atrack);
+                        fitstatus = fitterPCA_->fit(hits, atrack);
 
                     tracks.push_back(atrack);
 
@@ -253,6 +256,9 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 std::cout << "... ... track: " << itrack << " " << tracks.at(itrack) << std::endl;
             }
         }
+
+        if (tracks.size() > (unsigned) po_.maxTracks)
+            tracks.resize(po_.maxTracks);
 
         // _____________________________________________________________________
         // Remove fails and duplicates
@@ -277,11 +283,11 @@ int TrackFitter::makeTracks(TString src, TString out) {
 
 // _____________________________________________________________________________
 // Main driver
-int TrackFitter::run(TString src, TString out) {
+int TrackFitter::run() {
     int exitcode = 0;
     Timing(1);
 
-    exitcode = makeTracks(src, out);
+    exitcode = makeTracks(po_.input, po_.output);
     if (exitcode)  return exitcode;
     Timing();
 

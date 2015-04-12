@@ -136,6 +136,7 @@ int PatternGenerator::makePatterns(TString src) {
 
         // _____________________________________________________________________
         // Start generating patterns
+
         patt.fill(0);
 
         // Loop over reconstructed stubs
@@ -268,7 +269,7 @@ int PatternGenerator::writePatterns(TString out) {
         oldFreq = freq;
         nKept += freq;
 
-        if (freq < (unsigned) minFrequency_)  // cut off
+        if (freq < (unsigned) po_.minFrequency)  // cut off
             break;
 
         writer.pb_superstripIds->clear();
@@ -292,11 +293,11 @@ int PatternGenerator::writePatterns(TString out) {
 
 // _____________________________________________________________________________
 // Main driver
-int PatternGenerator::run(TString src, TString datadir, TString out) {
+int PatternGenerator::run() {
     int exitcode = 0;
     Timing(1);
 
-    exitcode = setupTriggerTower(datadir);
+    exitcode = setupTriggerTower(po_.datadir);
     if (exitcode)  return exitcode;
     Timing();
 
@@ -304,11 +305,11 @@ int PatternGenerator::run(TString src, TString datadir, TString out) {
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = makePatterns(src);
+    exitcode = makePatterns(po_.input);
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = writePatterns(out);
+    exitcode = writePatterns(po_.output);
     if (exitcode)  return exitcode;
     Timing();
 

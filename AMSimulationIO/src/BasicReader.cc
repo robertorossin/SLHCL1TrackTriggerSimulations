@@ -104,6 +104,29 @@ int BasicReader::init(TString src, bool full) {
     if (full)  tchain->SetBranchAddress("TTStubs_clusWidth1", &(vb_clusWidth1));
     tchain->SetBranchAddress("TTStubs_modId"     , &(vb_modId));
     tchain->SetBranchAddress("TTStubs_tpId"      , &(vb_tpId));
+
+    tchain->SetBranchStatus("*"                 , 0);
+    tchain->SetBranchStatus("genParts_pt"       , 1);
+    tchain->SetBranchStatus("genParts_eta"      , 1);
+    tchain->SetBranchStatus("genParts_phi"      , 1);
+    tchain->SetBranchStatus("genParts_vx"       , 1);
+    tchain->SetBranchStatus("genParts_vy"       , 1);
+    tchain->SetBranchStatus("genParts_vz"       , 1);
+    tchain->SetBranchStatus("genParts_charge"   , 1);
+    if (full)  tchain->SetBranchStatus("TTStubs_x"         , 1);
+    if (full)  tchain->SetBranchStatus("TTStubs_y"         , 1);
+    tchain->SetBranchStatus("TTStubs_z"         , 1);
+    tchain->SetBranchStatus("TTStubs_r"         , 1);
+    tchain->SetBranchStatus("TTStubs_eta"       , 1);
+    tchain->SetBranchStatus("TTStubs_phi"       , 1);
+    tchain->SetBranchStatus("TTStubs_coordx"    , 1);
+    tchain->SetBranchStatus("TTStubs_coordy"    , 1);
+    tchain->SetBranchStatus("TTStubs_trigBend"  , 1);
+    if (full)  tchain->SetBranchStatus("TTStubs_roughPt"   , 1);
+    if (full)  tchain->SetBranchStatus("TTStubs_clusWidth0", 1);
+    if (full)  tchain->SetBranchStatus("TTStubs_clusWidth1", 1);
+    tchain->SetBranchStatus("TTStubs_modId"     , 1);
+    tchain->SetBranchStatus("TTStubs_tpId"      , 1);
     return 0;
 }
 
