@@ -313,7 +313,7 @@ int PatternMatcher::makeRoads(TString src, TString out) {
 
                 found = hitBuffer_.find(ssIdHash);
                 if (found != hitBuffer_.end()) {
-                    aroad.superstripIds[layer] = found->first;
+                    aroad.superstripIds[layer] = ssId;
                     aroad.stubRefs     [layer] = found->second;
                     aroad.nstubs              += found->second.size();
 

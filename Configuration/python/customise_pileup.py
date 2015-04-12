@@ -56,8 +56,9 @@ def cust_useTrackerOnly(process, sequential=False, intime=False, ntuple=True):
     # Customise digitisation step
 
     # Modify pileup input source
-    process.mix.input.fileNames = mix_input_filenames
-    process.mix.input.sequential = sequential
+    if hasattr(process.mix, "input"):
+        process.mix.input.fileNames = mix_input_filenames
+        process.mix.input.sequential = sequential
 
     # Drop calorimeter and muon system
     process.pdigi_valid = process.pdigi_valid.copyAndExclude([process.doAllDigi])

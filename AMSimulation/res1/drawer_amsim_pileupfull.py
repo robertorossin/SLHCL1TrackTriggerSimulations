@@ -73,17 +73,18 @@ def projectRoads(tree, histos, options):
 
         nroads_per_event = 0
         ncombinations_per_event = 0
-
         stubmap = {}  # per event
 
+        # Loop over roads
         for patternRef, tower, nstubs, superstripIds, stubRefs in izip(evt.AMTTRoads_patternRef, evt.AMTTRoads_tower, evt.AMTTRoads_nstubs, evt.AMTTRoads_superstripIds, evt.AMTTRoads_stubRefs):
 
             if tower == options.tower and patternRef < options.npatterns:
+
                 ssidmap = {}  # per road
 
                 # superstripIds[i] is the i-th superstrip ID in the pattern (or road)
-                # stubRefs[i][j] is the j-th stub REF  in the i-th superstrip in the pattern (or road)
-                l = 0
+                # stubRefs[i][j] is the j-th stub REF in the i-th superstrip in the road
+                l = 0  # layer i
                 for ssid, ssid_stubRefs in izip(superstripIds, stubRefs):
                     for stub in ssid_stubRefs:
                         ssidmap[(l,ssid)] = ssidmap.get((l,ssid), 0) + 1
@@ -102,10 +103,11 @@ def projectRoads(tree, histos, options):
                 nstubs_per_road = 0
                 ncombinations_per_road = 1
 
+                # Loop over k=(l,ssid), v=count in ssidmap
                 for k, v in ssidmap.iteritems():
                     nstubs_per_superstrip = v
                     nstubs_per_road += v
-                    if v != 0:
+                    if v != 0:  # if no stub in the superstrip
                         ncombinations_per_road *= v
 
                     histos["nstubs_per_superstrip"].Fill(nstubs_per_superstrip)
