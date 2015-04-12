@@ -91,7 +91,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
         tracks.clear();
         int fitstatus = 0;
 
-        if (po_.mode=="RET") {
+        if (po_.algo=="RET") {
             // _________________________________________________________________
             // Track fitters taking the entire road
 
@@ -178,7 +178,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
 
             }  // loop over the roads
 
-        } else if (po_.mode=="ATF4" || po_.mode=="ATF5" || po_.mode=="PCA4" || po_.mode=="PCA5") {
+        } else if (po_.algo=="ATF4" || po_.algo=="ATF5" || po_.algo=="PCA4" || po_.algo=="PCA5") {
             // _________________________________________________________________
             // Track fitters taking fit combinations
 
@@ -234,9 +234,9 @@ int TrackFitter::makeTracks(TString src, TString out) {
                     atrack.setTower(tower);
                     atrack.setStubRefs(stubRefs);
 
-                    if (po_.mode=="ATF4" || po_.mode=="ATF5")
+                    if (po_.algo=="ATF4" || po_.algo=="ATF5")
                         fitstatus = fitterATF_->fit(hits, atrack);
-                    else if (po_.mode=="PCA4" || po_.mode=="PCA5")
+                    else if (po_.algo=="PCA4" || po_.algo=="PCA5")
                         fitstatus = fitterLin_->fit(hits, atrack);
 
                     tracks.push_back(atrack);

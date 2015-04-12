@@ -3,7 +3,7 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/Pattern.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TriggerTowerMap.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Attributes.h"
@@ -17,7 +17,7 @@ using namespace slhcl1tt;
 class PatternAnalyzer {
   public:
     // Constructor
-    PatternAnalyzer(PatternBankOption po)
+    PatternAnalyzer(ProgramOption po)
     : po_(po),
       nEvents_(999999999), minFrequency_(1), maxPatterns_(999999999), verbose_(1) {
 
@@ -62,7 +62,7 @@ class PatternAnalyzer {
     int writePatterns(TString out);
 
     // Configurations
-    const PatternBankOption po_;
+    const ProgramOption po_;
 
     // Program options
     long long nEvents_;

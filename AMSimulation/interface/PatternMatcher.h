@@ -3,7 +3,7 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/Pattern.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TriggerTowerMap.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
 using namespace slhcl1tt;
@@ -12,7 +12,7 @@ using namespace slhcl1tt;
 class PatternMatcher {
   public:
     // Constructor
-    PatternMatcher(PatternBankOption po)
+    PatternMatcher(ProgramOption po)
     : po_(po),
       prefixRoad_("AMTTRoads_"), suffix_(""),
       nEvents_(999999999), minFrequency_(1), maxPatterns_(999999999), maxMisses_(0),
@@ -59,7 +59,7 @@ class PatternMatcher {
     int makeRoads(TString src, TString out);
 
     // Configurations
-    const PatternBankOption po_;
+    const ProgramOption po_;
     const TString prefixRoad_;
     const TString suffix_;
 

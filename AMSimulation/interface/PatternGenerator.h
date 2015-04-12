@@ -3,7 +3,7 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/Pattern.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TriggerTowerMap.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
 using namespace slhcl1tt;
@@ -12,7 +12,7 @@ using namespace slhcl1tt;
 class PatternGenerator {
   public:
     // Constructor
-    PatternGenerator(PatternBankOption po)
+    PatternGenerator(ProgramOption po)
     : po_(po),
       nEvents_(999999999), minFrequency_(1), verbose_(1) {
 
@@ -53,7 +53,7 @@ class PatternGenerator {
     int writePatterns(TString out);
 
     // Configurations
-    const PatternBankOption po_;
+    const ProgramOption po_;
 
     // Program options
     long long nEvents_;

@@ -2,7 +2,7 @@
 #define AMSimulation_MatrixBuilder_h_
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TriggerTowerMap.h"
 using namespace slhcl1tt;
 
@@ -10,7 +10,7 @@ using namespace slhcl1tt;
 class MatrixBuilder {
   public:
     // Constructor
-    MatrixBuilder(PatternBankOption po)
+    MatrixBuilder(ProgramOption po)
     : po_(po),
       nEvents_(999999999), verbose_(1) {
 
@@ -47,7 +47,7 @@ class MatrixBuilder {
     int writeMatrices(TString out);
 
     // Configurations
-    const PatternBankOption po_;
+    const ProgramOption po_;
 
     // Program options
     long long nEvents_;

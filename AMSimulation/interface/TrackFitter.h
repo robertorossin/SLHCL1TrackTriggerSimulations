@@ -2,7 +2,7 @@
 #define AMSimulation_TrackFitter_h_
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterOption.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoLinearized.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoATF.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoRetina.h"
@@ -13,7 +13,7 @@ class TrackFitter {
 
   public:
     // Constructor
-    TrackFitter(TrackFitterOption po)
+    TrackFitter(ProgramOption po)
     : po_(po),
       prefixRoad_("AMTTRoads_"), prefixTrack_("AMTTTracks_"), suffix_(""),
       nEvents_(999999999), maxCombs_(999999999), maxTracks_(999999999),
@@ -23,11 +23,11 @@ class TrackFitter {
         fitterLin_    = 0;
         fitterATF_    = 0;
         fitterRetina_ = 0;
-        if (po_.mode=="ATF4")      fitterATF_ = new TrackFitterAlgoATF(false);
-        else if (po_.mode=="ATF5") fitterATF_ = new TrackFitterAlgoATF(true);
-        else if (po_.mode=="PCA4") fitterLin_ = new TrackFitterAlgoLinearized();
-        else if (po_.mode=="PCA5") fitterLin_ = new TrackFitterAlgoLinearized();
-        else if (po_.mode=="RET")  fitterRetina_ = new TrackFitterAlgoRetina();
+        if (po_.algo=="ATF4")      fitterATF_ = new TrackFitterAlgoATF(false);
+        else if (po_.algo=="ATF5") fitterATF_ = new TrackFitterAlgoATF(true);
+        else if (po_.algo=="PCA4") fitterLin_ = new TrackFitterAlgoLinearized();
+        else if (po_.algo=="PCA5") fitterLin_ = new TrackFitterAlgoLinearized();
+        else if (po_.algo=="RET")  fitterRetina_ = new TrackFitterAlgoRetina();
     }
 
     // Destructor
@@ -56,7 +56,7 @@ class TrackFitter {
     int makeTracks(TString src, TString out);
 
     // Configurations
-    const TrackFitterOption po_;
+    const ProgramOption po_;
     const TString prefixRoad_;
     const TString prefixTrack_;
     const TString suffix_;

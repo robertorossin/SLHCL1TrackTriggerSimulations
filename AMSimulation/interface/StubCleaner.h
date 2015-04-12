@@ -3,7 +3,7 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HelperMath.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Picky.h"
 using namespace slhcl1tt;
 
@@ -11,7 +11,7 @@ using namespace slhcl1tt;
 class StubCleaner {
   public:
     // Constructor
-    StubCleaner(PatternBankOption po)
+    StubCleaner(ProgramOption po)
     : po_(po),
       nEvents_(999999999), verbose_(1) {
 
@@ -45,7 +45,7 @@ class StubCleaner {
     int cleanStubs(TString src, TString out);
 
     // Configurations
-    const PatternBankOption po_;
+    const ProgramOption po_;
 
     // Program options
     long long nEvents_;

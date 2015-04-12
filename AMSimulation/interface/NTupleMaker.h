@@ -1,11 +1,13 @@
 #ifndef AMSimulation_NTupleMaker_h_
 #define AMSimulation_NTupleMaker_h_
 
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
+using namespace slhcl1tt;
+
 #include "TChain.h"
 #include "TFile.h"
 #include "TFileCollection.h"
-#include "TROOT.h"
-#include "TString.h"
 
 
 // Reimplemented from SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleMaker.h
@@ -28,9 +30,9 @@ class NTupleMaker {
     };
 
     // Constructor
-    NTupleMaker()
-    : nEvents_(999999999), trim_(true),
-      verbose_(1) {
+    NTupleMaker(ProgramOption po)
+    : po_(po),
+      nEvents_(999999999), trim_(true), verbose_(1) {
 
         makeLeafMap();
     }
@@ -86,6 +88,9 @@ class NTupleMaker {
 
 
   private:
+    // Configurations
+    const ProgramOption po_;
+
     // Program options
     long long nEvents_;
     bool trim_;  // do not keep every branch
