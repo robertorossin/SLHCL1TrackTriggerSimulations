@@ -44,7 +44,8 @@ TTTrackWriter::TTTrackWriter(int verbose)
   vt_tpId         (new std::vector<int>()),
   vt_tower        (new std::vector<unsigned>()),
   vt_roadRef      (new std::vector<unsigned>()),
-  vt_stubRefs     (new std::vector<std::vector<unsigned> >()) {}
+  vt_stubRefs     (new std::vector<std::vector<unsigned> >()),
+  vt_principals   (new std::vector<std::vector<float> >()) {}
 
 
 TTTrackWriter::~TTTrackWriter() {}
@@ -75,6 +76,7 @@ int TTTrackWriter::init(TChain* tchain, TString out, TString prefix, TString suf
     ttree->Branch(prefix + "tower"          + suffix, &(*vt_tower));
     ttree->Branch(prefix + "roadRef"        + suffix, &(*vt_roadRef));
     ttree->Branch(prefix + "stubRefs"       + suffix, &(*vt_stubRefs));
+    ttree->Branch(prefix + "principals"     + suffix, &(*vt_principals));
     return 0;
 }
 
@@ -160,6 +162,7 @@ void TTTrackWriter::fill(const std::vector<TTTrack2>& tracks) {
     vt_tower           ->clear();
     vt_roadRef         ->clear();
     vt_stubRefs        ->clear();
+    vt_principals      ->clear();
 
     const unsigned ntracks = tracks.size();
     for (unsigned i=0; i<ntracks; ++i) {
@@ -187,6 +190,7 @@ void TTTrackWriter::fill(const std::vector<TTTrack2>& tracks) {
         vt_tower           ->push_back(track.tower());
         vt_roadRef         ->push_back(track.roadRef());
         vt_stubRefs        ->push_back(track.stubRefs());
+        vt_principals      ->push_back(track.principals());
     }
 
     ttree->Fill();

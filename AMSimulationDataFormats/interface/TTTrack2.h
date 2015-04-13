@@ -14,12 +14,12 @@ class TTTrack2 {
     TTTrack2()
     : rinv_(-999999.), phi0_(-999999.), cottheta_(-999999.), z0_(-999999.), d0_(-999999.),
       chi2_(-999999.), ndof_(-1), chi2_phi_(-999999.), chi2_z_(-999999.),
-      tpId_(-1), tower_(99), roadRef_(), stubRefs_() {}
+      tpId_(-1), tower_(99), roadRef_(), stubRefs_(), principals_() {}
 
     TTTrack2(const TTTrack2& rhs)
     : rinv_(rhs.rinv_), phi0_(rhs.phi0_), cottheta_(rhs.cottheta_), z0_(rhs.z0_), d0_(rhs.d0_),
       chi2_(rhs.chi2_), ndof_(rhs.ndof_), chi2_phi_(rhs.chi2_phi_), chi2_z_(rhs.chi2_z_),
-      tpId_(rhs.tpId_), tower_(rhs.tower_), roadRef_(rhs.roadRef_), stubRefs_(rhs.stubRefs_) {}
+      tpId_(rhs.tpId_), tower_(rhs.tower_), roadRef_(rhs.roadRef_), stubRefs_(rhs.stubRefs_), principals_(rhs.principals_) {}
 
     // Destructor
     ~TTTrack2() {}
@@ -44,6 +44,9 @@ class TTTrack2 {
 
     void addStubRef(unsigned stubRef)                       { stubRefs_.push_back(stubRef); }
     void setStubRefs(const std::vector<unsigned>& stubRefs) { stubRefs_ = stubRefs; }
+
+    void addPrincipal(float principal)                      { principals_.push_back(principal); }
+    void setPrincipals(const std::vector<float>& principals){ principals_ = principals; }
 
     // Getters
     float rinv()                                const { return rinv_; }
@@ -73,6 +76,9 @@ class TTTrack2 {
     std::vector<unsigned> stubRefs()            const { return stubRefs_; }
     unsigned stubRef(int l)                     const { return stubRefs_.at(l); }
 
+    std::vector<float> principals()             const { return principals_; }
+    float principal(int l)                      const { return principals_.at(l); }
+
     float pt(float B=3.8)                       const { return std::abs(0.003 * B / rinv()); }  // assume r is in cm, B is in Tesla
     float theta()                               const { return std::atan(1.0 / cottheta()); }
     float eta()                                 const { return -std::log(tan(theta()/2.0)); }
@@ -99,6 +105,7 @@ class TTTrack2 {
     unsigned tower_;
     unsigned roadRef_;
     std::vector<unsigned> stubRefs_;
+    std::vector<float>    principals_;
 };
 
 // _____________________________________________________________________________

@@ -42,6 +42,8 @@ class TrackFitter {
 
   private:
     // Member functions
+    int loadConstants(TString txt);
+
     int makeTracks(TString src, TString out);
 
     // Program options

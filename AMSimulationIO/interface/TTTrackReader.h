@@ -57,6 +57,7 @@ class TTTrackWriter : public BasicWriter {
     std::auto_ptr<std::vector<unsigned> >               vt_tower;
     std::auto_ptr<std::vector<unsigned> >               vt_roadRef;
     std::auto_ptr<std::vector<std::vector<unsigned> > > vt_stubRefs;
+    std::auto_ptr<std::vector<std::vector<float> > >    vt_principals;
 };
 
 }  // namespace slhcl1tt
