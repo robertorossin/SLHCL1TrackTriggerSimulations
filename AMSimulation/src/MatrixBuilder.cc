@@ -1,9 +1,17 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/MatrixBuilder.h"
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubReader.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Statistics.h"
+
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/external/Eigen/Eigenvalues"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/external/Eigen/QR"
+#include <iomanip>
+#include <fstream>
 
 static const unsigned MIN_NGOODSTUBS = 3;
 static const unsigned MAX_NGOODSTUBS = 8;
+static const unsigned NVARIABLES = 12;  // number of hit coordinates
+static const unsigned NPARAMETERS = 4;  // number of track parameters
 
 
 // _____________________________________________________________________________
@@ -52,6 +60,15 @@ int MatrixBuilder::buildMatrices(TString src) {
     // _________________________________________________________________________
     // Loop over all events
 
+    if (verbose_)  std::cout << Info() << "Begin first loop on tracks" << std::endl;
+
+    // Mean vector and covariance matrix
+    Eigen::VectorXd means = Eigen::VectorXd::Zero(NVARIABLES);
+    Eigen::MatrixXd covariances = Eigen::MatrixXd::Zero(NVARIABLES, NVARIABLES);
+
+    // Cache
+    std::vector<bool> keepEvents;
+
     // Bookkeepers
     long int nRead = 0, nKept = 0;
 
@@ -65,6 +82,7 @@ int MatrixBuilder::buildMatrices(TString src) {
 
         if (nstubs < MIN_NGOODSTUBS) {  // skip if not enough stubs
             ++nRead;
+            keepEvents.push_back(false);
             continue;
         }
 
@@ -77,6 +95,7 @@ int MatrixBuilder::buildMatrices(TString src) {
         float simPt = reader.vp_pt->front();
         if (simPt < po_.minPt || po_.maxPt < simPt) {
             ++nRead;
+            keepEvents.push_back(false);
             continue;
         }
 
@@ -90,28 +109,165 @@ int MatrixBuilder::buildMatrices(TString src) {
         }
         if (ngoodstubs != po_.nLayers) {
             ++nRead;
+            keepEvents.push_back(false);
             continue;
         }
-        assert(nstubs == po_.nLayers);
+        assert(nstubs == po_.nLayers);  // FIXME: use hit bits
 
 
         // _____________________________________________________________________
         // Start building matrices
 
-        // Loop over reconstructed stubs
-        for (unsigned istub=0; istub<nstubs; ++istub) {
-            unsigned moduleId = reader.vb_modId   ->at(istub);
-            float    strip    = reader.vb_coordx  ->at(istub);  // in full-strip unit
-            float    segment  = reader.vb_coordy  ->at(istub);  // in full-strip unit
+        Eigen::VectorXd variables = Eigen::VectorXd::Zero(NVARIABLES);
 
+        // Loop over reconstructed stubs
+        for (unsigned istub=0, ivar=0; istub<nstubs; ++istub) {
             float    stub_r   = reader.vb_r       ->at(istub);
             float    stub_phi = reader.vb_phi     ->at(istub);
             float    stub_z   = reader.vb_z       ->at(istub);
-            float    stub_ds  = reader.vb_trigBend->at(istub);  // in full-strip unit
 
+            variables(ivar++) = stub_phi;
+            variables(ivar++) = stub_z;
 
             if (verbose_>2) {
-                std::cout << Debug() << "... ... stub: " << istub << " moduleId: " << moduleId << " strip: " << strip << " segment: " << segment << " r: " << stub_r << " phi: " << stub_phi << " z: " << stub_z << " ds: " << stub_ds << std::endl;
+                std::cout << Debug() << "... ... stub: " << istub << " r: " << stub_r << " phi: " << stub_phi << " z: " << stub_z << std::endl;
+            }
+        }
+
+        // Update mean vector
+        long int nTracks = nKept + 1;
+        for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
+            means(ivar) += (variables(ivar) - means(ivar))/nTracks;
+        }
+
+        // Update covariance matrix
+        if (nTracks > 1) {
+            for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
+                for (unsigned jvar=0; jvar<NVARIABLES; ++jvar) {
+                    covariances(ivar, jvar) += (variables(ivar) - means(ivar)) * (variables(jvar) - means(jvar)) / (nTracks-1) - covariances(ivar, jvar)/nTracks;
+                }
+            }
+        }
+
+        ++nKept;
+        ++nRead;
+        keepEvents.push_back(true);
+    }
+
+    if (verbose_)  std::cout << Info() << Form("Read: %7ld, kept: %7ld", nRead, nKept) << std::endl;
+
+    if (verbose_>1) {
+        std::cout << Info() << "means: " << std::endl;
+        std::cout << means << std::endl << std::endl;
+        std::cout << Info() << "covariances: " << std::endl;
+        std::cout << covariances << std::endl << std::endl;
+    }
+
+    // Find eigenvectors of covariance matrix
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver(covariances);
+
+    // Find matrix V
+    // V is the orthogonal transformation from coordinates space to principal components space
+    // The principal components are constraints + rotated track parameters
+    Eigen::MatrixXd V = (eigensolver.eigenvectors()).transpose();
+
+    if (verbose_) {
+        std::cout << Info() << "sqrt(eigenvalues) of covariances: " << std::endl;
+        std::cout << eigensolver.eigenvalues() << std::endl << std::endl;
+        std::cout << Info() << "eigenvectors^T:: " << std::endl;
+        std::cout << eigensolver.eigenvectors().transpose() << std::endl << std::endl;
+    }
+
+
+    // _________________________________________________________________________
+    // Loop over all events again
+
+    if (verbose_)  std::cout << Info() << "Begin second loop on tracks" << std::endl;
+
+    // Mean vector and covariance matrix for principal components and track parameters
+    Eigen::VectorXd meansV = Eigen::VectorXd::Zero(NVARIABLES);
+    Eigen::VectorXd meansP = Eigen::VectorXd::Zero(NPARAMETERS);
+    Eigen::MatrixXd covariancesV = Eigen::MatrixXd::Zero(NVARIABLES, NVARIABLES);
+    Eigen::MatrixXd covariancesPV = Eigen::MatrixXd::Zero(NPARAMETERS, NVARIABLES);
+
+    // Bookkeepers
+    nRead = 0, nKept = 0;
+
+    for (long long ievt=0; ievt<nEvents_; ++ievt) {
+        if (reader.loadTree(ievt) < 0)  break;
+        reader.getEntry(ievt);
+
+        const unsigned nstubs = reader.vb_modId->size();
+        if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
+
+        if (!keepEvents.at(ievt)) {
+            ++nRead;
+            continue;
+        }
+
+        // _____________________________________________________________________
+        // Start building matrices
+
+        Eigen::VectorXd variables = Eigen::VectorXd::Zero(NVARIABLES);
+
+        // Loop over reconstructed stubs
+        for (unsigned istub=0, ivar=0; istub<nstubs; ++istub) {
+            float    stub_r   = reader.vb_r       ->at(istub);
+            float    stub_phi = reader.vb_phi     ->at(istub);
+            float    stub_z   = reader.vb_z       ->at(istub);
+
+            variables(ivar++) = stub_phi;
+            variables(ivar++) = stub_z;
+        }
+
+        Eigen::VectorXd parameters = Eigen::VectorXd::Zero(NPARAMETERS);
+
+        // Get sim info
+        {
+            unsigned ipar = 0;
+            float simPt           = reader.vp_pt->front();
+            float simEta          = reader.vp_eta->front();
+            float simPhi          = reader.vp_phi->front();
+            //float simVx           = reader.vp_vx->front();
+            //float simVy           = reader.vp_vy->front();
+            float simVz           = reader.vp_vz->front();
+            int   simCharge       = reader.vp_charge->front();
+
+            float simCotTheta     = std::sinh(simEta);
+            float simChargeOverPt = float(simCharge)/simPt;
+
+            parameters(ipar++) = simPhi;
+            parameters(ipar++) = simCotTheta;
+            parameters(ipar++) = simVz;
+            parameters(ipar++) = simChargeOverPt;
+        }
+
+        // Transform coordinates to principal components
+        Eigen::VectorXd principals = Eigen::VectorXd::Zero(NVARIABLES);
+        principals = V * (variables - means);
+
+        // Update mean vectors
+        long int nTracks = nKept + 1;
+        for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
+            meansV(ivar) += (principals(ivar) - meansV(ivar))/nTracks;
+        }
+
+        for (unsigned ipar=0; ipar<NPARAMETERS; ++ipar) {
+            meansP(ipar) += (parameters(ipar) - meansP(ipar))/nTracks;
+        }
+
+        // Update covariance matrix
+        if (nTracks > 1) {
+            for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
+                for (unsigned jvar=0; jvar<NVARIABLES; ++jvar) {
+                    covariancesV(ivar, jvar) += (principals(ivar) - meansV(ivar)) * (principals(jvar) - meansV(jvar)) / (nTracks-1) - covariancesV(ivar, jvar)/nTracks;
+                }
+            }
+
+            for (unsigned ipar=0; ipar<NPARAMETERS; ++ipar) {
+                for (unsigned jvar=0; jvar<NVARIABLES; ++jvar) {
+                    covariancesPV(ipar, jvar) += (parameters(ipar) - meansP(ipar)) * (principals(jvar) - meansV(jvar)) / (nTracks-1) - covariancesPV(ipar, jvar)/nTracks;
+                }
             }
         }
 
@@ -119,7 +275,143 @@ int MatrixBuilder::buildMatrices(TString src) {
         ++nRead;
     }
 
-    if (verbose_)  std::cout << Info() << Form("Read: %7ld, kept: %7ld", nRead, nKept) << std::endl;
+    if (verbose_>1) {
+        std::cout << Info() << "meansV: " << std::endl;
+        std::cout << meansV << std::endl << std::endl;
+        std::cout << Info() << "meansP: " << std::endl;
+        std::cout << meansP << std::endl << std::endl;
+        std::cout << Info() << "covariancesV: " << std::endl;
+        std::cout << covariancesV << std::endl << std::endl;
+        std::cout << Info() << "covariancesPV: " << std::endl;
+        std::cout << covariancesPV << std::endl << std::endl;
+    }
+
+    // Find eigenvectors of covariance matrix
+    Eigen::MatrixXd D = Eigen::MatrixXd::Zero(NPARAMETERS, NVARIABLES);
+
+    // Find matrix D
+    // D is the transformation from principal components to track parameters
+    D = covariancesPV * covariancesV.inverse();
+    //D =(covariancesV.colPivHouseholderQr().solve(covariancesPV.transpose())).transpose();
+
+    Eigen::MatrixXd DV = Eigen::MatrixXd::Zero(NPARAMETERS, NVARIABLES);
+    DV = D * V;
+
+    if (verbose_) {
+        std::ios::fmtflags flags = std::cout.flags();
+        std::cout << Info() << "matrix V: " << std::endl;
+        std::cout << std::setprecision(4) << V << std::endl << std::endl;
+        std::cout << Info() << "matrix D: " << std::endl;
+        std::cout << D << std::endl << std::endl;
+        std::cout << Info() << "matrix DV: " << std::endl;
+        std::cout << DV << std::endl << std::endl;
+        std::cout.flags(flags);
+    }
+
+
+    // _________________________________________________________________________
+    // Loop over all events again
+
+    if (verbose_)  std::cout << Info() << "Begin third loop on tracks" << std::endl;
+
+    // Statistics
+    std::vector<Statistics> statV;
+    statV.resize(NVARIABLES);
+
+    std::vector<Statistics> statP;
+    statP.resize(NPARAMETERS);
+
+    // Bookkeepers
+    nRead = 0, nKept = 0;
+
+    for (long long ievt=0; ievt<nEvents_; ++ievt) {
+        if (reader.loadTree(ievt) < 0)  break;
+        reader.getEntry(ievt);
+
+        const unsigned nstubs = reader.vb_modId->size();
+        if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
+
+        if (!keepEvents.at(ievt)) {
+            ++nRead;
+            continue;
+        }
+
+        // _____________________________________________________________________
+        // Start getting statistics
+
+        Eigen::VectorXd variables = Eigen::VectorXd::Zero(NVARIABLES);
+
+        // Loop over reconstructed stubs
+        for (unsigned istub=0, ivar=0; istub<nstubs; ++istub) {
+            float    stub_r   = reader.vb_r       ->at(istub);
+            float    stub_phi = reader.vb_phi     ->at(istub);
+            float    stub_z   = reader.vb_z       ->at(istub);
+
+            variables(ivar++) = stub_phi;
+            variables(ivar++) = stub_z;
+        }
+
+        Eigen::VectorXd parameters = Eigen::VectorXd::Zero(NPARAMETERS);
+
+        // Get sim info
+        {
+            unsigned ipar = 0;
+            float simPt           = reader.vp_pt->front();
+            float simEta          = reader.vp_eta->front();
+            float simPhi          = reader.vp_phi->front();
+            //float simVx           = reader.vp_vx->front();
+            //float simVy           = reader.vp_vy->front();
+            float simVz           = reader.vp_vz->front();
+            int   simCharge       = reader.vp_charge->front();
+
+            float simCotTheta     = std::sinh(simEta);
+            float simChargeOverPt = float(simCharge)/simPt;
+
+            parameters(ipar++) = simPhi;
+            parameters(ipar++) = simCotTheta;
+            parameters(ipar++) = simVz;
+            parameters(ipar++) = simChargeOverPt;
+        }
+
+        Eigen::VectorXd principals = Eigen::VectorXd::Zero(NVARIABLES);
+        principals = V * (variables - means);
+
+        Eigen::VectorXd parameters_fit = Eigen::VectorXd::Zero(NPARAMETERS);
+        parameters_fit = DV * (variables - means);
+
+        for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
+            statV.at(ivar).fill(principals(ivar));
+        }
+
+        for (unsigned ipar=0; ipar<NPARAMETERS; ++ipar) {
+            statP.at(ipar).fill(parameters_fit(ipar) - parameters(ipar));
+        }
+    }
+
+    if (verbose_>1) {
+        std::cout << Info() << "statV: " << std::endl;
+        for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
+            std::cout << "principal " << ivar << ": " << statV.at(ivar).getEntries() << " " << statV.at(ivar).getMean() << " " << statV.at(ivar).getSigma() << std::endl;
+        }
+        std::cout << Info() << "statP: " << std::endl;
+        for (unsigned ipar=0; ipar<NPARAMETERS; ++ipar) {
+            std::cout << "parameter " << ipar << ": " << statP.at(ipar).getEntries() << " " << statP.at(ipar).getMean() << " " << statP.at(ipar).getSigma() << std::endl;
+        }
+    }
+
+    // FIXME: move to writeMatrices()
+    std::string out = po_.output;
+    std::ofstream outfile(out.c_str());
+    if (!outfile) {
+        std::cerr << Error() << "Unable to open " << out << std::endl;
+        return 1;
+    }
+
+    outfile << V;
+    outfile << std::endl << std::endl;
+    outfile << D;
+    outfile << std::endl;
+    outfile.close();
 
     return 0;
 }
