@@ -4,6 +4,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/MatrixBuilder.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitter.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternAnalyzer.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/MatrixTester.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/NTupleMaker.h"
 
 #include "boost/program_options.hpp"
@@ -35,9 +36,10 @@ int main(int argc, char **argv) {
         ("stubCleaning,C"      , "Clean stubs and pick one unique stub per layer")
         ("bankGeneration,B"    , "Generate associative memory pattern bank")
         ("patternRecognition,R", "Run associative memory pattern recognition")
-        ("matrixBuilding,M"    , "Calculate the matrix constants for PCA track fitting")
+        ("matrixBuilding,M"    , "Calculate matrix constants for PCA track fitting")
         ("trackFitting,T"      , "Perform track fitting")
         ("bankAnalysis,A"      , "Analyze associative memory pattern bank")
+        ("matrixTesting,U"     , "Test matrix constants for PCA track fitting")
         ("write,W"             , "Write full ntuple")
         ("no-color"            , "Turn off colored text")
         ("timing"              , "Show timing information")
@@ -154,9 +156,10 @@ int main(int argc, char **argv) {
                   vm.count("matrixBuilding")     +
                   vm.count("trackFitting")       +
                   vm.count("bankAnalysis")       +
+                  vm.count("matrixTesting")      +
                   vm.count("write")              ;
     if (vmcount != 1) {
-        std::cerr << "ERROR: Must select exactly one of '-C', '-B', '-R', '-M', '-T', '-A', or 'W'" << std::endl;
+        std::cerr << "ERROR: Must select exactly one of '-C', '-B', '-R', '-M', '-T', '-A', '-U', or 'W'" << std::endl;
         //std::cout << visible << std::endl;
         return EXIT_FAILURE;
     }
@@ -253,6 +256,17 @@ int main(int argc, char **argv) {
             return exitcode;
         }
         std::cout << "Pattern bank analysis " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
+
+    } else if (vm.count("matrixTesting")) {
+        std::cout << Color("magenta") << "Start PCA matrix testing..." << EndColor() << std::endl;
+
+        MatrixTester tester(option);
+        int exitcode = tester.run();
+        if (exitcode) {
+            std::cerr << "An error occurred during PCA matrix testing. Exiting." << std::endl;
+            return exitcode;
+        }
+        std::cout << "PCA matrix testing " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
 
     } else if (vm.count("write")) {
         std::cout << Color("magenta") << "Start writing full ntuple..." << EndColor() << std::endl;

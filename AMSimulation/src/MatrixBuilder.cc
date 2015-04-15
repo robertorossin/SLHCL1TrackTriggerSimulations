@@ -156,10 +156,6 @@ int MatrixBuilder::buildMatrices(TString src) {
         std::cout << covariances << std::endl << std::endl;
     }
 
-    // Find shifts
-    shifts_ = Eigen::VectorXd::Zero(nvariables_);
-    shifts_ = means;
-
     // Find eigenvectors of covariance matrix
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver(covariances);
     sqrtEigenvalues_ = Eigen::VectorXd::Zero(nvariables_);
@@ -177,7 +173,7 @@ int MatrixBuilder::buildMatrices(TString src) {
     if (verbose_>1) {
         std::cout << Info() << "sqrt(eigenvalues) of covariances: " << std::endl;
         std::cout << sqrtEigenvalues_ << std::endl << std::endl;
-        std::cout << Info() << "eigenvectors^T:: " << std::endl;
+        std::cout << Info() << "eigenvectors^T: " << std::endl;
         std::cout << V_ << std::endl << std::endl;
     }
 
@@ -188,8 +184,8 @@ int MatrixBuilder::buildMatrices(TString src) {
     if (verbose_)  std::cout << Info() << "Begin second loop on tracks" << std::endl;
 
     // Mean vector and covariance matrix for principal components and track parameters
-    Eigen::VectorXd meansV = Eigen::VectorXd::Zero(nvariables_);
-    Eigen::VectorXd meansP = Eigen::VectorXd::Zero(nparameters_);
+    meansV_ = Eigen::VectorXd::Zero(nvariables_);
+    meansP_ = Eigen::VectorXd::Zero(nparameters_);
     Eigen::MatrixXd covariancesV = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
     Eigen::MatrixXd covariancesPV = Eigen::MatrixXd::Zero(nparameters_, nvariables_);
 
@@ -256,24 +252,24 @@ int MatrixBuilder::buildMatrices(TString src) {
         // Update mean vectors
         long int nTracks = nKept + 1;
         for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
-            meansV(ivar) += (principals(ivar) - meansV(ivar))/nTracks;
+            meansV_(ivar) += (principals(ivar) - meansV_(ivar))/nTracks;
         }
 
         for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
-            meansP(ipar) += (parameters(ipar) - meansP(ipar))/nTracks;
+            meansP_(ipar) += (parameters(ipar) - meansP_(ipar))/nTracks;
         }
 
         // Update covariance matrix
         if (nTracks > 1) {
             for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
                 for (unsigned jvar=0; jvar<nvariables_; ++jvar) {
-                    covariancesV(ivar, jvar) += (principals(ivar) - meansV(ivar)) * (principals(jvar) - meansV(jvar)) / (nTracks-1) - covariancesV(ivar, jvar)/nTracks;
+                    covariancesV(ivar, jvar) += (principals(ivar) - meansV_(ivar)) * (principals(jvar) - meansV_(jvar)) / (nTracks-1) - covariancesV(ivar, jvar)/nTracks;
                 }
             }
 
             for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
                 for (unsigned jvar=0; jvar<nvariables_; ++jvar) {
-                    covariancesPV(ipar, jvar) += (parameters(ipar) - meansP(ipar)) * (principals(jvar) - meansV(jvar)) / (nTracks-1) - covariancesPV(ipar, jvar)/nTracks;
+                    covariancesPV(ipar, jvar) += (parameters(ipar) - meansP_(ipar)) * (principals(jvar) - meansV_(jvar)) / (nTracks-1) - covariancesPV(ipar, jvar)/nTracks;
                 }
             }
         }
@@ -284,15 +280,14 @@ int MatrixBuilder::buildMatrices(TString src) {
 
     if (verbose_>1) {
         std::cout << Info() << "meansV: " << std::endl;
-        std::cout << meansV << std::endl << std::endl;
+        std::cout << meansV_ << std::endl << std::endl;
         std::cout << Info() << "meansP: " << std::endl;
-        std::cout << meansP << std::endl << std::endl;
+        std::cout << meansP_ << std::endl << std::endl;
         std::cout << Info() << "covariancesV: " << std::endl;
         std::cout << covariancesV << std::endl << std::endl;
         std::cout << Info() << "covariancesPV: " << std::endl;
         std::cout << covariancesPV << std::endl << std::endl;
     }
-
 
     // Find matrix D
     // D is the transformation from principal components to track parameters
@@ -303,21 +298,11 @@ int MatrixBuilder::buildMatrices(TString src) {
     DV_ = Eigen::MatrixXd::Zero(nparameters_, nvariables_);
     DV_ = D_ * V_;
 
-    if (verbose_) {
-        std::cout << Info() << "The matrices are: " << std::endl;
-        std::ios::fmtflags flags = std::cout.flags();
-        std::cout << std::setprecision(4);
-        std::cout << "shifts: " << std::endl;
-        std::cout << shifts_ << std::endl << std::endl;
-        std::cout << "sqrtEigenvalues: " << std::endl;
-        std::cout << sqrtEigenvalues_ << std::endl << std::endl;
-        std::cout << "V: " << std::endl;
-        std::cout << V_ << std::endl << std::endl;
-        std::cout << "D: " << std::endl;
+    if (verbose_>1) {
+        std::cout << Info() << "covariancesPV * covariancesV^{-1}: " << std::endl;
         std::cout << D_ << std::endl << std::endl;
-        std::cout << "DV: " << std::endl;
+        std::cout << Info() << "covariancesPV * covariancesV^{-1} * eigenvectors^T: " << std::endl;
         std::cout << DV_ << std::endl << std::endl;
-        std::cout.flags(flags);
     }
 
 
@@ -325,6 +310,10 @@ int MatrixBuilder::buildMatrices(TString src) {
     // Loop over all events again
 
     if (verbose_)  std::cout << Info() << "Begin third loop on tracks" << std::endl;
+
+    // Get mean values again
+    meansV_ = Eigen::VectorXd::Zero(nvariables_);
+    meansP_ = Eigen::VectorXd::Zero(nparameters_);
 
     // Statistics
     std::vector<Statistics> statV(nvariables_);
@@ -346,7 +335,7 @@ int MatrixBuilder::buildMatrices(TString src) {
         }
 
         // _____________________________________________________________________
-        // Start getting statistics
+        // Start collecting statistics
 
         Eigen::VectorXd variables1 = Eigen::VectorXd::Zero(nvariables_/2);
         Eigen::VectorXd variables2 = Eigen::VectorXd::Zero(nvariables_/2);
@@ -387,11 +376,22 @@ int MatrixBuilder::buildMatrices(TString src) {
         }
 
         Eigen::VectorXd principals = Eigen::VectorXd::Zero(nvariables_);
-        principals = V_ * (variables - means);
+        principals = V_ * variables;
 
         Eigen::VectorXd parameters_fit = Eigen::VectorXd::Zero(nparameters_);
-        parameters_fit = DV_ * (variables - means);
+        parameters_fit = DV_ * variables;
 
+        // Update mean vectors
+        long int nTracks = nKept + 1;
+        for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
+            meansV_(ivar) += (principals(ivar) - meansV_(ivar))/nTracks;
+        }
+
+        for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
+            meansP_(ipar) += (parameters_fit(ipar) - meansP_(ipar))/nTracks;
+        }
+
+        // Collect statistics
         for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
             statV.at(ivar).fill(principals(ivar));
         }
@@ -405,6 +405,8 @@ int MatrixBuilder::buildMatrices(TString src) {
     }
 
     if (verbose_>1) {
+        std::ios::fmtflags flags = std::cout.flags();
+        std::cout << std::setprecision(4);
         std::cout << Info() << "statV: " << std::endl;
         for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
             std::cout << "principal " << ivar << ": " << statV.at(ivar).getEntries() << " " << statV.at(ivar).getMean() << " " << statV.at(ivar).getSigma() << std::endl;
@@ -413,6 +415,7 @@ int MatrixBuilder::buildMatrices(TString src) {
         for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
             std::cout << "parameter " << ipar << ": " << statP.at(ipar).getEntries() << " " << statP.at(ipar).getMean() << " " << statP.at(ipar).getSigma() << std::endl;
         }
+        std::cout.flags(flags);
     }
 
     return 0;
@@ -428,13 +431,32 @@ int MatrixBuilder::writeMatrices(TString out) {
         return 1;
     }
 
-    outfile << shifts_;
-    outfile << std::endl << std::endl;
-    outfile << sqrtEigenvalues_;
-    outfile << std::endl << std::endl;
+    if (verbose_) {
+        std::cout << Info() << "The matrices are: " << std::endl;
+        std::ios::fmtflags flags = std::cout.flags();
+        std::cout << std::setprecision(4);
+        std::cout << "V: " << std::endl;
+        std::cout << V_ << std::endl << std::endl;
+        std::cout << "D: " << std::endl;
+        std::cout << D_ << std::endl << std::endl;
+        std::cout << "meansV: " << std::endl;
+        std::cout << meansV_ << std::endl << std::endl;
+        std::cout << "meansP: " << std::endl;
+        std::cout << meansP_ << std::endl << std::endl;
+        std::cout << "sqrtEigenvalues: " << std::endl;
+        std::cout << sqrtEigenvalues_ << std::endl << std::endl;
+        std::cout.flags(flags);
+    }
+
     outfile << V_;
     outfile << std::endl << std::endl;
     outfile << D_;
+    outfile << std::endl << std::endl;
+    outfile << meansV_;
+    outfile << std::endl << std::endl;
+    outfile << meansP_;
+    outfile << std::endl << std::endl;
+    outfile << sqrtEigenvalues_;
     outfile << std::endl << std::endl;
     outfile.close();
 
