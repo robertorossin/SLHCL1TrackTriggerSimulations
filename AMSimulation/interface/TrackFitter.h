@@ -13,7 +13,7 @@ class TrackFitter {
 
   public:
     // Constructor
-    TrackFitter(ProgramOption po)
+    TrackFitter(const ProgramOption& po)
     : po_(po),
       nEvents_(po.maxEvents), verbose_(po.verbose),
       prefixRoad_("AMTTRoads_"), prefixTrack_("AMTTTracks_"), suffix_("") {

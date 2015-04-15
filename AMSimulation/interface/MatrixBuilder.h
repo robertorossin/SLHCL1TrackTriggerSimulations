@@ -12,7 +12,7 @@ using namespace slhcl1tt;
 class MatrixBuilder {
   public:
     // Constructor
-    MatrixBuilder(ProgramOption po)
+    MatrixBuilder(const ProgramOption& po)
     : po_(po),
       nEvents_(po.maxEvents), verbose_(po.verbose) {
 

@@ -3,8 +3,6 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/PatternBankReader.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubReader.h"
 
-static const unsigned MIN_NGOODSTUBS = 3;
-static const unsigned MAX_NGOODSTUBS = 8;
 static const unsigned MAX_FREQUENCY = 0xffffffff;  // unsigned
 
 namespace {
@@ -102,16 +100,6 @@ int PatternGenerator::makePatterns(TString src) {
         const unsigned nstubs = reader.vb_modId->size();
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
-        if (nstubs < MIN_NGOODSTUBS) {  // skip if not enough stubs
-            ++nRead;
-            continue;
-        }
-
-        if (nstubs > MAX_NGOODSTUBS) {
-            std::cout << Error() << "Too many stubs: " << nstubs << std::endl;
-            return 1;
-        }
-
         // Apply track pt requirement
         float simPt = reader.vp_pt->front();
         if (simPt < po_.minPt || po_.maxPt < simPt) {
@@ -173,6 +161,11 @@ int PatternGenerator::makePatterns(TString src) {
 
         ++nKept;
         ++nRead;
+    }
+
+    if (nRead == 0) {
+        std::cout << Error() << "Failed to read any event." << std::endl;
+        return 1;
     }
 
     if (verbose_)  std::cout << Info() << Form("Read: %7ld, kept: %7ld, # patterns: %7lu, coverage: %7.5f", nRead, nKept, patternBank_map_.size(), coverage) << std::endl;

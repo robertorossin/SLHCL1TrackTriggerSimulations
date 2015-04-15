@@ -12,7 +12,7 @@ using namespace slhcl1tt;
 class PatternGenerator {
   public:
     // Constructor
-    PatternGenerator(ProgramOption po)
+    PatternGenerator(const ProgramOption& po)
     : po_(po),
       nEvents_(po.maxEvents), verbose_(po.verbose) {
 

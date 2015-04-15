@@ -130,9 +130,9 @@ int BasicReader::init(TString src, bool full) {
     return 0;
 }
 
-void BasicReader::nullStubs(const std::vector<bool>& nulling) {
-    nullVectorElements(vb_x         , nulling);
-    nullVectorElements(vb_y         , nulling);
+void BasicReader::nullStubs(const std::vector<bool>& nulling, bool full) {
+    if (full)  nullVectorElements(vb_x         , nulling);
+    if (full)  nullVectorElements(vb_y         , nulling);
     nullVectorElements(vb_z         , nulling);
     nullVectorElements(vb_r         , nulling);
     nullVectorElements(vb_eta       , nulling);
@@ -140,9 +140,9 @@ void BasicReader::nullStubs(const std::vector<bool>& nulling) {
     nullVectorElements(vb_coordx    , nulling);
     nullVectorElements(vb_coordy    , nulling);
     nullVectorElements(vb_trigBend  , nulling);
-    nullVectorElements(vb_roughPt   , nulling);
-    nullVectorElements(vb_clusWidth0, nulling);
-    nullVectorElements(vb_clusWidth1, nulling);
+    if (full)  nullVectorElements(vb_roughPt   , nulling);
+    if (full)  nullVectorElements(vb_clusWidth0, nulling);
+    if (full)  nullVectorElements(vb_clusWidth1, nulling);
   //nullVectorElements(vb_modId     , nulling);  // don't null this guy
     nullVectorElements(vb_tpId      , nulling);
 }

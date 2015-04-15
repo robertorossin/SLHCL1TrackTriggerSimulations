@@ -12,7 +12,7 @@ using namespace slhcl1tt;
 class PatternMatcher {
   public:
     // Constructor
-    PatternMatcher(ProgramOption po)
+    PatternMatcher(const ProgramOption& po)
     : po_(po),
       nEvents_(po.maxEvents), verbose_(po.verbose),
       prefixRoad_("AMTTRoads_"), suffix_("") {

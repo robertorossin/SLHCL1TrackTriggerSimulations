@@ -312,6 +312,11 @@ int PatternMatcher::makeRoads(TString src, TString out) {
         ++nRead;
     }
 
+    if (nRead == 0) {
+        std::cout << Error() << "Failed to read any event." << std::endl;
+        return 1;
+    }
+
     if (verbose_)  std::cout << Info() << Form("Read: %7ld, triggered: %7ld", nRead, nKept) << std::endl;
 
     long long nentries = writer.writeTree();

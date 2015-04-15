@@ -30,7 +30,7 @@ class NTupleMaker {
     };
 
     // Constructor
-    NTupleMaker(ProgramOption po)
+    NTupleMaker(const ProgramOption& po)
     : po_(po),
       nEvents_(po.maxEvents), verbose_(po.verbose),
       trim_(true) {

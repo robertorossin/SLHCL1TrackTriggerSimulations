@@ -3,9 +3,6 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/PatternBankReader.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubReader.h"
 
-static const unsigned MIN_NGOODSTUBS = 3;
-static const unsigned MAX_NGOODSTUBS = 8;
-
 namespace {
 // Comparator
 bool sortByInvPt(const std::pair<pattern_type, Attributes *>& lhs, const std::pair<pattern_type, Attributes *>& rhs) {
@@ -149,16 +146,6 @@ int PatternAnalyzer::makePatterns(TString src) {
         if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
-        if (nstubs < MIN_NGOODSTUBS) {  // skip if not enough stubs
-            ++nRead;
-            continue;
-        }
-
-        if (nstubs > MAX_NGOODSTUBS) {
-            std::cout << Error() << "Too many stubs: " << nstubs << std::endl;
-            return 1;
-        }
-
         // Check sim info
         assert(reader.vp_pt->size() == 1);
         float simPt           = reader.vp_pt->front();
@@ -244,6 +231,11 @@ int PatternAnalyzer::makePatterns(TString src) {
 
         ++nKept;
         ++nRead;
+    }
+
+    if (nRead == 0) {
+        std::cout << Error() << "Failed to read any event." << std::endl;
+        return 1;
     }
 
     if (verbose_)  std::cout << Info() << Form("Read: %7ld, kept: %7ld", nRead, nKept) << std::endl;

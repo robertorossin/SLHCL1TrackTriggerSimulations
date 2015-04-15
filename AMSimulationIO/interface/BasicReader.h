@@ -21,7 +21,7 @@ class BasicReader {
 
     int init(TString src, bool full=true);
 
-    void nullStubs(const std::vector<bool>& nulling);
+    void nullStubs(const std::vector<bool>& nulling, bool full=true);
 
     Long64_t loadTree(Long64_t entry) { return tchain->LoadTree(entry); }
 

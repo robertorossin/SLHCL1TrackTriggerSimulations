@@ -17,7 +17,7 @@ using namespace slhcl1tt;
 class PatternAnalyzer {
   public:
     // Constructor
-    PatternAnalyzer(ProgramOption po)
+    PatternAnalyzer(const ProgramOption& po)
     : po_(po),
       nEvents_(po.maxEvents), verbose_(po.verbose) {
 

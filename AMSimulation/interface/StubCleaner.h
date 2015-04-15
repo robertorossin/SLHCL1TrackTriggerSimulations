@@ -11,7 +11,7 @@ using namespace slhcl1tt;
 class StubCleaner {
   public:
     // Constructor
-    StubCleaner(ProgramOption po)
+    StubCleaner(const ProgramOption& po)
     : po_(po),
       nEvents_(po.maxEvents), verbose_(po.verbose) {
 

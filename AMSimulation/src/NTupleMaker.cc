@@ -125,6 +125,9 @@ int NTupleMaker::writeTree(TString out) {
     // _________________________________________________________________________
     // Loop over all events
 
+    // Bookkeepers
+    long int nRead = 0;
+
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
         if (local_entry < 0)  break;
@@ -139,6 +142,13 @@ int NTupleMaker::writeTree(TString out) {
         if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
 
         ttree->Fill();
+
+        ++nRead;
+    }
+
+    if (nRead == 0) {
+        std::cout << Error() << "Failed to read any event." << std::endl;
+        return 1;
     }
 
     tfile->Write();
