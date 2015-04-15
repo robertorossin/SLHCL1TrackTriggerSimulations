@@ -49,6 +49,7 @@ class MatrixBuilder {
     TriggerTowerMap   * ttmap_;
 
     // Matrices
+    Eigen::VectorXd shifts_;
     Eigen::VectorXd sqrtEigenvalues_;
     Eigen::MatrixXd D_;
     Eigen::MatrixXd V_;

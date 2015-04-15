@@ -44,6 +44,12 @@ int TrackFitterAlgoPCA::loadConstants(TString txt) {
     }
 
     double x;
+    shifts_ = Eigen::VectorXd::Zero(NVARIABLES);
+    for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
+        infile >> x;
+        shifts_(ivar) = x;
+    }
+
     sqrtEigenvalues_ = Eigen::VectorXd::Zero(NVARIABLES);
     for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
         infile >> x;
@@ -79,18 +85,17 @@ int TrackFitterAlgoPCA::fit(const std::vector<TTHit>& hits, TTTrack2& track) {
         return 0;
 
     Eigen::VectorXd variables = Eigen::VectorXd::Zero(NVARIABLES);
-    Eigen::VectorXd means = Eigen::VectorXd::Zero(NVARIABLES);
     for (unsigned i=0, ivar=0; i<hits.size(); ++i) {
         const TTHit& hit = hits.at(i);
-        variables(ivar++) = hit.r * hit.phi;
+        variables(ivar++) = hit.phi;
         variables(ivar++) = hit.z;
     }
 
     Eigen::VectorXd principals = Eigen::VectorXd::Zero(NVARIABLES);
-    principals = V_ * (variables - means);
+    principals = V_ * (variables - shifts_);
 
     Eigen::VectorXd parameters_fit = Eigen::VectorXd::Zero(NPARAMETERS);
-    parameters_fit = DV_ * (variables - means);
+    parameters_fit = DV_ * (variables - shifts_);
 
     unsigned ndof = NVARIABLES - NPARAMETERS;
     double chi2 = 0.;
