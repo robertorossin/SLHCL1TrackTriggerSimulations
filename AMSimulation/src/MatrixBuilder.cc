@@ -8,11 +8,6 @@
 #include <iomanip>
 #include <fstream>
 
-static const unsigned MIN_NGOODSTUBS = 3;
-static const unsigned MAX_NGOODSTUBS = 8;
-static const unsigned NVARIABLES = 12;  // number of hit coordinates
-static const unsigned NPARAMETERS = 4;  // number of track parameters
-
 
 // _____________________________________________________________________________
 int MatrixBuilder::setupTriggerTower(TString datadir) {
@@ -63,8 +58,8 @@ int MatrixBuilder::buildMatrices(TString src) {
     if (verbose_)  std::cout << Info() << "Begin first loop on tracks" << std::endl;
 
     // Mean vector and covariance matrix
-    Eigen::VectorXd means = Eigen::VectorXd::Zero(NVARIABLES);
-    Eigen::MatrixXd covariances = Eigen::MatrixXd::Zero(NVARIABLES, NVARIABLES);
+    Eigen::VectorXd means = Eigen::VectorXd::Zero(nvariables_);
+    Eigen::MatrixXd covariances = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
 
     // Cache
     std::vector<bool> keepEvents;
@@ -79,17 +74,6 @@ int MatrixBuilder::buildMatrices(TString src) {
         const unsigned nstubs = reader.vb_modId->size();
         if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
-
-        if (nstubs < MIN_NGOODSTUBS) {  // skip if not enough stubs
-            ++nRead;
-            keepEvents.push_back(false);
-            continue;
-        }
-
-        if (nstubs > MAX_NGOODSTUBS) {
-            std::cout << Error() << "Too many stubs: " << nstubs << std::endl;
-            return 1;
-        }
 
         // Apply track pt requirement
         float simPt = reader.vp_pt->front();
@@ -107,43 +91,47 @@ int MatrixBuilder::buildMatrices(TString src) {
                 ++ngoodstubs;
             }
         }
-        if (ngoodstubs != po_.nLayers) {
+        if (ngoodstubs != po_.nLayers) {  // FIXME: allow missing hits
             ++nRead;
             keepEvents.push_back(false);
             continue;
         }
-        assert(nstubs == po_.nLayers);  // FIXME: use hit bits
+        assert(nstubs == po_.nLayers);
 
 
         // _____________________________________________________________________
         // Start building matrices
 
-        Eigen::VectorXd variables = Eigen::VectorXd::Zero(NVARIABLES);
+        Eigen::VectorXd variables1 = Eigen::VectorXd::Zero(nvariables_/2);
+        Eigen::VectorXd variables2 = Eigen::VectorXd::Zero(nvariables_/2);
 
         // Loop over reconstructed stubs
-        for (unsigned istub=0, ivar=0; istub<nstubs; ++istub) {
+        for (unsigned istub=0; istub<nstubs; ++istub) {
             float    stub_r   = reader.vb_r       ->at(istub);
             float    stub_phi = reader.vb_phi     ->at(istub);
             float    stub_z   = reader.vb_z       ->at(istub);
 
-            variables(ivar++) = stub_phi;
-            variables(ivar++) = stub_z;
+            variables1(istub) = stub_phi;
+            variables2(istub) = stub_z;
 
             if (verbose_>2) {
                 std::cout << Debug() << "... ... stub: " << istub << " r: " << stub_r << " phi: " << stub_phi << " z: " << stub_z << std::endl;
             }
         }
 
+        Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);
+        variables << variables1, variables2;
+
         // Update mean vector
         long int nTracks = nKept + 1;
-        for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
+        for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
             means(ivar) += (variables(ivar) - means(ivar))/nTracks;
         }
 
         // Update covariance matrix
         if (nTracks > 1) {
-            for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
-                for (unsigned jvar=0; jvar<NVARIABLES; ++jvar) {
+            for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
+                for (unsigned jvar=0; jvar<nvariables_; ++jvar) {
                     covariances(ivar, jvar) += (variables(ivar) - means(ivar)) * (variables(jvar) - means(jvar)) / (nTracks-1) - covariances(ivar, jvar)/nTracks;
                 }
             }
@@ -169,21 +157,21 @@ int MatrixBuilder::buildMatrices(TString src) {
     }
 
     // Find shifts
-    shifts_ = Eigen::VectorXd::Zero(NVARIABLES);
+    shifts_ = Eigen::VectorXd::Zero(nvariables_);
     shifts_ = means;
 
     // Find eigenvectors of covariance matrix
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver(covariances);
-    sqrtEigenvalues_ = Eigen::VectorXd::Zero(NVARIABLES);
+    sqrtEigenvalues_ = Eigen::VectorXd::Zero(nvariables_);
     sqrtEigenvalues_ = eigensolver.eigenvalues();
-    for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
+    for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
         sqrtEigenvalues_(ivar) = std::sqrt(sqrtEigenvalues_(ivar));  // take the square root
     }
 
     // Find matrix V
     // V is the orthogonal transformation from coordinates space to principal components space
     // The principal components are constraints + rotated track parameters
-    V_ = Eigen::MatrixXd::Zero(NVARIABLES, NVARIABLES);
+    V_ = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
     V_ = (eigensolver.eigenvectors()).transpose();
 
     if (verbose_>1) {
@@ -200,10 +188,10 @@ int MatrixBuilder::buildMatrices(TString src) {
     if (verbose_)  std::cout << Info() << "Begin second loop on tracks" << std::endl;
 
     // Mean vector and covariance matrix for principal components and track parameters
-    Eigen::VectorXd meansV = Eigen::VectorXd::Zero(NVARIABLES);
-    Eigen::VectorXd meansP = Eigen::VectorXd::Zero(NPARAMETERS);
-    Eigen::MatrixXd covariancesV = Eigen::MatrixXd::Zero(NVARIABLES, NVARIABLES);
-    Eigen::MatrixXd covariancesPV = Eigen::MatrixXd::Zero(NPARAMETERS, NVARIABLES);
+    Eigen::VectorXd meansV = Eigen::VectorXd::Zero(nvariables_);
+    Eigen::VectorXd meansP = Eigen::VectorXd::Zero(nparameters_);
+    Eigen::MatrixXd covariancesV = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
+    Eigen::MatrixXd covariancesPV = Eigen::MatrixXd::Zero(nparameters_, nvariables_);
 
     // Bookkeepers
     nRead = 0, nKept = 0;
@@ -223,19 +211,23 @@ int MatrixBuilder::buildMatrices(TString src) {
         // _____________________________________________________________________
         // Start building matrices
 
-        Eigen::VectorXd variables = Eigen::VectorXd::Zero(NVARIABLES);
+        Eigen::VectorXd variables1 = Eigen::VectorXd::Zero(nvariables_/2);
+        Eigen::VectorXd variables2 = Eigen::VectorXd::Zero(nvariables_/2);
 
         // Loop over reconstructed stubs
-        for (unsigned istub=0, ivar=0; istub<nstubs; ++istub) {
+        for (unsigned istub=0; istub<nstubs; ++istub) {
             float    stub_r   = reader.vb_r       ->at(istub);
             float    stub_phi = reader.vb_phi     ->at(istub);
             float    stub_z   = reader.vb_z       ->at(istub);
 
-            variables(ivar++) = stub_phi;
-            variables(ivar++) = stub_z;
+            variables1(istub) = stub_phi;
+            variables2(istub) = stub_z;
         }
 
-        Eigen::VectorXd parameters = Eigen::VectorXd::Zero(NPARAMETERS);
+        Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);
+        variables << variables1, variables2;
+
+        Eigen::VectorXd parameters = Eigen::VectorXd::Zero(nparameters_);
 
         // Get sim info
         {
@@ -258,29 +250,29 @@ int MatrixBuilder::buildMatrices(TString src) {
         }
 
         // Transform coordinates to principal components
-        Eigen::VectorXd principals = Eigen::VectorXd::Zero(NVARIABLES);
+        Eigen::VectorXd principals = Eigen::VectorXd::Zero(nvariables_);
         principals = V_ * (variables - means);
 
         // Update mean vectors
         long int nTracks = nKept + 1;
-        for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
+        for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
             meansV(ivar) += (principals(ivar) - meansV(ivar))/nTracks;
         }
 
-        for (unsigned ipar=0; ipar<NPARAMETERS; ++ipar) {
+        for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
             meansP(ipar) += (parameters(ipar) - meansP(ipar))/nTracks;
         }
 
         // Update covariance matrix
         if (nTracks > 1) {
-            for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
-                for (unsigned jvar=0; jvar<NVARIABLES; ++jvar) {
+            for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
+                for (unsigned jvar=0; jvar<nvariables_; ++jvar) {
                     covariancesV(ivar, jvar) += (principals(ivar) - meansV(ivar)) * (principals(jvar) - meansV(jvar)) / (nTracks-1) - covariancesV(ivar, jvar)/nTracks;
                 }
             }
 
-            for (unsigned ipar=0; ipar<NPARAMETERS; ++ipar) {
-                for (unsigned jvar=0; jvar<NVARIABLES; ++jvar) {
+            for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
+                for (unsigned jvar=0; jvar<nvariables_; ++jvar) {
                     covariancesPV(ipar, jvar) += (parameters(ipar) - meansP(ipar)) * (principals(jvar) - meansV(jvar)) / (nTracks-1) - covariancesPV(ipar, jvar)/nTracks;
                 }
             }
@@ -304,11 +296,11 @@ int MatrixBuilder::buildMatrices(TString src) {
 
     // Find matrix D
     // D is the transformation from principal components to track parameters
-    D_ = Eigen::MatrixXd::Zero(NPARAMETERS, NVARIABLES);
+    D_ = Eigen::MatrixXd::Zero(nparameters_, nvariables_);
     //D_ = covariancesPV * covariancesV.inverse();
     D_ = (covariancesV.colPivHouseholderQr().solve(covariancesPV.transpose())).transpose();
 
-    DV_ = Eigen::MatrixXd::Zero(NPARAMETERS, NVARIABLES);
+    DV_ = Eigen::MatrixXd::Zero(nparameters_, nvariables_);
     DV_ = D_ * V_;
 
     if (verbose_) {
@@ -335,11 +327,8 @@ int MatrixBuilder::buildMatrices(TString src) {
     if (verbose_)  std::cout << Info() << "Begin third loop on tracks" << std::endl;
 
     // Statistics
-    std::vector<Statistics> statV;
-    statV.resize(NVARIABLES);
-
-    std::vector<Statistics> statP;
-    statP.resize(NPARAMETERS);
+    std::vector<Statistics> statV(nvariables_);
+    std::vector<Statistics> statP(nparameters_);
 
     // Bookkeepers
     nRead = 0, nKept = 0;
@@ -359,19 +348,23 @@ int MatrixBuilder::buildMatrices(TString src) {
         // _____________________________________________________________________
         // Start getting statistics
 
-        Eigen::VectorXd variables = Eigen::VectorXd::Zero(NVARIABLES);
+        Eigen::VectorXd variables1 = Eigen::VectorXd::Zero(nvariables_/2);
+        Eigen::VectorXd variables2 = Eigen::VectorXd::Zero(nvariables_/2);
 
         // Loop over reconstructed stubs
-        for (unsigned istub=0, ivar=0; istub<nstubs; ++istub) {
+        for (unsigned istub=0; istub<nstubs; ++istub) {
             float    stub_r   = reader.vb_r       ->at(istub);
             float    stub_phi = reader.vb_phi     ->at(istub);
             float    stub_z   = reader.vb_z       ->at(istub);
 
-            variables(ivar++) = stub_phi;
-            variables(ivar++) = stub_z;
+            variables1(istub) = stub_phi;
+            variables2(istub) = stub_z;
         }
 
-        Eigen::VectorXd parameters = Eigen::VectorXd::Zero(NPARAMETERS);
+        Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);
+        variables << variables1, variables2;
+
+        Eigen::VectorXd parameters = Eigen::VectorXd::Zero(nparameters_);
 
         // Get sim info
         {
@@ -393,28 +386,31 @@ int MatrixBuilder::buildMatrices(TString src) {
             parameters(ipar++) = simChargeOverPt;
         }
 
-        Eigen::VectorXd principals = Eigen::VectorXd::Zero(NVARIABLES);
+        Eigen::VectorXd principals = Eigen::VectorXd::Zero(nvariables_);
         principals = V_ * (variables - means);
 
-        Eigen::VectorXd parameters_fit = Eigen::VectorXd::Zero(NPARAMETERS);
+        Eigen::VectorXd parameters_fit = Eigen::VectorXd::Zero(nparameters_);
         parameters_fit = DV_ * (variables - means);
 
-        for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
+        for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
             statV.at(ivar).fill(principals(ivar));
         }
 
-        for (unsigned ipar=0; ipar<NPARAMETERS; ++ipar) {
+        for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
             statP.at(ipar).fill(parameters_fit(ipar) - parameters(ipar));
         }
+
+        ++nKept;
+        ++nRead;
     }
 
     if (verbose_>1) {
         std::cout << Info() << "statV: " << std::endl;
-        for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
+        for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
             std::cout << "principal " << ivar << ": " << statV.at(ivar).getEntries() << " " << statV.at(ivar).getMean() << " " << statV.at(ivar).getSigma() << std::endl;
         }
         std::cout << Info() << "statP: " << std::endl;
-        for (unsigned ipar=0; ipar<NPARAMETERS; ++ipar) {
+        for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
             std::cout << "parameter " << ipar << ": " << statP.at(ipar).getEntries() << " " << statP.at(ipar).getMean() << " " << statP.at(ipar).getSigma() << std::endl;
         }
     }

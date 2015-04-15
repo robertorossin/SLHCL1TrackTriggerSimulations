@@ -1,4 +1,5 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Retina.h"
+using namespace slhcl1tt;
 
 #include <iostream>
 #include <string>

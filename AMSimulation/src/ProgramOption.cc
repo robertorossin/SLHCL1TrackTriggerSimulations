@@ -48,6 +48,7 @@ std::ostream& operator<<(std::ostream& o, const ProgramOption& po) {
       << "  maxStubs: "     << po.maxStubs
       << "  maxRoads: "     << po.maxRoads
 
+      << "  view: "         << po.view
       << "  hitbits: "      << po.hitbits
 
       << "  maxChi2: "      << po.maxChi2

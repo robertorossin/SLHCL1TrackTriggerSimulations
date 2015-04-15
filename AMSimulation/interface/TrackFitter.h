@@ -22,15 +22,15 @@ class TrackFitter {
         fitterPCA_    = 0;
         fitterATF_    = 0;
         fitterRetina_ = 0;
-        if (po_.algo == "ATF4")
+        if (po.algo == "ATF4")
             fitterATF_ = new TrackFitterAlgoATF(false);
-        else if (po_.algo=="ATF5")
+        else if (po.algo == "ATF5")
             fitterATF_ = new TrackFitterAlgoATF(true);
-        else if (po_.algo=="PCA4")
-            fitterPCA_ = new TrackFitterAlgoPCA(false);
-        else if (po_.algo=="PCA5")
-            fitterPCA_ = new TrackFitterAlgoPCA(true);
-        else if (po_.algo=="RET")
+        else if (po.algo == "PCA4")
+            fitterPCA_ = new TrackFitterAlgoPCA(po);
+        else if (po.algo == "PCA5")
+            fitterPCA_ = new TrackFitterAlgoPCA(po);
+        else if (po.algo == "RET")
             fitterRetina_ = new TrackFitterAlgoRetina();
     }
 

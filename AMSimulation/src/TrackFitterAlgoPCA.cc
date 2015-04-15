@@ -6,15 +6,12 @@
 #include <iomanip>
 #include <fstream>
 
-static const unsigned NVARIABLES = 12;  // number of hit coordinates
-static const unsigned NPARAMETERS = 4;  // number of track parameters
-
 
 // _____________________________________________________________________________
 int TrackFitterAlgoPCA::bookHistograms() {
     TH1::AddDirectory(kFALSE);
     //TString hname;
-    //for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
+    //for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
     //    hname = Form("var%i", ivar);
     //    histograms[hname] = new TH1F(hname, ";"+hname, 1000, -1., 1.);
     //
@@ -22,8 +19,8 @@ int TrackFitterAlgoPCA::bookHistograms() {
     //    histograms[hname] = new TH1F(hname, ";"+hname, 1000, -1., 1.);
     //}
     //
-    //TString parnames[NPARAMETERS] = {"phi", "cotTheta", "z0", "invPt"};
-    //for (unsigned ipar=0; ipar<NPARAMETERS; ++ipar) {
+    //TString parnames[nparameters_] = {"phi", "cotTheta", "z0", "invPt"};
+    //for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
     //    hname = Form("par%i", ipar);
     //    histograms[hname] = new TH1F(hname, ";"+hname, 1000, -1., 1.);
     //
@@ -44,35 +41,35 @@ int TrackFitterAlgoPCA::loadConstants(TString txt) {
     }
 
     double x;
-    shifts_ = Eigen::VectorXd::Zero(NVARIABLES);
-    for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
+    shifts_ = Eigen::VectorXd::Zero(nvariables_);
+    for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
         infile >> x;
         shifts_(ivar) = x;
     }
 
-    sqrtEigenvalues_ = Eigen::VectorXd::Zero(NVARIABLES);
-    for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
+    sqrtEigenvalues_ = Eigen::VectorXd::Zero(nvariables_);
+    for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
         infile >> x;
         sqrtEigenvalues_(ivar) = x;
     }
 
-    V_ = Eigen::MatrixXd::Zero(NVARIABLES, NVARIABLES);
-    for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
-        for (unsigned jvar=0; jvar<NVARIABLES; ++jvar) {
+    V_ = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
+    for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
+        for (unsigned jvar=0; jvar<nvariables_; ++jvar) {
             infile >> x;
             V_(ivar, jvar) = x;
         }
     }
 
-    D_ = Eigen::MatrixXd::Zero(NPARAMETERS, NVARIABLES);
-    for (unsigned ipar=0; ipar<NPARAMETERS; ++ipar) {
-        for (unsigned jvar=0; jvar<NVARIABLES; ++jvar) {
+    D_ = Eigen::MatrixXd::Zero(nparameters_, nvariables_);
+    for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
+        for (unsigned jvar=0; jvar<nvariables_; ++jvar) {
             infile >> x;
             D_(ipar, jvar) = x;
         }
     }
 
-    DV_ = Eigen::MatrixXd::Zero(NPARAMETERS, NVARIABLES);
+    DV_ = Eigen::MatrixXd::Zero(nparameters_, nvariables_);
     DV_ = D_ * V_;
 
     return 0;
@@ -81,23 +78,28 @@ int TrackFitterAlgoPCA::loadConstants(TString txt) {
 // _____________________________________________________________________________
 int TrackFitterAlgoPCA::fit(const std::vector<TTHit>& hits, TTTrack2& track) {
 
-    if (hits.size() != NVARIABLES/2)  // FIXME: use hit bits
+    if (hits.size() != nvariables_/2)  // FIXME: use hit bits
         return 0;
 
-    Eigen::VectorXd variables = Eigen::VectorXd::Zero(NVARIABLES);
-    for (unsigned i=0, ivar=0; i<hits.size(); ++i) {
+    Eigen::VectorXd variables1 = Eigen::VectorXd::Zero(nvariables_/2);
+    Eigen::VectorXd variables2 = Eigen::VectorXd::Zero(nvariables_/2);
+
+    for (unsigned i=0; i<hits.size(); ++i) {
         const TTHit& hit = hits.at(i);
-        variables(ivar++) = hit.phi;
-        variables(ivar++) = hit.z;
+        variables1(i) = hit.phi;
+        variables2(i) = hit.z;
     }
 
-    Eigen::VectorXd principals = Eigen::VectorXd::Zero(NVARIABLES);
+    Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);
+    variables << variables1, variables2;
+
+    Eigen::VectorXd principals = Eigen::VectorXd::Zero(nvariables_);
     principals = V_ * (variables - shifts_);
 
-    Eigen::VectorXd parameters_fit = Eigen::VectorXd::Zero(NPARAMETERS);
+    Eigen::VectorXd parameters_fit = Eigen::VectorXd::Zero(nparameters_);
     parameters_fit = DV_ * (variables - shifts_);
 
-    unsigned ndof = NVARIABLES - NPARAMETERS;
+    unsigned ndof = nvariables_ - nparameters_;
     double chi2 = 0.;
     for (unsigned i=0; i<ndof; ++i) {
         chi2 += (principals(i)/sqrtEigenvalues_(i))*(principals(i)/sqrtEigenvalues_(i));
@@ -112,7 +114,7 @@ int TrackFitterAlgoPCA::fit(const std::vector<TTHit>& hits, TTTrack2& track) {
     track.setTrackParams(rinv, phi0, cottheta0, z0, d0, chi2, ndof, 0., 0.);
 
     std::vector<float> principals_vec;
-    for (unsigned ivar=0; ivar<NVARIABLES; ++ivar) {
+    for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
         principals_vec.push_back(principals(ivar));
     }
 
