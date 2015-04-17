@@ -3,6 +3,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubReader.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Statistics.h"
 #include <iomanip>
+#include <fstream>
 
 
 // _____________________________________________________________________________
@@ -58,25 +59,37 @@ int MatrixTester::testMatrices(TString src) {
         fitterPCA_ -> print();
     }
 
+
     // _________________________________________________________________________
-    // Loop over all events
+    // Loop over all events (filter)
 
-    if (verbose_)  std::cout << Info() << "Begin first loop on tracks" << std::endl;
+    if (verbose_)  std::cout << Info() << "Begin event filtering" << std::endl;
 
-    // Containers
-    std::vector<TTTrack2> tracks;
-    tracks.reserve(300);
-
-    // Statistics
-    std::vector<Statistics> statV(nvariables_);
-    std::vector<Statistics> statP(nparameters_);
-
-    // Cache
+    // Event decisions
     std::vector<bool> keepEvents;
 
     // Bookkeepers
     long int nRead = 0, nKept = 0;
 
+#if 0
+    TString txt = "keepEvents.txt";
+    std::ifstream infile(txt.Data());
+    if (!infile) {
+        std::cout << "Unable to open " << txt << std::endl;
+        return 1;
+    }
+    int x;
+    while (infile >> x) {
+        long long ievt = nRead;
+        if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
+
+        keepEvents.push_back(x);
+
+        if (x)
+            ++nKept;
+        ++nRead;
+    }
+#else
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         if (reader.loadTree(ievt) < 0)  break;
         reader.getEntry(ievt);
@@ -101,12 +114,54 @@ int MatrixTester::testMatrices(TString src) {
                 ++ngoodstubs;
             }
         }
-        if (ngoodstubs != po_.nLayers) {  // FIXME: allow missing hits
+        if (ngoodstubs != po_.nLayers) {
             ++nRead;
             keepEvents.push_back(false);
             continue;
         }
         assert(nstubs == po_.nLayers);
+
+        ++nKept;
+        ++nRead;
+        keepEvents.push_back(true);
+    }
+#endif
+
+    if (nRead == 0) {
+        std::cout << Error() << "Failed to read any event." << std::endl;
+        return 1;
+    }
+
+    if (verbose_)  std::cout << Info() << Form("Read: %7ld, kept: %7ld", nRead, nKept) << std::endl;
+
+
+    // _________________________________________________________________________
+    // Loop over all events
+
+    if (verbose_)  std::cout << Info() << "Begin first loop on tracks" << std::endl;
+
+    // Containers
+    std::vector<TTTrack2> tracks;
+    tracks.reserve(300);
+
+    // Statistics
+    std::vector<Statistics> statV(nvariables_);
+    std::vector<Statistics> statP(nparameters_);
+
+    // Bookkeepers
+    nRead = 0, nKept = 0;
+
+    for (long long ievt=0; ievt<nEvents_; ++ievt) {
+        if (reader.loadTree(ievt) < 0)  break;
+        reader.getEntry(ievt);
+
+        const unsigned nstubs = reader.vb_modId->size();
+        if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
+
+        if (!keepEvents.at(ievt)) {
+            ++nRead;
+            continue;
+        }
 
 
         // _____________________________________________________________________
@@ -199,13 +254,6 @@ int MatrixTester::testMatrices(TString src) {
         ++nRead;
         keepEvents.push_back(true);
     }
-
-    if (nRead == 0) {
-        std::cout << Error() << "Failed to read any event." << std::endl;
-        return 1;
-    }
-
-    if (verbose_)  std::cout << Info() << Form("Read: %7ld, kept: %7ld", nRead, nKept) << std::endl;
 
     if (verbose_>1) {
         std::ios::fmtflags flags = std::cout.flags();

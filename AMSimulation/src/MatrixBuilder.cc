@@ -53,20 +53,35 @@ int MatrixBuilder::buildMatrices(TString src) {
 
 
     // _________________________________________________________________________
-    // Loop over all events
+    // Loop over all events (filter)
 
-    if (verbose_)  std::cout << Info() << "Begin first loop on tracks" << std::endl;
+    if (verbose_)  std::cout << Info() << "Begin event filtering" << std::endl;
 
-    // Mean vector and covariance matrix
-    Eigen::VectorXd means = Eigen::VectorXd::Zero(nvariables_);
-    Eigen::MatrixXd covariances = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
-
-    // Cache
+    // Event decisions
     std::vector<bool> keepEvents;
 
     // Bookkeepers
     long int nRead = 0, nKept = 0;
 
+#if 0
+    TString txt = "keepEvents.txt";
+    std::ifstream infile(txt.Data());
+    if (!infile) {
+        std::cout << "Unable to open " << txt << std::endl;
+        return 1;
+    }
+    int x;
+    while (infile >> x) {
+        long long ievt = nRead;
+        if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
+
+        keepEvents.push_back(x);
+
+        if (x)
+            ++nKept;
+        ++nRead;
+    }
+#else
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         if (reader.loadTree(ievt) < 0)  break;
         reader.getEntry(ievt);
@@ -91,13 +106,50 @@ int MatrixBuilder::buildMatrices(TString src) {
                 ++ngoodstubs;
             }
         }
-        if (ngoodstubs != po_.nLayers) {  // FIXME: allow missing hits
+        if (ngoodstubs != po_.nLayers) {
             ++nRead;
             keepEvents.push_back(false);
             continue;
         }
         assert(nstubs == po_.nLayers);
 
+        ++nKept;
+        ++nRead;
+        keepEvents.push_back(true);
+    }
+#endif
+
+    if (nRead == 0) {
+        std::cout << Error() << "Failed to read any event." << std::endl;
+        return 1;
+    }
+
+    if (verbose_)  std::cout << Info() << Form("Read: %7ld, kept: %7ld", nRead, nKept) << std::endl;
+
+
+    // _________________________________________________________________________
+    // Loop over all events
+
+    if (verbose_)  std::cout << Info() << "Begin first loop on tracks" << std::endl;
+
+    // Mean vector and covariance matrix
+    Eigen::VectorXd means = Eigen::VectorXd::Zero(nvariables_);
+    Eigen::MatrixXd covariances = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
+
+    // Bookkeepers
+    nRead = 0, nKept = 0;
+
+    for (long long ievt=0; ievt<nEvents_; ++ievt) {
+        if (reader.loadTree(ievt) < 0)  break;
+        reader.getEntry(ievt);
+
+        const unsigned nstubs = reader.vb_modId->size();
+        if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
+
+        if (!keepEvents.at(ievt)) {
+            ++nRead;
+            continue;
+        }
 
         // _____________________________________________________________________
         // Start building matrices
@@ -113,10 +165,6 @@ int MatrixBuilder::buildMatrices(TString src) {
 
             variables1(istub) = stub_phi;
             variables2(istub) = stub_z;
-
-            if (verbose_>2) {
-                std::cout << Debug() << "... ... stub: " << istub << " r: " << stub_r << " phi: " << stub_phi << " z: " << stub_z << std::endl;
-            }
         }
 
         Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);
@@ -141,13 +189,6 @@ int MatrixBuilder::buildMatrices(TString src) {
         ++nRead;
         keepEvents.push_back(true);
     }
-
-    if (nRead == 0) {
-        std::cout << Error() << "Failed to read any event." << std::endl;
-        return 1;
-    }
-
-    if (verbose_)  std::cout << Info() << Form("Read: %7ld, kept: %7ld", nRead, nKept) << std::endl;
 
     if (verbose_>1) {
         std::cout << Info() << "means: " << std::endl;
