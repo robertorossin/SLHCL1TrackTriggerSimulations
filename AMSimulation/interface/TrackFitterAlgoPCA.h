@@ -6,7 +6,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PCA.h"
 using namespace slhcl1tt;
 
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/external/Eigen/Core"
+#include "Eigen/Core"
 
 
 class TrackFitterAlgoPCA : public TrackFitterAlgoBase {

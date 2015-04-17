@@ -3,8 +3,8 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubReader.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Statistics.h"
 
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/external/Eigen/Eigenvalues"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/external/Eigen/QR"
+#include "Eigen/Eigenvalues"
+#include "Eigen/QR"
 #include <iomanip>
 #include <fstream>
 

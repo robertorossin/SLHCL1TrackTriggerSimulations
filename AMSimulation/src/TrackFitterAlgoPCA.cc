@@ -1,7 +1,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoPCA.h"
 
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/external/Eigen/Eigenvalues"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/external/Eigen/QR"
+#include "Eigen/Eigenvalues"
+#include "Eigen/QR"
 #include <iostream>
 #include <iomanip>
 #include <fstream>
