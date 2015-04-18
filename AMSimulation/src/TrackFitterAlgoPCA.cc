@@ -82,18 +82,14 @@ int TrackFitterAlgoPCA::loadConstants(TString txt) {
 }
 
 // _____________________________________________________________________________
-int TrackFitterAlgoPCA::fit(const std::vector<TTHit>& hits, TTTrack2& track) {
-
-    if (hits.size() != nvariables_/2)  // FIXME: use hit bits
-        return 0;
+int TrackFitterAlgoPCA::fit(const TTRoadComb& acomb, TTTrack2& track) {
 
     Eigen::VectorXd variables1 = Eigen::VectorXd::Zero(nvariables_/2);
     Eigen::VectorXd variables2 = Eigen::VectorXd::Zero(nvariables_/2);
 
-    for (unsigned i=0; i<hits.size(); ++i) {
-        const TTHit& hit = hits.at(i);
-        variables1(i) = hit.phi;
-        variables2(i) = hit.z;
+    for (unsigned i=0; i<acomb.stubs_phi.size(); ++i) {
+        variables1(i) = acomb.stubs_phi.at(i);
+        variables2(i) = acomb.stubs_z.at(i);
     }
 
     Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);

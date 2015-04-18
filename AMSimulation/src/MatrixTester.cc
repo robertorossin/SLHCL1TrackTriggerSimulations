@@ -170,38 +170,50 @@ int MatrixTester::testMatrices(TString src) {
         tracks.clear();
         int fitstatus = 0;
 
-        unsigned iroad = 0;
-        unsigned tower = po_.tower;
-        std::vector<unsigned> stubRefs;
+        TTRoadComb acomb;
+        acomb.roadRef    = 0;
+        acomb.patternRef = 0;
+        acomb.tower      = po_.tower;
+
+        acomb.stubRefs.clear();
         for (unsigned istub=0; istub<nstubs; ++istub) {
-            stubRefs.push_back(istub);
+            acomb.stubRefs.push_back(istub);
         }
 
-        // Loop over reconstructed stubs
-        std::vector<TTHit> hits;
-        for (unsigned istub=0; istub<stubRefs.size(); ++istub) {
-            const unsigned& ref = stubRefs.at(istub);
-            hits.emplace_back(TTHit{                // using POD type constructor
-                ref,
-                reader.vb_r->at(ref),
-                reader.vb_phi->at(ref),
-                reader.vb_z->at(ref),
-                0.,  // FIXME: add errors
-                0.,
-                0.
-            });
+        acomb.nstubs     = 0;
+        acomb.stubs_r   .clear();
+        acomb.stubs_phi .clear();
+        acomb.stubs_z   .clear();
+        acomb.stubs_bool.clear();
+        for (unsigned istub=0; istub<acomb.stubRefs.size(); ++istub) {
+            const unsigned stubRef = acomb.stubRefs.at(istub);
+            if (stubRef != 999999) {
+                ++acomb.nstubs;
+                acomb.stubs_r   .push_back(reader.vb_r   ->at(stubRef));
+                acomb.stubs_phi .push_back(reader.vb_phi ->at(stubRef));
+                acomb.stubs_z   .push_back(reader.vb_z   ->at(stubRef));
+                acomb.stubs_bool.push_back(true);
+            } else {
+                acomb.stubs_r   .push_back(0.);
+                acomb.stubs_phi .push_back(0.);
+                acomb.stubs_z   .push_back(0.);
+                acomb.stubs_bool.push_back(false);
+            }
         }
 
         // _____________________________________________________________________
         // Fit
         TTTrack2 atrack;
-        atrack.setRoadRef(iroad);
-        atrack.setTower(tower);
-        atrack.setStubRefs(stubRefs);
 
-        fitstatus = fitterPCA_->fit(hits, atrack);
+        fitstatus = fitterPCA_->fit(acomb, atrack);
 
+        atrack.setRoadRef (acomb.roadRef);
+        atrack.setTower   (acomb.tower);
+        atrack.setStubRefs(acomb.stubRefs);
         tracks.push_back(atrack);
+
+        if (verbose_>2)  std::cout << Debug() << "... track: " << 0 << " status: " << fitstatus << std::endl;
+
 
         std::vector<float> principals(nvariables_);
         std::vector<double> parameters(nparameters_);

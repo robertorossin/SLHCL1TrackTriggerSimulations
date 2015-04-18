@@ -112,44 +112,57 @@ int TrackFitter::makeTracks(TString src, TString out) {
             // Loop over the roads
             for (unsigned iroad=0; iroad<nroads; ++iroad) {
 
-                const unsigned tower = reader.vr_tower->at(iroad);
-                const unsigned nstubs = reader.vr_nstubs->at(iroad);
+                // Create and set TTRoadComb
+                TTRoadComb acomb;
+                acomb.roadRef    = iroad;
+                acomb.patternRef = reader.vr_patternRef->at(iroad);
+                acomb.tower      = reader.vr_tower->at(iroad);
 
-                std::vector<unsigned> stubRefsAllLayers; // collect stubRefs from all layers
+                acomb.stubRefs.clear();
                 for (unsigned isuperstrip=0; isuperstrip<reader.vr_stubRefs->at(iroad).size(); ++isuperstrip)
                     for (unsigned istub=0; istub<reader.vr_stubRefs->at(iroad).at(isuperstrip).size(); ++istub)
-                        stubRefsAllLayers.push_back(reader.vr_stubRefs->at(iroad).at(isuperstrip).at(istub));
-                assert(nstubs == stubRefsAllLayers.size());
+                        acomb.stubRefs.push_back(reader.vr_stubRefs->at(iroad).at(isuperstrip).at(istub));
+                assert(acomb.stubRefs.size() == reader.vr_nstubs->at(iroad));
+
+                acomb.nstubs     = 0;
+                acomb.stubs_r   .clear();
+                acomb.stubs_phi .clear();
+                acomb.stubs_z   .clear();
+                acomb.stubs_bool.clear();
+                for (unsigned istub=0; istub<acomb.stubRefs.size(); ++istub) {
+                    const unsigned stubRef = acomb.stubRefs.at(istub);
+                    if (stubRef != 999999) {
+                        ++acomb.nstubs;
+                        acomb.stubs_r   .push_back(reader.vb_r   ->at(stubRef));
+                        acomb.stubs_phi .push_back(reader.vb_phi ->at(stubRef));
+                        acomb.stubs_z   .push_back(reader.vb_z   ->at(stubRef));
+                        acomb.stubs_bool.push_back(true);
+                    } else {
+                        acomb.stubs_r   .push_back(0.);
+                        acomb.stubs_phi .push_back(0.);
+                        acomb.stubs_z   .push_back(0.);
+                        acomb.stubs_bool.push_back(false);
+                    }
+                }
 
                 if (verbose_>2) {
-                    std::cout << Debug() << "... ... road: " << iroad << " tower: " << tower << " # stubs: " << nstubs << std::endl;
+                    std::cout << Debug() << "... ... road: " << iroad << " patternRef: " << acomb.patternRef << " tower: " << acomb.tower << " # stubs: " << acomb.nstubs << std::endl;
                     std::cout << Debug() << "... ... road: " << iroad << " stubRefs: ";
-                    std::copy(stubRefsAllLayers.begin(), stubRefsAllLayers.end(), std::ostream_iterator<unsigned>(std::cout, " "));
+                    std::copy(acomb.stubRefs.begin(), acomb.stubRefs.end(), std::ostream_iterator<unsigned>(std::cout, " "));
                     std::cout << std::endl;
                 }
 
                 // _____________________________________________________________
-                // Loop over the stubs
-                std::vector<TTHit> hits;
-                for (unsigned istub=0; istub<nstubs; ++istub) {
-                    const unsigned& ref = stubRefsAllLayers.at(istub);
-                    hits.emplace_back(TTHit{                // using POD type constructor
-                        ref,
-                        reader.vb_r->at(ref),
-                        reader.vb_phi->at(ref),
-                        reader.vb_z->at(ref),
-                        0.,  // FIXME: add errors
-                        0.,
-                        0.
-                    });
-                }  // loop over the stubs
-
-                // _____________________________________________________________
                 // Fit
 
-                fitstatus = fitterRetina_->fit(tower, ievt, iroad, hits, tracks);
+                fitstatus = fitterRetina_->fit(acomb, ievt, tracks);
+                for (unsigned itrack=0; itrack<tracks.size(); ++itrack) {
+                    TTTrack2& track = tracks.at(itrack);
+                    track.setRoadRef(acomb.roadRef);
+                    track.setTower(acomb.tower);
+                }
 
-                if (verbose_>3)  std::cout << Debug() << "... ... road: " << iroad << " # tracks: " << tracks.size() << " status: " << fitstatus << std::endl;
+                if (verbose_>2)  std::cout << Debug() << "... ... road: " << iroad << " # tracks: " << tracks.size() << " status: " << fitstatus << std::endl;
 
                 /// Debug
                 if (verbose_>3 && tracks.size()>0) {
@@ -189,8 +202,8 @@ int TrackFitter::makeTracks(TString src, TString out) {
                         std::cout << "  " << itrk << "  -  " << track.pt() << " " << track.phi0() << " " << track.eta() << " " << track.z0() << " " << stubRefs.size() << std::endl;
                     }
                 }
-
             }  // loop over the roads
+
 
         } else if (po_.algo == "ATF4" || po_.algo == "ATF5" || po_.algo == "PCA4" || po_.algo == "PCA5") {
             // _________________________________________________________________
@@ -199,10 +212,9 @@ int TrackFitter::makeTracks(TString src, TString out) {
             // Loop over the roads
             for (unsigned iroad=0; iroad<nroads; ++iroad) {
 
-                const unsigned tower = reader.vr_tower->at(iroad);
+                // Get combinations of stubRefs
                 const unsigned nstubs = reader.vr_nstubs->at(iroad);
-
-                std::vector<std::vector<unsigned> > combinations = arrangeCombinations(reader.vr_stubRefs->at(iroad)); // get combinations of stubRefs
+                std::vector<std::vector<unsigned> > combinations = arrangeCombinations(reader.vr_stubRefs->at(iroad));
 
                 for (unsigned icomb=0; icomb<combinations.size(); ++icomb)
                     assert(combinations.at(icomb).size() == reader.vr_stubRefs->at(iroad).size());
@@ -211,54 +223,62 @@ int TrackFitter::makeTracks(TString src, TString out) {
                     combinations.resize(po_.maxCombs);
 
                 if (verbose_>2) {
-                    std::cout << Debug() << "... ... road: " << iroad << " tower: " << tower << " # stubs: " << nstubs << " # combinations: " << combinations.size() << std::endl;
+                    std::cout << Debug() << "... ... road: " << iroad << " # stubs: " << nstubs << " # combinations: " << combinations.size() << std::endl;
                 }
 
-                // _____________________________________________________________
                 // Loop over the combinations
-
                 for (unsigned icomb=0; icomb<combinations.size(); ++icomb) {
-                    const std::vector<unsigned>& stubRefs = combinations.at(icomb);
 
-                    if (verbose_>3) {
-                        std::cout << Debug() << "... ... ... comb: " << icomb << " stubRefs: ";
-                        std::copy(stubRefs.begin(), stubRefs.end(), std::ostream_iterator<unsigned>(std::cout, " "));
-                        std::cout << std::endl;
+                    // Create and set TTRoadComb
+                    TTRoadComb acomb;
+                    acomb.roadRef    = iroad;
+                    acomb.patternRef = reader.vr_patternRef->at(iroad);
+                    acomb.tower      = reader.vr_tower->at(iroad);
+                    acomb.stubRefs   = combinations.at(icomb);
+
+                    acomb.nstubs     = 0;
+                    acomb.stubs_r   .clear();
+                    acomb.stubs_phi .clear();
+                    acomb.stubs_z   .clear();
+                    acomb.stubs_bool.clear();
+                    for (unsigned istub=0; istub<acomb.stubRefs.size(); ++istub) {
+                        const unsigned stubRef = acomb.stubRefs.at(istub);
+                        if (stubRef != 999999) {
+                            ++acomb.nstubs;
+                            acomb.stubs_r   .push_back(reader.vb_r   ->at(stubRef));
+                            acomb.stubs_phi .push_back(reader.vb_phi ->at(stubRef));
+                            acomb.stubs_z   .push_back(reader.vb_z   ->at(stubRef));
+                            acomb.stubs_bool.push_back(true);
+                        } else {
+                            acomb.stubs_r   .push_back(0.);
+                            acomb.stubs_phi .push_back(0.);
+                            acomb.stubs_z   .push_back(0.);
+                            acomb.stubs_bool.push_back(false);
+                        }
                     }
 
-                    // Loop over the stubs
-                    std::vector<TTHit> hits;
-                    for (unsigned istub=0; istub<stubRefs.size(); ++istub) {
-                        const unsigned& ref = stubRefs.at(istub);
-                        if (ref == 999999)  // empty
-                            continue;
-
-                        hits.emplace_back(TTHit{                // using POD type constructor
-                            ref,
-                            reader.vb_r->at(ref),
-                            reader.vb_phi->at(ref),
-                            reader.vb_z->at(ref),
-                            0.,  // FIXME: add errors
-                            0.,
-                            0.
-                        });
+                    if (verbose_>2) {
+                        std::cout << Debug() << "... ... ... comb: " << icomb << " patternRef: " << acomb.patternRef << " tower: " << acomb.tower << " # stubs: " << acomb.nstubs << std::endl;
+                        std::cout << Debug() << "... ... ... comb: " << icomb << " stubRefs: ";
+                        std::copy(acomb.stubRefs.begin(), acomb.stubRefs.end(), std::ostream_iterator<unsigned>(std::cout, " "));
+                        std::cout << std::endl;
                     }
 
                     // _________________________________________________________
                     // Fit
-                    TTTrack2 atrack;
-                    atrack.setRoadRef(iroad);
-                    atrack.setTower(tower);
-                    atrack.setStubRefs(stubRefs);
+                    TTTrack2 track;
 
                     if (po_.algo=="ATF4" || po_.algo=="ATF5")
-                        fitstatus = fitterATF_->fit(hits, atrack);
+                        fitstatus = fitterATF_->fit(acomb, track);
                     else if (po_.algo=="PCA4" || po_.algo=="PCA5")
-                        fitstatus = fitterPCA_->fit(hits, atrack);
+                        fitstatus = fitterPCA_->fit(acomb, track);
 
-                    tracks.push_back(atrack);
+                    track.setRoadRef (acomb.roadRef);
+                    track.setTower   (acomb.tower);
+                    track.setStubRefs(acomb.stubRefs);
+                    tracks.push_back(track);
 
-                    if (verbose_>3)  std::cout << Debug() << "... ... ... track: " << icomb << " status: " << fitstatus << std::endl;
+                    if (verbose_>2)  std::cout << Debug() << "... ... ... track: " << icomb << " status: " << fitstatus << std::endl;
                 }
             }  // loop over the roads
 
