@@ -356,5 +356,13 @@ def save(imgdir, imgname, redraw_axis=True, dot_pdf=True, dot_root=False):
     if dot_pdf:
         gPad.Print(imgdir+imgname+".pdf")
     if dot_root:
-        gPad.Print(imgdir+imgname+".root")
+        def save_for_root(p):
+            if p.ClassName() == "TPad" or p.ClassName() == "TCanvas":
+                for pp in p.GetListOfPrimitives():
+                    save_for_root(pp)
+            p.Write()
+
+        tfile = TFile.Open(imgdir+imgname+".root", "RECREATE")
+        save_for_root(gPad)
+        tfile.Close()
 

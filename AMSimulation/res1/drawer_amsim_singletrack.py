@@ -337,18 +337,5 @@ if __name__ == '__main__':
     parse_drawer_options(options)
     options.pu = 0  # assume zero pileup
 
-    # Calculate trigger tower fiducial region
-    if options.tower != 99:
-        ieta = options.tower/8
-        iphi = options.tower%8
-        options.etamin = -2.2 + (4.4/6) * ieta
-        options.etamax = -2.2 + (4.4/6) * (ieta+1)
-        if iphi < 6:
-            options.phimin = -pi/2 + (2*pi/8) * iphi
-            options.phimax = -pi/2 + (2*pi/8) * (iphi+1)
-        else:
-            options.phimin = -2*pi -pi/2 + (2*pi/8) * iphi
-            options.phimax = -2*pi -pi/2 + (2*pi/8) * (iphi+1)
-
     # Call the main function
     main(options)

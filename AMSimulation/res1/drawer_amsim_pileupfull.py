@@ -17,38 +17,39 @@ donotdelete = []  # persist in memory
 # ______________________________________________________________________________
 def bookRoads():
     histos = {}
+    f = 5
 
     hname = "nroads_per_event"
-    nbins, xmin, xmax = modify_binning(150, 0., 300.)
+    nbins, xmin, xmax = modify_binning(400*f, 0., 400.*f)
     histos[hname] = TH1F(hname, "; # roads/tower/BX; Entries"                , nbins, xmin, xmax)
 
     hname = "nsuperstrips_per_road"
-    nbins, xmin, xmax = modify_binning(20, 0., 20.)
+    nbins, xmin, xmax = modify_binning(20*f, 0., 20.*f)
     histos[hname] = TH1F(hname, "; # superstrips/road/tower/BX; Entries"     , nbins, xmin, xmax)
 
     hname = "nstubs_per_superstrip"
-    nbins, xmin, xmax = modify_binning(50, 0., 50.)
+    nbins, xmin, xmax = modify_binning(50*f, 0., 50.*f)
     histos[hname] = TH1F(hname, "; # stubs/superstrip/road/tower/BX; Entries", nbins, xmin, xmax)
 
     hname = "nstubs_per_road"
-    nbins, xmin, xmax = modify_binning(50, 0., 50.)
+    nbins, xmin, xmax = modify_binning(50*f, 0., 50.*f)
     histos[hname] = TH1F(hname, "; # stubs/road/tower/BX; Entries"           , nbins, xmin, xmax)
 
     hname = "nstubs_per_event"
-    nbins, xmin, xmax = modify_binning(150, 0., 300.)
+    nbins, xmin, xmax = modify_binning(400*f, 0., 400.*f)
     histos[hname] = TH1F(hname, "; # stubs/tower/BX; Entries"                , nbins, xmin, xmax)
 
     hname = "ncombinations_per_road"
-    nbins, xmin, xmax = modify_binning(100, 0., 500.)
+    nbins, xmin, xmax = modify_binning(500*f, 0., 500.*f)
     histos[hname] = TH1F(hname, "; # combinations/road/tower/BX; Entries"    , nbins, xmin, xmax)
 
     hname = "ncombinations_per_event"
-    nbins, xmin, xmax = modify_binning(150, 0., 1500.)
+    nbins, xmin, xmax = modify_binning(2000*f, 0., 2000.*f)
     histos[hname] = TH1F(hname, "; # combinations/tower/BX; Entries"         , nbins, xmin, xmax)
 
     for i in xrange(6):
         hname = "nstubs_per_layer_%i" % i
-        nbins, xmin, xmax = modify_binning(50, 0., 50.)
+        nbins, xmin, xmax = modify_binning(50*f, 0., 50.*f)
         histos[hname] = TH1F(hname, "; # stubs/layer/road/tower/BX; Entries" , nbins, xmin, xmax)
 
     # Style
@@ -97,7 +98,7 @@ def projectRoads(tree, histos, options):
                     l += 1
 
                 nsuperstrips_per_road = len(ssidmap)
-                assert(nsuperstrips_per_road == 6)
+                #assert(nsuperstrips_per_road == 6)
                 histos["nsuperstrips_per_road"].Fill(nsuperstrips_per_road)
 
                 nstubs_per_road = 0
