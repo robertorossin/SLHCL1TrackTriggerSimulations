@@ -12,7 +12,7 @@ using namespace slhcl1tt;
 class TrackFitterAlgoPCA : public TrackFitterAlgoBase {
   public:
     TrackFitterAlgoPCA(const slhcl1tt::ProgramOption& po)
-    : TrackFitterAlgoBase(),
+    : TrackFitterAlgoBase(), verbose_(po.verbose),
       view_(PCA_3D), hitbits_(PCA_ALLHIT), nvariables_(12), nparameters_(4) {
 
         // Setup
@@ -61,6 +61,8 @@ class TrackFitterAlgoPCA : public TrackFitterAlgoBase {
     void print();
 
   private:
+    int verbose_;
+
     // Settings
     PCA_FitView view_;
     PCA_HitBits hitbits_;
@@ -68,6 +70,12 @@ class TrackFitterAlgoPCA : public TrackFitterAlgoBase {
     unsigned nparameters_;  // number of track parameters
 
     // Matrices
+    Eigen::VectorXd meansR_;
+    Eigen::VectorXd meansC_;
+    Eigen::VectorXd meansT_;
+    Eigen::MatrixXd solutionsC_;
+    Eigen::MatrixXd solutionsT_;
+
     Eigen::VectorXd sqrtEigenvalues_;
     Eigen::VectorXd meansV_;
     Eigen::VectorXd meansP_;

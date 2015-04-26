@@ -86,6 +86,12 @@ class MatrixBuilder {
     unsigned nparameters_;  // number of track parameters
 
     // Matrices
+    Eigen::VectorXd meansR_;
+    Eigen::VectorXd meansC_;
+    Eigen::VectorXd meansT_;
+    Eigen::MatrixXd solutionsC_;
+    Eigen::MatrixXd solutionsT_;
+
     Eigen::VectorXd sqrtEigenvalues_;
     Eigen::VectorXd meansV_;
     Eigen::VectorXd meansP_;

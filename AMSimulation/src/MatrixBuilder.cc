@@ -63,7 +63,8 @@ int MatrixBuilder::buildMatrices(TString src) {
     // Bookkeepers
     long int nRead = 0, nKept = 0;
 
-#if 0
+//#define Use_keepEvents_txt_
+#ifdef Use_keepEvents_txt_
     TString txt = "keepEvents.txt";
     std::ifstream infile(txt.Data());
     if (!infile) {
@@ -136,6 +137,12 @@ int MatrixBuilder::buildMatrices(TString src) {
     Eigen::VectorXd means = Eigen::VectorXd::Zero(nvariables_);
     Eigen::MatrixXd covariances = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
 
+    meansC_ = Eigen::VectorXd::Zero(1);
+    Eigen::MatrixXd covariancesC = Eigen::MatrixXd::Zero(1, nvariables_/2);
+
+    meansT_ = Eigen::VectorXd::Zero(1);
+    Eigen::MatrixXd covariancesT = Eigen::MatrixXd::Zero(1, nvariables_/2);
+
     // Bookkeepers
     nRead = 0, nKept = 0;
 
@@ -159,13 +166,149 @@ int MatrixBuilder::buildMatrices(TString src) {
 
         // Loop over reconstructed stubs
         for (unsigned istub=0; istub<nstubs; ++istub) {
-            float    stub_r   = reader.vb_r       ->at(istub);
+            //float    stub_r   = reader.vb_r       ->at(istub);
             float    stub_phi = reader.vb_phi     ->at(istub);
             float    stub_z   = reader.vb_z       ->at(istub);
 
             variables1(istub) = stub_phi;
             variables2(istub) = stub_z;
         }
+
+        Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);
+        variables << variables1, variables2;
+
+        // Update mean vectors
+        long int nTracks = nKept + 1;
+        for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
+            means(ivar) += (variables(ivar) - means(ivar))/nTracks;
+        }
+
+        // Get sim info
+        float C = 0, T = 0;
+        {
+            unsigned ipar = 0;
+            float simPt           = reader.vp_pt->front();
+            float simEta          = reader.vp_eta->front();
+            float simPhi          = reader.vp_phi->front();
+            //float simVx           = reader.vp_vx->front();
+            //float simVy           = reader.vp_vy->front();
+            float simVz           = reader.vp_vz->front();
+            int   simCharge       = reader.vp_charge->front();
+
+            float simCotTheta     = std::sinh(simEta);
+            float simChargeOverPt = float(simCharge)/simPt;
+
+            C = 0.5 * (0.003 * 3.8 * simChargeOverPt);  // 1/(2 x radius of curvature)
+            T = simCotTheta;
+            meansC_(ipar) += (C - meansC_(ipar))/nTracks;
+            meansT_(ipar) += (T - meansT_(ipar))/nTracks;
+        }
+
+        // Update covariance matrices
+        if (nTracks > 1) {
+            for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
+                for (unsigned jvar=0; jvar<nvariables_; ++jvar) {
+                    covariances(ivar, jvar) += (variables(ivar) - means(ivar)) * (variables(jvar) - means(jvar)) / (nTracks-1) - covariances(ivar, jvar)/nTracks;
+                }
+            }
+
+            for (unsigned ipar=0; ipar<1; ++ipar) {
+                for (unsigned jvar=0; jvar<nvariables_/2; ++jvar) {
+                    unsigned kvar = jvar;
+                    covariancesC(ipar, jvar) += (C - meansC_(ipar)) * (variables(kvar) - means(kvar)) / (nTracks-1) - covariancesC(ipar, jvar)/nTracks;
+
+                    kvar = jvar + nvariables_/2;
+                    covariancesT(ipar, jvar) += (T - meansT_(ipar)) * (variables(kvar) - means(kvar)) / (nTracks-1) - covariancesT(ipar, jvar)/nTracks;
+                }
+            }
+        }
+
+        ++nKept;
+        ++nRead;
+    }
+
+    Eigen::MatrixXd covariances_phi = covariances.block(0,0,nvariables_/2,nvariables_/2);
+    solutionsC_ = Eigen::MatrixXd::Zero(1,nvariables_/2);
+    //solutionsC_ = covariancesC*(covariances_phi.inverse());
+    solutionsC_ = (covariances_phi.colPivHouseholderQr().solve(covariancesC.transpose())).transpose();
+
+    Eigen::MatrixXd covariances_z = covariances.block(nvariables_/2,nvariables_/2,nvariables_/2,nvariables_/2);
+    solutionsT_ = Eigen::MatrixXd::Zero(1,nvariables_/2);
+    //solutionsT_ = covariancesT*(covariances_z.inverse());
+    solutionsT_ = (covariances_z.colPivHouseholderQr().solve(covariancesT.transpose())).transpose();
+
+    if (verbose_>1) {
+        std::cout << Info() << "means: " << std::endl;
+        std::cout << means << std::endl << std::endl;
+        std::cout << Info() << "covariances: " << std::endl;
+        std::cout << covariances << std::endl << std::endl;
+        //std::cout << Info() << "covariances_phi: " << std::endl;
+        //std::cout << covariances_phi << std::endl << std::endl;
+        //std::cout << Info() << "covariances_z: " << std::endl;
+        //std::cout << covariances_z << std::endl << std::endl;
+
+        std::cout << Info() << "meansC: " << std::endl;
+        std::cout << meansC_ << std::endl << std::endl;
+        std::cout << Info() << "covariancesC: " << std::endl;
+        std::cout << covariancesC << std::endl << std::endl;
+        std::cout << Info() << "solutionsC: " << std::endl;
+        std::cout << solutionsC_ << std::endl << std::endl;
+        std::cout << Info() << "meansT: " << std::endl;
+        std::cout << meansT_ << std::endl << std::endl;
+        std::cout << Info() << "covariancesT: " << std::endl;
+        std::cout << covariancesT << std::endl << std::endl;
+        std::cout << Info() << "solutionsT: " << std::endl;
+        std::cout << solutionsT_ << std::endl << std::endl;
+    }
+
+
+    // _________________________________________________________________________
+    // Loop over all events again
+
+    if (verbose_)  std::cout << Info() << "Begin second loop on tracks" << std::endl;
+
+    // Mean vector and covariance matrix
+    means = Eigen::VectorXd::Zero(nvariables_);
+    covariances = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
+
+    meansR_ = Eigen::VectorXd::Zero(nvariables_/2);
+    meansR_ << 22.5913, 35.4772, 50.5402, 68.3101, 88.5002, 107.71;
+
+    // Bookkeepers
+    nRead = 0, nKept = 0;
+
+    for (long long ievt=0; ievt<nEvents_; ++ievt) {
+        if (reader.loadTree(ievt) < 0)  break;
+        reader.getEntry(ievt);
+
+        const unsigned nstubs = reader.vb_modId->size();
+        if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
+
+        if (!keepEvents.at(ievt)) {
+            ++nRead;
+            continue;
+        }
+
+        // _____________________________________________________________________
+        // Start building matrices
+
+        Eigen::VectorXd variables1 = Eigen::VectorXd::Zero(nvariables_/2);
+        Eigen::VectorXd variables2 = Eigen::VectorXd::Zero(nvariables_/2);
+        Eigen::VectorXd variables3 = Eigen::VectorXd::Zero(nvariables_/2);
+
+        // Loop over reconstructed stubs
+        for (unsigned istub=0; istub<nstubs; ++istub) {
+            float    stub_r   = reader.vb_r       ->at(istub);
+            float    stub_phi = reader.vb_phi     ->at(istub);
+            float    stub_z   = reader.vb_z       ->at(istub);
+
+            variables1(istub) = stub_phi;
+            variables2(istub) = stub_z;
+            variables3(istub) = meansR_(istub) - stub_r;
+        }
+
+        variables1 += ((solutionsC_ * variables1)(0,0)) * variables3;
+        variables2 += ((solutionsT_ * variables2)(0,0)) * variables3;
 
         Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);
         variables << variables1, variables2;
@@ -221,7 +364,7 @@ int MatrixBuilder::buildMatrices(TString src) {
     // _________________________________________________________________________
     // Loop over all events again
 
-    if (verbose_)  std::cout << Info() << "Begin second loop on tracks" << std::endl;
+    if (verbose_)  std::cout << Info() << "Begin third loop on tracks" << std::endl;
 
     // Mean vector and covariance matrix for principal components and track parameters
     meansV_ = Eigen::VectorXd::Zero(nvariables_);
@@ -249,6 +392,7 @@ int MatrixBuilder::buildMatrices(TString src) {
 
         Eigen::VectorXd variables1 = Eigen::VectorXd::Zero(nvariables_/2);
         Eigen::VectorXd variables2 = Eigen::VectorXd::Zero(nvariables_/2);
+        Eigen::VectorXd variables3 = Eigen::VectorXd::Zero(nvariables_/2);
 
         // Loop over reconstructed stubs
         for (unsigned istub=0; istub<nstubs; ++istub) {
@@ -258,7 +402,11 @@ int MatrixBuilder::buildMatrices(TString src) {
 
             variables1(istub) = stub_phi;
             variables2(istub) = stub_z;
+            variables3(istub) = meansR_(istub) - stub_r;
         }
+
+        variables1 += ((solutionsC_ * variables1)(0,0)) * variables3;
+        variables2 += ((solutionsT_ * variables2)(0,0)) * variables3;
 
         Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);
         variables << variables1, variables2;
@@ -349,7 +497,7 @@ int MatrixBuilder::buildMatrices(TString src) {
     // _________________________________________________________________________
     // Loop over all events again
 
-    if (verbose_)  std::cout << Info() << "Begin third loop on tracks" << std::endl;
+    if (verbose_)  std::cout << Info() << "Begin fourth loop on tracks" << std::endl;
 
     // Get mean values again
     meansV_ = Eigen::VectorXd::Zero(nvariables_);
@@ -379,6 +527,7 @@ int MatrixBuilder::buildMatrices(TString src) {
 
         Eigen::VectorXd variables1 = Eigen::VectorXd::Zero(nvariables_/2);
         Eigen::VectorXd variables2 = Eigen::VectorXd::Zero(nvariables_/2);
+        Eigen::VectorXd variables3 = Eigen::VectorXd::Zero(nvariables_/2);
 
         // Loop over reconstructed stubs
         for (unsigned istub=0; istub<nstubs; ++istub) {
@@ -388,7 +537,11 @@ int MatrixBuilder::buildMatrices(TString src) {
 
             variables1(istub) = stub_phi;
             variables2(istub) = stub_z;
+            variables3(istub) = meansR_(istub) - stub_r;
         }
+
+        variables1 += ((solutionsC_ * variables1)(0,0)) * variables3;
+        variables2 += ((solutionsT_ * variables2)(0,0)) * variables3;
 
         Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);
         variables << variables1, variables2;
@@ -475,6 +628,18 @@ int MatrixBuilder::writeMatrices(TString out) {
         std::cout << Info() << "The matrices are: " << std::endl;
         std::ios::fmtflags flags = std::cout.flags();
         std::cout << std::setprecision(4);
+
+        std::cout << "solutionsC: " << std::endl;
+        std::cout << solutionsC_ << std::endl << std::endl;
+        std::cout << "solutionsT: " << std::endl;
+        std::cout << solutionsT_ << std::endl << std::endl;
+        std::cout << "meansR: " << std::endl;
+        std::cout << meansR_ << std::endl << std::endl;
+        std::cout << "meansC: " << std::endl;
+        std::cout << meansC_ << std::endl << std::endl;
+        std::cout << "meansT: " << std::endl;
+        std::cout << meansT_ << std::endl << std::endl;
+
         std::cout << "V: " << std::endl;
         std::cout << V_ << std::endl << std::endl;
         std::cout << "D: " << std::endl;
@@ -487,6 +652,18 @@ int MatrixBuilder::writeMatrices(TString out) {
         std::cout << sqrtEigenvalues_ << std::endl << std::endl;
         std::cout.flags(flags);
     }
+
+    outfile << std::setprecision(6);
+    outfile << solutionsC_;
+    outfile << std::endl << std::endl;
+    outfile << solutionsT_;
+    outfile << std::endl << std::endl;
+    outfile << meansR_;
+    outfile << std::endl << std::endl;
+    outfile << meansC_;
+    outfile << std::endl << std::endl;
+    outfile << meansT_;
+    outfile << std::endl << std::endl;
 
     outfile << V_;
     outfile << std::endl << std::endl;

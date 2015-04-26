@@ -71,7 +71,8 @@ int MatrixTester::testMatrices(TString src) {
     // Bookkeepers
     long int nRead = 0, nKept = 0;
 
-#if 0
+//#define Use_keepEvents_txt_
+#ifdef Use_keepEvents_txt_
     TString txt = "keepEvents.txt";
     std::ifstream infile(txt.Data());
     if (!infile) {

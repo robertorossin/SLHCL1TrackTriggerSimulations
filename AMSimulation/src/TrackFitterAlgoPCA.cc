@@ -41,6 +41,32 @@ int TrackFitterAlgoPCA::loadConstants(TString txt) {
     }
 
     double x;
+    solutionsC_ = Eigen::MatrixXd::Zero(1,nvariables_/2);
+    for (unsigned ivar=0; ivar<nvariables_/2; ++ivar) {
+        infile >> x;
+        solutionsC_(0, ivar) = x;
+    }
+
+    solutionsT_ = Eigen::MatrixXd::Zero(1,nvariables_/2);
+    for (unsigned ivar=0; ivar<nvariables_/2; ++ivar) {
+        infile >> x;
+        solutionsT_(0, ivar) = x;
+    }
+
+    meansR_ = Eigen::VectorXd::Zero(nvariables_/2);
+    for (unsigned ivar=0; ivar<nvariables_/2; ++ivar) {
+        infile >> x;
+        meansR_(ivar) = x;
+    }
+
+    meansC_ = Eigen::VectorXd::Zero(1);
+    infile >> x;
+    meansC_(0) = x;
+
+    meansT_ = Eigen::VectorXd::Zero(1);
+    infile >> x;
+    meansT_(0) = x;
+
     V_ = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
     for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
         for (unsigned jvar=0; jvar<nvariables_; ++jvar) {
@@ -86,11 +112,16 @@ int TrackFitterAlgoPCA::fit(const TTRoadComb& acomb, TTTrack2& track) {
 
     Eigen::VectorXd variables1 = Eigen::VectorXd::Zero(nvariables_/2);
     Eigen::VectorXd variables2 = Eigen::VectorXd::Zero(nvariables_/2);
+    Eigen::VectorXd variables3 = Eigen::VectorXd::Zero(nvariables_/2);
 
-    for (unsigned i=0; i<acomb.stubs_phi.size(); ++i) {
-        variables1(i) = acomb.stubs_phi.at(i);
-        variables2(i) = acomb.stubs_z.at(i);
+    for (unsigned istub=0; istub<acomb.stubs_phi.size(); ++istub) {
+        variables1(istub) = acomb.stubs_phi.at(istub);
+        variables2(istub) = acomb.stubs_z.at(istub);
+        variables3(istub) = meansR_(istub) - acomb.stubs_r.at(istub);
     }
+
+    variables1 += ((solutionsC_ * variables1)(0,0)) * variables3;
+    variables2 += ((solutionsT_ * variables2)(0,0)) * variables3;
 
     Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);
     variables << variables1, variables2;
@@ -131,6 +162,18 @@ int TrackFitterAlgoPCA::fit(const TTRoadComb& acomb, TTTrack2& track) {
 void TrackFitterAlgoPCA::print() {
     std::ios::fmtflags flags = std::cout.flags();
     std::cout << std::setprecision(4);
+
+    std::cout << "solutionsC: " << std::endl;
+    std::cout << solutionsC_ << std::endl << std::endl;
+    std::cout << "solutionsT: " << std::endl;
+    std::cout << solutionsT_ << std::endl << std::endl;
+    std::cout << "meansR: " << std::endl;
+    std::cout << meansR_ << std::endl << std::endl;
+    std::cout << "meansC: " << std::endl;
+    std::cout << meansC_ << std::endl << std::endl;
+    std::cout << "meansT: " << std::endl;
+    std::cout << meansT_ << std::endl << std::endl;
+
     std::cout << "V: " << std::endl;
     std::cout << V_ << std::endl << std::endl;
     std::cout << "D: " << std::endl;
