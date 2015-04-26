@@ -14,6 +14,7 @@ NTupleSimTracks::NTupleSimTracks(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >    (prefix_ + "px"     + suffix_);
     produces<std::vector<float> >    (prefix_ + "py"     + suffix_);
     produces<std::vector<float> >    (prefix_ + "pz"     + suffix_);
+    produces<std::vector<float> >    (prefix_ + "E"      + suffix_);
     produces<std::vector<float> >    (prefix_ + "pt"     + suffix_);
     produces<std::vector<float> >    (prefix_ + "eta"    + suffix_);
     produces<std::vector<float> >    (prefix_ + "phi"    + suffix_);
@@ -31,6 +32,7 @@ void NTupleSimTracks::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     std::auto_ptr<std::vector<float> >    v_px    (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    v_py    (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    v_pz    (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >    v_E     (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    v_pt    (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    v_eta   (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    v_phi   (new std::vector<float>());
@@ -62,6 +64,7 @@ void NTupleSimTracks::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                 v_px->push_back(momentum.px());
                 v_py->push_back(momentum.py());
                 v_pz->push_back(momentum.pz());
+                v_E->push_back(momentum.energy());
                 v_pt->push_back(momentum.pt());
                 v_eta->push_back(momentum.eta());
                 v_phi->push_back(momentum.phi());
@@ -85,6 +88,7 @@ void NTupleSimTracks::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     iEvent.put(v_px    , prefix_ + "px"     + suffix_);
     iEvent.put(v_py    , prefix_ + "py"     + suffix_);
     iEvent.put(v_pz    , prefix_ + "pz"     + suffix_);
+    iEvent.put(v_E     , prefix_ + "E"      + suffix_);
     iEvent.put(v_pt    , prefix_ + "pt"     + suffix_);
     iEvent.put(v_eta   , prefix_ + "eta"    + suffix_);
     iEvent.put(v_phi   , prefix_ + "phi"    + suffix_);
