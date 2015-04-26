@@ -4,7 +4,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoLinearized.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoToyPCA.h"
+//#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoToyPCA.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoATF.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoRetina.h"
 using namespace slhcl1tt;
@@ -31,7 +31,7 @@ class TrackFitter {
 	fitter_ = 0;
         if (po_.mode=="ATF4")      fitter_ = new TrackFitterAlgoATF(false);
         else if (po_.mode=="ATF5") fitter_ = new TrackFitterAlgoATF(true);
-        else if (po_.mode=="PCA4") fitter_ = new TrackFitterAlgoToyPCA("matrixVD_0_FirstEstimate.txt");
+        //else if (po_.mode=="PCA4") fitter_ = new TrackFitterAlgoToyPCA("matrixVD_0_FirstEstimate.txt");
         else if (po_.mode=="LTF") fitter_ = new TrackFitterAlgoLinearized();
         else if (po_.mode=="RET")  fitter_ = new TrackFitterAlgoRetina();
 	else {
