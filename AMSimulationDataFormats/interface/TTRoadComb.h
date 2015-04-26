@@ -37,6 +37,12 @@ struct TTRoadComb {
         default      :  return 7;
         }
     }
+
+    unsigned ptsegment() {
+        switch (patternRef) {
+        default      :  return 0;
+        }
+    }
 };
 
 

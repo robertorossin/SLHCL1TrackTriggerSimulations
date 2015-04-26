@@ -43,6 +43,8 @@ TTTrackWriter::TTTrackWriter(int verbose)
   vt_chi2_z       (new std::vector<float>()),
   vt_tpId         (new std::vector<int>()),
   vt_tower        (new std::vector<unsigned>()),
+  vt_hitBits      (new std::vector<unsigned>()),
+  vt_ptSegment    (new std::vector<unsigned>()),
   vt_roadRef      (new std::vector<unsigned>()),
   vt_stubRefs     (new std::vector<std::vector<unsigned> >()),
   vt_principals   (new std::vector<std::vector<float> >()) {}
@@ -74,6 +76,8 @@ int TTTrackWriter::init(TChain* tchain, TString out, TString prefix, TString suf
     ttree->Branch(prefix + "chi2_z"         + suffix, &(*vt_chi2_z));
     ttree->Branch(prefix + "tpId"           + suffix, &(*vt_tpId));
     ttree->Branch(prefix + "tower"          + suffix, &(*vt_tower));
+    ttree->Branch(prefix + "hitBits"        + suffix, &(*vt_hitBits));
+    ttree->Branch(prefix + "ptSegment"      + suffix, &(*vt_ptSegment));
     ttree->Branch(prefix + "roadRef"        + suffix, &(*vt_roadRef));
     ttree->Branch(prefix + "stubRefs"       + suffix, &(*vt_stubRefs));
     ttree->Branch(prefix + "principals"     + suffix, &(*vt_principals));
@@ -160,6 +164,8 @@ void TTTrackWriter::fill(const std::vector<TTTrack2>& tracks) {
     vt_chi2_z          ->clear();
     vt_tpId            ->clear();
     vt_tower           ->clear();
+    vt_hitBits         ->clear();
+    vt_ptSegment       ->clear();
     vt_roadRef         ->clear();
     vt_stubRefs        ->clear();
     vt_principals      ->clear();
@@ -188,6 +194,8 @@ void TTTrackWriter::fill(const std::vector<TTTrack2>& tracks) {
         vt_chi2_z          ->push_back(track.chi2_z());
         vt_tpId            ->push_back(track.tpId());
         vt_tower           ->push_back(track.tower());
+        vt_hitBits         ->push_back(track.hitBits());
+        vt_ptSegment       ->push_back(track.ptSegment());
         vt_roadRef         ->push_back(track.roadRef());
         vt_stubRefs        ->push_back(track.stubRefs());
         vt_principals      ->push_back(track.principals());

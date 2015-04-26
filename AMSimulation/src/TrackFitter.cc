@@ -157,9 +157,9 @@ int TrackFitter::makeTracks(TString src, TString out) {
 
                 fitstatus = fitterRetina_->fit(acomb, ievt, tracks);
                 for (unsigned itrack=0; itrack<tracks.size(); ++itrack) {
-                    TTTrack2& track = tracks.at(itrack);
-                    track.setRoadRef(acomb.roadRef);
-                    track.setTower(acomb.tower);
+                    TTTrack2& atrack = tracks.at(itrack);
+                    atrack.setTower(acomb.tower);
+                    atrack.setRoadRef(acomb.roadRef);
                 }
 
                 if (verbose_>2)  std::cout << Debug() << "... ... road: " << iroad << " # tracks: " << tracks.size() << " status: " << fitstatus << std::endl;
@@ -266,17 +266,19 @@ int TrackFitter::makeTracks(TString src, TString out) {
 
                     // _________________________________________________________
                     // Fit
-                    TTTrack2 track;
+                    TTTrack2 atrack;
 
                     if (po_.algo=="ATF4" || po_.algo=="ATF5")
-                        fitstatus = fitterATF_->fit(acomb, track);
+                        fitstatus = fitterATF_->fit(acomb, atrack);
                     else if (po_.algo=="PCA4" || po_.algo=="PCA5")
-                        fitstatus = fitterPCA_->fit(acomb, track);
+                        fitstatus = fitterPCA_->fit(acomb, atrack);
 
-                    track.setRoadRef (acomb.roadRef);
-                    track.setTower   (acomb.tower);
-                    track.setStubRefs(acomb.stubRefs);
-                    tracks.push_back(track);
+                    atrack.setTower    (acomb.tower);
+                    atrack.setHitBits  (acomb.hitbits());
+                    atrack.setPtSegment(acomb.ptsegment());
+                    atrack.setRoadRef  (acomb.roadRef);
+                    atrack.setStubRefs (acomb.stubRefs);
+                    tracks.push_back(atrack);
 
                     if (verbose_>2)  std::cout << Debug() << "... ... ... track: " << icomb << " status: " << fitstatus << std::endl;
                 }

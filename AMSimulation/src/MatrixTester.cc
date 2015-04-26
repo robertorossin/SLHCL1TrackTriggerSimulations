@@ -207,9 +207,11 @@ int MatrixTester::testMatrices(TString src) {
 
         fitstatus = fitterPCA_->fit(acomb, atrack);
 
-        atrack.setRoadRef (acomb.roadRef);
-        atrack.setTower   (acomb.tower);
-        atrack.setStubRefs(acomb.stubRefs);
+        atrack.setTower    (acomb.tower);
+        atrack.setHitBits  (acomb.hitbits());
+        atrack.setPtSegment(acomb.ptsegment());
+        atrack.setRoadRef  (acomb.roadRef);
+        atrack.setStubRefs (acomb.stubRefs);
         tracks.push_back(atrack);
 
         if (verbose_>2)  std::cout << Debug() << "... track: " << 0 << " status: " << fitstatus << std::endl;
@@ -264,7 +266,6 @@ int MatrixTester::testMatrices(TString src) {
 
         ++nKept;
         ++nRead;
-        keepEvents.push_back(true);
     }
 
     if (verbose_>1) {

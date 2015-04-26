@@ -187,7 +187,6 @@ int MatrixBuilder::buildMatrices(TString src) {
 
         ++nKept;
         ++nRead;
-        keepEvents.push_back(true);
     }
 
     if (verbose_>1) {
