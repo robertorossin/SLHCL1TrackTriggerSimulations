@@ -69,8 +69,8 @@ int PatternMatcher::loadPatterns(TString bank) {
     }
 
     long long npatterns = pbreader.getPatterns();
-    if (npatterns > maxPatterns_)
-        npatterns = maxPatterns_;
+    if (npatterns > po_.maxPatterns)
+        npatterns = po_.maxPatterns;
     assert(npatterns > 0);
 
     // Allocate memory
@@ -82,7 +82,7 @@ int PatternMatcher::loadPatterns(TString bank) {
 
     for (long long ipatt=0; ipatt<npatterns; ++ipatt) {
         pbreader.getPattern(ipatt);
-        if (pbreader.pb_frequency < minFrequency_)
+        if (pbreader.pb_frequency < po_.minFrequency)
             break;
 
         assert(pbreader.pb_superstripIds->size() == po_.nLayers);
@@ -124,31 +124,6 @@ int PatternMatcher::makeRoads(TString src, TString out) {
     if (reader.init(src)) {
         std::cout << Error() << "Failed to initialize TTStubReader." << std::endl;
         return 1;
-
-    } else {
-        // Only read certain branches
-        TChain* tchain = reader.getChain();
-        tchain->SetBranchStatus("*"                 , 0);
-        tchain->SetBranchStatus("genParts_pt"       , 1);
-        tchain->SetBranchStatus("genParts_eta"      , 1);
-        tchain->SetBranchStatus("genParts_phi"      , 1);
-        tchain->SetBranchStatus("genParts_vx"       , 1);
-        tchain->SetBranchStatus("genParts_vy"       , 1);
-        tchain->SetBranchStatus("genParts_vz"       , 1);
-        tchain->SetBranchStatus("genParts_charge"   , 1);
-        tchain->SetBranchStatus("TTStubs_x"         , 1);
-        tchain->SetBranchStatus("TTStubs_y"         , 1);
-        tchain->SetBranchStatus("TTStubs_z"         , 1);
-        tchain->SetBranchStatus("TTStubs_r"         , 1);
-        tchain->SetBranchStatus("TTStubs_eta"       , 1);
-        tchain->SetBranchStatus("TTStubs_phi"       , 1);
-        tchain->SetBranchStatus("TTStubs_coordx"    , 1);
-        tchain->SetBranchStatus("TTStubs_coordy"    , 1);
-        tchain->SetBranchStatus("TTStubs_trigBend"  , 1);
-      //tchain->SetBranchStatus("TTStubs_roughPt"   , 1);
-      //tchain->SetBranchStatus("TTStubs_clusWidth" , 1);
-        tchain->SetBranchStatus("TTStubs_modId"     , 1);
-        tchain->SetBranchStatus("TTStubs_tpId"      , 1);
     }
 
     // For writing
@@ -250,8 +225,8 @@ int PatternMatcher::makeRoads(TString src, TString out) {
         // Limit the number of stubs per superstrip
         for (std::map<unsigned, std::vector<unsigned> >::iterator it=hitBuffer_.begin();
              it!=hitBuffer_.end(); ++it) {
-            if (it->second.size() > (unsigned) maxStubs_)
-                it->second.resize(maxStubs_);
+            if (it->second.size() > (unsigned) po_.maxStubs)
+                it->second.resize(po_.maxStubs);
         }
 
 
@@ -273,10 +248,10 @@ int PatternMatcher::makeRoads(TString src, TString out) {
                     ++nMisses;
 
                 // Skip if more misses than allowed
-                if (nMisses > maxMisses_)
+                if (nMisses > po_.maxMisses)
                     break;
             }
-            if (nMisses <= maxMisses_)
+            if (nMisses <= po_.maxMisses)
                 firedPatterns.push_back(itpatt - patternBank_.begin());
         }
 
@@ -313,7 +288,7 @@ int PatternMatcher::makeRoads(TString src, TString out) {
 
                 found = hitBuffer_.find(ssIdHash);
                 if (found != hitBuffer_.end()) {
-                    aroad.superstripIds[layer] = found->first;
+                    aroad.superstripIds[layer] = ssId;
                     aroad.stubRefs     [layer] = found->second;
                     aroad.nstubs              += found->second.size();
 
@@ -326,7 +301,7 @@ int PatternMatcher::makeRoads(TString src, TString out) {
 
             if (verbose_>2)  std::cout << Debug() << "... ... road: " << roads.size() - 1 << " " << aroad << std::endl;
 
-            if (roads.size() >= (unsigned) maxRoads_)
+            if (roads.size() >= (unsigned) po_.maxRoads)
                 break;
         }
 
@@ -335,6 +310,11 @@ int PatternMatcher::makeRoads(TString src, TString out) {
 
         writer.fill(roads);
         ++nRead;
+    }
+
+    if (nRead == 0) {
+        std::cout << Error() << "Failed to read any event." << std::endl;
+        return 1;
     }
 
     if (verbose_)  std::cout << Info() << Form("Read: %7ld, triggered: %7ld", nRead, nKept) << std::endl;
@@ -348,11 +328,11 @@ int PatternMatcher::makeRoads(TString src, TString out) {
 
 // _____________________________________________________________________________
 // Main driver
-int PatternMatcher::run(TString src, TString bank, TString datadir, TString out) {
+int PatternMatcher::run() {
     int exitcode = 0;
     Timing(1);
 
-    exitcode = setupTriggerTower(datadir);
+    exitcode = setupTriggerTower(po_.datadir);
     if (exitcode)  return exitcode;
     Timing();
 
@@ -360,11 +340,11 @@ int PatternMatcher::run(TString src, TString bank, TString datadir, TString out)
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = loadPatterns(bank);
+    exitcode = loadPatterns(po_.bankfile);
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = makeRoads(src, out);
+    exitcode = makeRoads(po_.input, po_.output);
     if (exitcode)  return exitcode;
     Timing();
 

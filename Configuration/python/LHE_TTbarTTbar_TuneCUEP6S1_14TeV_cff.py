@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 source = cms.Source("LHESource",
-    fileNames = cms.untracked.vstring('file:/afs/cern.ch/user/j/jiafulow/public/fromSeb/LHE/4tops_SM_10000_events.lhe'),
+    fileNames = cms.untracked.vstring('file:/eos/uscms/store/user/jiafu/L1TrackTrigger/from_sviret/LHE/4tops_SM_10000_events.lhe'),
 )
 
 #from Configuration.Generator.Pythia6CUEP6S1Settings_cfi import *

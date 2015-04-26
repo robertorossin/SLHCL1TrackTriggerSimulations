@@ -2,7 +2,3 @@
   <use   name="SLHCL1TrackTriggerSimulations/AMSimulation"/>
   <use   name="boost_program_options"/>
 </bin>
-<bin   name="amconvert" file="amconvert.cc">
-  <use   name="SLHCL1TrackTriggerSimulations/AMSimulation"/>
-  <use   name="boost_program_options"/>
-</bin>

@@ -3,6 +3,7 @@
 
 #include <vector>
 
+namespace slhcl1tt {
 
 struct xyPoint {
   double x;
@@ -64,5 +65,7 @@ class Retina {
   pqPoint getBestPQ();
 
 };
+
+}  // namespace slhcl1tt
 
 #endif

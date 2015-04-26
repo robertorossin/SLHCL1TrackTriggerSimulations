@@ -59,31 +59,6 @@ int StubCleaner::cleanStubs(TString src, TString out) {
     if (reader.init(src, false)) {
         std::cout << Error() << "Failed to initialize TTStubReader." << std::endl;
         return 1;
-
-    } else {
-        // Only read certain branches
-        TChain* tchain = reader.getChain();
-        tchain->SetBranchStatus("*"                 , 0);
-        tchain->SetBranchStatus("genParts_pt"       , 1);
-        tchain->SetBranchStatus("genParts_eta"      , 1);
-        tchain->SetBranchStatus("genParts_phi"      , 1);
-        tchain->SetBranchStatus("genParts_vx"       , 1);
-        tchain->SetBranchStatus("genParts_vy"       , 1);
-        tchain->SetBranchStatus("genParts_vz"       , 1);
-        tchain->SetBranchStatus("genParts_charge"   , 1);
-      //tchain->SetBranchStatus("TTStubs_x"         , 1);  // sync with BasicReader::init()
-      //tchain->SetBranchStatus("TTStubs_y"         , 1);  // sync with BasicReader::init()
-        tchain->SetBranchStatus("TTStubs_z"         , 1);
-        tchain->SetBranchStatus("TTStubs_r"         , 1);
-        tchain->SetBranchStatus("TTStubs_eta"       , 1);
-        tchain->SetBranchStatus("TTStubs_phi"       , 1);
-        tchain->SetBranchStatus("TTStubs_coordx"    , 1);
-        tchain->SetBranchStatus("TTStubs_coordy"    , 1);
-        tchain->SetBranchStatus("TTStubs_trigBend"  , 1);
-      //tchain->SetBranchStatus("TTStubs_roughPt"   , 1);  // sync with BasicReader::init()
-      //tchain->SetBranchStatus("TTStubs_clusWidth" , 1);  // sync with BasicReader::init()
-        tchain->SetBranchStatus("TTStubs_modId"     , 1);
-        tchain->SetBranchStatus("TTStubs_tpId"      , 1);
     }
 
     // For event selection
@@ -157,7 +132,8 @@ int StubCleaner::cleanStubs(TString src, TString out) {
         // Apply pt, eta, phi requirements
         bool sim = (po_.minPt  <= simPt  && simPt  <= po_.maxPt  &&
                     po_.minEta <= simEta && simEta <= po_.maxEta &&
-                    po_.minPhi <= simPhi && simPhi <= po_.maxPhi);
+                    po_.minPhi <= simPhi && simPhi <= po_.maxPhi &&
+                    po_.minVz  <= simVz  && simVz  <= po_.maxVz);
         if (!sim)
             keep = false;
 
@@ -277,19 +253,20 @@ int StubCleaner::cleanStubs(TString src, TString out) {
                 unsigned ipos = pos - reader.vb_modId->begin();
 
                 // Insert, keeping only the 'ngoodstubs' elements
-              //insertSorted(reader.vb_x->begin()        , ngoodstubs, ipos, reader.vb_x->at(istub));
-              //insertSorted(reader.vb_y->begin()        , ngoodstubs, ipos, reader.vb_y->at(istub));
-                insertSorted(reader.vb_z->begin()        , ngoodstubs, ipos, reader.vb_z->at(istub));
-                insertSorted(reader.vb_r->begin()        , ngoodstubs, ipos, reader.vb_r->at(istub));
-                insertSorted(reader.vb_eta->begin()      , ngoodstubs, ipos, reader.vb_eta->at(istub));
-                insertSorted(reader.vb_phi->begin()      , ngoodstubs, ipos, reader.vb_phi->at(istub));
-                insertSorted(reader.vb_coordx->begin()   , ngoodstubs, ipos, reader.vb_coordx->at(istub));
-                insertSorted(reader.vb_coordy->begin()   , ngoodstubs, ipos, reader.vb_coordy->at(istub));
-                insertSorted(reader.vb_trigBend->begin() , ngoodstubs, ipos, reader.vb_trigBend->at(istub));
-              //insertSorted(reader.vb_roughPt->begin()  , ngoodstubs, ipos, reader.vb_roughPt->at(istub));
-              //insertSorted(reader.vb_clusWidth->begin(), ngoodstubs, ipos, reader.vb_clusWidth->at(istub));
-                insertSorted(reader.vb_modId->begin()    , ngoodstubs, ipos, reader.vb_modId->at(istub));
-                insertSorted(reader.vb_tpId->begin()     , ngoodstubs, ipos, reader.vb_tpId->at(istub));
+              //insertSorted(reader.vb_x->begin()         , ngoodstubs, ipos, reader.vb_x->at(istub));
+              //insertSorted(reader.vb_y->begin()         , ngoodstubs, ipos, reader.vb_y->at(istub));
+                insertSorted(reader.vb_z->begin()         , ngoodstubs, ipos, reader.vb_z->at(istub));
+                insertSorted(reader.vb_r->begin()         , ngoodstubs, ipos, reader.vb_r->at(istub));
+                insertSorted(reader.vb_eta->begin()       , ngoodstubs, ipos, reader.vb_eta->at(istub));
+                insertSorted(reader.vb_phi->begin()       , ngoodstubs, ipos, reader.vb_phi->at(istub));
+                insertSorted(reader.vb_coordx->begin()    , ngoodstubs, ipos, reader.vb_coordx->at(istub));
+                insertSorted(reader.vb_coordy->begin()    , ngoodstubs, ipos, reader.vb_coordy->at(istub));
+                insertSorted(reader.vb_trigBend->begin()  , ngoodstubs, ipos, reader.vb_trigBend->at(istub));
+              //insertSorted(reader.vb_roughPt->begin()   , ngoodstubs, ipos, reader.vb_roughPt->at(istub));
+              //insertSorted(reader.vb_clusWidth0->begin(), ngoodstubs, ipos, reader.vb_clusWidth0->at(istub));
+              //insertSorted(reader.vb_clusWidth1->begin(), ngoodstubs, ipos, reader.vb_clusWidth1->at(istub));
+                insertSorted(reader.vb_modId->begin()     , ngoodstubs, ipos, reader.vb_modId->at(istub));
+                insertSorted(reader.vb_tpId->begin()      , ngoodstubs, ipos, reader.vb_tpId->at(istub));
 
                 ++ngoodstubs;  // remember to increment
             }
@@ -315,23 +292,30 @@ int StubCleaner::cleanStubs(TString src, TString out) {
 
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # good stubs: " << ngoodstubs << " keep? " << keep << std::endl;
 
-      //reader.vb_x        ->resize(ngoodstubs);
-      //reader.vb_y        ->resize(ngoodstubs);
-        reader.vb_z        ->resize(ngoodstubs);
-        reader.vb_r        ->resize(ngoodstubs);
-        reader.vb_eta      ->resize(ngoodstubs);
-        reader.vb_phi      ->resize(ngoodstubs);
-        reader.vb_coordx   ->resize(ngoodstubs);
-        reader.vb_coordy   ->resize(ngoodstubs);
-        reader.vb_trigBend ->resize(ngoodstubs);
-      //reader.vb_roughPt  ->resize(ngoodstubs);
-      //reader.vb_clusWidth->resize(ngoodstubs);
-        reader.vb_modId    ->resize(ngoodstubs);
-        reader.vb_tpId     ->resize(ngoodstubs);
+      //reader.vb_x         ->resize(ngoodstubs);
+      //reader.vb_y         ->resize(ngoodstubs);
+        reader.vb_z         ->resize(ngoodstubs);
+        reader.vb_r         ->resize(ngoodstubs);
+        reader.vb_eta       ->resize(ngoodstubs);
+        reader.vb_phi       ->resize(ngoodstubs);
+        reader.vb_coordx    ->resize(ngoodstubs);
+        reader.vb_coordy    ->resize(ngoodstubs);
+        reader.vb_trigBend  ->resize(ngoodstubs);
+      //reader.vb_roughPt   ->resize(ngoodstubs);
+      //reader.vb_clusWidth0->resize(ngoodstubs);
+      //reader.vb_clusWidth1->resize(ngoodstubs);
+        reader.vb_modId     ->resize(ngoodstubs);
+        reader.vb_tpId      ->resize(ngoodstubs);
 
         ++nRead;
         writer.fill();
     }
+
+    if (nRead == 0) {
+        std::cout << Error() << "Failed to read any event." << std::endl;
+        return 1;
+    }
+
     if (verbose_)  std::cout << Info() << Form("Read: %7ld, kept: %7ld", nRead, nKept) << std::endl;
 
     long long nentries = writer.writeTree();
@@ -343,11 +327,11 @@ int StubCleaner::cleanStubs(TString src, TString out) {
 
 // _____________________________________________________________________________
 // Main driver
-int StubCleaner::run(TString src, TString out) {
+int StubCleaner::run() {
     int exitcode = 0;
     Timing(1);
 
-    exitcode = cleanStubs(src, out);
+    exitcode = cleanStubs(po_.input, po_.output);
     if (exitcode)  return exitcode;
     Timing();
 

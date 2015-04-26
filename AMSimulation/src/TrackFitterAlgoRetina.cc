@@ -12,27 +12,26 @@ TrackFitterAlgoRetina::~TrackFitterAlgoRetina(){
 }
 
 
-int TrackFitterAlgoRetina::fit(unsigned tower, unsigned eventNum, unsigned roadRef, const std::vector<TTHit>& hits, std::vector<TTTrack2>& tracks){
+int TrackFitterAlgoRetina::fit(const TTRoadComb& aroad, unsigned eventNum, std::vector<TTTrack2>& tracks){
 
   int exitcode = 0;
 
-  if(hits.size()>1024){
+  if(aroad.nstubs>1024){
     std::cout << "ERROR : too many stubs for fitting!" << std::endl;
     return 1;
   }
 
 
-  //for(unsigned int ihit=0; ihit<hits.size(); ihit++){
-  //  std::cout << "  x = " << hits[ihit].x
-  //            << "  \ty = " << hits[ihit].y
-  //            << "  \tz = " << hits[ihit].z
-  //            << "  \trho = " << hits[ihit].r << std::endl;
+  //for (unsigned int ihit=0; ihit<aroad.nstubs; ihit++){
+  //  std::cout << "  rho = " << aroad.stubs_r[ihit]
+  //            << "  \tphi = " << aroad.stubs_phi[ihit]
+  //            << "  \tz = " << aroad.stubs_z[ihit] << std::endl;
   //}
 
 
   // --- Determine in which phi sector and eta range the trigger tower is:
-  const int phi_sector = tower % 8;
-  const int eta_range  = tower / 8;
+  const int phi_sector = aroad.tower % 8;
+  const int eta_range  = aroad.tower / 8;
 
   int trigTow_type = 0;
   if ( eta_range==1 || eta_range==4 )
@@ -45,12 +44,15 @@ int TrackFitterAlgoRetina::fit(unsigned tower, unsigned eventNum, unsigned roadR
   double y1 =  0.0046296296296296294; // 0.5/108.
 
 
-  // Use xyPoint instead of TTHit
   std::vector < xyPoint > hits_XY;
   std::vector < xyPoint > hits_RZ;
 
-  for (unsigned int ihit=0; ihit<hits.size(); ++ihit){
-    hits_XY.emplace_back(xyPoint{hits[ihit].x(), hits[ihit].y(), ihit});
+  for (unsigned int ihit=0; ihit<aroad.nstubs; ihit++){
+    hits_XY.emplace_back(xyPoint{
+        aroad.stubs_r[ihit] * std::cos(aroad.stubs_phi[ihit]),
+        aroad.stubs_r[ihit] * std::sin(aroad.stubs_phi[ihit]),
+        ihit
+    });
   }
 
 
@@ -182,13 +184,15 @@ int TrackFitterAlgoRetina::fit(unsigned tower, unsigned eventNum, unsigned roadR
 
     // --- Associate stubs to this maxumum:
     hits_RZ.clear();
-    for (unsigned int ihit=0; ihit<hits.size(); ++ihit){
+    for (unsigned int ihit=0; ihit<aroad.nstubs; ihit++){
 
       double dist   = fabs(hits_XY[ihit].y-p*hits_XY[ihit].x-q)/sqrt(1.+p*p);
       double weight = exp(-0.5*dist*dist/(sigma_step2[0]*sigma_step2[0]));
 
       if ( weight>0.5 ){
-        hits_RZ.emplace_back(xyPoint{fabs(hits[ihit].z), hits[ihit].r, ihit});  // NB: we are using fabs(z) !!!!
+        hits_RZ.emplace_back(xyPoint{
+            fabs(aroad.stubs_z[ihit]), aroad.stubs_r[ihit], ihit
+        });  // NB: we are using fabs(z) !!!!
       }
       //cout << ihit << " - " << dist << "  " << weight << endl;
 
@@ -353,11 +357,9 @@ int TrackFitterAlgoRetina::fit(unsigned tower, unsigned eventNum, unsigned roadR
            cottheta != -9999. && z0 != -9999. ){
 
         TTTrack2 atrack;
-        atrack.setRoadRef(roadRef);
-        atrack.setTower(tower);
         atrack.setTrackParams(c, phi, cottheta, z0, 0., 0., 0, 0., 0.);
-        for(unsigned int ihit=0; ihit<hits_RZ.size(); ihit++)
-          atrack.addStubRef(hits[hits_RZ[ihit].hitRef].ref);
+        for (unsigned int ihit=0; ihit<hits_RZ.size(); ihit++)
+          atrack.addStubRef(aroad.stubRefs.at(hits_RZ[ihit].hitRef));
 
         tracks.push_back(atrack);
       }

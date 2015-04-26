@@ -3,7 +3,7 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/Pattern.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TriggerTowerMap.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
 using namespace slhcl1tt;
@@ -12,9 +12,9 @@ using namespace slhcl1tt;
 class PatternGenerator {
   public:
     // Constructor
-    PatternGenerator(PatternBankOption po)
+    PatternGenerator(const ProgramOption& po)
     : po_(po),
-      nEvents_(999999999), minFrequency_(1), verbose_(1) {
+      nEvents_(po.maxEvents), verbose_(po.verbose) {
 
         // Initialize
         ttmap_   = new TriggerTowerMap();
@@ -27,17 +27,8 @@ class PatternGenerator {
         if (arbiter_)   delete arbiter_;
     }
 
-
-    // Setters
-    void setNEvents(long long n)    { if (n != -1)  nEvents_ = n > 0 ? n : 0; }
-    void setMinFrequency(int n)     { minFrequency_ = n > 1 ? n : 1; }
-    void setVerbosity(int v)        { verbose_ = v; }
-
-    // Getters
-    // none
-
     // Main driver
-    int run(TString src, TString datadir, TString out);
+    int run();
 
 
   private:
@@ -52,12 +43,9 @@ class PatternGenerator {
     // Write pattern bank
     int writePatterns(TString out);
 
-    // Configurations
-    const PatternBankOption po_;
-
     // Program options
+    const ProgramOption po_;
     long long nEvents_;
-    int minFrequency_;  // min frequency of a pattern to be stored
     int verbose_;
 
     // Operators

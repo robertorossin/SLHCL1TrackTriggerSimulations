@@ -1,14 +1,14 @@
-#ifndef NTupleTools_NTupleSimBeamSpot_h_
-#define NTupleTools_NTupleSimBeamSpot_h_
+#ifndef NTupleTools_NTupleBeamSpot_h_
+#define NTupleTools_NTupleBeamSpot_h_
 
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleCommon.h"
 
 
 namespace reco { class BeamSpot; }
 
-class NTupleSimBeamSpot : public edm::EDProducer {
+class NTupleBeamSpot : public edm::EDProducer {
   public:
-    explicit NTupleSimBeamSpot(const edm::ParameterSet&);
+    explicit NTupleBeamSpot(const edm::ParameterSet&);
 
   private:
     //virtual void beginJob();

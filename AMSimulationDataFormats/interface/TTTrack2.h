@@ -14,12 +14,14 @@ class TTTrack2 {
     TTTrack2()
     : rinv_(-999999.), phi0_(-999999.), cottheta_(-999999.), z0_(-999999.), d0_(-999999.),
       chi2_(-999999.), ndof_(-1), chi2_phi_(-999999.), chi2_z_(-999999.),
-      tpId_(-1), tower_(99), roadRef_(), stubRefs_() {}
+      tpId_(-1), tower_(99), hitBits_(0), ptSegment_(0), roadRef_(0),
+      stubRefs_(), principals_() {}
 
     TTTrack2(const TTTrack2& rhs)
     : rinv_(rhs.rinv_), phi0_(rhs.phi0_), cottheta_(rhs.cottheta_), z0_(rhs.z0_), d0_(rhs.d0_),
       chi2_(rhs.chi2_), ndof_(rhs.ndof_), chi2_phi_(rhs.chi2_phi_), chi2_z_(rhs.chi2_z_),
-      tpId_(rhs.tpId_), tower_(rhs.tower_), roadRef_(rhs.roadRef_), stubRefs_(rhs.stubRefs_) {}
+      tpId_(rhs.tpId_), tower_(rhs.tower_), hitBits_(rhs.hitBits_), ptSegment_(rhs.ptSegment_), roadRef_(rhs.roadRef_),
+      stubRefs_(rhs.stubRefs_), principals_(rhs.principals_) {}
 
     // Destructor
     ~TTTrack2() {}
@@ -40,10 +42,15 @@ class TTTrack2 {
 
     void setTpId(int tpId)                                  { tpId_ = tpId; }
     void setTower(unsigned tower)                           { tower_ = tower; }
+    void setHitBits(unsigned hitBits)                       { hitBits_ = hitBits; }
+    void setPtSegment(unsigned ptSegment)                   { ptSegment_ = ptSegment; }
     void setRoadRef(unsigned roadRef)                       { roadRef_ = roadRef; }
 
     void addStubRef(unsigned stubRef)                       { stubRefs_.push_back(stubRef); }
     void setStubRefs(const std::vector<unsigned>& stubRefs) { stubRefs_ = stubRefs; }
+
+    void addPrincipal(float principal)                      { principals_.push_back(principal); }
+    void setPrincipals(const std::vector<float>& principals){ principals_ = principals; }
 
     // Getters
     float rinv()                                const { return rinv_; }
@@ -68,10 +75,17 @@ class TTTrack2 {
 
     unsigned tower()                            const { return tower_; }
 
+    unsigned hitBits()                          const { return hitBits_; }
+
+    unsigned ptSegment()                        const { return ptSegment_; }
+
     unsigned roadRef()                          const { return roadRef_; }
 
     std::vector<unsigned> stubRefs()            const { return stubRefs_; }
     unsigned stubRef(int l)                     const { return stubRefs_.at(l); }
+
+    std::vector<float> principals()             const { return principals_; }
+    float principal(int l)                      const { return principals_.at(l); }
 
     float pt(float B=3.8)                       const { return std::abs(0.003 * B / rinv()); }  // assume r is in cm, B is in Tesla
     float theta()                               const { return std::atan(1.0 / cottheta()); }
@@ -97,8 +111,11 @@ class TTTrack2 {
     float chi2_z_;
     int   tpId_;
     unsigned tower_;
+    unsigned hitBits_;
+    unsigned ptSegment_;
     unsigned roadRef_;
     std::vector<unsigned> stubRefs_;
+    std::vector<float>    principals_;
 };
 
 // _____________________________________________________________________________

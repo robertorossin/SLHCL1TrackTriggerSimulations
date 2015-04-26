@@ -3,7 +3,7 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HelperMath.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternBankOption.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Picky.h"
 using namespace slhcl1tt;
 
@@ -11,9 +11,9 @@ using namespace slhcl1tt;
 class StubCleaner {
   public:
     // Constructor
-    StubCleaner(PatternBankOption po)
+    StubCleaner(const ProgramOption& po)
     : po_(po),
-      nEvents_(999999999), verbose_(1) {
+      nEvents_(po.maxEvents), verbose_(po.verbose) {
 
         // Set event selection (default: always pass)
         eventSelect_ = "(1)";
@@ -27,16 +27,8 @@ class StubCleaner {
         if (picky_)  delete picky_;
     }
 
-
-    // Setters
-    void setNEvents(long long n)    { if (n != -1)  nEvents_ = n > 0 ? n : 0; }
-    void setVerbosity(int v)        { verbose_ = v; }
-
-    // Getters
-    // none
-
     // Main driver
-    int run(TString src, TString out);
+    int run();
 
 
   private:
@@ -44,10 +36,8 @@ class StubCleaner {
     // Select one unique stub per layer
     int cleanStubs(TString src, TString out);
 
-    // Configurations
-    const PatternBankOption po_;
-
     // Program options
+    const ProgramOption po_;
     long long nEvents_;
     int verbose_;
 
