@@ -1,0 +1,6 @@
+Please check DataFormat.xlsx for the output format
+
+The names of the 40 input modules are written in ModuleList.txt
+
+Just edit and run:
+root -l runJobs.C++
