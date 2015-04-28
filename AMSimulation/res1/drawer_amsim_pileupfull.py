@@ -11,8 +11,6 @@ from helper import *
 col  = TColor.GetColor("#6a3d9a")  # tttt140
 fcol = TColor.GetColor("#cab2d6")  # tttt140
 
-donotdelete = []  # persist in memory
-
 
 # ______________________________________________________________________________
 def bookRoads():
@@ -20,42 +18,45 @@ def bookRoads():
     f = 5
 
     hname = "nroads_per_event"
-    nbins, xmin, xmax = modify_binning(400*f, 0., 400.*f)
-    histos[hname] = TH1F(hname, "; # roads/tower/BX; Entries"                , nbins, xmin, xmax)
+    nbins, xmin, xmax = 400*f, 0., 400.*f
+    histos[hname] = TH1F(hname, "; # roads/tower/BX"                , nbins, xmin, xmax)
 
     hname = "nsuperstrips_per_road"
-    nbins, xmin, xmax = modify_binning(20*f, 0., 20.*f)
-    histos[hname] = TH1F(hname, "; # superstrips/road/tower/BX; Entries"     , nbins, xmin, xmax)
+    nbins, xmin, xmax = 20*f, 0., 20.*f
+    histos[hname] = TH1F(hname, "; # superstrips/road/tower/BX"     , nbins, xmin, xmax)
 
     hname = "nstubs_per_superstrip"
-    nbins, xmin, xmax = modify_binning(50*f, 0., 50.*f)
-    histos[hname] = TH1F(hname, "; # stubs/superstrip/road/tower/BX; Entries", nbins, xmin, xmax)
+    nbins, xmin, xmax = 50*f, 0., 50.*f
+    histos[hname] = TH1F(hname, "; # stubs/superstrip/road/tower/BX", nbins, xmin, xmax)
 
     hname = "nstubs_per_road"
-    nbins, xmin, xmax = modify_binning(50*f, 0., 50.*f)
-    histos[hname] = TH1F(hname, "; # stubs/road/tower/BX; Entries"           , nbins, xmin, xmax)
+    nbins, xmin, xmax = 50*f, 0., 50.*f
+    histos[hname] = TH1F(hname, "; # stubs/road/tower/BX"           , nbins, xmin, xmax)
 
     hname = "nstubs_per_event"
-    nbins, xmin, xmax = modify_binning(400*f, 0., 400.*f)
-    histos[hname] = TH1F(hname, "; # stubs/tower/BX; Entries"                , nbins, xmin, xmax)
+    nbins, xmin, xmax = 400*f, 0., 400.*f
+    histos[hname] = TH1F(hname, "; # stubs/tower/BX"                , nbins, xmin, xmax)
 
     hname = "ncombinations_per_road"
-    nbins, xmin, xmax = modify_binning(500*f, 0., 500.*f)
-    histos[hname] = TH1F(hname, "; # combinations/road/tower/BX; Entries"    , nbins, xmin, xmax)
+    nbins, xmin, xmax = 500*f, 0., 500.*f
+    histos[hname] = TH1F(hname, "; # combinations/road/tower/BX"    , nbins, xmin, xmax)
 
     hname = "ncombinations_per_event"
-    nbins, xmin, xmax = modify_binning(2000*f, 0., 2000.*f)
-    histos[hname] = TH1F(hname, "; # combinations/tower/BX; Entries"         , nbins, xmin, xmax)
+    nbins, xmin, xmax = 2000*f, 0., 2000.*f
+    histos[hname] = TH1F(hname, "; # combinations/tower/BX"         , nbins, xmin, xmax)
 
     for i in xrange(6):
         hname = "nstubs_per_layer_%i" % i
-        nbins, xmin, xmax = modify_binning(50*f, 0., 50.*f)
-        histos[hname] = TH1F(hname, "; # stubs/layer/road/tower/BX; Entries" , nbins, xmin, xmax)
+        nbins, xmin, xmax = 50*f, 0., 50.*f
+        histos[hname] = TH1F(hname, "; # stubs/layer/road/tower/BX" , nbins, xmin, xmax)
 
     # Style
     for hname, h in histos.iteritems():
         h.SetLineWidth(2); h.SetMarkerSize(0)
         h.SetLineColor(col); h.SetFillColor(fcol)
+        if h.ClassName() == "TH1F":
+            binwidth = (h.GetXaxis().GetXmax() - h.GetXaxis().GetXmin())/h.GetNbinsX()
+            h.SetYTitle("Entries / %.1f" % binwidth)
     donotdelete.append(histos)
     return histos
 

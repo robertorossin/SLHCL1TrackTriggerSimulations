@@ -13,8 +13,6 @@ colors2 = blkrgb[:1] + blkrgb[3:]
 ttmap = json.load(open("../data/trigger_sector_map.json"), object_pairs_hook=convert_key_to_int)
 ttrmap = get_reverse_map(ttmap)
 
-donotdelete = []  # persist in memory
-
 
 # ______________________________________________________________________________
 def bookCoverage():

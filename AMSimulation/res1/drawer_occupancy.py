@@ -15,8 +15,6 @@ fcol = TColor.GetColor("#cab2d6")  # tttt140
 ttmap = json.load(open("../data/trigger_sector_map.json"), object_pairs_hook=convert_key_to_int)
 ttrmap = get_reverse_map(ttmap)
 
-donotdelete = []  # persist in memory
-
 
 # ______________________________________________________________________________
 def bookStubs():
@@ -24,34 +22,37 @@ def bookStubs():
 
     # TH1F
     hname = "ntracks_pt0p5"
-    nbinsx, xmin, xmax = modify_binning(100, 0., 100.)
-    histos[hname] = TH1F(hname, "; # tracks/tower/BX {p_{T}>0.5}", nbinsx, xmin, xmax)
+    nbinsx, xmin, xmax = 100, 0., 100.
+    histos[hname] = TH1F(hname, "; # tracks/tower/BX {p_{T}>0.5}" , nbinsx, xmin, xmax)
 
     hname = "ntracks_pt1"
-    nbinsx, xmin, xmax = modify_binning(100, 0., 100.)
-    histos[hname] = TH1F(hname, "; # tracks/tower/BX {p_{T}>1}", nbinsx, xmin, xmax)
+    nbinsx, xmin, xmax = 100, 0., 100.
+    histos[hname] = TH1F(hname, "; # tracks/tower/BX {p_{T}>1}"   , nbinsx, xmin, xmax)
 
     hname = "ntracks_pt2"
-    nbinsx, xmin, xmax = modify_binning(100, 0., 100.)
-    histos[hname] = TH1F(hname, "; # tracks/tower/BX {p_{T}>2}", nbinsx, xmin, xmax)
+    nbinsx, xmin, xmax = 100, 0., 100.
+    histos[hname] = TH1F(hname, "; # tracks/tower/BX {p_{T}>2}"   , nbinsx, xmin, xmax)
 
     hname = "ntracks_pt3"
-    nbinsx, xmin, xmax = modify_binning(100, 0., 100.)
-    histos[hname] = TH1F(hname, "; # tracks/tower/BX {p_{T}>3}", nbinsx, xmin, xmax)
+    nbinsx, xmin, xmax = 100, 0., 100.
+    histos[hname] = TH1F(hname, "; # tracks/tower/BX {p_{T}>3}"   , nbinsx, xmin, xmax)
 
     hname = "nstubs_99"
-    nbinsx, xmin, xmax = modify_binning(200, 0., 1600.)
-    histos[hname] = TH1F(hname, "; # stubs/tower/BX", nbinsx, xmin, xmax)
+    nbinsx, xmin, xmax = 1600, 0., 1600.
+    histos[hname] = TH1F(hname, "; # stubs/tower/BX"              , nbinsx, xmin, xmax)
 
     for i in xrange(6):
         hname = "nstubs_%i" % i
-        nbinsx, xmin, xmax = modify_binning(200, 0., 400.)
+        nbinsx, xmin, xmax = 400, 0., 400.
         histos[hname] = TH1F(hname, "; # stubs/tower/BX {L%i}" % i, nbinsx, xmin, xmax)
 
     # Style
     for hname, h in histos.iteritems():
         h.SetLineWidth(2); h.SetMarkerSize(0)
         h.SetLineColor(col); h.SetFillColor(fcol)
+        if h.ClassName() == "TH1F":
+            binwidth = (h.GetXaxis().GetXmax() - h.GetXaxis().GetXmin())/h.GetNbinsX()
+            h.SetYTitle("Entries / %.1f" % binwidth)
     donotdelete.append(histos)
     return histos
 

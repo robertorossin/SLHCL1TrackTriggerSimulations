@@ -58,6 +58,8 @@ tline = TLine()
 tline.SetLineColor(kGray+2)
 tline.SetLineStyle(2)
 
+donotdelete = []  # persist in memory
+
 # ______________________________________________________________________________
 # Classes
 
