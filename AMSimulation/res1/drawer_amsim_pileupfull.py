@@ -2,7 +2,6 @@
 
 from rootdrawing import *
 from parser import *
-from helper import *
 
 # Configurations
 #col  = TColor.GetColor("#e31a1c")  # nu140
@@ -134,7 +133,7 @@ def projectRoads(tree, histos, options):
     return
 
 
-def drawRoads(histos, options, logy=True):
+def drawRoads(histos, options):
     def parse_ss(ss):
         if "lu" in ss:
             ss = ss.replace("lu", "")
@@ -174,12 +173,12 @@ def drawRoads(histos, options, logy=True):
         if "per_layer" in hname:
             continue
 
-        if logy:
+        if options.logy:
             h.SetMaximum(h.GetMaximum() * 14); h.SetMinimum(0.5)
         else:
             h.SetMaximum(h.GetMaximum() * 1.4); h.SetMinimum(0.)
         h.SetStats(1); h.Draw("hist")
-        gPad.SetLogy(logy)
+        gPad.SetLogy(options.logy)
         displayQuantiles(h)
 
         tlatex.DrawLatex(0.6, 0.185, "%s [%.2fM bank]" % (parse_ss(options.ss), options.npatterns*1e-6))
@@ -243,12 +242,12 @@ def drawRoads(histos, options, logy=True):
             if ymax == -1:
                 ymax = h.GetMaximum()
 
-            if logy:
+            if options.logy:
                 h.SetMaximum(ymax * 14); h.SetMinimum(0.5)
             else:
                 h.SetMaximum(ymax * 1.4); h.SetMinimum(0.)
             h.SetStats(1); h.Draw("hist")
-            gPad.SetLogy(logy)
+            gPad.SetLogy(options.logy)
             displayQuantiles(h, scalebox=(2.,2.))
 
             tlatex.DrawLatex(0.5, 0.260, "Layer %i" % i)
@@ -309,6 +308,7 @@ if __name__ == '__main__':
     # Parse default arguments
     options = parser.parse_args()
     parse_drawer_options(options)
+    options.logy = True
 
     # Call the main function
     main(options)

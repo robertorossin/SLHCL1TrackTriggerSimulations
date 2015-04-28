@@ -2,7 +2,6 @@
 
 from rootdrawing import *
 from parser import *
-from helper import *
 import itertools
 
 # Configurations

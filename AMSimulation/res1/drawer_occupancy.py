@@ -2,7 +2,6 @@
 
 from rootdrawing import *
 from parser import *
-from helper import *
 
 # Configurations
 #col  = TColor.GetColor("#e31a1c")  # nu140

@@ -2,9 +2,30 @@
 
 from rootdrawing import *
 from parser import *
-from helper import *
 
-donotdelete = []  # persist in memory
+
+# ______________________________________________________________________________
+def bookSpam():
+    histos = {}
+
+    donotdelete.append(histos)
+    return histos
+
+def projectSpam(tree, histos, options):
+    tree.SetBranchStatus("*", 0)
+
+    # Loop over events
+    for ievt, evt in enumerate(tree):
+        if (ievt == options.nentries):  break
+
+    tree.SetBranchStatus("*", 1)
+    return
+
+def drawSpam(histos, options):
+    return
+
+def sitrepSpam(histos, options):
+    print "--- SITREP ---------------------------------------------------------"
 
 
 # ______________________________________________________________________________
@@ -21,6 +42,11 @@ def main(options):
     #
     # ... DO STUFF HERE ...
     #
+    # e.g.
+    #histos = bookSpam()
+    #projectSpam(tchain, histos, options)
+    #drawSpam(histos, options)
+    #sitrepSpam(histos,options)
 
 
 # ______________________________________________________________________________

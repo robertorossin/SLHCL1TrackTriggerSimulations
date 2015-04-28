@@ -2,9 +2,6 @@
 
 from rootdrawing import *
 from parser import *
-from helper import *
-
-donotdelete = []  # persist in memory
 
 
 # ______________________________________________________________________________

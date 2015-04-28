@@ -2,14 +2,11 @@
 
 from rootdrawing import *
 from parser import *
-from helper import *
 from math import asin
 
 # Configurations
 col  = TColor.GetColor("#1f78b4")  # mu0
 fcol = TColor.GetColor("#a6cee3")
-
-donotdelete = []  # persist in memory
 
 
 # ______________________________________________________________________________
