@@ -1,4 +1,5 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoPCA.h"
+using namespace slhcl1tt;
 
 #include "Eigen/Eigenvalues"
 #include "Eigen/QR"
@@ -9,31 +10,15 @@
 
 // _____________________________________________________________________________
 int TrackFitterAlgoPCA::bookHistograms() {
-    TH1::AddDirectory(kFALSE);
-    //TString hname;
-    //for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
-    //    hname = Form("var%i", ivar);
-    //    histograms[hname] = new TH1F(hname, ";"+hname, 1000, -1., 1.);
-    //
-    //    hname = Form("pc%i", ivar);
-    //    histograms[hname] = new TH1F(hname, ";"+hname, 1000, -1., 1.);
-    //}
-    //
-    //TString parnames[nparameters_] = {"phi", "cotTheta", "z0", "invPt"};
-    //for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
-    //    hname = Form("par%i", ipar);
-    //    histograms[hname] = new TH1F(hname, ";"+hname, 1000, -1., 1.);
-    //
-    //    hname = Form("errpar%i", ipar);
-    //    histograms[hname] = new TH1F(hname, ";"+hname, 1000, -0.01, 0.01);
-    //}
+    //TH1::AddDirectory(kFALSE);
 
     return 0;
 }
 
 
 // _____________________________________________________________________________
-int TrackFitterAlgoPCA::loadConstants(TString txt) {
+int TrackFitterAlgoPCA::loadConstants() {
+    TString txt = "matrices_tt27_5M.txt";
     std::ifstream infile(txt.Data());
     if (!infile) {
         std::cout << "Unable to open " << txt << std::endl;

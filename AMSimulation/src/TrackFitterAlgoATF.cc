@@ -8,6 +8,8 @@ Souvik Das, University of Florida
 --- ---  --- --- --- --- --- --- --- --- --- --- --- --- --- --- */
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoATF.h"
+using namespace slhcl1tt;
+
 #include <iostream>
 
 int stubUncertaintyStripWidth(double r, double &d_phi, double &d_z)

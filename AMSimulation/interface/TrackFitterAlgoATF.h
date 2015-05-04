@@ -11,7 +11,8 @@ Souvik Das, University of Florida
 #define AMSimulation_TrackFitterAlgoATF_h_
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoBase.h"
-using namespace slhcl1tt;
+
+namespace slhcl1tt {
 
 class TrackFitterAlgoATF : public TrackFitterAlgoBase
 {
@@ -24,5 +25,7 @@ class TrackFitterAlgoATF : public TrackFitterAlgoBase
   private:
     bool fiveParameters_;
 };
+
+}  // namespace slhcl1tt
 
 #endif

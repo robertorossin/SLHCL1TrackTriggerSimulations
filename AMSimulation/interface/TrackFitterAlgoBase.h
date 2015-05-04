@@ -12,18 +12,20 @@
 #include <string>
 #include <vector>
 
+namespace slhcl1tt {
 
 class TrackFitterAlgoBase {
   public:
     TrackFitterAlgoBase() {}
-    ~TrackFitterAlgoBase() {}
+    virtual ~TrackFitterAlgoBase() {}
 
-    //virtual int fit(const TTRoadComb& aroad, std::vector<TTTrack2>& tracks) = 0;
-    //virtual int fit(const TTRoadComb& acomb, TTTrack2& track) = 0;
+    virtual int fit(const TTRoadComb& acomb, TTTrack2& track) = 0;
 
     // Histograms
-    std::map<TString, TH1F *>     histograms;
+    std::map<TString, TH1F *>  histograms_;
 };
+
+}  // namespace slhcl1tt
 
 #endif
 

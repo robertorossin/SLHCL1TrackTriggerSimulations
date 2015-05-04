@@ -4,10 +4,10 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoBase.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PCA.h"
-using namespace slhcl1tt;
 
 #include "Eigen/Core"
 
+namespace slhcl1tt {
 
 class TrackFitterAlgoPCA : public TrackFitterAlgoBase {
   public:
@@ -46,13 +46,11 @@ class TrackFitterAlgoPCA : public TrackFitterAlgoBase {
 
         // Book histograms
         bookHistograms();
+
+        loadConstants();
     }
 
     ~TrackFitterAlgoPCA() {}
-
-    int bookHistograms();
-
-    int loadConstants(TString txt);
 
     int fit(const TTRoadComb& acomb, TTTrack2& track);
 
@@ -61,9 +59,12 @@ class TrackFitterAlgoPCA : public TrackFitterAlgoBase {
     void print();
 
   private:
-    int verbose_;
+    int bookHistograms();
+
+    int loadConstants();
 
     // Settings
+    int verbose_;
     PCA_FitView view_;
     PCA_HitBits hitbits_;
     unsigned nvariables_;   // number of hit coordinates or principal components
@@ -83,5 +84,7 @@ class TrackFitterAlgoPCA : public TrackFitterAlgoBase {
     Eigen::MatrixXd V_;
     Eigen::MatrixXd DV_;
 };
+
+}  // namespace slhcl1tt
 
 #endif

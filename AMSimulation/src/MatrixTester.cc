@@ -48,18 +48,6 @@ int MatrixTester::testMatrices(TString src) {
     // Get trigger tower reverse map
     const std::map<unsigned, bool>& ttrmap = ttmap_ -> getTriggerTowerReverseMap(po_.tower);
 
-
-    // _________________________________________________________________________
-    // Load matrices
-    if (fitterPCA_ -> loadConstants(po_.matrixfile)) {
-        return 1;
-    }
-    if (verbose_) {
-        std::cout << Info() << "The matrices are: " << std::endl;
-        fitterPCA_ -> print();
-    }
-
-
     // _________________________________________________________________________
     // Loop over all events (filter)
 

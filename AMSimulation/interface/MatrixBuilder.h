@@ -7,6 +7,8 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PCA.h"
 using namespace slhcl1tt;
 
+#include "TH1F.h"
+#include "TString.h"
 #include "Eigen/Core"
 
 
@@ -62,14 +64,19 @@ class MatrixBuilder {
 
   private:
     // Member functions
+
     // Setup trigger tower
     int setupTriggerTower(TString datadir);
+
+    // Book histograms
+    int bookHistograms();
 
     // Build matrices
     int buildMatrices(TString src);
 
     // Write matrices
     int writeMatrices(TString out);
+    int writeHistograms(TString out);
 
     // Program options
     const ProgramOption po_;
@@ -98,6 +105,9 @@ class MatrixBuilder {
     Eigen::MatrixXd D_;
     Eigen::MatrixXd V_;
     Eigen::MatrixXd DV_;
+
+    // Histograms
+    std::map<TString, TH1F *>  histograms_;
 };
 
 #endif

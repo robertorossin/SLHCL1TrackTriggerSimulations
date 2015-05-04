@@ -34,6 +34,76 @@ int MatrixBuilder::setupTriggerTower(TString datadir) {
     return 0;
 }
 
+
+// _____________________________________________________________________________
+int MatrixBuilder::bookHistograms() {
+    TH1::AddDirectory(kFALSE);
+    TString hname;
+    for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
+        hname = Form("var%i", ivar);
+        histograms_[hname] = new TH1F(hname, ";"+hname, 1000, -1., 1.);
+
+        hname = Form("pc%i", ivar);
+        histograms_[hname] = new TH1F(hname, ";"+hname, 1000, -1., 1.);
+    }
+
+    for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
+        hname = Form("par%i", ipar);
+        histograms_[hname] = new TH1F(hname, ";"+hname, 1000, -1., 1.);
+
+        hname = Form("fitpar%i", ipar);
+        histograms_[hname] = new TH1F(hname, ";"+hname, 1000, -1., 1.);
+
+        hname = Form("errpar%i", ipar);
+        histograms_[hname] = new TH1F(hname, ";"+hname, 1000, -0.1, 0.1);
+    }
+
+    // Manually adjust binning
+    histograms_["var0"]   ->SetBins(1000, 0., 2.4);
+    histograms_["var1"]   ->SetBins(1000, 0., 2.4);
+    histograms_["var2"]   ->SetBins(1000, 0., 2.4);
+    histograms_["var3"]   ->SetBins(1000, 0., 2.4);
+    histograms_["var4"]   ->SetBins(1000, 0., 2.4);
+    histograms_["var5"]   ->SetBins(1000, 0., 2.4);
+    histograms_["var6"]   ->SetBins(1000, -100., 200.);
+    histograms_["var7"]   ->SetBins(1000, -100., 200.);
+    histograms_["var8"]   ->SetBins(1000, -100., 200.);
+    histograms_["var9"]   ->SetBins(1000, -100., 200.);
+    histograms_["var10"]  ->SetBins(1000, -100., 200.);
+    histograms_["var11"]  ->SetBins(1000, -100., 200.);
+
+    histograms_["pc0"]    ->SetBins(1000, -0.005, 0.005);
+    histograms_["pc1"]    ->SetBins(1000, -0.005, 0.005);
+    histograms_["pc2"]    ->SetBins(1000, -0.005, 0.005);
+    histograms_["pc3"]    ->SetBins(1000, -0.005, 0.005);
+    histograms_["pc4"]    ->SetBins(1000, -0.25, 0.25);
+    histograms_["pc5"]    ->SetBins(1000, -0.25, 0.25);
+    histograms_["pc6"]    ->SetBins(1000, -2.5, 2.5);
+    histograms_["pc7"]    ->SetBins(1000, -1., 7.);
+    histograms_["pc8"]    ->SetBins(1000, -8., 8.);
+    histograms_["pc9"]    ->SetBins(1000, -8., 8.);
+    histograms_["pc10"]   ->SetBins(1000, -25., 25.);
+    histograms_["pc11"]   ->SetBins(1000, -50., 200.);
+
+    histograms_["par0"]   ->SetBins(1000, 0.6, 1.8);
+    histograms_["par1"]   ->SetBins(1000, -0.1, 0.9);
+    histograms_["par2"]   ->SetBins(1000, -25., 25.);
+    histograms_["par3"]   ->SetBins(1000, -0.6, 0.6);
+
+    histograms_["fitpar0"]->SetBins(1000, 0.6, 1.8);
+    histograms_["fitpar1"]->SetBins(1000, -0.1, 0.9);
+    histograms_["fitpar2"]->SetBins(1000, -25., 25.);
+    histograms_["fitpar3"]->SetBins(1000, -0.6, 0.6);
+
+    histograms_["errpar0"]->SetBins(1000, -0.005, 0.005);
+    histograms_["errpar1"]->SetBins(1000, -0.02, 0.02);
+    histograms_["errpar2"]->SetBins(1000, -0.5, 0.5);
+    histograms_["errpar3"]->SetBins(1000, -0.02, 0.02);
+
+    return 0;
+}
+
+
 // _____________________________________________________________________________
 // Build matrices
 int MatrixBuilder::buildMatrices(TString src) {
@@ -504,6 +574,8 @@ int MatrixBuilder::buildMatrices(TString src) {
     meansP_ = Eigen::VectorXd::Zero(nparameters_);
 
     // Statistics
+    std::vector<Statistics> statCT(2);
+    std::vector<Statistics> statX(nvariables_);
     std::vector<Statistics> statV(nvariables_);
     std::vector<Statistics> statP(nparameters_);
 
@@ -549,6 +621,7 @@ int MatrixBuilder::buildMatrices(TString src) {
         Eigen::VectorXd parameters = Eigen::VectorXd::Zero(nparameters_);
 
         // Get sim info
+        float C = 0, T = 0;
         {
             unsigned ipar = 0;
             float simPt           = reader.vp_pt->front();
@@ -561,6 +634,9 @@ int MatrixBuilder::buildMatrices(TString src) {
 
             float simCotTheta     = std::sinh(simEta);
             float simChargeOverPt = float(simCharge)/simPt;
+
+            C = 0.5 * (0.003 * 3.8 * simChargeOverPt);  // 1/(2 x radius of curvature)
+            T = simCotTheta;
 
             parameters(ipar++) = simPhi;
             parameters(ipar++) = simCotTheta;
@@ -584,13 +660,33 @@ int MatrixBuilder::buildMatrices(TString src) {
             meansP_(ipar) += (parameters_fit(ipar) - meansP_(ipar))/nTracks;
         }
 
-        // Collect statistics
+        // Collect statistics and fill histograms
+        statCT.at(0).fill(((solutionsC_ * variables1)(0,0)) - C);
+        statCT.at(1).fill(((solutionsT_ * variables2)(0,0)) - T);
+
+        TString hname;
         for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
+            statX.at(ivar).fill(variables(ivar));
             statV.at(ivar).fill(principals(ivar));
+
+            hname = Form("var%i", ivar);
+            histograms_[hname]->Fill(variables(ivar));
+
+            hname = Form("pc%i", ivar);
+            histograms_[hname]->Fill(principals(ivar));
         }
 
         for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
             statP.at(ipar).fill(parameters_fit(ipar) - parameters(ipar));
+
+            hname = Form("par%i", ipar);
+            histograms_[hname]->Fill(parameters(ipar));
+
+            hname = Form("fitpar%i", ipar);
+            histograms_[hname]->Fill(parameters_fit(ipar));
+
+            hname = Form("errpar%i", ipar);
+            histograms_[hname]->Fill(parameters_fit(ipar) - parameters(ipar));
         }
 
         ++nKept;
@@ -600,9 +696,17 @@ int MatrixBuilder::buildMatrices(TString src) {
     if (verbose_>1) {
         std::ios::fmtflags flags = std::cout.flags();
         std::cout << std::setprecision(4);
+        std::cout << Info() << "statX: " << std::endl;
+        for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
+            std::cout << "variable " << ivar << ": " << statX.at(ivar).getEntries() << " " << statX.at(ivar).getMean() << " " << statX.at(ivar).getSigma() << std::endl;
+        }
         std::cout << Info() << "statV: " << std::endl;
         for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
             std::cout << "principal " << ivar << ": " << statV.at(ivar).getEntries() << " " << statV.at(ivar).getMean() << " " << statV.at(ivar).getSigma() << std::endl;
+        }
+        std::cout << Info() << "statCT: " << std::endl;
+        for (unsigned ivar=0; ivar<2; ++ivar) {
+            std::cout << "parameter " << ivar << ": " << statCT.at(ivar).getEntries() << " " << statCT.at(ivar).getMean() << " " << statCT.at(ivar).getSigma() << std::endl;
         }
         std::cout << Info() << "statP: " << std::endl;
         for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
@@ -682,6 +786,21 @@ int MatrixBuilder::writeMatrices(TString out) {
 
 
 // _____________________________________________________________________________
+// Write matrices
+int MatrixBuilder::writeHistograms(TString out) {
+    TFile* outfile = TFile::Open(out.ReplaceAll(".txt",".root"), "RECREATE");
+    for (std::map<TString, TH1F *>::const_iterator it=histograms_.begin();
+         it!=histograms_.end(); ++it) {
+        if (it->second)  it->second->SetDirectory(gDirectory);
+    }
+    outfile->Write();
+    outfile->Close();
+
+    return 0;
+}
+
+
+// _____________________________________________________________________________
 // Main driver
 int MatrixBuilder::run() {
     int exitcode = 0;
@@ -691,11 +810,19 @@ int MatrixBuilder::run() {
     if (exitcode)  return exitcode;
     Timing();
 
+    exitcode = bookHistograms();
+    if (exitcode)  return exitcode;
+    Timing();
+
     exitcode = buildMatrices(po_.input);
     if (exitcode)  return exitcode;
     Timing();
 
     exitcode = writeMatrices(po_.output);
+    if (exitcode)  return exitcode;
+    Timing();
+
+    exitcode = writeHistograms(po_.output);
     if (exitcode)  return exitcode;
     Timing();
 
