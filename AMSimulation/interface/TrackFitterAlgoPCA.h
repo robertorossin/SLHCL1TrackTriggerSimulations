@@ -3,9 +3,11 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoBase.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PCA.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PCAMatrix.h"
 
-#include "Eigen/Core"
+// 10 pt segments times 7 possible layer combinations
+#define PCA_NMATRICES 70
+
 
 namespace slhcl1tt {
 
@@ -13,35 +15,24 @@ class TrackFitterAlgoPCA : public TrackFitterAlgoBase {
   public:
     TrackFitterAlgoPCA(const slhcl1tt::ProgramOption& po)
     : TrackFitterAlgoBase(), verbose_(po.verbose),
-      view_(PCA_3D), hitbits_(PCA_ALLHIT), nvariables_(12), nparameters_(4) {
+      view_(XYZ), nvariables_(12), nparameters_(4) {
 
         // Setup
-        if (po.view == "XYZ" || po.view == "3D")
-            view_ = PCA_3D;
-        else if (po.view == "XY" || po.view == "RPHI")
-            view_ = PCA_RPHI;
-        else if (po.view == "RZ")
-            view_ = PCA_RZ;
+        if (po.view == "XYZ") {
+            view_ = XYZ;
+            nvariables_ = 6 * 2;
+        } else if (po.view == "XY") {
+            view_ = XY;
+            nvariables_ = 6;
+        } else if (po.view == "RZ") {
+            view_ = RZ;
+            nvariables_ = 6;
+        }
 
-        hitbits_ = static_cast<PCA_HitBits>(po.hitbits);
-
-        if (po.algo == "PCA4")
+        if (po.algo == "PCA4") {
             nparameters_ = 4;
-        else if (po.algo == "PCA5")
+        } else if (po.algo == "PCA5") {
             nparameters_ = 5;
-
-        if (view_ == PCA_3D) {
-            if (hitbits_ == PCA_ALLHIT) {
-                nvariables_ = 6 * 2;
-            } else {
-                nvariables_ = (6-1) * 2;
-            }
-        } else {
-            if (hitbits_ == PCA_ALLHIT) {
-                nvariables_ = 6 * 1;
-            } else {
-                nvariables_ = (6-1) * 1;
-            }
         }
 
         // Book histograms
@@ -52,7 +43,7 @@ class TrackFitterAlgoPCA : public TrackFitterAlgoBase {
 
     ~TrackFitterAlgoPCA() {}
 
-    int fit(const TTRoadComb& acomb, TTTrack2& track);
+    int fit(const TTRoadComb& acomb, TTTrack2& atrack);
 
     unsigned nvariables()   const { return nvariables_; }
     unsigned nparameters()  const { return nparameters_; }
@@ -65,24 +56,12 @@ class TrackFitterAlgoPCA : public TrackFitterAlgoBase {
 
     // Settings
     int verbose_;
-    PCA_FitView view_;
-    PCA_HitBits hitbits_;
+    FitView view_;
     unsigned nvariables_;   // number of hit coordinates or principal components
     unsigned nparameters_;  // number of track parameters
 
     // Matrices
-    Eigen::VectorXd meansR_;
-    Eigen::VectorXd meansC_;
-    Eigen::VectorXd meansT_;
-    Eigen::MatrixXd solutionsC_;
-    Eigen::MatrixXd solutionsT_;
-
-    Eigen::VectorXd sqrtEigenvalues_;
-    Eigen::VectorXd meansV_;
-    Eigen::VectorXd meansP_;
-    Eigen::MatrixXd D_;
-    Eigen::MatrixXd V_;
-    Eigen::MatrixXd DV_;
+    PCAMatrix matrices[PCA_NMATRICES];
 };
 
 }  // namespace slhcl1tt

@@ -152,7 +152,6 @@ int MatrixTester::testMatrices(TString src) {
             continue;
         }
 
-
         // _____________________________________________________________________
         // Start fitting tracks
 
@@ -193,7 +192,6 @@ int MatrixTester::testMatrices(TString src) {
         // _____________________________________________________________________
         // Fit
         TTTrack2 atrack;
-
         fitstatus = fitterPCA_->fit(acomb, atrack);
 
         atrack.setTower    (acomb.tower);
@@ -212,33 +210,29 @@ int MatrixTester::testMatrices(TString src) {
 
         // _____________________________________________________________________
         // Get sim info
+        // Get sim info
+        double simCotTheta     = std::sinh(reader.vp_eta->front());
+        double simChargeOverPt = float(reader.vp_charge->front())/reader.vp_pt->front();
+        double simPhi          = reader.vp_phi->front();
+        double simVz           = reader.vp_vz->front();
+        //double simC = 0.5 * (0.003 * 3.8 * simChargeOverPt);  // 1/(2 x radius of curvature)
+        //double simT = simCotTheta;
         {
             unsigned ipar = 0;
-            float simPt           = reader.vp_pt->front();
-            float simEta          = reader.vp_eta->front();
-            float simPhi          = reader.vp_phi->front();
-            //float simVx           = reader.vp_vx->front();
-            //float simVy           = reader.vp_vy->front();
-            float simVz           = reader.vp_vz->front();
-            int   simCharge       = reader.vp_charge->front();
-
-            float simCotTheta     = std::sinh(simEta);
-            float simChargeOverPt = float(simCharge)/simPt;
-
-            parameters[ipar++] = simPhi;
-            parameters[ipar++] = simCotTheta;
-            parameters[ipar++] = simVz;
-            parameters[ipar++] = simChargeOverPt;
+            parameters.at(ipar++) = simPhi;
+            parameters.at(ipar++) = simCotTheta;
+            parameters.at(ipar++) = simVz;
+            parameters.at(ipar++) = simChargeOverPt;
         }
 
         // _____________________________________________________________________
         // Get fit info
         {
             unsigned ipar = 0;
-            parameters_fit[ipar++] = atrack.phi0();
-            parameters_fit[ipar++] = atrack.cottheta();
-            parameters_fit[ipar++] = atrack.z0();
-            parameters_fit[ipar++] = atrack.rinv() / (0.003 * 3.8);
+            parameters_fit.at(ipar++) = atrack.phi0();
+            parameters_fit.at(ipar++) = atrack.cottheta();
+            parameters_fit.at(ipar++) = atrack.z0();
+            parameters_fit.at(ipar++) = atrack.rinv() / (0.003 * 3.8);
 
             assert(atrack.principals().size() == nvariables_);
             principals = atrack.principals();

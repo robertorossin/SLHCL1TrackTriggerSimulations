@@ -14,12 +14,16 @@
 
 namespace slhcl1tt {
 
+enum FitView { XYZ=0, XY, RZ };
+
+//enum HitBits { HITALL=0, MISSL0, MISSL1, MISSL2, MISSL3, MISSL4, MISSL5 };
+
 class TrackFitterAlgoBase {
   public:
     TrackFitterAlgoBase() {}
     virtual ~TrackFitterAlgoBase() {}
 
-    virtual int fit(const TTRoadComb& acomb, TTTrack2& track) = 0;
+    virtual int fit(const TTRoadComb& acomb, TTTrack2& atrack) = 0;
 
     // Histograms
     std::map<TString, TH1F *>  histograms_;

@@ -19,7 +19,7 @@ struct TTRoadComb {
     std::vector<float> stubs_z;
     std::vector<bool>  stubs_bool;
 
-    unsigned hitbits() {
+    unsigned hitbits() const {
         unsigned bits = 0;
 
         for (unsigned i=0; i<stubs_bool.size(); ++i) {
@@ -38,7 +38,7 @@ struct TTRoadComb {
         }
     }
 
-    unsigned ptsegment() {
+    unsigned ptsegment() const {
         switch (patternRef) {
         default      :  return 0;
         }

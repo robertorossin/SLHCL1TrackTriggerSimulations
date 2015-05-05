@@ -13,7 +13,7 @@ class TrackFitterAlgoLTF : public TrackFitterAlgoBase {
 
     ~TrackFitterAlgoLTF() {}
 
-    virtual int fit(const TTRoadComb& acomb, TTTrack2& track);
+    virtual int fit(const TTRoadComb& acomb, TTTrack2& atrack);
 
   private:
     int verbose_;
