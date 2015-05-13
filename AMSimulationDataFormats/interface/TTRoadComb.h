@@ -9,6 +9,7 @@ namespace slhcl1tt {
 
 struct TTRoadComb {
     unsigned roadRef;
+    unsigned combRef;
     unsigned patternRef;
     unsigned tower;
     unsigned nstubs;

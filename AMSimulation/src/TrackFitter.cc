@@ -118,6 +118,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 // Create and set TTRoadComb
                 TTRoadComb acomb;
                 acomb.roadRef    = iroad;
+                acomb.combRef    = icomb;
                 acomb.patternRef = reader.vr_patternRef->at(iroad);
                 acomb.tower      = reader.vr_tower->at(iroad);
                 acomb.stubRefs   = combinations.at(icomb);
@@ -159,6 +160,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 atrack.setHitBits  (acomb.hitbits());
                 atrack.setPtSegment(acomb.ptsegment());
                 atrack.setRoadRef  (acomb.roadRef);
+                atrack.setCombRef  (acomb.combRef);
                 atrack.setStubRefs (acomb.stubRefs);
                 tracks.push_back(atrack);
 
