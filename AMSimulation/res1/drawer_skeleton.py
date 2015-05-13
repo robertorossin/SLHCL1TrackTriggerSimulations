@@ -5,13 +5,17 @@ from parser import *
 
 
 # ______________________________________________________________________________
-def bookSpam():
+def drawer_book():
     histos = {}
 
+    # Style
+    for hname, h in histos.iteritems():
+        h.SetLineWidth(2); h.SetMarkerSize(0)
+        h.SetLineColor(col); h.SetFillColor(fcol)
     donotdelete.append(histos)
     return histos
 
-def projectSpam(tree, histos, options):
+def drawer_project(tree, histos, options):
     tree.SetBranchStatus("*", 0)
 
     # Loop over events
@@ -21,10 +25,10 @@ def projectSpam(tree, histos, options):
     tree.SetBranchStatus("*", 1)
     return
 
-def drawSpam(histos, options):
+def drawer_draw(histos, options):
     return
 
-def sitrepSpam(histos, options):
+def drawer_sitrep(histos, options):
     print "--- SITREP ---------------------------------------------------------"
 
 
@@ -38,15 +42,10 @@ def main(options):
     tchain.AddFileInfoList(options.tfilecoll.GetList())
 
     # Process
-
-    #
-    # ... DO STUFF HERE ...
-    #
-    # e.g.
-    #histos = bookSpam()
-    #projectSpam(tchain, histos, options)
-    #drawSpam(histos, options)
-    #sitrepSpam(histos,options)
+    histos = drawer_book()
+    drawer_project(tchain, histos, options)
+    drawer_draw(histos, options)
+    drawer_sitrep(histos, options)
 
 
 # ______________________________________________________________________________

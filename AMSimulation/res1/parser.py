@@ -1,6 +1,7 @@
 from helper import *
 
 import argparse
+import tempfile
 from StringIO import StringIO
 from ROOT import TFileCollection, gROOT, gSystem
 
@@ -26,9 +27,13 @@ def parse_drawer_options(options):
     # Make input file list
     if not options.infile.endswith(".root") and not options.infile.endswith(".txt"):
         raise ValueError("infile must be .root file or .txt file")
+
     if options.infile.endswith(".root"):
-        options.tfilecoll = TFileCollection("fc", "")
-        options.tfilecoll.Add(options.infile)
+        # Create a temporary file with one line
+        with tempfile.NamedTemporaryFile() as infile:
+            infile.write(options.infile)
+            infile.flush()
+            options.tfilecoll = TFileCollection("fc", "", infile.name)
     else:
         options.tfilecoll = TFileCollection("fc", "", options.infile)
 
