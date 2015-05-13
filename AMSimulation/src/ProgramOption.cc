@@ -23,6 +23,7 @@ std::ostream& operator<<(std::ostream& o, const ProgramOption& po) {
       << "  trackfile: "    << po.trackfile
 
       << "  verbose: "      << po.verbose
+      << "  speedup: "      << po.speedup
       << "  maxEvents: "    << po.maxEvents
 
       << "  nLayers: "      << po.nLayers
@@ -35,6 +36,8 @@ std::ostream& operator<<(std::ostream& o, const ProgramOption& po) {
 
       << "  minPt: "        << po.minPt
       << "  maxPt: "        << po.maxPt
+      << "  minInvPt: "     << po.minInvPt
+      << "  maxInvPt: "     << po.maxInvPt
       << "  minEta: "       << po.minEta
       << "  maxEta: "       << po.maxEta
       << "  minPhi: "       << po.minPhi
@@ -42,6 +45,7 @@ std::ostream& operator<<(std::ostream& o, const ProgramOption& po) {
       << "  minVz: "        << po.minVz
       << "  maxVz: "        << po.maxVz
 
+      << "  picky: "        << po.picky
       << "  minFrequency: " << po.minFrequency
       << "  maxPatterns: "  << po.maxPatterns
       << "  maxMisses: "    << po.maxMisses
