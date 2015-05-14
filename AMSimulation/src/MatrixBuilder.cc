@@ -43,6 +43,9 @@ int MatrixBuilder::bookHistograms() {
 
         hname = Form("pc%i", ivar);
         histograms_[hname] = new TH1F(hname, ";"+hname, 1000, -1., 1.);
+
+        hname = Form("npc%i", ivar);
+        histograms_[hname] = new TH1F(hname, ";"+hname, 1000, -10., 10.);
     }
 
     for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
@@ -103,6 +106,65 @@ int MatrixBuilder::bookHistograms() {
 
 
 // _____________________________________________________________________________
+// Set variable to zero according to hit bits
+int MatrixBuilder::setVariableToZero(Eigen::VectorXd& variables1, Eigen::VectorXd& variables2, Eigen::VectorXd& variables3, const unsigned hitbits) {
+    if (hitbits == 0) {
+        return 0;
+    }
+
+    if (1 <= hitbits && hitbits <= 6) {
+        int i = hitbits - 1;
+        variables1(i) = 0.;
+        variables2(i) = 0.;
+        variables3(i) = 0.;
+        return 0;
+    }
+
+    return 1;
+}
+
+// Set rotation to zeroes according to hit bits
+int MatrixBuilder::setRotationToZero(Eigen::MatrixXd& rotation, const unsigned nvariables, const unsigned hitbits) {
+    if (hitbits == 0) {
+        return 0;
+    }
+
+    if (1 <= hitbits && hitbits <= 6) {
+        for (unsigned i=0; i<nvariables; ++i) {
+            rotation(0,i) = 0;
+
+            if (nvariables > 6) {
+                rotation(1,i) = 0;
+            }
+        }
+
+        return 0;
+    }
+
+    return 1;
+}
+
+// Set covariance to unit according to hit bits
+int MatrixBuilder::setCovarianceToUnit(Eigen::MatrixXd& covariances, const unsigned nvariables, const unsigned hitbits) {
+    if (hitbits == 0) {
+        return 0;
+    }
+
+    if (1 <= hitbits && hitbits <= 6) {
+        covariances(0,0) = 1;
+
+        if (nvariables > 6) {
+            covariances(1,1) = 1;
+        }
+
+        return 0;
+    }
+
+    return 1;
+}
+
+
+// _____________________________________________________________________________
 // Build matrices
 int MatrixBuilder::buildMatrices(TString src) {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events and generating patterns." << std::endl;
@@ -131,26 +193,6 @@ int MatrixBuilder::buildMatrices(TString src) {
     // Bookkeepers
     long int nRead = 0, nKept = 0;
 
-//#define Use_keepEvents_txt_
-#ifdef Use_keepEvents_txt_
-    TString txt = "keepEvents.txt";
-    std::ifstream infile(txt.Data());
-    if (!infile) {
-        std::cout << "Unable to open " << txt << std::endl;
-        return 1;
-    }
-    int x;
-    while (infile >> x) {
-        long long ievt = nRead;
-        if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
-
-        keepEvents.push_back(x);
-
-        if (x)
-            ++nKept;
-        ++nRead;
-    }
-#else
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         if (reader.loadTree(ievt) < 0)  break;
         reader.getEntry(ievt);
@@ -160,8 +202,8 @@ int MatrixBuilder::buildMatrices(TString src) {
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
         // Apply track pt requirement
-        float simPt = reader.vp_pt->front();
-        if (simPt < po_.minPt || po_.maxPt < simPt) {
+        double simChargeOverPt = float(reader.vp_charge->front())/reader.vp_pt->front();
+        if (simChargeOverPt < po_.minInvPt || po_.maxInvPt < simChargeOverPt) {
             ++nRead;
             keepEvents.push_back(false);
             continue;
@@ -186,7 +228,6 @@ int MatrixBuilder::buildMatrices(TString src) {
         ++nRead;
         keepEvents.push_back(true);
     }
-#endif
 
     if (nRead == 0) {
         std::cout << Error() << "Failed to read any event." << std::endl;
@@ -231,16 +272,19 @@ int MatrixBuilder::buildMatrices(TString src) {
 
         Eigen::VectorXd variables1 = Eigen::VectorXd::Zero(nvariables_/2);
         Eigen::VectorXd variables2 = Eigen::VectorXd::Zero(nvariables_/2);
+        Eigen::VectorXd variables3 = Eigen::VectorXd::Zero(nvariables_/2);
 
         // Loop over reconstructed stubs
         for (unsigned istub=0; istub<nstubs; ++istub) {
-            //float    stub_r   = reader.vb_r       ->at(istub);
+            float    stub_r   = reader.vb_r       ->at(istub);
             float    stub_phi = reader.vb_phi     ->at(istub);
             float    stub_z   = reader.vb_z       ->at(istub);
 
             variables1(istub) = stub_phi;
             variables2(istub) = stub_z;
+            variables3(istub) = meansR_(istub) - stub_r;
         }
+        setVariableToZero(variables1, variables2, variables3, po_.hitbits);
 
         Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);
         variables << variables1, variables2;
@@ -287,11 +331,15 @@ int MatrixBuilder::buildMatrices(TString src) {
 
     // Find solutions for C & T
     Eigen::MatrixXd covariances_phi = covariances.block(0,0,nvariables_/2,nvariables_/2);
+    setCovarianceToUnit(covariances_phi, nvariables_/2, po_.hitbits);
+
     Eigen::MatrixXd solutionsC = Eigen::MatrixXd::Zero(1,nvariables_/2);
     //solutionsC = covariancesC*(covariances_phi.inverse());
     solutionsC = (covariances_phi.colPivHouseholderQr().solve(covariancesC.transpose())).transpose();
 
     Eigen::MatrixXd covariances_z = covariances.block(nvariables_/2,nvariables_/2,nvariables_/2,nvariables_/2);
+    setCovarianceToUnit(covariances_z, nvariables_/2, po_.hitbits);
+
     Eigen::MatrixXd solutionsT = Eigen::MatrixXd::Zero(1,nvariables_/2);
     //solutionsT = covariancesT*(covariances_z.inverse());
     solutionsT = (covariances_z.colPivHouseholderQr().solve(covariancesT.transpose())).transpose();
@@ -362,6 +410,7 @@ int MatrixBuilder::buildMatrices(TString src) {
             variables2(istub) = stub_z;
             variables3(istub) = meansR_(istub) - stub_r;
         }
+        setVariableToZero(variables1, variables2, variables3, po_.hitbits);
 
         variables1 += ((solutionsC * variables1)(0,0)) * variables3;
         variables2 += ((solutionsT * variables2)(0,0)) * variables3;
@@ -408,6 +457,8 @@ int MatrixBuilder::buildMatrices(TString src) {
     // The principal components are constraints + rotated track parameters
     Eigen::MatrixXd V = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
     V = (eigensolver.eigenvectors()).transpose();
+
+    setRotationToZero(V, nvariables_, po_.hitbits);
 
     if (verbose_>1) {
         std::cout << Info() << "sqrt(eigenvalues) of covariances: " << std::endl;
@@ -461,6 +512,7 @@ int MatrixBuilder::buildMatrices(TString src) {
             variables2(istub) = stub_z;
             variables3(istub) = meansR_(istub) - stub_r;
         }
+        setVariableToZero(variables1, variables2, variables3, po_.hitbits);
 
         variables1 += ((solutionsC * variables1)(0,0)) * variables3;
         variables2 += ((solutionsT * variables2)(0,0)) * variables3;
@@ -518,16 +570,7 @@ int MatrixBuilder::buildMatrices(TString src) {
         ++nRead;
     }
 
-    if (verbose_>1) {
-        std::cout << Info() << "meansV: " << std::endl;
-        std::cout << meansV << std::endl << std::endl;
-        std::cout << Info() << "meansP: " << std::endl;
-        std::cout << meansP << std::endl << std::endl;
-        std::cout << Info() << "covariancesV: " << std::endl;
-        std::cout << covariancesV << std::endl << std::endl;
-        std::cout << Info() << "covariancesPV: " << std::endl;
-        std::cout << covariancesPV << std::endl << std::endl;
-    }
+    setCovarianceToUnit(covariancesV, nvariables_, po_.hitbits);
 
     // Find matrix D
     // D is the transformation from principal components to track parameters
@@ -539,6 +582,15 @@ int MatrixBuilder::buildMatrices(TString src) {
     DV = D * V;
 
     if (verbose_>1) {
+        std::cout << Info() << "meansV: " << std::endl;
+        std::cout << meansV << std::endl << std::endl;
+        std::cout << Info() << "meansP: " << std::endl;
+        std::cout << meansP << std::endl << std::endl;
+        std::cout << Info() << "covariancesV: " << std::endl;
+        std::cout << covariancesV << std::endl << std::endl;
+        std::cout << Info() << "covariancesPV: " << std::endl;
+        std::cout << covariancesPV << std::endl << std::endl;
+
         std::cout << Info() << "covariancesPV * covariancesV^{-1}: " << std::endl;
         std::cout << D << std::endl << std::endl;
         std::cout << Info() << "covariancesPV * covariancesV^{-1} * eigenvectors^T: " << std::endl;
@@ -593,6 +645,7 @@ int MatrixBuilder::buildMatrices(TString src) {
             variables2(istub) = stub_z;
             variables3(istub) = meansR_(istub) - stub_r;
         }
+        setVariableToZero(variables1, variables2, variables3, po_.hitbits);
 
         variables1 += ((solutionsC * variables1)(0,0)) * variables3;
         variables2 += ((solutionsT * variables2)(0,0)) * variables3;
@@ -618,10 +671,10 @@ int MatrixBuilder::buildMatrices(TString src) {
         }
 
         Eigen::VectorXd principals = Eigen::VectorXd::Zero(nvariables_);
-        principals = V * variables;
+        principals = V * variables;  // not using delta here!
 
         Eigen::VectorXd parameters_fit = Eigen::VectorXd::Zero(nparameters_);
-        parameters_fit = DV * variables;
+        parameters_fit = DV * variables;  // not using delta here!
 
         // Update mean vectors
         long int nTracks = nKept + 1;
@@ -642,24 +695,31 @@ int MatrixBuilder::buildMatrices(TString src) {
             statX.at(ivar).fill(variables(ivar));
             statV.at(ivar).fill(principals(ivar));
 
-            hname = Form("var%i", ivar);
-            histograms_[hname]->Fill(variables(ivar));
+            if (po_.speedup<1) {
+                hname = Form("var%i", ivar);
+                histograms_[hname]->Fill(variables(ivar));
 
-            hname = Form("pc%i", ivar);
-            histograms_[hname]->Fill(principals(ivar));
+                hname = Form("pc%i", ivar);
+                histograms_[hname]->Fill(principals(ivar));
+
+                hname = Form("npc%i", ivar);
+                histograms_[hname]->Fill((principals(ivar)- meansV(ivar)) / sqrtEigenvalues(ivar));
+            }
         }
 
         for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
             statP.at(ipar).fill(parameters_fit(ipar) - parameters(ipar));
 
-            hname = Form("par%i", ipar);
-            histograms_[hname]->Fill(parameters(ipar));
+            if (po_.speedup<1) {
+                hname = Form("par%i", ipar);
+                histograms_[hname]->Fill(parameters(ipar));
 
-            hname = Form("fitpar%i", ipar);
-            histograms_[hname]->Fill(parameters_fit(ipar));
+                hname = Form("fitpar%i", ipar);
+                histograms_[hname]->Fill(parameters_fit(ipar));
 
-            hname = Form("errpar%i", ipar);
-            histograms_[hname]->Fill(parameters_fit(ipar) - parameters(ipar));
+                hname = Form("errpar%i", ipar);
+                histograms_[hname]->Fill(parameters_fit(ipar) - parameters(ipar));
+            }
         }
 
         ++nKept;

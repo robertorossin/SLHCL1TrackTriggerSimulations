@@ -45,11 +45,11 @@ int TrackFitterAlgoPCA::fit(const TTRoadComb& acomb, TTTrack2& atrack) {
 
     Eigen::VectorXd principals = Eigen::VectorXd::Zero(nvariables_);
     principals = mat.V * variables;
-    //principals -= mat.meansV;
+    principals -= mat.meansV;
 
     Eigen::VectorXd parameters_fit = Eigen::VectorXd::Zero(nparameters_);
     parameters_fit = mat.DV * variables;
-    //parameters_fit -= mat.meansP;
+    parameters_fit -= mat.meansP;
 
     unsigned ndof = nvariables_ - nparameters_;
     double chi2 = 0.;
