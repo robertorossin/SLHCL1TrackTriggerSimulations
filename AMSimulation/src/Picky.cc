@@ -35,11 +35,13 @@ Picky::Picky() {
 
     // phi cut per barrel layer
     //barrel_phi_cuts_ = { 0.004, 0.004, 0.005, 0.007, 0.009, 0.012 };
-    barrel_phi_cuts_ = { 0.100, 0.100, 0.100, 0.100, 0.100, 0.100 };  // disabled
+    barrel_phi_cuts_ = { 0.00132*16, 0.00174*16, 0.00214*16, 0.00256*12, 0.00298*12, 0.00338*12 };
+    //barrel_phi_cuts_ = { 0.100, 0.100, 0.100, 0.100, 0.100, 0.100 };  // disabled
 
     // z cut per barrel layer
     //barrel_z_cuts_   = { 0.300, 0.400, 0.500, 3.000, 3.500, 4.000 };
-    barrel_z_cuts_   = { 9.900, 9.900, 9.900, 9.900, 9.900, 9.900 };  // disabled
+    barrel_z_cuts_   = { 0.07*8, 0.094*8, 0.152*8, 2.34*4, 2.36*4, 2.44*4 };
+    //barrel_z_cuts_   = { 9.900, 9.900, 9.900, 9.900, 9.900, 9.900 };  // disabled
 
     // phi cut per endcap disk
     endcap_phi_cuts_ = { 0.100, 0.100, 0.100, 0.100, 0.100 };  // disabled
