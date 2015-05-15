@@ -7,6 +7,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoATF.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoLTF.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/CombinationFactory.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/GhostBuster.h"
 using namespace slhcl1tt;
 
 
@@ -62,6 +63,9 @@ class TrackFitter {
 
     // Combination factory
     CombinationFactory combinationFactory_;
+
+    // Ghost buster
+    GhostBuster ghostBuster_;
 };
 
 #endif

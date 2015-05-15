@@ -20,7 +20,7 @@ class CombinationFactory {
     // groups[i][j] is the j-th element in the i-th group
     // combinations[i][j] is the j-th element in the i-th combination
     template<typename T>
-    std::vector<std::vector<T> > combine(const std::vector<std::vector<T> >& groups, const unsigned maxN) {
+    std::vector<std::vector<T> > combine(const std::vector<std::vector<T> >& groups) {
         std::vector<T> combination;
         std::vector<std::vector<T> > combinations;
 
@@ -48,9 +48,6 @@ class CombinationFactory {
             for (j=i+1; j<ngroups; ++j)
                 indices[j] = 0;  // set indices behind that index to zeroes
         }
-
-        if (combinations.size() > maxN)
-            combinations.resize(maxN);
 
         return combinations;
     }

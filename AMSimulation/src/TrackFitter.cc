@@ -85,22 +85,27 @@ int TrackFitter::makeTracks(TString src, TString out) {
 
         // Loop over the roads
         for (unsigned iroad=0; iroad<nroads; ++iroad) {
+            if (iroad >= (unsigned) po_.maxRoads)  break;
 
             // Get combinations of stubRefs
-            const unsigned nstubs = reader.vr_nstubs->at(iroad);
-            const std::vector<std::vector<unsigned> >& stubRefs = reader.vr_stubRefs->at(iroad);
+            std::vector<std::vector<unsigned> > stubRefs = reader.vr_stubRefs->at(iroad);
+            for (unsigned ilayer=0; ilayer<stubRefs.size(); ++ilayer) {
+                if (stubRefs.at(ilayer).size() > (unsigned) po_.maxStubs)
+                    stubRefs.at(ilayer).resize(po_.maxStubs);
+            }
 
-            const std::vector<std::vector<unsigned> >& combinations = combinationFactory_.combine(stubRefs, po_.maxCombs);
+            const std::vector<std::vector<unsigned> >& combinations = combinationFactory_.combine(stubRefs);
 
             for (unsigned icomb=0; icomb<combinations.size(); ++icomb)
                 assert(combinations.at(icomb).size() == reader.vr_stubRefs->at(iroad).size());
 
             if (verbose_>2) {
-                std::cout << Debug() << "... ... road: " << iroad << " # stubs: " << nstubs << " # combinations: " << combinations.size() << std::endl;
+                std::cout << Debug() << "... ... road: " << iroad << " # combinations: " << combinations.size() << std::endl;
             }
 
             // Loop over the combinations
             for (unsigned icomb=0; icomb<combinations.size(); ++icomb) {
+                if (icomb >= (unsigned) po_.maxCombs)  break;
 
                 // Create and set TTRoadComb
                 TTRoadComb acomb;
@@ -161,16 +166,25 @@ int TrackFitter::makeTracks(TString src, TString out) {
             }
         }
 
-        if (tracks.size() > (unsigned) po_.maxTracks)
-            tracks.resize(po_.maxTracks);
-
         // _____________________________________________________________________
         // Remove fails and duplicates
 
-        // FIXME: implement this
+        for (unsigned itrack=0; itrack<tracks.size(); ++itrack) {  // all tracks
+            for (unsigned jtrack=0; jtrack<itrack; ++jtrack) {  // only non ghost tracks
+                if (tracks.at(jtrack).isGhost())  continue;
+
+                bool isGhost = ghostBuster_.isGhostTrack(tracks.at(jtrack).stubRefs(), tracks.at(itrack).stubRefs());
+                if (isGhost) {
+                    tracks.at(itrack).setAsGhost();
+                }
+            }
+        }
 
         if (! tracks.empty())
             ++nKept;
+
+        if (tracks.size() > (unsigned) po_.maxTracks)
+            tracks.resize(po_.maxTracks);
 
         writer.fill(tracks);
         ++nRead;
