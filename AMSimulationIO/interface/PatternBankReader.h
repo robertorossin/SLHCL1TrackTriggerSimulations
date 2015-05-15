@@ -23,6 +23,7 @@ class PatternBankReader {
     int init(TString src);
 
     void getPatternBankInfo(float& coverage, unsigned& count, unsigned& tower, std::string& superstrip);
+    void getPatternInvPt(Long64_t entry, float& invPt_mean);
 
     Int_t getPattern(Long64_t entry) { return ttree->GetEntry(entry); }
 

@@ -58,6 +58,9 @@ int PatternBankReader::init(TString src) {
         ttree3->SetBranchAddress("phi_sigma"     , &pb_phi_sigma);
         ttree3->SetBranchAddress("z0_mean"       , &pb_z0_mean);
         ttree3->SetBranchAddress("z0_sigma"      , &pb_z0_sigma);
+
+        ttree3->SetBranchStatus("*"              , 0);
+        ttree3->SetBranchStatus("invPt_mean"     , 1);
     }
 
     ttree2 = (TTree*) tfile->Get("patternBankInfo");
@@ -84,6 +87,12 @@ void PatternBankReader::getPatternBankInfo(float& coverage, unsigned& count, uns
     count      = pb_count;
     tower      = pb_tower;
     superstrip = (*pb_superstrip);
+}
+
+void PatternBankReader::getPatternInvPt(Long64_t entry, float& invPt_mean) {
+    ttree3->GetEntry(entry);
+
+    invPt_mean = pb_invPt_mean;
 }
 
 
