@@ -62,8 +62,8 @@ class PatternAnalyzer {
 
     // Pattern bank data
     std::vector<Attributes>                             patternAttributes_;
-    std::map<pattern_type, Attributes *>                patternBank_map_;
-    std::vector<std::pair<pattern_type, Attributes *> > patternBank_pairs_;
+    std::map<pattern_type, Attributes *>                patternAttributes_map_;
+    std::vector<std::pair<pattern_type, Attributes *> > patternAttributes_pairs_;
 
     // Histograms
     std::map<TString, TH1F *>     histograms;

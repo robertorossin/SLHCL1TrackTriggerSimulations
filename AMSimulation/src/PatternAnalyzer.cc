@@ -90,7 +90,7 @@ int PatternAnalyzer::loadPatterns(TString bank) {
         std::copy(pbreader.pb_superstripIds->begin(), pbreader.pb_superstripIds->end(), patt.begin());
 
         // Insert the pattern
-        ret = patternBank_map_.insert(std::make_pair(patt, &(patternAttributes_.at(ipatt))));
+        ret = patternAttributes_map_.insert(std::make_pair(patt, &(patternAttributes_.at(ipatt))));
 
         if (!ret.second) {
             std::cout << Warning() << "Failed to insert: " << patt << std::endl;
@@ -253,9 +253,9 @@ int PatternAnalyzer::makePatterns(TString src) {
 
         }
 
-        // Find pattern in the bank
-        std::map<pattern_type, Attributes *>::iterator found = patternBank_map_.find(patt);
-        if (found != patternBank_map_.end()) {
+        // Find pattern in the bank, update the attributes
+        std::map<pattern_type, Attributes *>::iterator found = patternAttributes_map_.find(patt);
+        if (found != patternAttributes_map_.end()) {
             Attributes * attr = found->second;
             ++ attr->n;
             attr->invPt.fill(simChargeOverPt);
@@ -282,28 +282,28 @@ int PatternAnalyzer::makePatterns(TString src) {
     // Sort by mean invPt
 
     // Convert map to vector of pairs
-    const unsigned origSize = patternBank_map_.size();
-    //patternBank_pairs_.reserve(patternBank_map_.size());  // can cause bad_alloc
-    //patternBank_pairs_.insert(patternBank_pairs_.end(), patternBank_map_.begin(), patternBank_map_.end());
+    const unsigned origSize = patternAttributes_map_.size();
+    //patternAttributes_pairs_.reserve(patternAttributes_map_.size());  // can cause bad_alloc
+    //patternAttributes_pairs_.insert(patternAttributes_pairs_.end(), patternAttributes_map_.begin(), patternAttributes_map_.end());
 
-    for (std::map<pattern_type, Attributes *>::const_iterator it = patternBank_map_.begin();
-         it != patternBank_map_.end(); ) {  // should not cause bad_alloc
-        patternBank_pairs_.push_back(*it);
-        it = patternBank_map_.erase(it);
+    for (std::map<pattern_type, Attributes *>::const_iterator it = patternAttributes_map_.begin();
+         it != patternAttributes_map_.end(); ) {  // should not cause bad_alloc
+        patternAttributes_pairs_.push_back(*it);
+        it = patternAttributes_map_.erase(it);
     }
-    assert(patternBank_pairs_.size() == origSize);
+    assert(patternAttributes_pairs_.size() == origSize);
 
     // Clear map and release memory
     std::map<pattern_type, Attributes *> mapEmpty;
-    patternBank_map_.clear();
-    patternBank_map_.swap(mapEmpty);
+    patternAttributes_map_.clear();
+    patternAttributes_map_.swap(mapEmpty);
 
     // Sort by invPt
-    std::stable_sort(patternBank_pairs_.begin(), patternBank_pairs_.end(), sortByInvPt);
+    std::stable_sort(patternAttributes_pairs_.begin(), patternAttributes_pairs_.end(), sortByInvPt);
 
     // Assign sorted pattern id
-    for (unsigned i=0; i<patternBank_pairs_.size(); ++i) {
-        patternBank_pairs_.at(i).second->id = i;
+    for (unsigned i=0; i<patternAttributes_pairs_.size(); ++i) {
+        patternAttributes_pairs_.at(i).second->id = i;
     }
 
 
@@ -311,7 +311,7 @@ int PatternAnalyzer::makePatterns(TString src) {
     // Fill histograms
 
     // CUIDADO: this assumes all the pattern attributes are populated well (ntracks > npatterns)
-    const unsigned npatterns = patternBank_pairs_.size();
+    const unsigned npatterns = patternAttributes_pairs_.size();
     for (std::vector<std::pair<float, Attributes *> >::const_iterator it=attrs.begin();
          it!=attrs.end(); ++it) {
 
@@ -368,7 +368,7 @@ int PatternAnalyzer::writePatterns(TString out) {
 
     // _________________________________________________________________________
     // Save pattern bank
-    const long long npatterns = patternBank_pairs_.size();
+    const long long npatterns = patternAttributes_pairs_.size();
 
     // Bookkeepers
     long int nKept = 0;
@@ -378,10 +378,10 @@ int PatternAnalyzer::writePatterns(TString out) {
             std::cout << Debug() << Form("... Writing event: %7lld, total freq: %7lu", ipatt, nKept) << std::endl;
         }
 
-        const Attributes * attr = patternBank_pairs_.at(ipatt).second;
+        const Attributes * attr = patternAttributes_pairs_.at(ipatt).second;
 
         writer.pb_superstripIds->clear();
-        const pattern_type& patt = patternBank_pairs_.at(ipatt).first;
+        const pattern_type& patt = patternAttributes_pairs_.at(ipatt).first;
         for (unsigned ilayer=0; ilayer<po_.nLayers; ++ilayer) {
             writer.pb_superstripIds->push_back(patt.at(ilayer));
         }
