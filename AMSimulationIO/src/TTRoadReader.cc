@@ -11,6 +11,7 @@ TTRoadReader::TTRoadReader(int verbose)
   vr_patternRef   (0),
   vr_tower        (0),
   vr_nstubs       (0),
+  vr_patternInvPt (0),
   vr_superstripIds(0),
   vr_stubRefs     (0) {}
 
@@ -23,6 +24,7 @@ int TTRoadReader::init(TString src, TString prefix, TString suffix) {
     tchain->SetBranchAddress(prefix + "patternRef"    + suffix, &(vr_patternRef));
     tchain->SetBranchAddress(prefix + "tower"         + suffix, &(vr_tower));
     tchain->SetBranchAddress(prefix + "nstubs"        + suffix, &(vr_nstubs));
+    tchain->SetBranchAddress(prefix + "patternInvPt"  + suffix, &(vr_patternInvPt));
     tchain->SetBranchAddress(prefix + "superstripIds" + suffix, &(vr_superstripIds));
     tchain->SetBranchAddress(prefix + "stubRefs"      + suffix, &(vr_stubRefs));
     return 0;
@@ -36,6 +38,7 @@ TTRoadWriter::TTRoadWriter(int verbose)
   vr_patternRef     (new std::vector<unsigned>()),
   vr_tower          (new std::vector<unsigned>()),
   vr_nstubs         (new std::vector<unsigned>()),
+  vr_patternInvPt   (new std::vector<float>()),
   vr_superstripIds  (new std::vector<std::vector<unsigned> >()),
   vr_stubRefs       (new std::vector<std::vector<std::vector<unsigned> > >()) {}
 
@@ -48,6 +51,7 @@ int TTRoadWriter::init(TChain* tchain, TString out, TString prefix, TString suff
     ttree->Branch(prefix + "patternRef"    + suffix, &(*vr_patternRef));
     ttree->Branch(prefix + "tower"         + suffix, &(*vr_tower));
     ttree->Branch(prefix + "nstubs"        + suffix, &(*vr_nstubs));
+    ttree->Branch(prefix + "patternInvPt"  + suffix, &(*vr_patternInvPt));
     ttree->Branch(prefix + "superstripIds" + suffix, &(*vr_superstripIds));
     ttree->Branch(prefix + "stubRefs"      + suffix, &(*vr_stubRefs));
     return 0;
@@ -57,6 +61,7 @@ void TTRoadWriter::fill(const std::vector<TTRoad>& roads) {
     vr_patternRef   ->clear();
     vr_tower        ->clear();
     vr_nstubs       ->clear();
+    vr_patternInvPt ->clear();
     vr_superstripIds->clear();
     vr_stubRefs     ->clear();
 
@@ -66,6 +71,7 @@ void TTRoadWriter::fill(const std::vector<TTRoad>& roads) {
         vr_patternRef   ->push_back(road.patternRef);
         vr_tower        ->push_back(road.tower);
         vr_nstubs       ->push_back(road.nstubs);
+        vr_patternInvPt ->push_back(road.patternInvPt);
         vr_superstripIds->push_back(road.superstripIds);
         vr_stubRefs     ->push_back(road.stubRefs);
     }

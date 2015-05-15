@@ -11,6 +11,8 @@ struct TTRoad {
     unsigned patternRef;
     unsigned tower;
     unsigned nstubs;
+    float    patternInvPt;
+
     std::vector<unsigned> superstripIds;  // necessary?
     std::vector<std::vector<unsigned> > stubRefs;  // stubRefs[superstrip i][stub j]
 };

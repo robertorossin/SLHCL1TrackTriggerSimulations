@@ -19,6 +19,7 @@ class TTRoadReader : public BasicReader {
     std::vector<unsigned> *                             vr_patternRef;
     std::vector<unsigned> *                             vr_tower;
     std::vector<unsigned> *                             vr_nstubs;
+    std::vector<float> *                                vr_patternInvPt;
     std::vector<std::vector<unsigned> > *               vr_superstripIds;
     std::vector<std::vector<std::vector<unsigned> > > * vr_stubRefs;
 };
@@ -39,6 +40,7 @@ class TTRoadWriter : public BasicWriter {
     std::auto_ptr<std::vector<unsigned> >                             vr_patternRef;
     std::auto_ptr<std::vector<unsigned> >                             vr_tower;
     std::auto_ptr<std::vector<unsigned> >                             vr_nstubs;
+    std::auto_ptr<std::vector<float> >                                vr_patternInvPt;
     std::auto_ptr<std::vector<std::vector<unsigned> > >               vr_superstripIds;
     std::auto_ptr<std::vector<std::vector<std::vector<unsigned> > > > vr_stubRefs;
 };

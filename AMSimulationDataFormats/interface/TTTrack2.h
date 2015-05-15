@@ -91,6 +91,7 @@ class TTTrack2 {
     float principal(int l)                      const { return principals_.at(l); }
 
     float pt(float B=3.8)                       const { return std::abs(0.003 * B / rinv()); }  // assume r is in cm, B is in Tesla
+    float invPt(float B=3.8)                    const { return rinv() / (0.003 * B); }          // assume r is in cm, B is in Tesla
     float theta()                               const { return std::atan(1.0 / cottheta()); }
     float eta()                                 const { return -std::log(tan(theta()/2.0)); }
     float phi()                                 const { return phi0(); }
