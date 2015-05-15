@@ -59,26 +59,6 @@ int MatrixTester::testMatrices(TString src) {
     // Bookkeepers
     long int nRead = 0, nKept = 0;
 
-//#define Use_keepEvents_txt_
-#ifdef Use_keepEvents_txt_
-    TString txt = "keepEvents.txt";
-    std::ifstream infile(txt.Data());
-    if (!infile) {
-        std::cout << "Unable to open " << txt << std::endl;
-        return 1;
-    }
-    int x;
-    while (infile >> x) {
-        long long ievt = nRead;
-        if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
-
-        keepEvents.push_back(x);
-
-        if (x)
-            ++nKept;
-        ++nRead;
-    }
-#else
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         if (reader.loadTree(ievt) < 0)  break;
         reader.getEntry(ievt);
@@ -88,8 +68,8 @@ int MatrixTester::testMatrices(TString src) {
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
         // Apply track pt requirement
-        float simPt = reader.vp_pt->front();
-        if (simPt < po_.minPt || po_.maxPt < simPt) {
+        double simChargeOverPt = float(reader.vp_charge->front())/reader.vp_pt->front();
+        if (simChargeOverPt < po_.minInvPt || po_.maxInvPt < simChargeOverPt) {
             ++nRead;
             keepEvents.push_back(false);
             continue;
@@ -114,7 +94,6 @@ int MatrixTester::testMatrices(TString src) {
         ++nRead;
         keepEvents.push_back(true);
     }
-#endif
 
     if (nRead == 0) {
         std::cout << Error() << "Failed to read any event." << std::endl;
@@ -158,25 +137,26 @@ int MatrixTester::testMatrices(TString src) {
         tracks.clear();
         int fitstatus = 0;
 
+        // Create and set TTRoadComb
         TTRoadComb acomb;
         acomb.roadRef    = 0;
-        acomb.patternRef = 0;
-        acomb.tower      = po_.tower;
+        acomb.combRef    = 0;
+        acomb.ptSegment  = 0;
+        acomb.hitBits    = 0;
 
         acomb.stubRefs.clear();
         for (unsigned istub=0; istub<nstubs; ++istub) {
             acomb.stubRefs.push_back(istub);
         }
 
-        acomb.nstubs     = 0;
         acomb.stubs_r   .clear();
         acomb.stubs_phi .clear();
         acomb.stubs_z   .clear();
         acomb.stubs_bool.clear();
+
         for (unsigned istub=0; istub<acomb.stubRefs.size(); ++istub) {
             const unsigned stubRef = acomb.stubRefs.at(istub);
             if (stubRef != 999999) {
-                ++acomb.nstubs;
                 acomb.stubs_r   .push_back(reader.vb_r   ->at(stubRef));
                 acomb.stubs_phi .push_back(reader.vb_phi ->at(stubRef));
                 acomb.stubs_z   .push_back(reader.vb_z   ->at(stubRef));
@@ -194,10 +174,11 @@ int MatrixTester::testMatrices(TString src) {
         TTTrack2 atrack;
         fitstatus = fitterPCA_->fit(acomb, atrack);
 
-        atrack.setTower    (acomb.tower);
-        atrack.setHitBits  (acomb.hitbits());
-        atrack.setPtSegment(acomb.ptsegment());
+        atrack.setTower    (po_.tower);
         atrack.setRoadRef  (acomb.roadRef);
+        atrack.setCombRef  (acomb.combRef);
+        atrack.setPtSegment(acomb.ptSegment);
+        atrack.setHitBits  (acomb.hitBits);
         atrack.setStubRefs (acomb.stubRefs);
         tracks.push_back(atrack);
 
@@ -210,12 +191,11 @@ int MatrixTester::testMatrices(TString src) {
 
         // _____________________________________________________________________
         // Get sim info
-        // Get sim info
         double simCotTheta     = std::sinh(reader.vp_eta->front());
         double simChargeOverPt = float(reader.vp_charge->front())/reader.vp_pt->front();
         double simPhi          = reader.vp_phi->front();
         double simVz           = reader.vp_vz->front();
-        //double simC = 0.5 * (0.003 * 3.8 * simChargeOverPt);  // 1/(2 x radius of curvature)
+        //double simC = -0.5 * (0.003 * 3.8 * simChargeOverPt);  // 1/(2 x radius of curvature)
         //double simT = simCotTheta;
         {
             unsigned ipar = 0;
@@ -232,7 +212,7 @@ int MatrixTester::testMatrices(TString src) {
             parameters_fit.at(ipar++) = atrack.phi0();
             parameters_fit.at(ipar++) = atrack.cottheta();
             parameters_fit.at(ipar++) = atrack.z0();
-            parameters_fit.at(ipar++) = atrack.rinv() / (0.003 * 3.8);
+            parameters_fit.at(ipar++) = atrack.invPt();
 
             assert(atrack.principals().size() == nvariables_);
             principals = atrack.principals();

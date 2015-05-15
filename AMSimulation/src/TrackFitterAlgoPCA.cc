@@ -13,7 +13,15 @@ int TrackFitterAlgoPCA::bookHistograms() {
 
 // _____________________________________________________________________________
 int TrackFitterAlgoPCA::loadConstants() {
-    matrices[0].read("matrices.txt", nvariables_, nparameters_);
+
+    for (unsigned i=0; i<PCA_NSEGMENTS; ++i) {
+        for (unsigned j=0; j<PCA_NHITBITS; ++j) {
+            PCAMatrix matrix;
+            matrix.read("matrices.txt", nvariables_, nparameters_);
+
+            matrices.push_back(matrix);
+        }
+    }
 
     if (verbose_)
         print();
@@ -24,7 +32,7 @@ int TrackFitterAlgoPCA::loadConstants() {
 // _____________________________________________________________________________
 int TrackFitterAlgoPCA::fit(const TTRoadComb& acomb, TTTrack2& atrack) {
 
-    int imat = acomb.ptsegment() * 7 + acomb.hitbits();
+    int imat = acomb.ptSegment * PCA_NHITBITS + acomb.hitBits;
     const PCAMatrix& mat = matrices[imat];
 
     Eigen::VectorXd variables1 = Eigen::VectorXd::Zero(nvariables_/2);
@@ -77,9 +85,9 @@ int TrackFitterAlgoPCA::fit(const TTRoadComb& acomb, TTTrack2& atrack) {
 // _____________________________________________________________________________
 void TrackFitterAlgoPCA::print() {
     std::cout << "view: " << view_ << " nvariables: " << nvariables_ << " nparameters: " << nparameters_ << std::endl;
-    for (int i=0; i<PCA_NMATRICES; ++i) {
+    for (unsigned i=0; i<matrices.size(); ++i) {
         std::cout << "** matrix " << i << std::endl;
-        matrices[i].print();
+        matrices.at(i).print();
     }
     std::cout << std::endl;
 }

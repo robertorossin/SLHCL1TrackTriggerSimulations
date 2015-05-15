@@ -201,10 +201,12 @@ int stubUncertaintyResidual(double r, double &d_phi, double &d_z)
 int TrackFitterAlgoATF::fit(const TTRoadComb& acomb, TTTrack2& atrack)
 {
   double A=0, B=0, C=0, D=0, E=0, F=0, G=0, H=0, I=0, J=0, K=0, L=0, M=0, P=0, Q=0;
+  unsigned nstubs = 0;
   for (unsigned int i=0; i<acomb.stubs_phi.size(); ++i)
   {
     if (!acomb.stubs_bool.at(i))
         continue;
+    ++nstubs;
 
     double r=acomb.stubs_r.at(i);
     double phi=acomb.stubs_phi.at(i);
@@ -252,7 +254,7 @@ int TrackFitterAlgoATF::fit(const TTRoadComb& acomb, TTTrack2& atrack)
                 + Q + M*pow(z0, 2) + I*pow(cottheta0*(1.-(d0*rinv/2.)), 2) - 2.*L*z0 - 2.*G*cottheta0*(1.-(d0*rinv/2.))
                 + 2.*H*z0*cottheta0*(1.-(d0*rinv/2.));
                  
-    int    ndof = (acomb.nstubs-5);
+    int    ndof = (nstubs-5);
 
     double chi2_phi = P + pow(phi0, 2)*B + F*pow(rinv/2., 2) + pow(d0, 2)*K
                     - 2.*A*phi0 + E*rinv + 2.*d0*J
@@ -280,7 +282,7 @@ int TrackFitterAlgoATF::fit(const TTRoadComb& acomb, TTTrack2& atrack)
                 + Q + M*pow(z0, 2) + I*pow(cottheta0, 2) - 2.*L*z0 - 2.*G*cottheta0 
                 + 2.*H*z0*cottheta0;
                  
-    int    ndof = (acomb.nstubs-4);
+    int    ndof = (nstubs-4);
 
     double chi2_phi = P + E*rinv/2. - phi0*A;
 

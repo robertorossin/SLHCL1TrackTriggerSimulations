@@ -5,8 +5,10 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PCAMatrix.h"
 
-// 10 pt segments times 7 possible layer combinations
-#define PCA_NMATRICES 70
+static const unsigned PCA_NSEGMENTS = 10;     // 10 segments in invPt
+static const unsigned PCA_NHITBITS  = 7;      // 7 layer combinations
+static const float    PCA_MAX_INVPT = +1./2;  // 2 GeV
+static const float    PCA_MIN_INVPT = -1./2;  // 2 GeV
 
 
 namespace slhcl1tt {
@@ -61,7 +63,7 @@ class TrackFitterAlgoPCA : public TrackFitterAlgoBase {
     unsigned nparameters_;  // number of track parameters
 
     // Matrices
-    PCAMatrix matrices[PCA_NMATRICES];
+    std::vector<PCAMatrix> matrices;
 };
 
 }  // namespace slhcl1tt
