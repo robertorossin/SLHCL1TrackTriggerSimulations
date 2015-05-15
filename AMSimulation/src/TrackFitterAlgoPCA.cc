@@ -23,7 +23,7 @@ int TrackFitterAlgoPCA::loadConstants() {
         }
     }
 
-    if (verbose_)
+    if (verbose_>2)
         print();
 
     return 0;

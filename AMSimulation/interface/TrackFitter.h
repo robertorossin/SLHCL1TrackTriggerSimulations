@@ -6,6 +6,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoPCA.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoATF.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoLTF.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/CombinationFactory.h"
 using namespace slhcl1tt;
 
 
@@ -20,7 +21,7 @@ class TrackFitter {
 
         // Decide the track fitter to use
         fitter_ = 0;
-        if (po.algo == "PCA") {
+        if (po.algo == "PCA" || po.algo == "PCA4" || po.algo == "PCA5") {
             fitter_ = new TrackFitterAlgoPCA(po);
         } else if (po.algo == "ATF" || po.algo == "ATF4") {
             fitter_ = new TrackFitterAlgoATF(false);
@@ -56,8 +57,11 @@ class TrackFitter {
     const TString prefixTrack_;
     const TString suffix_;
 
-    // Track fitters
+    // Track fitter
     TrackFitterAlgoBase *  fitter_;
+
+    // Combination factory
+    CombinationFactory combinationFactory_;
 };
 
 #endif

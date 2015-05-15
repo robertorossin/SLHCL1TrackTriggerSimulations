@@ -5,45 +5,6 @@
 
 
 namespace {
-// Combination arrangement
-// groups[i][j] is the j-th element in the i-th group
-// combinations[i][j] is the j-th element in the i-th combination
-template<typename T>
-std::vector<std::vector<T> > arrangeCombinations(const std::vector<std::vector<T> >& groups, const unsigned maxCombs) {
-    std::vector<T> combination;
-    std::vector<std::vector<T> > combinations;
-
-    const int ngroups = groups.size();
-    std::vector<unsigned> indices(ngroups, 0);  // init to zeroes
-
-    int i=0, j=0;
-    while (true) {
-        combination.clear();
-        for (i=0; i<ngroups; ++i) {
-            if (groups.at(i).size())
-                combination.push_back(groups.at(i).at(indices.at(i)));
-            else  // empty group
-                combination.push_back(999999);
-        }
-        combinations.push_back(combination);
-
-        for (i=ngroups-1; i>=0; --i)
-            if (groups.at(i).size())
-                if (indices.at(i) != groups.at(i).size() - 1)
-                    break;  // take the last index that has not reached the end
-        if (i == -1)  break;
-
-        indices[i] += 1;  // increment that index
-        for (j=i+1; j<ngroups; ++j)
-            indices[j] = 0;  // set indices behind that index to zeroes
-    }
-
-    if (combinations.size() > maxCombs)
-        combinations.resize(maxCombs);
-
-    return combinations;
-}
-
 unsigned getPtSegment(float invPt) {  // for PCA
     return (invPt - PCA_MIN_INVPT) / (PCA_MAX_INVPT - PCA_MIN_INVPT) * PCA_NSEGMENTS;
 }
@@ -127,7 +88,9 @@ int TrackFitter::makeTracks(TString src, TString out) {
 
             // Get combinations of stubRefs
             const unsigned nstubs = reader.vr_nstubs->at(iroad);
-            const std::vector<std::vector<unsigned> >& combinations = arrangeCombinations(reader.vr_stubRefs->at(iroad), po_.maxCombs);
+            const std::vector<std::vector<unsigned> >& stubRefs = reader.vr_stubRefs->at(iroad);
+
+            const std::vector<std::vector<unsigned> >& combinations = combinationFactory_.combine(stubRefs, po_.maxCombs);
 
             for (unsigned icomb=0; icomb<combinations.size(); ++icomb)
                 assert(combinations.at(icomb).size() == reader.vr_stubRefs->at(iroad).size());
@@ -153,7 +116,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
 
                 for (unsigned istub=0; istub<acomb.stubRefs.size(); ++istub) {
                     const unsigned stubRef = acomb.stubRefs.at(istub);
-                    if (stubRef != 999999) {
+                    if (stubRef != CombinationFactory::BAD) {
                         acomb.stubs_r   .push_back(reader.vb_r   ->at(stubRef));
                         acomb.stubs_phi .push_back(reader.vb_phi ->at(stubRef));
                         acomb.stubs_z   .push_back(reader.vb_z   ->at(stubRef));
