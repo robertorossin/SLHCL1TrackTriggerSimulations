@@ -2,6 +2,7 @@
 #define AMSimulation_AssociativeMemory_h_
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/Pattern.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HitBuffer.h"
 #include <vector>
 
 namespace slhcl1tt {
@@ -9,7 +10,7 @@ namespace slhcl1tt {
 class AssociativeMemory {
   public:
     // Constructor
-    AssociativeMemory() {}
+    AssociativeMemory() : frozen_(false) {}
 
     // Destructor
     ~AssociativeMemory() {}
@@ -27,7 +28,7 @@ class AssociativeMemory {
     unsigned size() const { return patternBank_.size(); }
 
     // Perform direct pattern lookup, return a list of patterns that are fired
-    std::vector<unsigned> lookup(const std::vector<bool>& hitBuffer, const unsigned nLayers, const unsigned maxMisses);
+    std::vector<unsigned> lookup(const HitBuffer& hitBuffer, const unsigned nLayers, const unsigned maxMisses);
 
     // Retrieve superstripIds and attributes
     void retrieve(const unsigned patternRef, pattern_type& superstripIds, float& invPt);
@@ -39,6 +40,7 @@ class AssociativeMemory {
     // Member data
     std::vector<pattern_type> patternBank_;
     std::vector<float>        patternAttributes_invPt_;
+    bool frozen_;
 };
 
 }

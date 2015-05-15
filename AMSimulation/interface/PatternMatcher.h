@@ -63,9 +63,7 @@ class PatternMatcher {
     AssociativeMemory associativeMemory_;
 
     // Hit buffer
-    //HitBuffer hitBuffer_;  // FIXME
-    std::map<unsigned, std::vector<unsigned> > hitBuffer_;
-    std::vector<bool>                          hitBuffer_bool_;
+    HitBuffer hitBuffer_;
 };
 
 #endif

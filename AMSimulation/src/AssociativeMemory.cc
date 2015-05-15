@@ -38,10 +38,11 @@ void AssociativeMemory::insert(const pattern_type& patt, const float invPt) {
 // _____________________________________________________________________________
 void AssociativeMemory::freeze() {
     assert(patternBank_.size() == patternAttributes_invPt_.size());
+    frozen_ = true;
 }
 
 // _____________________________________________________________________________
-std::vector<unsigned> AssociativeMemory::lookup(const std::vector<bool>& hitBuffer, const unsigned nLayers, const unsigned maxMisses) {
+std::vector<unsigned> AssociativeMemory::lookup(const HitBuffer& hitBuffer, const unsigned nLayers, const unsigned maxMisses) {
     std::vector<unsigned> firedPatterns;
 
     for (std::vector<pattern_type>::const_iterator itpatt = patternBank_.begin();
@@ -52,7 +53,7 @@ std::vector<unsigned> AssociativeMemory::lookup(const std::vector<bool>& hitBuff
              itlayer != itpatt->rend(); ++itlayer) {
 
             const superstrip_type ss = *itlayer;
-            if (!hitBuffer.at(ss))
+            if (!hitBuffer.isHit(ss))
                 ++nMisses;
 
             // Skip if more misses than allowed
@@ -67,8 +68,8 @@ std::vector<unsigned> AssociativeMemory::lookup(const std::vector<bool>& hitBuff
 
 // _____________________________________________________________________________
 void AssociativeMemory::retrieve(const unsigned patternRef, pattern_type& superstripIds, float& invPt) {
-//FIXME    superstripIds = patternBank_            .at(patternRef);
-//FIXME    invPt         = patternAttributes_invPt_.at(patternRef);
+    superstripIds = patternBank_            .at(patternRef);
+    invPt         = patternAttributes_invPt_.at(patternRef);
 }
 
 // _____________________________________________________________________________
