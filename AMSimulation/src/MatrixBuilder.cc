@@ -107,13 +107,13 @@ int MatrixBuilder::bookHistograms() {
 
 // _____________________________________________________________________________
 // Set variable to zero according to hit bits
-int MatrixBuilder::setVariableToZero(Eigen::VectorXd& variables1, Eigen::VectorXd& variables2, Eigen::VectorXd& variables3, const unsigned hitbits) {
-    if (hitbits == 0) {
+int MatrixBuilder::setVariableToZero(Eigen::VectorXd& variables1, Eigen::VectorXd& variables2, Eigen::VectorXd& variables3, const unsigned hitBits) {
+    if (hitBits == 0) {
         return 0;
     }
 
-    if (1 <= hitbits && hitbits <= 6) {
-        int i = hitbits - 1;
+    if (1 <= hitBits && hitBits <= 6) {
+        int i = hitBits - 1;
         variables1(i) = 0.;
         variables2(i) = 0.;
         variables3(i) = 0.;
@@ -124,12 +124,12 @@ int MatrixBuilder::setVariableToZero(Eigen::VectorXd& variables1, Eigen::VectorX
 }
 
 // Set rotation to zeroes according to hit bits
-int MatrixBuilder::setRotationToZero(Eigen::MatrixXd& rotation, const unsigned nvariables, const unsigned hitbits) {
-    if (hitbits == 0) {
+int MatrixBuilder::setRotationToZero(Eigen::MatrixXd& rotation, const unsigned nvariables, const unsigned hitBits) {
+    if (hitBits == 0) {
         return 0;
     }
 
-    if (1 <= hitbits && hitbits <= 6) {
+    if (1 <= hitBits && hitBits <= 6) {
         for (unsigned i=0; i<nvariables; ++i) {
             rotation(0,i) = 0;
 
@@ -137,7 +137,6 @@ int MatrixBuilder::setRotationToZero(Eigen::MatrixXd& rotation, const unsigned n
                 rotation(1,i) = 0;
             }
         }
-
         return 0;
     }
 
@@ -145,18 +144,17 @@ int MatrixBuilder::setRotationToZero(Eigen::MatrixXd& rotation, const unsigned n
 }
 
 // Set covariance to unit according to hit bits
-int MatrixBuilder::setCovarianceToUnit(Eigen::MatrixXd& covariances, const unsigned nvariables, const unsigned hitbits) {
-    if (hitbits == 0) {
+int MatrixBuilder::setCovarianceToUnit(Eigen::MatrixXd& covariances, const unsigned nvariables, const unsigned hitBits) {
+    if (hitBits == 0) {
         return 0;
     }
 
-    if (1 <= hitbits && hitbits <= 6) {
+    if (1 <= hitBits && hitBits <= 6) {
         covariances(0,0) = 1;
 
         if (nvariables > 6) {
             covariances(1,1) = 1;
         }
-
         return 0;
     }
 
@@ -284,7 +282,7 @@ int MatrixBuilder::buildMatrices(TString src) {
             variables2(istub) = stub_z;
             variables3(istub) = meansR_(istub) - stub_r;
         }
-        setVariableToZero(variables1, variables2, variables3, po_.hitbits);
+        setVariableToZero(variables1, variables2, variables3, po_.hitBits);
 
         Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);
         variables << variables1, variables2;
@@ -331,14 +329,14 @@ int MatrixBuilder::buildMatrices(TString src) {
 
     // Find solutions for C & T
     Eigen::MatrixXd covariances_phi = covariances.block(0,0,nvariables_/2,nvariables_/2);
-    setCovarianceToUnit(covariances_phi, nvariables_/2, po_.hitbits);
+    setCovarianceToUnit(covariances_phi, nvariables_/2, po_.hitBits);
 
     Eigen::MatrixXd solutionsC = Eigen::MatrixXd::Zero(1,nvariables_/2);
     //solutionsC = covariancesC*(covariances_phi.inverse());
     solutionsC = (covariances_phi.colPivHouseholderQr().solve(covariancesC.transpose())).transpose();
 
     Eigen::MatrixXd covariances_z = covariances.block(nvariables_/2,nvariables_/2,nvariables_/2,nvariables_/2);
-    setCovarianceToUnit(covariances_z, nvariables_/2, po_.hitbits);
+    setCovarianceToUnit(covariances_z, nvariables_/2, po_.hitBits);
 
     Eigen::MatrixXd solutionsT = Eigen::MatrixXd::Zero(1,nvariables_/2);
     //solutionsT = covariancesT*(covariances_z.inverse());
@@ -410,7 +408,7 @@ int MatrixBuilder::buildMatrices(TString src) {
             variables2(istub) = stub_z;
             variables3(istub) = meansR_(istub) - stub_r;
         }
-        setVariableToZero(variables1, variables2, variables3, po_.hitbits);
+        setVariableToZero(variables1, variables2, variables3, po_.hitBits);
 
         variables1 += ((solutionsC * variables1)(0,0)) * variables3;
         variables2 += ((solutionsT * variables2)(0,0)) * variables3;
@@ -458,7 +456,7 @@ int MatrixBuilder::buildMatrices(TString src) {
     Eigen::MatrixXd V = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
     V = (eigensolver.eigenvectors()).transpose();
 
-    setRotationToZero(V, nvariables_, po_.hitbits);
+    setRotationToZero(V, nvariables_, po_.hitBits);
 
     if (verbose_>1) {
         std::cout << Info() << "sqrt(eigenvalues) of covariances: " << std::endl;
@@ -512,7 +510,7 @@ int MatrixBuilder::buildMatrices(TString src) {
             variables2(istub) = stub_z;
             variables3(istub) = meansR_(istub) - stub_r;
         }
-        setVariableToZero(variables1, variables2, variables3, po_.hitbits);
+        setVariableToZero(variables1, variables2, variables3, po_.hitBits);
 
         variables1 += ((solutionsC * variables1)(0,0)) * variables3;
         variables2 += ((solutionsT * variables2)(0,0)) * variables3;
@@ -570,7 +568,7 @@ int MatrixBuilder::buildMatrices(TString src) {
         ++nRead;
     }
 
-    setCovarianceToUnit(covariancesV, nvariables_, po_.hitbits);
+    setCovarianceToUnit(covariancesV, nvariables_, po_.hitBits);
 
     // Find matrix D
     // D is the transformation from principal components to track parameters
@@ -645,7 +643,7 @@ int MatrixBuilder::buildMatrices(TString src) {
             variables2(istub) = stub_z;
             variables3(istub) = meansR_(istub) - stub_r;
         }
-        setVariableToZero(variables1, variables2, variables3, po_.hitbits);
+        setVariableToZero(variables1, variables2, variables3, po_.hitBits);
 
         variables1 += ((solutionsC * variables1)(0,0)) * variables3;
         variables2 += ((solutionsT * variables2)(0,0)) * variables3;

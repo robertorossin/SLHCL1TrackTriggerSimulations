@@ -63,9 +63,9 @@ class MatrixBuilder {
     int bookHistograms();
 
     // Set certain variables to zero
-    int setVariableToZero(Eigen::VectorXd& variables1, Eigen::VectorXd& variables2, Eigen::VectorXd& variables3, const unsigned hitbits);
-    int setRotationToZero(Eigen::MatrixXd& rotation, const unsigned nvariables, const unsigned hitbits);
-    int setCovarianceToUnit(Eigen::MatrixXd& covariances, const unsigned nvariables, const unsigned hitbits);
+    int setVariableToZero(Eigen::VectorXd& variables1, Eigen::VectorXd& variables2, Eigen::VectorXd& variables3, const unsigned hitBits);
+    int setRotationToZero(Eigen::MatrixXd& rotation, const unsigned nvariables, const unsigned hitBits);
+    int setCovarianceToUnit(Eigen::MatrixXd& covariances, const unsigned nvariables, const unsigned hitBits);
 
     // Build matrices
     int buildMatrices(TString src);

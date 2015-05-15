@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
 
         // Only for matrix building
         ("view"         , po::value<std::string>(&option.view)->default_value("XYZ"), "Specify fit view (e.g. XYZ, XY, RZ)")
-        ("hitbits"      , po::value<unsigned>(&option.hitbits)->default_value(0), "Specify hit bits (0: all hit, 1: miss layer 1, ..., 6: miss layer 6)")
+        ("hitBits"      , po::value<unsigned>(&option.hitBits)->default_value(0), "Specify hit bits (0: all hit, 1: miss layer 1, ..., 6: miss layer 6)")
 
         // Only for track fitting
         ("maxChi2"      , po::value<float>(&option.maxChi2)->default_value(999.), "Specify maximum reduced chi-squared")

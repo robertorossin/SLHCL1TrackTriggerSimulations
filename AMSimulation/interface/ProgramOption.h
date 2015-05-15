@@ -46,7 +46,7 @@ struct ProgramOption {
     int         maxRoads;
 
     std::string view;
-    unsigned    hitbits;
+    unsigned    hitBits;
 
     float       maxChi2;
     int         minNdof;
