@@ -45,6 +45,7 @@ class TTTrackWriter : public BasicWriter {
     std::auto_ptr<std::vector<float> >                  vt_vy;
     std::auto_ptr<std::vector<float> >                  vt_vz;
     std::auto_ptr<std::vector<float> >                  vt_rinv;
+    std::auto_ptr<std::vector<float> >                  vt_invPt;
     std::auto_ptr<std::vector<float> >                  vt_phi0;
     std::auto_ptr<std::vector<float> >                  vt_cottheta;
     std::auto_ptr<std::vector<float> >                  vt_z0;
@@ -53,7 +54,9 @@ class TTTrackWriter : public BasicWriter {
     std::auto_ptr<std::vector<int> >                    vt_ndof;
     std::auto_ptr<std::vector<float> >                  vt_chi2_phi;
     std::auto_ptr<std::vector<float> >                  vt_chi2_z;
+    std::auto_ptr<std::vector<bool> >                   vt_isGhost;
     std::auto_ptr<std::vector<int> >                    vt_tpId;
+    std::auto_ptr<std::vector<int> >                    vt_synTpId;
     std::auto_ptr<std::vector<unsigned> >               vt_tower;
     std::auto_ptr<std::vector<unsigned> >               vt_hitBits;
     std::auto_ptr<std::vector<unsigned> >               vt_ptSegment;

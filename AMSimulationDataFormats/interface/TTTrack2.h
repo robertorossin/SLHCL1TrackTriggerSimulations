@@ -14,13 +14,13 @@ class TTTrack2 {
     TTTrack2()
     : rinv_(-999999.), phi0_(-999999.), cottheta_(-999999.), z0_(-999999.), d0_(-999999.),
       chi2_(-999999.), ndof_(-1), chi2_phi_(-999999.), chi2_z_(-999999.),
-      isGhost_(false), tpId_(-1), tower_(99), hitBits_(0), ptSegment_(0), roadRef_(0), combRef_(0),
+      isGhost_(false), tpId_(-1), synTpId_(-1), tower_(99), hitBits_(0), ptSegment_(0), roadRef_(0), combRef_(0),
       stubRefs_(), principals_() {}
 
     TTTrack2(const TTTrack2& rhs)
     : rinv_(rhs.rinv_), phi0_(rhs.phi0_), cottheta_(rhs.cottheta_), z0_(rhs.z0_), d0_(rhs.d0_),
       chi2_(rhs.chi2_), ndof_(rhs.ndof_), chi2_phi_(rhs.chi2_phi_), chi2_z_(rhs.chi2_z_),
-      isGhost_(rhs.isGhost_), tpId_(rhs.tpId_), tower_(rhs.tower_), hitBits_(rhs.hitBits_), ptSegment_(rhs.ptSegment_), roadRef_(rhs.roadRef_), combRef_(rhs.combRef_),
+      isGhost_(rhs.isGhost_), tpId_(rhs.tpId_), synTpId_(rhs.synTpId_), tower_(rhs.tower_), hitBits_(rhs.hitBits_), ptSegment_(rhs.ptSegment_), roadRef_(rhs.roadRef_), combRef_(rhs.combRef_),
       stubRefs_(rhs.stubRefs_), principals_(rhs.principals_) {}
 
     // Destructor
@@ -42,6 +42,7 @@ class TTTrack2 {
 
     void setAsGhost()                                       { isGhost_ = true; }
     void setTpId(int tpId)                                  { tpId_ = tpId; }
+    void setSynTpId(int synTpId)                            { synTpId_ = synTpId; }
     void setTower(unsigned tower)                           { tower_ = tower; }
     void setHitBits(unsigned hitBits)                       { hitBits_ = hitBits; }
     void setPtSegment(unsigned ptSegment)                   { ptSegment_ = ptSegment; }
@@ -69,6 +70,8 @@ class TTTrack2 {
 
     int   ndof()                                const { return ndof_; }
 
+    float chi2Red()                             const { return chi2() / ndof(); }
+
     float chi2_phi()                            const { return chi2_phi_; }
 
     float chi2_z()                              const { return chi2_z_; }
@@ -76,6 +79,8 @@ class TTTrack2 {
     bool  isGhost()                             const { return isGhost_; }
 
     int   tpId()                                const { return tpId_; }
+
+    int   synTpId()                             const { return synTpId_; }
 
     unsigned tower()                            const { return tower_; }
 
@@ -118,6 +123,7 @@ class TTTrack2 {
     float chi2_z_;
     bool  isGhost_;
     int   tpId_;
+    int   synTpId_;
     unsigned tower_;
     unsigned hitBits_;
     unsigned ptSegment_;

@@ -6,7 +6,7 @@ using namespace slhcl1tt;
 
 // _____________________________________________________________________________
 TTRoadReader::TTRoadReader(int verbose)
-: BasicReader(verbose),
+: TTStubPlusTPReader(verbose),
 
   vr_patternRef   (0),
   vr_tower        (0),
@@ -18,9 +18,10 @@ TTRoadReader::TTRoadReader(int verbose)
 TTRoadReader::~TTRoadReader() {}
 
 int TTRoadReader::init(TString src, TString prefix, TString suffix) {
-    if (BasicReader::init(src))
+    if (TTStubPlusTPReader::init(src))
         return 1;
 
+    // Set branch addresses
     tchain->SetBranchAddress(prefix + "patternRef"    + suffix, &(vr_patternRef));
     tchain->SetBranchAddress(prefix + "tower"         + suffix, &(vr_tower));
     tchain->SetBranchAddress(prefix + "nstubs"        + suffix, &(vr_nstubs));

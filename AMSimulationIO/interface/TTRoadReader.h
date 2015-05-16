@@ -2,13 +2,13 @@
 #define AMSimulationIO_TTRoadReader_h_
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTRoad.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/BasicReader.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubPlusTPReader.h"
 
 
 namespace slhcl1tt {
 
 // _____________________________________________________________________________
-class TTRoadReader : public BasicReader {
+class TTRoadReader : public TTStubPlusTPReader {
   public:
     TTRoadReader(int verbose=1);
     ~TTRoadReader();

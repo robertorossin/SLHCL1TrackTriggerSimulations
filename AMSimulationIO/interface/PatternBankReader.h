@@ -105,4 +105,3 @@ class PatternBankWriter {
 }  // namespace slhcl1tt
 
 #endif
-
