@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 #include "Eigen/Eigenvalues"
 #include "Eigen/QR"
+#include <string>
 
 namespace slhcl1tt {
 
@@ -21,6 +22,8 @@ class PCAMatrix {
     Eigen::MatrixXd V;
     Eigen::MatrixXd D;
     Eigen::MatrixXd DV;
+
+    std::string filename;
 
     int read(std::string txt, unsigned nvariables, unsigned nparameters);
 

@@ -22,9 +22,9 @@ class TrackFitter {
 
         // Decide the track fitter to use
         fitter_ = 0;
-        if (po.algo == "PCA" || po.algo == "PCA4" || po.algo == "PCA5") {
+        if (po.algo == "PCA4" || po.algo == "PCA5") {
             fitter_ = new TrackFitterAlgoPCA(po);
-        } else if (po.algo == "ATF" || po.algo == "ATF4") {
+        } else if (po.algo == "ATF4") {
             fitter_ = new TrackFitterAlgoATF(false);
         } else if (po.algo == "ATF5") {
             fitter_ = new TrackFitterAlgoATF(true);

@@ -10,6 +10,8 @@ using namespace slhcl1tt;
 int PCAMatrix::read(std::string txt, unsigned nvariables, unsigned nparameters) {
 
     // Read from file
+    filename = txt;
+
     std::ifstream infile(txt.c_str());
     if (!infile) {
         std::cout << "Unable to open " << txt << std::endl;
@@ -124,6 +126,8 @@ int PCAMatrix::write(std::string txt) {
 void PCAMatrix::print() {
     std::ios::fmtflags flags = std::cout.flags();
     std::cout << std::setprecision(4);
+
+    std::cout << "filename: " << filename << std::endl;
 
     std::cout << "meansR: " << std::endl;
     std::cout << meansR << std::endl << std::endl;
