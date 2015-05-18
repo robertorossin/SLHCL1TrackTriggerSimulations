@@ -1,13 +1,17 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternMatcher.h"
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/PatternBankReader.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubReader.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubPlusTPReader.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTRoadReader.h"
 
 namespace {
-// Simple joining
+// Join 'layer' and 'superstrip' into one number
 unsigned simpleHash(unsigned layer, unsigned nss, unsigned ss) {
     return layer * nss + ss;
+}
+
+unsigned simpleHashUndo(unsigned layer, unsigned nss, unsigned ssh) {
+    return ssh % nss;
 }
 
 unsigned simpleHashNbins(unsigned nlayers, unsigned nss) {
@@ -44,7 +48,6 @@ int PatternMatcher::setupTriggerTower(TString datadir) {
 // _____________________________________________________________________________
 int PatternMatcher::setupSuperstrip() {
     try {
-        // FIXME: will only work for one trigger tower
         arbiter_ -> setDefinition(po_.superstrip, po_.tower, ttmap_);
 
     } catch (const std::invalid_argument& e) {
@@ -73,12 +76,28 @@ int PatternMatcher::loadPatterns(TString bank) {
         npatterns = po_.maxPatterns;
     assert(npatterns > 0);
 
-    // Allocate memory
-    patternBank_.clear();
-    patternBank_.resize(npatterns);
+    // Setup hit buffer
+    const unsigned nss = arbiter_ -> nsuperstripsPerLayer();
+
+    if (hitBuffer_.init(simpleHashNbins(po_.nLayers, nss))) {
+        std::cout << Error() << "Failed to initialize HitBuffer." << std::endl;
+        return 1;
+    }
+
+    // Setup associative memory
+    if (associativeMemory_.init(npatterns)) {
+        std::cout << Error() << "Failed to initialize AssociativeMemory." << std::endl;
+        return 1;
+    }
+
+    if (verbose_)  std::cout << Info() << "Assume " << nss << " possible superstrips per layer." << std::endl;
 
     // _________________________________________________________________________
     // Load the patterns
+
+    pattern_type pattHash;
+    pattHash.fill(0);
+    float pattInvPt = 0.;
 
     for (long long ipatt=0; ipatt<npatterns; ++ipatt) {
         pbreader.getPattern(ipatt);
@@ -86,9 +105,6 @@ int PatternMatcher::loadPatterns(TString bank) {
             break;
 
         assert(pbreader.pb_superstripIds->size() == po_.nLayers);
-
-        // Fill the patternBank, which is just a big vector
-        std::copy(pbreader.pb_superstripIds->begin(), pbreader.pb_superstripIds->end(), patternBank_.at(ipatt).begin());
 
         if (verbose_>3) {
             for (unsigned i=0; i<pbreader.pb_superstripIds->size(); ++i) {
@@ -98,7 +114,26 @@ int PatternMatcher::loadPatterns(TString bank) {
                 std::cout << " freq: " << (unsigned) pbreader.pb_frequency << std::endl;
             }
         }
+
+        // Fill the associative memory
+        pbreader.getPatternInvPt(ipatt, pattInvPt);
+
+        //associativeMemory_.insert(pbreader.pb_superstripIds->begin(), pbreader.pb_superstripIds->end(), pattInvPt);
+
+        // Fill the associative memory, after hashing
+        pattHash.fill(0);
+        for (unsigned layer=0; layer<po_.nLayers; ++layer) {
+            const unsigned ssId     = pbreader.pb_superstripIds->at(layer);
+            const unsigned ssIdHash = simpleHash(layer, nss, ssId);
+            pattHash.at(layer) = ssIdHash;
+        }
+
+        associativeMemory_.insert(pattHash, pattInvPt);
     }
+
+    associativeMemory_.freeze();
+    assert(associativeMemory_.size() == npatterns);
+
     if (verbose_)  std::cout << Info() << "Successfully loaded " << npatterns << " patterns." << std::endl;
 
     return 0;
@@ -112,17 +147,12 @@ int PatternMatcher::makeRoads(TString src, TString out) {
     // Get trigger tower reverse map
     const std::map<unsigned, bool>& ttrmap = ttmap_ -> getTriggerTowerReverseMap(po_.tower);
 
-    // Setup hit buffer
-    const unsigned nss = arbiter_ -> nsuperstripsPerLayer();
-    hitBuffer_bool_.resize(simpleHashNbins(po_.nLayers, nss));
-
-    if (verbose_)  std::cout << Info() << "Assume " << nss << " possible superstrips per layer." << std::endl;
 
     // _________________________________________________________________________
     // For reading
-    TTStubReader reader(verbose_);
+    TTStubPlusTPReader reader(verbose_);
     if (reader.init(src)) {
-        std::cout << Error() << "Failed to initialize TTStubReader." << std::endl;
+        std::cout << Error() << "Failed to initialize TTStubPlusTPReader." << std::endl;
         return 1;
     }
 
@@ -136,6 +166,8 @@ int PatternMatcher::makeRoads(TString src, TString out) {
 
     // _________________________________________________________________________
     // Loop over all events
+
+    const unsigned nss = arbiter_ -> nsuperstripsPerLayer();
 
     // Containers
     std::vector<TTRoad> roads;
@@ -182,8 +214,7 @@ int PatternMatcher::makeRoads(TString src, TString out) {
 
         // _____________________________________________________________________
         // Start pattern recognition
-        hitBuffer_.clear();
-        std::fill(hitBuffer_bool_.begin(), hitBuffer_bool_.end(), false);
+        hitBuffer_.reset();
 
         // Loop over reconstructed stubs
         for (unsigned istub=0; istub<nstubs; ++istub) {
@@ -213,8 +244,7 @@ int PatternMatcher::makeRoads(TString src, TString out) {
             unsigned ssIdHash = simpleHash(lay16, nss, ssId);
 
             // Push into hit buffer
-            hitBuffer_[ssIdHash].push_back(istub);  // a map
-            hitBuffer_bool_[ssIdHash] = true;       // a hash table
+            hitBuffer_.insert(ssIdHash, istub);
 
             if (verbose_>2) {
                 std::cout << Debug() << "... ... stub: " << istub << " moduleId: " << moduleId << " strip: " << strip << " segment: " << segment << " r: " << stub_r << " phi: " << stub_phi << " z: " << stub_z << " ds: " << stub_ds << std::endl;
@@ -222,38 +252,11 @@ int PatternMatcher::makeRoads(TString src, TString out) {
             }
         }
 
-        // Limit the number of stubs per superstrip
-        for (std::map<unsigned, std::vector<unsigned> >::iterator it=hitBuffer_.begin();
-             it!=hitBuffer_.end(); ++it) {
-            if (it->second.size() > (unsigned) po_.maxStubs)
-                it->second.resize(po_.maxStubs);
-        }
-
+        hitBuffer_.freeze(po_.maxStubs);
 
         // _____________________________________________________________________
-        // Perform direct lookup
-        std::vector<unsigned> firedPatterns;
-
-        for (std::vector<pattern_type>::const_iterator itpatt = patternBank_.begin();
-             itpatt != patternBank_.end(); ++itpatt) {
-            int nMisses = 0;
-
-            unsigned layer = po_.nLayers - 1;  // start from the last layer
-            for (pattern_type::const_reverse_iterator itlayer = itpatt->rend() - po_.nLayers;
-                 itlayer != itpatt->rend(); ++itlayer, --layer) {
-                const unsigned ssId     = *itlayer;
-                const unsigned ssIdHash = simpleHash(layer, nss, ssId);
-
-                if (!hitBuffer_bool_.at(ssIdHash))
-                    ++nMisses;
-
-                // Skip if more misses than allowed
-                if (nMisses > po_.maxMisses)
-                    break;
-            }
-            if (nMisses <= po_.maxMisses)
-                firedPatterns.push_back(itpatt - patternBank_.begin());
-        }
+        // Perform associative memory lookup
+        const std::vector<unsigned>& firedPatterns = associativeMemory_.lookup(hitBuffer_, po_.nLayers, po_.maxMisses);
 
 
         // _____________________________________________________________________
@@ -261,15 +264,17 @@ int PatternMatcher::makeRoads(TString src, TString out) {
         roads.clear();
 
         // Collect stubs
-        std::map<unsigned, std::vector<unsigned> >::const_iterator found;
-        std::vector<unsigned>::const_iterator itfound;
-
         for (std::vector<unsigned>::const_iterator it = firedPatterns.begin(); it != firedPatterns.end(); ++it) {
             // Create and set TTRoad
             TTRoad aroad;
-            aroad.patternRef = (*it);
-            aroad.tower      = po_.tower;
-            aroad.nstubs     = 0;
+            aroad.patternRef   = (*it);
+            aroad.tower        = po_.tower;
+            aroad.nstubs       = 0;
+            aroad.patternInvPt = 0.;
+
+            // Retrieve the superstripIds and other attributes
+            pattern_type pattHash;
+            associativeMemory_.retrieve(aroad.patternRef, pattHash, aroad.patternInvPt);
 
             aroad.superstripIds.clear();
             aroad.stubRefs.clear();
@@ -277,23 +282,18 @@ int PatternMatcher::makeRoads(TString src, TString out) {
             aroad.superstripIds.resize(po_.nLayers);
             aroad.stubRefs.resize(po_.nLayers);
 
-            // Retrieve the pattern to get the superstripIds
-            std::vector<pattern_type>::const_iterator itpatt = patternBank_.begin() + (*it);
+            for (unsigned layer=0; layer<po_.nLayers; ++layer) {
+                const unsigned ssIdHash = pattHash.at(layer);
+                const unsigned ssId     = simpleHashUndo(layer, nss, ssIdHash);
 
-            unsigned layer = 0;
-            for (pattern_type::const_iterator itlayer = itpatt->begin();
-                 itlayer != itpatt->begin() + po_.nLayers; ++itlayer, ++layer) {
-                const unsigned ssId     = *itlayer;
-                const unsigned ssIdHash = simpleHash(layer, nss, ssId);
-
-                found = hitBuffer_.find(ssIdHash);
-                if (found != hitBuffer_.end()) {
-                    aroad.superstripIds[layer] = ssId;
-                    aroad.stubRefs     [layer] = found->second;
-                    aroad.nstubs              += found->second.size();
+                if (hitBuffer_.isHit(ssIdHash)) {
+                    const std::vector<unsigned>& stubRefs = hitBuffer_.getHits(ssIdHash);
+                    aroad.superstripIds.at(layer) = ssId;
+                    aroad.stubRefs     .at(layer) = stubRefs;
+                    aroad.nstubs                 += stubRefs.size();
 
                 } else {
-                    // ??
+                    aroad.superstripIds.at(layer) = ssId;
                 }
             }
 

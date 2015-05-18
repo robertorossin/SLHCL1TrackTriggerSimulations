@@ -72,9 +72,9 @@ class TestAMSim(unittest.TestCase):
                     countB += 1
             nstubs = ievt.TTStubs_modId.size()
             countsA[nstubs] += 1
-        self.assertEqual(countA, 588)
-        self.assertEqual(countB, 588)
-        self.assertEqual(countsA, [0,0,0,0,6,16,62,16,0])
+        self.assertEqual(countA, 587)
+        self.assertEqual(countB, 587)
+        self.assertEqual(countsA, [0,0,0,0,6,17,61,16,0])
         self.assertEqual(sum(countsA), 100)
         self.assertEqual(sum([i * cnt for i,cnt in enumerate(countsA)]), countA)
 

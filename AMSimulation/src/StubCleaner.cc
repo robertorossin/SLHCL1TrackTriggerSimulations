@@ -46,6 +46,10 @@ float calcIdealPhi(float simPhi, float simChargeOverPt, float r) {
     //return simPhi - c * r * simChargeOverPt;
     return simPhi - std::asin(c * r * simChargeOverPt);
 }
+
+float calcIdealZ(float simVz, float simCotTheta, float r) {
+    return simVz + r * simCotTheta;
+}
 }
 
 
@@ -163,7 +167,7 @@ int StubCleaner::cleanStubs(TString src, TString out) {
             // CUIDADO: simVx and simVy are currently not used in the calculation
             //          therefore d0 is assumed to be zero, and z0 is assumed to be equal to vz
             float idealPhi = calcIdealPhi(simPhi, simChargeOverPt, stub_r);
-            float idealZ   = simVz + stub_r * simCotTheta;
+            float idealZ   = calcIdealZ(simVz, simCotTheta, stub_r);
             float idealR   = stub_r;
 
             if (lay16 >= 6) {  // for endcap
@@ -182,7 +186,7 @@ int StubCleaner::cleanStubs(TString src, TString out) {
             if (verbose_>2)  std::cout << Debug() << "... ... stub: " << istub << " moduleId: " << moduleId << " r: " << stub_r << " phi: " << stub_phi << " z: " << stub_z << " ds: " << stub_ds << " lay16: " << lay16 << " deltaPhi: " << deltaPhi << " deltaR: " << deltaR << " deltaZ: " << deltaZ << std::endl;
 
             bool picked = picky_ -> applyCuts(lay16, deltaPhi, deltaR, deltaZ);
-            if (picked) {
+            if (!po_.picky || (po_.picky && picked) ) {
                 unsigned rank = picky_ -> findRank(lay16, stub_r, stub_z);
 
                 float deltaX = stub_r * (std::cos(stub_phi) - std::cos(idealPhi));

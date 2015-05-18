@@ -6,6 +6,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TriggerTowerMap.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Attributes.h"
 using namespace slhcl1tt;
 
 
@@ -25,6 +26,11 @@ class PatternGenerator {
     ~PatternGenerator() {
         if (ttmap_)     delete ttmap_;
         if (arbiter_)   delete arbiter_;
+
+        for (std::map<pattern_type, Attributes *>::iterator it=patternAttributes_map_.begin();
+             it != patternAttributes_map_.end(); ++it) {
+            if (it->second)  delete it->second;
+        }
     }
 
     // Main driver
@@ -55,6 +61,8 @@ class PatternGenerator {
     // Pattern bank data
     std::map<pattern_type, unsigned>                patternBank_map_;
     std::vector<std::pair<pattern_type, unsigned> > patternBank_pairs_;
+
+    std::map<pattern_type, Attributes *>            patternAttributes_map_;
 
     // Bookkeepers
     float coverage_;

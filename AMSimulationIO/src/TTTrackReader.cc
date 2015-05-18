@@ -14,7 +14,6 @@ int TTTrackReader::init(TString src, TString prefixRoad, TString prefixTrack, TS
     if (TTRoadReader::init(src, prefixRoad, suffix))
         return 1;
 
-    // FIXME
     return 0;
 }
 
@@ -33,6 +32,7 @@ TTTrackWriter::TTTrackWriter(int verbose)
   vt_vy           (new std::vector<float>()),
   vt_vz           (new std::vector<float>()),
   vt_rinv         (new std::vector<float>()),
+  vt_invPt        (new std::vector<float>()),
   vt_phi0         (new std::vector<float>()),
   vt_cottheta     (new std::vector<float>()),
   vt_z0           (new std::vector<float>()),
@@ -41,11 +41,14 @@ TTTrackWriter::TTTrackWriter(int verbose)
   vt_ndof         (new std::vector<int>()),
   vt_chi2_phi     (new std::vector<float>()),
   vt_chi2_z       (new std::vector<float>()),
+  vt_isGhost      (new std::vector<bool>()),
   vt_tpId         (new std::vector<int>()),
+  vt_synTpId      (new std::vector<int>()),
   vt_tower        (new std::vector<unsigned>()),
   vt_hitBits      (new std::vector<unsigned>()),
   vt_ptSegment    (new std::vector<unsigned>()),
   vt_roadRef      (new std::vector<unsigned>()),
+  vt_combRef      (new std::vector<unsigned>()),
   vt_stubRefs     (new std::vector<std::vector<unsigned> >()),
   vt_principals   (new std::vector<std::vector<float> >()) {}
 
@@ -66,6 +69,7 @@ int TTTrackWriter::init(TChain* tchain, TString out, TString prefix, TString suf
   //ttree->Branch(prefix + "vy"             + suffix, &(*vt_vy));
   //ttree->Branch(prefix + "vz"             + suffix, &(*vt_vz));
     ttree->Branch(prefix + "rinv"           + suffix, &(*vt_rinv));
+    ttree->Branch(prefix + "invPt"          + suffix, &(*vt_invPt));
     ttree->Branch(prefix + "phi0"           + suffix, &(*vt_phi0));
     ttree->Branch(prefix + "cottheta"       + suffix, &(*vt_cottheta));
     ttree->Branch(prefix + "z0"             + suffix, &(*vt_z0));
@@ -74,11 +78,14 @@ int TTTrackWriter::init(TChain* tchain, TString out, TString prefix, TString suf
     ttree->Branch(prefix + "ndof"           + suffix, &(*vt_ndof));
     ttree->Branch(prefix + "chi2_phi"       + suffix, &(*vt_chi2_phi));
     ttree->Branch(prefix + "chi2_z"         + suffix, &(*vt_chi2_z));
+    ttree->Branch(prefix + "isGhost"        + suffix, &(*vt_isGhost));
     ttree->Branch(prefix + "tpId"           + suffix, &(*vt_tpId));
+    ttree->Branch(prefix + "synTpId"        + suffix, &(*vt_synTpId));
     ttree->Branch(prefix + "tower"          + suffix, &(*vt_tower));
     ttree->Branch(prefix + "hitBits"        + suffix, &(*vt_hitBits));
     ttree->Branch(prefix + "ptSegment"      + suffix, &(*vt_ptSegment));
     ttree->Branch(prefix + "roadRef"        + suffix, &(*vt_roadRef));
+    ttree->Branch(prefix + "combRef"        + suffix, &(*vt_combRef));
     ttree->Branch(prefix + "stubRefs"       + suffix, &(*vt_stubRefs));
     ttree->Branch(prefix + "principals"     + suffix, &(*vt_principals));
     return 0;
@@ -154,6 +161,7 @@ void TTTrackWriter::fill(const std::vector<TTTrack2>& tracks) {
     vt_vy              ->clear();
     vt_vz              ->clear();
     vt_rinv            ->clear();
+    vt_invPt           ->clear();
     vt_phi0            ->clear();
     vt_cottheta        ->clear();
     vt_z0              ->clear();
@@ -162,11 +170,14 @@ void TTTrackWriter::fill(const std::vector<TTTrack2>& tracks) {
     vt_ndof            ->clear();
     vt_chi2_phi        ->clear();
     vt_chi2_z          ->clear();
+    vt_isGhost         ->clear();
     vt_tpId            ->clear();
+    vt_synTpId         ->clear();
     vt_tower           ->clear();
     vt_hitBits         ->clear();
     vt_ptSegment       ->clear();
     vt_roadRef         ->clear();
+    vt_combRef         ->clear();
     vt_stubRefs        ->clear();
     vt_principals      ->clear();
 
@@ -184,6 +195,7 @@ void TTTrackWriter::fill(const std::vector<TTTrack2>& tracks) {
         //vt_vy              ->push_back(track.vy());
         //vt_vz              ->push_back(track.vz());
         vt_rinv            ->push_back(track.rinv());
+        vt_invPt           ->push_back(track.invPt());
         vt_phi0            ->push_back(track.phi0());
         vt_cottheta        ->push_back(track.cottheta());
         vt_z0              ->push_back(track.z0());
@@ -192,11 +204,14 @@ void TTTrackWriter::fill(const std::vector<TTTrack2>& tracks) {
         vt_ndof            ->push_back(track.ndof());
         vt_chi2_phi        ->push_back(track.chi2_phi());
         vt_chi2_z          ->push_back(track.chi2_z());
+        vt_isGhost         ->push_back(track.isGhost());
         vt_tpId            ->push_back(track.tpId());
+        vt_synTpId         ->push_back(track.synTpId());
         vt_tower           ->push_back(track.tower());
         vt_hitBits         ->push_back(track.hitBits());
         vt_ptSegment       ->push_back(track.ptSegment());
         vt_roadRef         ->push_back(track.roadRef());
+        vt_combRef         ->push_back(track.combRef());
         vt_stubRefs        ->push_back(track.stubRefs());
         vt_principals      ->push_back(track.principals());
     }

@@ -100,8 +100,19 @@ int PatternGenerator::makePatterns(TString src) {
         const unsigned nstubs = reader.vb_modId->size();
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
+        // Get sim info
+        float simPt           = reader.vp_pt->front();
+        float simEta          = reader.vp_eta->front();
+        float simPhi          = reader.vp_phi->front();
+        //float simVx           = reader.vp_vx->front();
+        //float simVy           = reader.vp_vy->front();
+        float simVz           = reader.vp_vz->front();
+        int   simCharge       = reader.vp_charge->front();
+
+        float simCotTheta     = std::sinh(simEta);
+        float simChargeOverPt = float(simCharge)/simPt;
+
         // Apply track pt requirement
-        float simPt = reader.vp_pt->front();
         if (simPt < po_.minPt || po_.maxPt < simPt) {
             ++nRead;
             continue;
@@ -156,6 +167,19 @@ int PatternGenerator::makePatterns(TString src) {
 
         // Insert pattern into the bank
         ++patternBank_map_[patt];
+
+        // Update the attributes
+        if (po_.speedup<1) {
+            std::pair<std::map<pattern_type, Attributes *>::iterator, bool> ins = patternAttributes_map_.insert(std::make_pair(patt, new Attributes()));
+            Attributes * attr = ins.first->second;
+            if (attr) {
+                ++ attr->n;
+                attr->invPt.fill(simChargeOverPt);
+                attr->cotTheta.fill(simCotTheta);
+                attr->phi.fill(simPhi);
+                attr->z0.fill(simVz);
+            }
+        }
 
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " patt: " << patt << std::endl;
 
@@ -271,7 +295,21 @@ int PatternGenerator::writePatterns(TString out) {
             writer.pb_superstripIds->push_back(patt.at(ilayer));
         }
         *(writer.pb_frequency) = freq;
+
+        if (po_.speedup<1) {
+            const Attributes * attr = patternAttributes_map_.at(patt);
+            *(writer.pb_invPt_mean)     = attr->invPt.getMean();
+            *(writer.pb_invPt_sigma)    = attr->invPt.getSigma();
+            *(writer.pb_cotTheta_mean)  = attr->cotTheta.getMean();
+            *(writer.pb_cotTheta_sigma) = attr->cotTheta.getSigma();
+            *(writer.pb_phi_mean)       = attr->phi.getMean();
+            *(writer.pb_phi_sigma)      = attr->phi.getSigma();
+            *(writer.pb_z0_mean)        = attr->z0.getMean();
+            *(writer.pb_z0_sigma)       = attr->z0.getSigma();
+        }
+
         writer.fillPatternBank();
+        writer.fillPatternAttributes();
     }
 
     long long nentries = writer.writeTree();

@@ -6,6 +6,8 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TriggerTowerMap.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/AssociativeMemory.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HitBuffer.h"
 using namespace slhcl1tt;
 
 
@@ -57,12 +59,11 @@ class PatternMatcher {
     TriggerTowerMap   * ttmap_;
     SuperstripArbiter * arbiter_;
 
-    // Pattern bank data
-    std::vector<pattern_type> patternBank_;
+    // Associative memory
+    AssociativeMemory associativeMemory_;
 
     // Hit buffer
-    std::map<unsigned, std::vector<unsigned> > hitBuffer_;
-    std::vector<bool>                          hitBuffer_bool_;
+    HitBuffer hitBuffer_;
 };
 
 #endif

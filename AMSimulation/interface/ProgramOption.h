@@ -16,6 +16,7 @@ struct ProgramOption {
     std::string trackfile;
 
     int         verbose;
+    int         speedup;
     long long   maxEvents;
 
     unsigned    nLayers;
@@ -28,6 +29,8 @@ struct ProgramOption {
 
     float       minPt;
     float       maxPt;
+    float       minInvPt;
+    float       maxInvPt;
     float       minEta;
     float       maxEta;
     float       minPhi;
@@ -35,6 +38,7 @@ struct ProgramOption {
     float       minVz;
     float       maxVz;
 
+    int         picky;
     int         minFrequency;
     long int    maxPatterns;
     int         maxMisses;
@@ -42,7 +46,7 @@ struct ProgramOption {
     int         maxRoads;
 
     std::string view;
-    unsigned    hitbits;
+    unsigned    hitBits;
 
     float       maxChi2;
     int         minNdof;

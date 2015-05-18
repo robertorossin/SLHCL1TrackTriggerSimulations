@@ -5,7 +5,9 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoPCA.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoATF.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoRetina.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoLTF.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/CombinationFactory.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/GhostBuster.h"
 using namespace slhcl1tt;
 
 
@@ -19,26 +21,23 @@ class TrackFitter {
       prefixRoad_("AMTTRoads_"), prefixTrack_("AMTTTracks_"), suffix_("") {
 
         // Decide the track fitter to use
-        fitterPCA_    = 0;
-        fitterATF_    = 0;
-        fitterRetina_ = 0;
-        if (po.algo == "ATF4")
-            fitterATF_ = new TrackFitterAlgoATF(false);
-        else if (po.algo == "ATF5")
-            fitterATF_ = new TrackFitterAlgoATF(true);
-        else if (po.algo == "PCA4")
-            fitterPCA_ = new TrackFitterAlgoPCA(po);
-        else if (po.algo == "PCA5")
-            fitterPCA_ = new TrackFitterAlgoPCA(po);
-        else if (po.algo == "RET")
-            fitterRetina_ = new TrackFitterAlgoRetina();
+        fitter_ = 0;
+        if (po.algo == "PCA4" || po.algo == "PCA5") {
+            fitter_ = new TrackFitterAlgoPCA(po);
+        } else if (po.algo == "ATF4") {
+            fitter_ = new TrackFitterAlgoATF(false);
+        } else if (po.algo == "ATF5") {
+            fitter_ = new TrackFitterAlgoATF(true);
+        } else if (po.algo == "LTF") {
+            fitter_ = new TrackFitterAlgoLTF(po);
+        } else {
+            throw std::invalid_argument("unknown track fitter algo.");
+        }
     }
 
     // Destructor
     ~TrackFitter() {
-        if (fitterPCA_)    delete fitterPCA_;
-        if (fitterATF_)    delete fitterATF_;
-        if (fitterRetina_) delete fitterRetina_;
+        if (fitter_)  delete fitter_;
     }
 
     // Main driver
@@ -47,8 +46,6 @@ class TrackFitter {
 
   private:
     // Member functions
-    int loadConstants(TString txt);
-
     int makeTracks(TString src, TString out);
 
     // Program options
@@ -61,10 +58,14 @@ class TrackFitter {
     const TString prefixTrack_;
     const TString suffix_;
 
-    // Track fitters
-    TrackFitterAlgoPCA *    fitterPCA_;
-    TrackFitterAlgoATF *    fitterATF_;
-    TrackFitterAlgoRetina * fitterRetina_;
+    // Track fitter
+    TrackFitterAlgoBase *  fitter_;
+
+    // Combination factory
+    CombinationFactory combinationFactory_;
+
+    // Ghost buster
+    GhostBuster ghostBuster_;
 };
 
 #endif

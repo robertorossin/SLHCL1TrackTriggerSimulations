@@ -3,10 +3,10 @@
 
 namespace slhcl1tt {
 
-std::ostream& operator<<(std::ostream& o, const TTRoadComb& road) {
-    o << "Road no: " << road.roadRef << " pattern no: " << road.patternRef << " tower: " << road.tower << " # stubs: " << road.nstubs << " stubs: (";
-    for (unsigned i=0; i<road.stubRefs.size(); ++i)
-        std::cout << "(" << road.stubs_r.at(i) << "," << road.stubs_phi.at(i) << "," << road.stubs_z.at(i) << "," << road.stubs_bool.at(i) << "), ";
+std::ostream& operator<<(std::ostream& o, const TTRoadComb& comb) {
+    o << "Road no: " << comb.roadRef << " comb no: " << comb.combRef << " ptSegment: " << comb.ptSegment << " hitBits: " << comb.hitBits << " stubs: (";
+    for (unsigned i=0; i<comb.stubRefs.size(); ++i)
+        std::cout << "(" << comb.stubs_r.at(i) << "," << comb.stubs_phi.at(i) << "," << comb.stubs_z.at(i) << "," << comb.stubs_bool.at(i) << "), ";
     o << ")" << std::endl;
     return o;
 }

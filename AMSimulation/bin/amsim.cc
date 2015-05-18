@@ -57,6 +57,7 @@ int main(int argc, char **argv) {
         ("tracks"       , po::value<std::string>(&option.trackfile), "Specify file containing the tracks")
 
         ("verbosity,v"  , po::value<int>(&option.verbose)->default_value(1), "Verbosity level (-1 = very quiet; 0 = quiet, 1 = verbose, 2+ = debug)")
+        ("speedup"      , po::value<int>(&option.speedup)->default_value(0), "Speed-up level")
         ("maxEvents,n"  , po::value<long long>(&option.maxEvents)->default_value(-1), "Specfiy max number of events")
 
         ("nLayers"      , po::value<unsigned>(&option.nLayers)->default_value(6), "Specify # of layers")
@@ -70,17 +71,22 @@ int main(int argc, char **argv) {
         ("superstrip,s" , po::value<std::string>(&option.superstrip)->default_value("ss256_nz2"), "Specify the superstrip definition (default: ss256_nz2)")
 
         // Track fitting algorithm
-        ("algo,f"       , po::value<std::string>(&option.algo)->default_value("PCA4"), "Select track fitter -- PCA4: PCA fitter 4 params; PCA5: PCA fitter 5 params; ATF4: ATF fitter 4 params; ATF5: ATF fitter 5 params; RET: Retina fitter (default: PCA4)")
+        ("algo,f"       , po::value<std::string>(&option.algo)->default_value("PCA4"), "Select track fitter -- PCA4: PCA fitter 4 params; PCA5: PCA fitter 5 params; ATF4: ATF fitter 4 params; ATF5: ATF fitter 5 params; LTF: Linearized track fitter (default: PCA4)")
 
         // MC truth
         ("minPt"        , po::value<float>(&option.minPt)->default_value(     2.0), "Specify min pt")
         ("maxPt"        , po::value<float>(&option.maxPt)->default_value(999999.0), "Specify max pt")
+        ("minInvPt"     , po::value<float>(&option.minInvPt)->default_value(-999999.0), "Specify min signed 1/pt")
+        ("maxInvPt"     , po::value<float>(&option.maxInvPt)->default_value( 999999.0), "Specify max signed 1/pt")
         ("minEta"       , po::value<float>(&option.minEta)->default_value(-2.5), "Specify min eta (signed)")
         ("maxEta"       , po::value<float>(&option.maxEta)->default_value( 2.5), "Specify max eta (signed)")
         ("minPhi"       , po::value<float>(&option.minPhi)->default_value(-M_PI), "Specify min phi (from -pi to pi)")
         ("maxPhi"       , po::value<float>(&option.maxPhi)->default_value( M_PI), "Specify max phi (from -pi to pi)")
         ("minVz"        , po::value<float>(&option.minVz)->default_value(-300.), "Specify min vertex z (cm)")
         ("maxVz"        , po::value<float>(&option.maxVz)->default_value( 300.), "Specify max vertex z (cm)")
+
+        // Only for stub cleaning
+        ("picky"        , po::value<int>(&option.picky)->default_value(1), "Specify picky level (default: 1)")
 
         // Only for bank generation
         ("minFrequency" , po::value<int>(&option.minFrequency)->default_value(1), "Specify min frequency of a pattern to be stored or read")
@@ -93,7 +99,7 @@ int main(int argc, char **argv) {
 
         // Only for matrix building
         ("view"         , po::value<std::string>(&option.view)->default_value("XYZ"), "Specify fit view (e.g. XYZ, XY, RZ)")
-        ("hitbits"      , po::value<unsigned>(&option.hitbits)->default_value(0), "Specify hit bits (0: all hit, 1: miss layer 1, ..., 6: miss layer 6)")
+        ("hitBits"      , po::value<unsigned>(&option.hitBits)->default_value(0), "Specify hit bits (0: all hit, 1: miss layer 1, ..., 6: miss layer 6)")
 
         // Only for track fitting
         ("maxChi2"      , po::value<float>(&option.maxChi2)->default_value(999.), "Specify maximum reduced chi-squared")

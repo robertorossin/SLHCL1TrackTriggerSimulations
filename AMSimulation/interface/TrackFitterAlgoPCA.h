@@ -3,85 +3,79 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoBase.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PCA.h"
-using namespace slhcl1tt;
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PCAMatrix.h"
 
-#include "Eigen/Core"
+static const unsigned PCA_NSEGMENTS = 10;     // 10 segments in invPt
+static const unsigned PCA_NHITBITS  = 7;      // 7 layer combinations
+static const float    PCA_MAX_INVPT = +1./2;  // 2 GeV
+static const float    PCA_MIN_INVPT = -1./2;  // 2 GeV
 
+
+namespace slhcl1tt {
 
 class TrackFitterAlgoPCA : public TrackFitterAlgoBase {
   public:
     TrackFitterAlgoPCA(const slhcl1tt::ProgramOption& po)
-    : TrackFitterAlgoBase(), verbose_(po.verbose),
-      view_(PCA_3D), hitbits_(PCA_ALLHIT), nvariables_(12), nparameters_(4) {
+    : TrackFitterAlgoBase(), datadir_(po.datadir), tower_(po.tower), verbose_(po.verbose),
+      view_(XYZ), nvariables_(12), nparameters_(4) {
 
-        // Setup
-        if (po.view == "XYZ" || po.view == "3D")
-            view_ = PCA_3D;
-        else if (po.view == "XY" || po.view == "RPHI")
-            view_ = PCA_RPHI;
-        else if (po.view == "RZ")
-            view_ = PCA_RZ;
-
-        hitbits_ = static_cast<PCA_HitBits>(po.hitbits);
-
-        if (po.algo == "PCA4")
-            nparameters_ = 4;
-        else if (po.algo == "PCA5")
-            nparameters_ = 5;
-
-        if (view_ == PCA_3D) {
-            if (hitbits_ == PCA_ALLHIT) {
-                nvariables_ = 6 * 2;
-            } else {
-                nvariables_ = (6-1) * 2;
+        // Determine # of variables and # of parameters
+        if (po.view == "XYZ") {
+            view_ = XYZ;
+            nvariables_ = 6 * 2;
+            if (po.algo == "PCA4") {
+                nparameters_ = 4;
+            } else if (po.algo == "PCA5") {
+                nparameters_ = 5;
             }
-        } else {
-            if (hitbits_ == PCA_ALLHIT) {
-                nvariables_ = 6 * 1;
-            } else {
-                nvariables_ = (6-1) * 1;
+
+        } else if (po.view == "XY") {
+            view_ = XY;
+            nvariables_ = 6;
+            if (po.algo == "PCA4") {
+                nparameters_ = 2;
+            } else if (po.algo == "PCA5") {
+                nparameters_ = 3;
             }
+
+        } else if (po.view == "RZ") {
+            view_ = RZ;
+            nvariables_ = 6;
+            nparameters_ = 2;
         }
 
         // Book histograms
         bookHistograms();
+
+        loadConstants();
     }
 
     ~TrackFitterAlgoPCA() {}
 
-    int bookHistograms();
-
-    int loadConstants(TString txt);
-
-    int fit(const TTRoadComb& acomb, TTTrack2& track);
+    int fit(const TTRoadComb& acomb, TTTrack2& atrack);
 
     unsigned nvariables()   const { return nvariables_; }
     unsigned nparameters()  const { return nparameters_; }
     void print();
 
   private:
-    int verbose_;
+    int bookHistograms();
+
+    int loadConstants();
 
     // Settings
-    PCA_FitView view_;
-    PCA_HitBits hitbits_;
-    unsigned nvariables_;   // number of hit coordinates or principal components
-    unsigned nparameters_;  // number of track parameters
+    std::string datadir_;
+    unsigned    tower_;
+    int         verbose_;
+
+    FitView     view_;
+    unsigned    nvariables_;   // number of hit coordinates or principal components
+    unsigned    nparameters_;  // number of track parameters
 
     // Matrices
-    Eigen::VectorXd meansR_;
-    Eigen::VectorXd meansC_;
-    Eigen::VectorXd meansT_;
-    Eigen::MatrixXd solutionsC_;
-    Eigen::MatrixXd solutionsT_;
-
-    Eigen::VectorXd sqrtEigenvalues_;
-    Eigen::VectorXd meansV_;
-    Eigen::VectorXd meansP_;
-    Eigen::MatrixXd D_;
-    Eigen::MatrixXd V_;
-    Eigen::MatrixXd DV_;
+    std::vector<PCAMatrix> matrices;
 };
+
+}  // namespace slhcl1tt
 
 #endif
