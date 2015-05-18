@@ -152,7 +152,9 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 atrack.setPtSegment(acomb.ptSegment);
                 atrack.setHitBits  (acomb.hitBits);
                 atrack.setStubRefs (acomb.stubRefs);
-                tracks.push_back(atrack);
+
+                if (atrack.chi2Red() > po_.maxChi2)  // reduced chi^2 = chi^2 / ndof
+                    tracks.push_back(atrack);
 
                 if (verbose_>2)  std::cout << Debug() << "... ... ... track: " << icomb << " status: " << fitstatus << std::endl;
             }
@@ -167,7 +169,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
         }
 
         // _____________________________________________________________________
-        // Remove fails and duplicates
+        // Find ghosts
 
         for (unsigned itrack=0; itrack<tracks.size(); ++itrack) {  // all tracks
             for (unsigned jtrack=0; jtrack<itrack; ++jtrack) {  // only non ghost tracks
@@ -185,6 +187,46 @@ int TrackFitter::makeTracks(TString src, TString out) {
 
         if (tracks.size() > (unsigned) po_.maxTracks)
             tracks.resize(po_.maxTracks);
+
+
+        // _____________________________________________________________________
+        // Track categorization
+
+        if (po_.speedup<1) {
+            const unsigned nparts = reader.vp_pt->size();
+
+            std::vector<TrackingParticle> trkParts;
+            for (unsigned ipart=0; ipart<nparts; ++ipart) {
+                float simPt           = reader.vp_pt->at(ipart);
+                float simEta          = reader.vp_eta->at(ipart);
+                float simPhi          = reader.vp_phi->at(ipart);
+                //float simVx           = reader.vp_vx->at(ipart);
+                //float simVy           = reader.vp_vy->at(ipart);
+                float simVz           = reader.vp_vz->at(ipart);
+                int   simCharge       = reader.vp_charge->at(ipart);
+
+                float simCotTheta     = std::sinh(simEta);
+                float simChargeOverPt = float(simCharge)/simPt;
+
+                //bool  signal          = reader.vp_signal->at(ipart);
+                //bool  intime          = reader.vp_intime->at(ipart);
+                bool  primary         = reader.vp_primary->at(ipart);
+                int   pdgId           = reader.vp_pdgId->at(ipart);
+
+                if (primary) {
+                    trkParts.emplace_back(TrackingParticle{  // using POD type constructor
+                        (int) ipart,
+                        pdgId,
+                        simChargeOverPt,
+                        simPhi,
+                        simCotTheta,
+                        simVz,
+                        0.
+                    });
+                }
+            }
+
+        }
 
         writer.fill(tracks);
         ++nRead;
