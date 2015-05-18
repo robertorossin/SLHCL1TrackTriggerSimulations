@@ -15,7 +15,8 @@
 int main(int argc, char **argv) {
 
     // Log the input arguments
-    std::cout << "amsim arguments << ";
+    std::cout << Color("lgreenb") << "Command:" << EndColor() << std::endl;
+    std::cout << argv[0] << " ";
     for(int i = 1; i < argc-1; ++i) {
         std::cout << argv[i] << " ";
     }
