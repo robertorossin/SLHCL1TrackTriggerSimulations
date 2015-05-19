@@ -17,7 +17,7 @@ bool sortByMatchQuality(const std::pair<unsigned, float>& lhs, const std::pair<u
     return lhs.second < rhs.second;
 }
 
-float diff(float lhs, float rhs) {
+float absDiff(float lhs, float rhs) {
     return std::abs(lhs - rhs);
 }
 }
@@ -62,11 +62,21 @@ void MCTruthAssociator::associate(std::vector<TrackingParticle>& trkParts, std::
             const TTTrack2& track = tracks.at(itrack);
 
             if (accept(trkPart, track)) {
-                float quality = diff(trkPart.invPt   , track.invPt());  // using diff in invPt as quality
+                float quality = absDiff(trkPart.invPt   , track.invPt());  // using diff in invPt as quality
                 matches.at(ipart).push_back(std::make_pair(itrack, quality));
             }
         }
     }
+
+    // Debug
+    //for (unsigned ipart=0; ipart<nparts; ++ipart) {
+    //    const std::vector<std::pair<unsigned, float> >& ipart_matches = matches.at(ipart);
+    //    for (unsigned imatch=0; imatch<ipart_matches.size(); ++imatch) {
+    //        unsigned itrack = ipart_matches.at(imatch).first;
+    //        float quality = ipart_matches.at(imatch).second;
+    //        std::cout << "ipart: " << ipart << " itrack: " << itrack << " quality: " << quality << std::endl;
+    //    }
+    //}
 
     std::vector<int> mcCategories(nparts, ParticleCategory::NOTFOUND);
     std::vector<int> recoCategories(ntracks, TrackCategory::FAKE);
@@ -133,11 +143,11 @@ void MCTruthAssociator::associate(std::vector<TrackingParticle>& trkParts, std::
 
 // _____________________________________________________________________________
 bool MCTruthAssociator::accept(const TrackingParticle& trkPart, const TTTrack2& track) {
-    if ((diff(trkPart.invPt   , track.invPt())    < cut_invPt_   ) &&
-        (diff(trkPart.phi0    , track.phi0())     < cut_phi0_    ) &&
-        (diff(trkPart.cottheta, track.cottheta()) < cut_cottheta_) &&
-        (diff(trkPart.z0      , track.z0())       < cut_z0_      ) &&
-        (diff(trkPart.d0      , track.d0())       < cut_d0_      )) {
+    if ((absDiff(trkPart.invPt   , track.invPt())    < cut_invPt_   ) &&
+        (absDiff(trkPart.phi0    , track.phi0())     < cut_phi0_    ) &&
+        (absDiff(trkPart.cottheta, track.cottheta()) < cut_cottheta_) &&
+        (absDiff(trkPart.z0      , track.z0())       < cut_z0_      ) &&
+        (absDiff(trkPart.d0      , track.d0())       < cut_d0_      )) {
         return true;
     }
     return false;

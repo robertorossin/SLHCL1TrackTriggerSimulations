@@ -15,9 +15,6 @@ class StubCleaner {
     : po_(po),
       nEvents_(po.maxEvents), verbose_(po.verbose) {
 
-        // Set event selection (default: always pass)
-        eventSelect_ = "(1)";
-
         // Initialize
         picky_ = new Picky();
     }
@@ -40,9 +37,6 @@ class StubCleaner {
     const ProgramOption po_;
     long long nEvents_;
     int verbose_;
-
-    // Event selection
-    TString eventSelect_;
 
     // Picky
     Picky * picky_;

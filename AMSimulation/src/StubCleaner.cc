@@ -67,9 +67,6 @@ int StubCleaner::cleanStubs(TString src, TString out) {
         return 1;
     }
 
-    // For event selection
-    TTreeFormula* ttf_event = reader.addFormula(eventSelect_);
-
     // For writing
     TTStubWriter writer(verbose_);
     if (writer.init(reader.getChain(), out)) {
@@ -111,11 +108,6 @@ int StubCleaner::cleanStubs(TString src, TString out) {
         // Events that fail don't exit the loop immediately, so that event info
         // can still be printed when verbosity is turned on.
         bool keep = true;
-
-        // Check event selection
-        int ndata = ttf_event->GetNdata();
-        if (ndata)
-            keep = (ttf_event->EvalInstance() != 0);
 
         // Check min # of stubs
         bool require = (nstubs >= MIN_NGOODSTUBS);
