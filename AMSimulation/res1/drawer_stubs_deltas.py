@@ -6,7 +6,7 @@ from math import asin, sinh
 
 # Configurations
 col  = TColor.GetColor("#1f78b4")  # mu0
-fcol = TColor.GetColor("#a6cee3")
+fcol = TColor.GetColor("#a6cee3")  # mu0
 
 
 # ______________________________________________________________________________
@@ -16,9 +16,10 @@ def calcIdealPhi(phi, invPt, r):
     #return phi - mPtFactor * r * invPt
     return phi - asin(mPtFactor * r * invPt)
 
-def calcIdealZ(eta, vz, r):
+def calcIdealZ(eta, vz, invPt, r):
     cotTheta = sinh(eta)
-    return vz + r * cotTheta
+    #return vz + r * cotTheta
+    return vz + (1.0 / (mPtFactor * invPt) * asin(mPtFactor * r * invPt)) * cotTheta
 
 # Calculate constants
 rMeans = b_rcoord_cmssw  # cm
@@ -31,7 +32,7 @@ for i in xrange(6):
 
 
 # ______________________________________________________________________________
-def bookStubs():
+def drawer_book():
     histos = {}
 
     # TH1F
@@ -106,7 +107,7 @@ def bookStubs():
     donotdelete.append(histos)
     return histos
 
-def projectStubs(tree, histos, options):
+def drawer_project(tree, histos, options):
     tree.SetBranchStatus("*", 0)
     tree.SetBranchStatus("genParts_pt"           , 1)
     tree.SetBranchStatus("genParts_eta"          , 1)
@@ -169,8 +170,8 @@ def projectStubs(tree, histos, options):
             histos["stub_absdphi_corr_%i" % i].Fill(abs(stub_phi_corr - ideal_phi_at_mean_r))
             histos["stub_absdphi_four_%i" % i].Fill(abs(stub_phi - ideal_phi_at_stub_r))
 
-            ideal_z_at_stub_r = calcIdealZ(gen_eta, gen_vz, stub_r)
-            ideal_z_at_mean_r = calcIdealZ(gen_eta, gen_vz, rMeans[i])
+            ideal_z_at_stub_r = calcIdealZ(gen_eta, gen_vz, gen_invPt, stub_r)
+            ideal_z_at_mean_r = calcIdealZ(gen_eta, gen_vz, gen_invPt, rMeans[i])
             stub_z_corr = 0
 
             histos["stub_dz_%i" % i].Fill(stub_z - ideal_z_at_mean_r)
@@ -185,7 +186,7 @@ def projectStubs(tree, histos, options):
     tree.SetBranchStatus("*", 1)
     return
 
-def drawStubs(histos, options):
+def drawer_draw(histos, options):
     for hname, h in histos.iteritems():
         if "vs_" not in hname:
             # TH1F
@@ -199,7 +200,7 @@ def drawStubs(histos, options):
             CMS_label()
             save(options.outdir, hname, dot_root=True, dot_pdf=False)
 
-def sitrepStubs(histos, options):
+def drawer_sitrep(histos, options):
     # Get one-sided confidence interval
     def getCI(h, threshold=0.95):
         nbinsx = h.GetNbinsX()
@@ -282,10 +283,10 @@ def main(options):
     tchain.AddFileInfoList(options.tfilecoll.GetList())
 
     # Process
-    histos = bookStubs()
-    projectStubs(tchain, histos, options)
-    drawStubs(histos, options)
-    sitrepStubs(histos, options)
+    histos = drawer_book()
+    drawer_project(tchain, histos, options)
+    drawer_draw(histos, options)
+    drawer_sitrep(histos, options)
 
 
 # ______________________________________________________________________________
@@ -296,6 +297,10 @@ if __name__ == '__main__':
 
     # Add default arguments
     add_drawer_arguments(parser)
+
+    # Add more arguments
+    #parser.add_argument("ss", help="short name of superstrip definition (e.g. ss256)")
+    #parser.add_argument("npatterns", type=int, help="number of patterns to reach the desired coverage")
 
     # Parse default arguments
     options = parser.parse_args()

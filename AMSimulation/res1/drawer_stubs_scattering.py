@@ -4,6 +4,10 @@ from rootdrawing import *
 from parser import *
 from math import sin, cos, tan, sinh, asin, exp, atan
 
+
+# ______________________________________________________________________________
+mPtFactor = 0.3*3.8*1e-2/2.0
+
 # Load trigger tower map
 ttmap = json.load(open("../data/trigger_sector_map.json"), object_pairs_hook=convert_key_to_int)
 ttrmap = get_reverse_map(ttmap)
@@ -27,7 +31,7 @@ tline2.SetLineWidth(2)
 
 
 # ______________________________________________________________________________
-def bookTrack():
+def drawer_book():
     histos = {}
 
     hname = "xy"
@@ -100,16 +104,20 @@ def get_tgraphs(pt, eta, phi, vz):
 
     for i in xrange(n+1):
         r = (ymax - ymin) / float(n) * i
-        cc = 0.3*3.8*1e-2/2.0
-        #deltaPhi = - cc*r*1.0/float(pt)
-        deltaPhi = - asin(cc*r*1.0/float(pt))
+        invPt = 1.0/float(pt)
+
+        #deltaPhi = - mPtFactor * r * invPt
+        deltaPhi = - asin(mPtFactor * r * invPt)
+
+        #deltaZ = r * sinh(eta)
+        deltaZ = (1.0 / (mPtFactor * invPt) * asin(mPtFactor * r * invPt)) * sinh(eta)
 
         xp.append(r * cos(phi + deltaPhi))
         xm.append(r * cos(phi - deltaPhi))
         yp.append(r * sin(phi + deltaPhi))
         ym.append(r * sin(phi - deltaPhi))
         rr.append(r)
-        zz.append(r * sinh(eta))
+        zz.append(vz + deltaZ)
     n += 1
 
     gxyp = TGraph(n, array('d', xp), array('d', yp))
@@ -127,7 +135,7 @@ def get_tgraphs(pt, eta, phi, vz):
     return tgraphs
 
 
-def projectTrack(tree, histos, options):
+def drawer_project(tree, histos, options):
     tree.SetBranchStatus("*", 0)
     tree.SetBranchStatus("TTStubs_r"      , 1)
     tree.SetBranchStatus("TTStubs_phi"    , 1)
@@ -153,7 +161,7 @@ def projectTrack(tree, histos, options):
     tree.SetBranchStatus("*", 1)
     return
 
-def drawTrack(histos, view, tpolylines, tgraph_p, tgraph_m, options):
+def drawer_draw(histos, view, tpolylines, tgraph_p, tgraph_m, options):
     if view == "XY":
         hname = "xy"
     elif view == "RZ":
@@ -203,7 +211,7 @@ def drawTrack(histos, view, tpolylines, tgraph_p, tgraph_m, options):
     donotdelete.append([tpolylines, tgraph_p, tgraph_m])
     return
 
-def sitrepTrack(histos, options):
+def drawer_sitrep(histos, options):
     print "--- SITREP ---------------------------------------------------------"
     print "--- Using tt{0}, pt={1}, eta={2}, phi={3}, vz={4}".format(options.tower, options.pt, options.eta, options.phi, options.vz)
 
@@ -218,14 +226,14 @@ def main(options):
     tchain.AddFileInfoList(options.tfilecoll.GetList())
 
     # Process
-    histos = bookTrack()
-    projectTrack(tchain, histos, options)
+    histos = drawer_book()
+    drawer_project(tchain, histos, options)
     tpolylines_xy = get_tpolylines("XY")
     tpolylines_rz = get_tpolylines("RZ")
     tgraphs = get_tgraphs(options.pt, options.eta, options.phi, options.vz)
-    drawTrack(histos, "XY", tpolylines_xy, tgraphs[0], tgraphs[1], options)
-    drawTrack(histos, "RZ", tpolylines_rz, tgraphs[2], tgraphs[2], options)
-    sitrepTrack(histos,options)
+    drawer_draw(histos, "XY", tpolylines_xy, tgraphs[0], tgraphs[1], options)
+    drawer_draw(histos, "RZ", tpolylines_rz, tgraphs[2], tgraphs[2], options)
+    drawer_sitrep(histos, options)
 
 
 # ______________________________________________________________________________

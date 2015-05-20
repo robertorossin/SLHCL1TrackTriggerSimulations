@@ -17,45 +17,51 @@ def drawer_book():
     histos = {}
 
     hname = "trkParts_pt"
-    histos[hname] = TH1F(hname, "; trkpart p_{T} [GeV]", 200, 0, 100)
+    histos[hname] = TH1F(hname, "; trkPart p_{T} [GeV]", 200, 0, 100)
 
     hname = "trkParts_invPt"
-    histos[hname] = TH1F(hname, "; trkpart 1/p_{T} [1/GeV]", 220, -5.5, 5.5)
+    histos[hname] = TH1F(hname, "; trkPart 1/p_{T} [1/GeV]", 220, -5.5, 5.5)
 
     hname = "trkParts_eta"
-    histos[hname] = TH1F(hname, "; trkpart_{pt>2} #eta", 300, -5, 5)
+    histos[hname] = TH1F(hname, "; trkPart_{pt>2} #eta", 300, -5, 5)
 
     hname = "trkParts_phi"
-    histos[hname] = TH1F(hname, "; trkpart_{pt>2} #phi [#pi rad]", 220, -1.1, 1.1)
+    histos[hname] = TH1F(hname, "; trkPart_{pt>2} #phi [#pi rad]", 220, -1.1, 1.1)
 
     hname = "trkParts_vx"
-    histos[hname] = TH1F(hname, "; trkpart_{pt>2} vertex x [cm]", 200, -0.01, 0.01)
+    histos[hname] = TH1F(hname, "; trkPart_{pt>2} vertex x [cm]", 200, -0.01, 0.01)
 
     hname = "trkParts_vy"
-    histos[hname] = TH1F(hname, "; trkpart_{pt>2} vertex y [cm]", 200, -0.01, 0.01)
+    histos[hname] = TH1F(hname, "; trkPart_{pt>2} vertex y [cm]", 200, -0.01, 0.01)
 
     hname = "trkParts_vz"
-    histos[hname] = TH1F(hname, "; trkpart_{pt>2} vertex z [cm]", 200, -30, 30)
+    histos[hname] = TH1F(hname, "; trkPart_{pt>2} vertex z [cm]", 200, -30, 30)
 
     hname = "trkParts_charge"
-    histos[hname] = TH1F(hname, "; trkpart_{pt>2} charge", 5, -2.5, 2.5)
+    histos[hname] = TH1F(hname, "; trkPart_{pt>2} charge", 5, -2.5, 2.5)
 
     hname = "trkParts_pdgName"
-    histos[hname] = TH1F(hname, "; trkpart_{pt>2} pdgName", 50, -25, 25)
+    histos[hname] = TH1F(hname, "; trkPart_{pt>2} pdgName", 50, -25, 25)
 
-    hname = "nTrkParts_pt2"
-    histos[hname] = TH1F(hname, "; # trkparts_{pt>2} [GeV]", 250, 0, 250)
+    hname = "ntrkParts_pt0p5"
+    histos[hname] = TH1F(hname, "; # trkParts {pt>0.5}", 250, 0, 2500)
 
-    hname = "nTrkParts_pt3"
-    histos[hname] = TH1F(hname, "; # trkparts_{pt>3} [GeV]", 250, 0, 250)
+    hname = "ntrkParts_pt1"
+    histos[hname] = TH1F(hname, "; # trkParts {pt>1}", 250, 0, 1000)
 
-    hname = "nTrkParts_pt5"
-    histos[hname] = TH1F(hname, "; # trkparts_{pt>5} [GeV]", 250, 0, 250)
+    hname = "ntrkParts_pt2"
+    histos[hname] = TH1F(hname, "; # trkParts {pt>2}", 250, 0, 250)
 
-    hname = "nTrkParts_pt10"
-    histos[hname] = TH1F(hname, "; # trkparts_{pt>10} [GeV]", 250, 0, 250)
+    hname = "ntrkParts_pt3"
+    histos[hname] = TH1F(hname, "; # trkParts {pt>3}", 250, 0, 250)
 
-    hname = "nVertices"
+    hname = "ntrkParts_pt5"
+    histos[hname] = TH1F(hname, "; # trkParts {pt>5}", 250, 0, 250)
+
+    hname = "ntrkParts_pt10"
+    histos[hname] = TH1F(hname, "; # trkParts {pt>10}", 250, 0, 250)
+
+    hname = "nvertices"
     histos[hname] = TH1F(hname, "; # vertices", 250, 0, 250)
 
     # Style
@@ -81,6 +87,7 @@ def drawer_project(tree, histos, options):
     # Loop over events
     for ievt, evt in enumerate(tree):
         if (ievt == options.nentries):  break
+        if (ievt % 100 == 0):  print "Processing event: %i" % ievt
 
         nparts = evt.trkParts_pt.size()
         pt_map = {}
@@ -89,7 +96,7 @@ def drawer_project(tree, histos, options):
             primary = evt.trkParts_primary[ipart]
             charge  = evt.trkParts_charge [ipart]
 
-            if charge!=0 and not primary:
+            if not (charge!=0 and primary):
                 continue
 
             pt      = evt.trkParts_pt     [ipart]
@@ -101,12 +108,14 @@ def drawer_project(tree, histos, options):
             charge  = evt.trkParts_charge [ipart]
             pdgId   = evt.trkParts_pdgId  [ipart]
 
-            if not (pt > 2 and abs(eta) < 2.4):
+            if pt > 2:  # relax eta cut
                 histos["trkParts_eta"    ].Fill(eta)
 
-            if abs(eta) < 2.4:
+            if abs(eta) < 2.4:  # relax pt cut
                 histos["trkParts_pt"     ].Fill(pt)
                 histos["trkParts_invPt"  ].Fill(charge/pt)
+
+                pt_map[ipart] = pt
 
             if not (pt > 2 and abs(eta) < 2.4):
                 continue
@@ -118,21 +127,21 @@ def drawer_project(tree, histos, options):
             histos["trkParts_charge" ].Fill(charge)
             histos["trkParts_pdgName"].Fill(c_pdgName.get(pdgId), 1)
 
-            pt_map[ipart] = pt
+        histos["ntrkParts_pt0p5" ].Fill(count_if(pt_map.values(), lambda x: x>0.5))
+        histos["ntrkParts_pt1"   ].Fill(count_if(pt_map.values(), lambda x: x>1))
+        histos["ntrkParts_pt2"   ].Fill(count_if(pt_map.values(), lambda x: x>2))
+        histos["ntrkParts_pt3"   ].Fill(count_if(pt_map.values(), lambda x: x>3))
+        histos["ntrkParts_pt5"   ].Fill(count_if(pt_map.values(), lambda x: x>5))
+        histos["ntrkParts_pt10"  ].Fill(count_if(pt_map.values(), lambda x: x>10))
 
-        histos["nTrkParts_pt2"   ].Fill(count_if(pt_map.values(), lambda x: x>2))
-        histos["nTrkParts_pt3"   ].Fill(count_if(pt_map.values(), lambda x: x>3))
-        histos["nTrkParts_pt5"   ].Fill(count_if(pt_map.values(), lambda x: x>5))
-        histos["nTrkParts_pt10"  ].Fill(count_if(pt_map.values(), lambda x: x>10))
-
-        histos["nVertices"       ].Fill(evt.gen_nPV)
+        histos["nvertices"       ].Fill(evt.gen_nPV)
 
     tree.SetBranchStatus("*", 1)
     return
 
 def drawer_draw(histos, options):
     for hname, h in histos.iteritems():
-        if hname in ["trkParts_pt", "trkParts_pdgName"]:
+        if hname in ["trkParts_pt"]:
             options.logy = True
         else:
             options.logy = False

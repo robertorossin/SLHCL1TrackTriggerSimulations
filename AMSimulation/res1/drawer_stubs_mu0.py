@@ -8,6 +8,8 @@ from parser import *
 def drawer_book():
     histos = {}
 
+    # FIXME
+
     # Style
     for hname, h in histos.iteritems():
         h.SetLineWidth(2); h.SetMarkerSize(0)
