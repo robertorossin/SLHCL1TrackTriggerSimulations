@@ -2,14 +2,14 @@
 
 from rootdrawing import *
 from parser import *
-from pdgName import pdgName
+import pdgName
 
 col  = TColor.GetColor("#e31a1c")  # nu140
 fcol = TColor.GetColor("#fb9a99")  # nu140
 #col  = TColor.GetColor("#6a3d9a")  # tttt140
 #fcol = TColor.GetColor("#cab2d6")  # tttt140
 
-c_pdgName = pdgName()
+c_pdgName = pdgName.pdgName()
 
 
 # ______________________________________________________________________________
