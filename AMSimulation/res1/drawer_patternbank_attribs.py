@@ -75,7 +75,7 @@ def drawer_project(tree, histos, options):
         beg = binwidth * ievt
         end = binwidth * (ievt+1)
 
-        x_1.append(ievt)
+        x_1.append(ievt*binwidth)
         y_1.append(sum(y[beg:end]) / binwidth)
         ex_1.append(sum(ex[beg:end]) / binwidth)
         ey_1.append(sum(ey[beg:end]) / binwidth)

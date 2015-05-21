@@ -53,4 +53,6 @@ def parse_drawer_options(options):
         else:
             options.phimin = -2*pi -pi/2 + (2*pi/8) * iphi
             options.phimax = -2*pi -pi/2 + (2*pi/8) * (iphi+1)
+        options.ptmin = 2.
+        options.ptmax = 2000.
 

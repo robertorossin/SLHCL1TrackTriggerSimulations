@@ -4,49 +4,48 @@ from rootdrawing import *
 from parser import *
 
 # Configurations
-#col  = TColor.GetColor("#e31a1c")  # nu140
-#fcol = TColor.GetColor("#fb9a99")  # nu140
+col  = TColor.GetColor("#e31a1c")  # nu140
+fcol = TColor.GetColor("#fb9a99")  # nu140
 
-col  = TColor.GetColor("#6a3d9a")  # tttt140
-fcol = TColor.GetColor("#cab2d6")  # tttt140
+#col  = TColor.GetColor("#6a3d9a")  # tttt140
+#fcol = TColor.GetColor("#cab2d6")  # tttt140
 
 
 # ______________________________________________________________________________
-def bookRoads():
+def drawer_book(options):
     histos = {}
-    f = 5
 
     hname = "nroads_per_event"
-    nbins, xmin, xmax = 400*f, 0., 400.*f
+    nbins, xmin, xmax = 200, 0., 200.*options.xscale
     histos[hname] = TH1F(hname, "; # roads/tower/BX"                , nbins, xmin, xmax)
 
-    hname = "nsuperstrips_per_road"
-    nbins, xmin, xmax = 20*f, 0., 20.*f
-    histos[hname] = TH1F(hname, "; # superstrips/road/tower/BX"     , nbins, xmin, xmax)
-
-    hname = "nstubs_per_superstrip"
-    nbins, xmin, xmax = 50*f, 0., 50.*f
-    histos[hname] = TH1F(hname, "; # stubs/superstrip/road/tower/BX", nbins, xmin, xmax)
-
-    hname = "nstubs_per_road"
-    nbins, xmin, xmax = 50*f, 0., 50.*f
-    histos[hname] = TH1F(hname, "; # stubs/road/tower/BX"           , nbins, xmin, xmax)
-
-    hname = "nstubs_per_event"
-    nbins, xmin, xmax = 400*f, 0., 400.*f
-    histos[hname] = TH1F(hname, "; # stubs/tower/BX"                , nbins, xmin, xmax)
-
     hname = "ncombinations_per_road"
-    nbins, xmin, xmax = 500*f, 0., 500.*f
+    nbins, xmin, xmax = 400, 0., 400.*options.xscale
     histos[hname] = TH1F(hname, "; # combinations/road/tower/BX"    , nbins, xmin, xmax)
 
     hname = "ncombinations_per_event"
-    nbins, xmin, xmax = 2000*f, 0., 2000.*f
+    nbins, xmin, xmax = 800, 0., 1600.*options.xscale
     histos[hname] = TH1F(hname, "; # combinations/tower/BX"         , nbins, xmin, xmax)
+
+    hname = "nsuperstrips_per_road"
+    nbins, xmin, xmax = 20, 0., 20.
+    histos[hname] = TH1F(hname, "; # superstrips/road/tower/BX"     , nbins, xmin, xmax)
+
+    hname = "nstubs_per_superstrip"
+    nbins, xmin, xmax = 50, 0., 50.
+    histos[hname] = TH1F(hname, "; # stubs/superstrip/road/tower/BX", nbins, xmin, xmax)
+
+    hname = "nstubs_per_road"
+    nbins, xmin, xmax = 50, 0., 50.
+    histos[hname] = TH1F(hname, "; # stubs/road/tower/BX"           , nbins, xmin, xmax)
+
+    hname = "nstubs_per_event"
+    nbins, xmin, xmax = 500, 0., 500.
+    histos[hname] = TH1F(hname, "; # stubs/tower/BX"                , nbins, xmin, xmax)
 
     for i in xrange(6):
         hname = "nstubs_per_layer_%i" % i
-        nbins, xmin, xmax = 50*f, 0., 50.*f
+        nbins, xmin, xmax = 50, 0., 50.
         histos[hname] = TH1F(hname, "; # stubs/layer/road/tower/BX" , nbins, xmin, xmax)
 
     # Style
@@ -60,7 +59,7 @@ def bookRoads():
     return histos
 
 
-def projectRoads(tree, histos, options):
+def drawer_project(tree, histos, options):
     tree.SetBranchStatus("*", 0)
     tree.SetBranchStatus("AMTTRoads_patternRef"   , 1)
     tree.SetBranchStatus("AMTTRoads_tower"        , 1)
@@ -133,7 +132,9 @@ def projectRoads(tree, histos, options):
     return
 
 
-def drawRoads(histos, options):
+def drawer_draw(histos, options):
+    options.logy = True
+
     def parse_ss(ss):
         if "lu" in ss:
             ss = ss.replace("lu", "")
@@ -181,11 +182,11 @@ def drawRoads(histos, options):
         gPad.SetLogy(options.logy)
         displayQuantiles(h)
 
-        tlatex.DrawLatex(0.6, 0.185, "%s [%.2fM bank]" % (parse_ss(options.ss), options.npatterns*1e-6))
+        tlatex.DrawLatex(0.6, 0.185, "%s [%.0fK bank]" % (parse_ss(options.ss), options.npatterns*1e-3))
         CMS_label()
         save(options.outdir, "%s_%s" % (hname, options.ss), dot_root=True)
 
-    # Specialized: nstubs_per_layer_%i
+    # Specialized: nstubs_per_layer_%i plots
     if True:
         c1 = TCanvas("c1", "c1")
         lmargin, rmargin, bmargin, tmargin = (gStyle.GetPadLeftMargin(), gStyle.GetPadRightMargin(), gStyle.GetPadBottomMargin(), gStyle.GetPadTopMargin())
@@ -222,7 +223,6 @@ def drawRoads(histos, options):
             c1.cd(i+1)
 
             # Style
-            #print h.GetXaxis().GetTitleOffset(), h.GetXaxis().GetTitleSize(), h.GetXaxis().GetTitleSize(), h.GetYaxis().GetTitleOffset(), h.GetYaxis().GetTitleSize(), h.GetYaxis().GetTitleSize()
             if i/3 == 0:
                 #h.GetYaxis().SetTitleOffset(0.90)
                 h.GetYaxis().SetTitleSize(h.GetYaxis().GetTitleSize() * 2)
@@ -251,7 +251,7 @@ def drawRoads(histos, options):
             displayQuantiles(h, scalebox=(2.,2.))
 
             tlatex.DrawLatex(0.5, 0.260, "Layer %i" % i)
-            tlatex.DrawLatex(0.5, 0.185, "%s [%.2fM bank]" % (parse_ss(options.ss), options.npatterns*1e-6))
+            tlatex.DrawLatex(0.5, 0.185, "%s [%.0fK bank]" % (parse_ss(options.ss), options.npatterns*1e-3))
 
         c1.cd(0)
         CMS_label()
@@ -262,7 +262,7 @@ def drawRoads(histos, options):
     return
 
 
-def sitrepRoads(histos,options):
+def drawer_sitrep(histos, options):
     print "--- SITREP ---------------------------------------------------------"
     print "--- Using tt{0}, pu{1}, ss={2}, npatterns={3}".format(options.tower, options.pu, options.ss, options.npatterns)
     print "--- Variable, mean, 95%% CI, 99%% CI:"
@@ -286,10 +286,10 @@ def main(options):
     tchain.AddFileInfoList(options.tfilecoll.GetList())
 
     # Process
-    histos = bookRoads()
-    projectRoads(tchain, histos, options)
-    drawRoads(histos, options)
-    sitrepRoads(histos,options)
+    histos = drawer_book(options)
+    drawer_project(tchain, histos, options)
+    drawer_draw(histos, options)
+    drawer_sitrep(histos, options)
 
 
 # ______________________________________________________________________________
@@ -304,11 +304,14 @@ if __name__ == '__main__':
     # Add more arguments
     parser.add_argument("ss", help="short name of superstrip definition (e.g. ss256)")
     parser.add_argument("npatterns", type=int, help="number of patterns to reach the desired coverage")
+    parser.add_argument("--coverage", type=float, default=0.95, help="desired coverage (default: %(default)s)")
+    parser.add_argument("--minPt", type=float, default=2, help="min pT (default: %(default)s)")
+    parser.add_argument("--xscale", type=float, default=1, help="scale factor for the x-axis range (default: %(default)s)")
 
     # Parse default arguments
     options = parser.parse_args()
     parse_drawer_options(options)
-    options.logy = True
+    options.ptmin = options.minPt
 
     # Call the main function
     main(options)
