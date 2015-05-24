@@ -172,7 +172,7 @@ int MatrixBuilder::buildMatrices(TString src) {
     // _________________________________________________________________________
     // Loop over all events and filter them
 
-    if (verbose_)  std::cout << Info() << "Begin event filtering" << std::endl;
+    if (verbose_)  std::cout << Info() << "Begin event filtering (two loops)" << std::endl;
 
     if (loopEventsAndFilter(reader))
         return 1;
@@ -219,6 +219,12 @@ int MatrixBuilder::loopEventsAndFilter(TTStubReader& reader) {
     // Get trigger tower reverse map
     const std::map<unsigned, bool>& ttrmap = ttmap_ -> getTriggerTowerReverseMap(po_.tower);
 
+    if (verbose_)  std::cout << Info() << "Filter events." << std::endl;
+
+    // Mean vector and covariance matrix
+    Eigen::VectorXd means = Eigen::VectorXd::Zero(nvariables_);
+    Eigen::MatrixXd covariances = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
+
     // Bookkeepers
     long int nRead = 0, nKept = 0;
 
@@ -255,6 +261,49 @@ int MatrixBuilder::loopEventsAndFilter(TTStubReader& reader) {
         }
         assert(nstubs == po_.nLayers);
 
+        // _____________________________________________________________________
+        // Calculate means and covariances for V (cheating version)
+
+        Eigen::VectorXd variables1 = Eigen::VectorXd::Zero(nvariables_/2);
+        Eigen::VectorXd variables2 = Eigen::VectorXd::Zero(nvariables_/2);
+        Eigen::VectorXd variables3 = Eigen::VectorXd::Zero(nvariables_/2);
+
+        // Loop over reconstructed stubs
+        for (unsigned istub=0; istub<nstubs; ++istub) {
+            float    stub_r   = reader.vb_r       ->at(istub);
+            float    stub_phi = reader.vb_phi     ->at(istub);
+            float    stub_z   = reader.vb_z       ->at(istub);
+
+            variables1(istub) = stub_phi;
+            variables2(istub) = stub_z;
+            variables3(istub) = meansR_(istub) - stub_r;
+        }
+        //setVariableToZero(variables1, variables2, variables3, po_.hitBits);
+
+        // Apply DeltaR correction (cheating version)
+        const double simC = -0.5 * (0.003 * 3.8 * simChargeOverPt);  // 1/(2 x radius of curvature)
+        const double simT = simCotTheta;
+        variables1 += simC * variables3;
+        variables2 += simT * variables3;
+
+        Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);
+        variables << variables1, variables2;
+
+        // Update mean vector
+        long int nTracks = nKept + 1;
+        for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
+            means(ivar) += (variables(ivar) - means(ivar))/nTracks;
+        }
+
+        // Update covariance matrix
+        if (nTracks > 1) {
+            for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
+                for (unsigned jvar=0; jvar<nvariables_; ++jvar) {
+                    covariances(ivar, jvar) += (variables(ivar) - means(ivar)) * (variables(jvar) - means(jvar)) / (nTracks-1) - covariances(ivar, jvar)/nTracks;
+                }
+            }
+        }
+
         ++nKept;
         ++nRead;
         keepEvents_.push_back(true);
@@ -263,6 +312,94 @@ int MatrixBuilder::loopEventsAndFilter(TTStubReader& reader) {
     if (nRead == 0) {
         std::cout << Error() << "Failed to read any event." << std::endl;
         return 1;
+    }
+
+    if (verbose_)  std::cout << Info() << Form("Read: %7ld, kept: %7ld", nRead, nKept) << std::endl;
+
+     // Find eigenvectors of covariance matrix (cheating version)
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver(covariances);
+    Eigen::VectorXd sqrtEigenvalues = Eigen::VectorXd::Zero(nvariables_);
+    for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
+        sqrtEigenvalues(ivar) = std::sqrt(std::max(0., eigensolver.eigenvalues()(ivar)));
+    }
+
+    // Find matrix V (cheating version)
+    // V is the orthogonal transformation from coordinates space to principal components space
+    // The principal components are constraints + rotated track parameters
+    Eigen::MatrixXd V = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
+    V = (eigensolver.eigenvectors()).transpose();
+
+    // _________________________________________________________________________
+    // Loop again to reject outliers
+
+    const float sigma = 5.;
+    if (sigma >= 10.)
+        return 0;
+
+    if (verbose_)  std::cout << Info() << "Reject outlier events. sigma=" << sigma << std::endl;
+
+    // Bookkeepers
+    nRead = 0, nKept = 0;
+
+    for (long long ievt=0; ievt<nEvents_; ++ievt) {
+        if (reader.loadTree(ievt) < 0)  break;
+        reader.getEntry(ievt);
+
+        const unsigned nstubs = reader.vb_modId->size();
+        if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
+
+        if (!keepEvents_.at(ievt)) {
+            ++nRead;
+            continue;
+        }
+
+        double simChargeOverPt = float(reader.vp_charge->front())/reader.vp_pt->front();
+        double simCotTheta     = std::sinh(reader.vp_eta->front());
+
+        // _____________________________________________________________________
+        // Reject outliers
+
+        Eigen::VectorXd variables1 = Eigen::VectorXd::Zero(nvariables_/2);
+        Eigen::VectorXd variables2 = Eigen::VectorXd::Zero(nvariables_/2);
+        Eigen::VectorXd variables3 = Eigen::VectorXd::Zero(nvariables_/2);
+
+        // Loop over reconstructed stubs
+        for (unsigned istub=0; istub<nstubs; ++istub) {
+            float    stub_r   = reader.vb_r       ->at(istub);
+            float    stub_phi = reader.vb_phi     ->at(istub);
+            float    stub_z   = reader.vb_z       ->at(istub);
+
+            variables1(istub) = stub_phi;
+            variables2(istub) = stub_z;
+            variables3(istub) = meansR_(istub) - stub_r;
+        }
+        //setVariableToZero(variables1, variables2, variables3, po_.hitBits);
+
+        // Apply DeltaR correction (cheating version)
+        const double simC = -0.5 * (0.003 * 3.8 * simChargeOverPt);  // 1/(2 x radius of curvature)
+        const double simT = simCotTheta;
+        variables1 += simC * variables3;
+        variables2 += simT * variables3;
+
+        Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);
+        variables << variables1, variables2;
+
+        // Transform coordinates to principal components (cheating version)
+        Eigen::VectorXd principals = Eigen::VectorXd::Zero(nvariables_);
+        principals = V * (variables - means);
+
+        for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
+            assert(sqrtEigenvalues(ivar) > 0.);
+            if (principals(ivar)/sqrtEigenvalues(ivar) > sigma) {
+                keepEvents_.at(ievt) = false;
+
+                //std::cout << ievt << " " << ivar << " " << principals(ivar) << " " << sqrtEigenvalues(ivar) << " " << principals(ivar)/sqrtEigenvalues(ivar) << std::endl;
+            }
+        }
+
+        if (keepEvents_.at(ievt))
+            ++nKept;
+        ++nRead;
     }
 
     if (verbose_)  std::cout << Info() << Form("Read: %7ld, kept: %7ld", nRead, nKept) << std::endl;
@@ -492,11 +629,8 @@ int MatrixBuilder::loopEventsAndSolveEigenvectors(TTStubReader& reader) {
     // Find eigenvectors of covariance matrix
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver(covariances);
     Eigen::VectorXd sqrtEigenvalues = Eigen::VectorXd::Zero(nvariables_);
-    sqrtEigenvalues = eigensolver.eigenvalues();
     for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
-        if (sqrtEigenvalues(ivar) <= 0.)
-            sqrtEigenvalues(ivar) = 0.;
-        sqrtEigenvalues(ivar) = std::sqrt(sqrtEigenvalues(ivar));  // take the square root
+        sqrtEigenvalues(ivar) = std::sqrt(std::max(0., eigensolver.eigenvalues()(ivar)));
     }
 
     // Find matrix V
@@ -767,6 +901,7 @@ int MatrixBuilder::loopEventsAndEval(TTStubReader& reader) {
                 histograms_[hname]->Fill(principals(ivar));
 
                 hname = Form("npc%i", ivar);
+                //assert(mat_.sqrtEigenvalues(ivar) > 0.);
                 histograms_[hname]->Fill((principals(ivar)- meansV(ivar)) / mat_.sqrtEigenvalues(ivar));
             }
         }
