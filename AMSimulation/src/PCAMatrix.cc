@@ -7,7 +7,7 @@ using namespace slhcl1tt;
 #include <stdexcept>
 
 
-int PCAMatrix::read(std::string txt, unsigned nvariables, unsigned nparameters) {
+int PCAMatrix::read(const std::string txt) {
 
     // Read from file
     filename = txt;
@@ -17,6 +17,9 @@ int PCAMatrix::read(std::string txt, unsigned nvariables, unsigned nparameters) 
         std::cout << "Unable to open " << txt << std::endl;
         throw std::runtime_error("Unable to open input file.");
     }
+
+    infile >> nvariables;
+    infile >> nparameters;
 
     double x;
 
@@ -50,6 +53,12 @@ int PCAMatrix::read(std::string txt, unsigned nvariables, unsigned nparameters) 
     for (unsigned ivar=0; ivar<nvariables; ++ivar) {
         infile >> x;
         sqrtEigenvalues(ivar) = x;
+    }
+
+    meansX = Eigen::VectorXd::Zero(nvariables);
+    for (unsigned ivar=0; ivar<nvariables; ++ivar) {
+        infile >> x;
+        meansX(ivar) = x;
     }
 
     meansV = Eigen::VectorXd::Zero(nvariables);
@@ -87,7 +96,7 @@ int PCAMatrix::read(std::string txt, unsigned nvariables, unsigned nparameters) 
     return 0;
 }
 
-int PCAMatrix::write(std::string txt) {
+int PCAMatrix::write(const std::string txt) {
 
     // Write to a file
     std::ofstream outfile(txt.c_str());
@@ -95,6 +104,9 @@ int PCAMatrix::write(std::string txt) {
         std::cout << "Unable to open " << txt << std::endl;
         throw std::runtime_error("Unable to open output file.");
     }
+
+    outfile << nvariables << std::endl;
+    outfile << nparameters << std::endl << std::endl;
 
     outfile << std::setprecision(6);
     outfile << meansR;
@@ -109,6 +121,8 @@ int PCAMatrix::write(std::string txt) {
     outfile << std::endl << std::endl;
 
     outfile << sqrtEigenvalues;
+    outfile << std::endl << std::endl;
+    outfile << meansX;
     outfile << std::endl << std::endl;
     outfile << meansV;
     outfile << std::endl << std::endl;
@@ -127,7 +141,9 @@ void PCAMatrix::print() {
     std::ios::fmtflags flags = std::cout.flags();
     std::cout << std::setprecision(4);
 
-    std::cout << "filename: " << filename << std::endl;
+    std::cout << "nvariables: " << nvariables << std::endl;
+    std::cout << "nparameters: " << nparameters << std::endl;
+    std::cout << "filename: " << filename << std::endl << std::endl;
 
     std::cout << "meansR: " << std::endl;
     std::cout << meansR << std::endl << std::endl;
@@ -142,6 +158,8 @@ void PCAMatrix::print() {
 
     std::cout << "sqrtEigenvalues: " << std::endl;
     std::cout << sqrtEigenvalues << std::endl << std::endl;
+    std::cout << "meansX: " << std::endl;
+    std::cout << meansX << std::endl << std::endl;
     std::cout << "meansV: " << std::endl;
     std::cout << meansV << std::endl << std::endl;
     std::cout << "meansP: " << std::endl;

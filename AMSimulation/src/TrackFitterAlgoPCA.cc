@@ -18,10 +18,11 @@ int TrackFitterAlgoPCA::loadConstants() {
         for (unsigned j=0; j<PCA_NHITBITS; ++j) {
             std::string filename = Form("matrix/matrices_tt%i_pt%i_hb%i.txt", tower_, i, j);
 
-            PCAMatrix matrix;
-            matrix.read(datadir_ + filename, nvariables_, nparameters_);
+            PCAMatrix mat;
+            mat.read(datadir_ + filename);
+            assert(mat.nvariables == nvariables_ && mat.nparameters == nparameters_);
 
-            matrices.push_back(matrix);
+            matrices.push_back(mat);
         }
     }
 
@@ -72,6 +73,7 @@ int TrackFitterAlgoPCA::fit(const TTRoadComb& acomb, TTTrack2& atrack) {
     double chi2 = 0.;
     unsigned ndof = 0;
     for (unsigned ivar=begin_ivar; ivar<(nvariables_ - nparameters_); ++ivar) {
+        assert(mat.sqrtEigenvalues(ivar) > 0.);
         chi2 += (principals(ivar)/mat.sqrtEigenvalues(ivar))*(principals(ivar)/mat.sqrtEigenvalues(ivar));
         ndof += 1;
     }

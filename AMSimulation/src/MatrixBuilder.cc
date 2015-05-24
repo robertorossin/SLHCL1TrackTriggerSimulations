@@ -230,8 +230,10 @@ int MatrixBuilder::loopEventsAndFilter(TTStubReader& reader) {
         if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
-        // Apply track pt requirement
+        // Apply track invPt requirement
+        assert(reader.vp_pt->size() == 1);
         double simChargeOverPt = float(reader.vp_charge->front())/reader.vp_pt->front();
+        double simCotTheta     = std::sinh(reader.vp_eta->front());
         if (simChargeOverPt < po_.minInvPt || po_.maxInvPt < simChargeOverPt) {
             ++nRead;
             keepEvents_.push_back(false);
@@ -319,12 +321,8 @@ int MatrixBuilder::loopEventsAndSolveCT(TTStubReader& reader) {
         variables << variables1, variables2;
 
         // Get sim info
-        double simCotTheta     = std::sinh(reader.vp_eta->front());
         double simChargeOverPt = float(reader.vp_charge->front())/reader.vp_pt->front();
-        //double simPhi          = reader.vp_phi->front();
-        //double simVz           = reader.vp_vz->front();
-        double simC = -0.5 * (0.003 * 3.8 * simChargeOverPt);  // 1/(2 x radius of curvature)
-        double simT = simCotTheta;
+        double simCotTheta     = std::sinh(reader.vp_eta->front());
 
         // Update mean vectors
         long int nTracks = nKept + 1;
@@ -332,6 +330,8 @@ int MatrixBuilder::loopEventsAndSolveCT(TTStubReader& reader) {
             means(ivar) += (variables(ivar) - means(ivar))/nTracks;
         }
 
+        const double simC = -0.5 * (0.003 * 3.8 * simChargeOverPt);  // 1/(2 x radius of curvature)
+        const double simT = simCotTheta;
         meansC(0) += (simC - meansC(0))/nTracks;
         meansT(0) += (simT - meansT(0))/nTracks;
 
@@ -358,51 +358,59 @@ int MatrixBuilder::loopEventsAndSolveCT(TTStubReader& reader) {
         ++nRead;
     }
 
-    // Find solutions for C & T
-    Eigen::MatrixXd covariances_phi = covariances.block(0,0,nvariables_/2,nvariables_/2);
-    setCovarianceToUnit(covariances_phi, nvariables_/2, po_.hitBits);
-
-    Eigen::MatrixXd solutionsC = Eigen::MatrixXd::Zero(1,nvariables_/2);
-    //solutionsC = covariancesC*(covariances_phi.inverse());
-    solutionsC = (covariances_phi.colPivHouseholderQr().solve(covariancesC.transpose())).transpose();
-
-    Eigen::MatrixXd covariances_z = covariances.block(nvariables_/2,nvariables_/2,nvariables_/2,nvariables_/2);
-    setCovarianceToUnit(covariances_z, nvariables_/2, po_.hitBits);
-
-    Eigen::MatrixXd solutionsT = Eigen::MatrixXd::Zero(1,nvariables_/2);
-    //solutionsT = covariancesT*(covariances_z.inverse());
-    solutionsT = (covariances_z.colPivHouseholderQr().solve(covariancesT.transpose())).transpose();
-
     if (verbose_>1) {
         std::cout << Info() << "means: " << std::endl;
         std::cout << means << std::endl << std::endl;
         std::cout << Info() << "covariances: " << std::endl;
         std::cout << covariances << std::endl << std::endl;
+    }
+
+    // Find solutions for C & T
+    Eigen::MatrixXd covariances_phi = covariances.block(0,0,nvariables_/2,nvariables_/2);
+    setCovarianceToUnit(covariances_phi, nvariables_/2, po_.hitBits);
+
+    Eigen::MatrixXd covariances_z = covariances.block(nvariables_/2,nvariables_/2,nvariables_/2,nvariables_/2);
+    setCovarianceToUnit(covariances_z, nvariables_/2, po_.hitBits);
+
+    if (verbose_>1) {
         //std::cout << Info() << "covariances_phi: " << std::endl;
         //std::cout << covariances_phi << std::endl << std::endl;
         //std::cout << Info() << "covariances_z: " << std::endl;
         //std::cout << covariances_z << std::endl << std::endl;
-
-        std::cout << Info() << "meansC: " << std::endl;
-        std::cout << meansC << std::endl << std::endl;
         std::cout << Info() << "covariancesC: " << std::endl;
         std::cout << covariancesC << std::endl << std::endl;
-        std::cout << Info() << "solutionsC: " << std::endl;
-        std::cout << solutionsC << std::endl << std::endl;
-        std::cout << Info() << "meansT: " << std::endl;
-        std::cout << meansT << std::endl << std::endl;
         std::cout << Info() << "covariancesT: " << std::endl;
         std::cout << covariancesT << std::endl << std::endl;
-        std::cout << Info() << "solutionsT: " << std::endl;
-        std::cout << solutionsT << std::endl << std::endl;
     }
 
+    Eigen::MatrixXd solutionsC = Eigen::MatrixXd::Zero(1,nvariables_/2);
+    //solutionsC = covariancesC*(covariances_phi.inverse());
+    solutionsC = (covariances_phi.colPivHouseholderQr().solve(covariancesC.transpose())).transpose();
+
+    Eigen::MatrixXd solutionsT = Eigen::MatrixXd::Zero(1,nvariables_/2);
+    //solutionsT = covariancesT*(covariances_z.inverse());
+    solutionsT = (covariances_z.colPivHouseholderQr().solve(covariancesT.transpose())).transpose();
+
     // Set PCAMatrix
-    mat_.meansR = meansR_;
-    mat_.meansC = meansC;
-    mat_.meansT = meansT;
+    mat_.nvariables  = nvariables_;
+    mat_.nparameters = nparameters_;
+    mat_.meansR      = meansR_;
+
+    mat_.meansC = meansC;  // incorrect: should be using delta of C
+    mat_.meansT = meansT;  // incorrect: should be using delta of T
     mat_.solutionsC = solutionsC;
     mat_.solutionsT = solutionsT;
+
+    if (verbose_>1) {
+        std::cout << Info() << "meansC: " << std::endl;
+        std::cout << mat_.meansC << std::endl << std::endl;
+        std::cout << Info() << "solutionsC: " << std::endl;
+        std::cout << mat_.solutionsC << std::endl << std::endl;
+        std::cout << Info() << "meansT: " << std::endl;
+        std::cout << mat_.meansT << std::endl << std::endl;
+        std::cout << Info() << "solutionsT: " << std::endl;
+        std::cout << mat_.solutionsT << std::endl << std::endl;
+    }
     return 0;
 }
 
@@ -448,6 +456,7 @@ int MatrixBuilder::loopEventsAndSolveEigenvectors(TTStubReader& reader) {
         }
         setVariableToZero(variables1, variables2, variables3, po_.hitBits);
 
+        // Apply DeltaR correction
         variables1 += ((mat_.solutionsC * variables1)(0,0)) * variables3;
         variables2 += ((mat_.solutionsT * variables2)(0,0)) * variables3;
 
@@ -498,17 +507,16 @@ int MatrixBuilder::loopEventsAndSolveEigenvectors(TTStubReader& reader) {
 
     setRotationToZero(V, nvariables_, po_.hitBits);
 
-    if (verbose_>1) {
-        std::cout << Info() << "sqrt(eigenvalues) of covariances: " << std::endl;
-        std::cout << sqrtEigenvalues << std::endl << std::endl;
-        std::cout << Info() << "eigenvectors^T: " << std::endl;
-        std::cout << V << std::endl << std::endl;
-    }
-
     // Set PCA matrix
     mat_.sqrtEigenvalues = sqrtEigenvalues;
     mat_.V = V;
 
+    if (verbose_>1) {
+        std::cout << Info() << "sqrt(eigenvalues): " << std::endl;
+        std::cout << mat_.sqrtEigenvalues << std::endl << std::endl;
+        std::cout << Info() << "eigenvectors^T: " << std::endl;
+        std::cout << mat_.V << std::endl << std::endl;
+    }
     return 0;
 }
 
@@ -539,7 +547,7 @@ int MatrixBuilder::loopEventsAndSolveD(TTStubReader& reader) {
         }
 
         // _____________________________________________________________________
-        // Calculate V covairance matrix and PV correlation matrix
+        // Calculate V covariance matrix and PV covariance matrix
 
         Eigen::VectorXd variables1 = Eigen::VectorXd::Zero(nvariables_/2);
         Eigen::VectorXd variables2 = Eigen::VectorXd::Zero(nvariables_/2);
@@ -557,6 +565,7 @@ int MatrixBuilder::loopEventsAndSolveD(TTStubReader& reader) {
         }
         setVariableToZero(variables1, variables2, variables3, po_.hitBits);
 
+        // Apply DeltaR correction
         variables1 += ((mat_.solutionsC * variables1)(0,0)) * variables3;
         variables2 += ((mat_.solutionsT * variables2)(0,0)) * variables3;
 
@@ -566,12 +575,10 @@ int MatrixBuilder::loopEventsAndSolveD(TTStubReader& reader) {
         Eigen::VectorXd parameters = Eigen::VectorXd::Zero(nparameters_);
 
         // Get sim info
-        double simCotTheta     = std::sinh(reader.vp_eta->front());
         double simChargeOverPt = float(reader.vp_charge->front())/reader.vp_pt->front();
+        double simCotTheta     = std::sinh(reader.vp_eta->front());
         double simPhi          = reader.vp_phi->front();
         double simVz           = reader.vp_vz->front();
-        //double simC = -0.5 * (0.003 * 3.8 * simChargeOverPt);  // 1/(2 x radius of curvature)
-        //double simT = simCotTheta;
         {
             unsigned ipar = 0;
             parameters(ipar++) = simPhi;
@@ -582,7 +589,7 @@ int MatrixBuilder::loopEventsAndSolveD(TTStubReader& reader) {
 
         // Transform coordinates to principal components
         Eigen::VectorXd principals = Eigen::VectorXd::Zero(nvariables_);
-        principals = mat_.V * variables;  // not using delta here!
+        principals = mat_.V * variables;  // not using deltas of variables here!
 
         // Update mean vectors
         long int nTracks = nKept + 1;
@@ -594,7 +601,7 @@ int MatrixBuilder::loopEventsAndSolveD(TTStubReader& reader) {
             meansP(ipar) += (parameters(ipar) - meansP(ipar))/nTracks;
         }
 
-        // Update covariance matrix
+        // Update covariance matrices
         if (nTracks > 1) {
             for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
                 for (unsigned jvar=0; jvar<nvariables_; ++jvar) {
@@ -615,15 +622,6 @@ int MatrixBuilder::loopEventsAndSolveD(TTStubReader& reader) {
 
     setCovarianceToUnit(covariancesV, nvariables_, po_.hitBits);
 
-    // Find matrix D
-    // D is the transformation from principal components to track parameters
-    Eigen::MatrixXd D = Eigen::MatrixXd::Zero(nparameters_, nvariables_);
-    //D = covariancesPV * covariancesV.inverse();
-    D = (covariancesV.colPivHouseholderQr().solve(covariancesPV.transpose())).transpose();
-
-    Eigen::MatrixXd DV = Eigen::MatrixXd::Zero(nparameters_, nvariables_);
-    DV = D * mat_.V;
-
     if (verbose_>1) {
         std::cout << Info() << "meansV: " << std::endl;
         std::cout << meansV << std::endl << std::endl;
@@ -633,17 +631,27 @@ int MatrixBuilder::loopEventsAndSolveD(TTStubReader& reader) {
         std::cout << covariancesV << std::endl << std::endl;
         std::cout << Info() << "covariancesPV: " << std::endl;
         std::cout << covariancesPV << std::endl << std::endl;
-
-        std::cout << Info() << "covariancesPV * covariancesV^{-1}: " << std::endl;
-        std::cout << D << std::endl << std::endl;
-        std::cout << Info() << "covariancesPV * covariancesV^{-1} * eigenvectors^T: " << std::endl;
-        std::cout << DV << std::endl << std::endl;
     }
+
+    // Find matrix D
+    // D is the transformation from principal components to track parameters
+    Eigen::MatrixXd D = Eigen::MatrixXd::Zero(nparameters_, nvariables_);
+    //D = covariancesPV * covariancesV.inverse();
+    D = (covariancesV.colPivHouseholderQr().solve(covariancesPV.transpose())).transpose();
+
+    Eigen::MatrixXd DV = Eigen::MatrixXd::Zero(nparameters_, nvariables_);
+    DV = D * mat_.V;
 
     // Set PCAMatrix
     mat_.D = D;
     mat_.DV = DV;
 
+    if (verbose_>1) {
+        std::cout << Info() << "covariancesPV * covariancesV^{-1}: " << std::endl;
+        std::cout << mat_.D << std::endl << std::endl;
+        std::cout << Info() << "covariancesPV * covariancesV^{-1} * eigenvectors^T: " << std::endl;
+        std::cout << mat_.DV << std::endl << std::endl;
+    }
     return 0;
 }
 
@@ -651,7 +659,8 @@ int MatrixBuilder::loopEventsAndSolveD(TTStubReader& reader) {
 // Loop over all events and evaluate biases and resolutions
 int MatrixBuilder::loopEventsAndEval(TTStubReader& reader) {
 
-    // Get mean values again
+    // Get mean values
+    Eigen::VectorXd meansX = Eigen::VectorXd::Zero(nvariables_);
     Eigen::VectorXd meansV = Eigen::VectorXd::Zero(nvariables_);
     Eigen::VectorXd meansP = Eigen::VectorXd::Zero(nparameters_);
 
@@ -695,6 +704,7 @@ int MatrixBuilder::loopEventsAndEval(TTStubReader& reader) {
         }
         setVariableToZero(variables1, variables2, variables3, po_.hitBits);
 
+        // Apply DeltaR correction
         variables1 += ((mat_.solutionsC * variables1)(0,0)) * variables3;
         variables2 += ((mat_.solutionsT * variables2)(0,0)) * variables3;
 
@@ -704,12 +714,10 @@ int MatrixBuilder::loopEventsAndEval(TTStubReader& reader) {
         Eigen::VectorXd parameters = Eigen::VectorXd::Zero(nparameters_);
 
         // Get sim info
-        double simCotTheta     = std::sinh(reader.vp_eta->front());
         double simChargeOverPt = float(reader.vp_charge->front())/reader.vp_pt->front();
+        double simCotTheta     = std::sinh(reader.vp_eta->front());
         double simPhi          = reader.vp_phi->front();
         double simVz           = reader.vp_vz->front();
-        double simC = -0.5 * (0.003 * 3.8 * simChargeOverPt);  // 1/(2 x radius of curvature)
-        double simT = simCotTheta;
         {
             unsigned ipar = 0;
             parameters(ipar++) = simPhi;
@@ -718,14 +726,20 @@ int MatrixBuilder::loopEventsAndEval(TTStubReader& reader) {
             parameters(ipar++) = simChargeOverPt;
         }
 
+        // Transform coordinates to principal components
         Eigen::VectorXd principals = Eigen::VectorXd::Zero(nvariables_);
-        principals = mat_.V * variables;  // not using delta here!
+        principals = mat_.V * variables;  // not using deltas of variables here!
 
+        // Transform coordinates to parameters
         Eigen::VectorXd parameters_fit = Eigen::VectorXd::Zero(nparameters_);
-        parameters_fit = mat_.DV * variables;  // not using delta here!
+        parameters_fit = mat_.DV * variables;  // not using deltas of variables here!
 
         // Update mean vectors
         long int nTracks = nKept + 1;
+        for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
+            meansX(ivar) += (variables(ivar) - meansX(ivar))/nTracks;
+        }
+
         for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
             meansV(ivar) += (principals(ivar) - meansV(ivar))/nTracks;
         }
@@ -735,6 +749,8 @@ int MatrixBuilder::loopEventsAndEval(TTStubReader& reader) {
         }
 
         // Collect statistics and fill histograms
+        const double simC = -0.5 * (0.003 * 3.8 * simChargeOverPt);  // 1/(2 x radius of curvature)
+        const double simT = simCotTheta;
         statCT.at(0).fill(((mat_.solutionsC * variables1)(0,0)) - simC);
         statCT.at(1).fill(((mat_.solutionsT * variables2)(0,0)) - simT);
 
@@ -797,8 +813,18 @@ int MatrixBuilder::loopEventsAndEval(TTStubReader& reader) {
     }
 
     // Set PCAMatrix
+    mat_.meansX = meansX;  // after DeltaR correction
     mat_.meansV = meansV;
     mat_.meansP = meansP;
+
+    if (verbose_>1) {
+        std::cout << Info() << "meansX: " << std::endl;
+        std::cout << mat_.meansX << std::endl << std::endl;
+        std::cout << Info() << "meansV: " << std::endl;
+        std::cout << mat_.meansV << std::endl << std::endl;
+        std::cout << Info() << "meansP: " << std::endl;
+        std::cout << mat_.meansP << std::endl << std::endl;
+    }
     return 0;
 }
 
