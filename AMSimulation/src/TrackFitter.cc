@@ -111,6 +111,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 TTRoadComb acomb;
                 acomb.roadRef    = iroad;
                 acomb.combRef    = icomb;
+                acomb.patternRef = reader.vr_patternRef->at(iroad);
                 acomb.ptSegment  = getPtSegment(reader.vr_patternInvPt->at(iroad));
                 acomb.stubRefs   = combinations.at(icomb);
 
@@ -146,12 +147,13 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 TTTrack2 atrack;
                 fitstatus = fitter_->fit(acomb, atrack);
 
-                atrack.setTower    (po_.tower);
-                atrack.setRoadRef  (acomb.roadRef);
-                atrack.setCombRef  (acomb.combRef);
-                atrack.setPtSegment(acomb.ptSegment);
-                atrack.setHitBits  (acomb.hitBits);
-                atrack.setStubRefs (acomb.stubRefs);
+                atrack.setTower     (po_.tower);
+                atrack.setRoadRef   (acomb.roadRef);
+                atrack.setCombRef   (acomb.combRef);
+                atrack.setPatternRef(acomb.patternRef);
+                atrack.setPtSegment (acomb.ptSegment);
+                atrack.setHitBits   (acomb.hitBits);
+                atrack.setStubRefs  (acomb.stubRefs);
 
                 if (atrack.chi2Red() < po_.maxChi2)  // reduced chi^2 = chi^2 / ndof
                     tracks.push_back(atrack);

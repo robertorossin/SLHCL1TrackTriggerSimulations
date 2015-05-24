@@ -10,6 +10,7 @@ namespace slhcl1tt {
 struct TTRoadComb {
     unsigned roadRef;
     unsigned combRef;
+    unsigned patternRef;
     float    ptSegment;
     unsigned hitBits;
 
