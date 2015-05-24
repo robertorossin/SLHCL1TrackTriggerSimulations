@@ -32,7 +32,6 @@ int MatrixBuilder::setupTriggerTower(TString datadir) {
     return 0;
 }
 
-
 // _____________________________________________________________________________
 int MatrixBuilder::bookHistograms() {
     TH1::AddDirectory(kFALSE);
@@ -104,7 +103,6 @@ int MatrixBuilder::bookHistograms() {
     return 0;
 }
 
-
 // _____________________________________________________________________________
 // Set variable to zero according to hit bits
 int MatrixBuilder::setVariableToZero(Eigen::VectorXd& variables1, Eigen::VectorXd& variables2, Eigen::VectorXd& variables3, const unsigned hitBits) {
@@ -119,7 +117,6 @@ int MatrixBuilder::setVariableToZero(Eigen::VectorXd& variables1, Eigen::VectorX
         variables3(i) = 0.;
         return 0;
     }
-
     return 1;
 }
 
@@ -139,7 +136,6 @@ int MatrixBuilder::setRotationToZero(Eigen::MatrixXd& rotation, const unsigned n
         }
         return 0;
     }
-
     return 1;
 }
 
@@ -157,10 +153,8 @@ int MatrixBuilder::setCovarianceToUnit(Eigen::MatrixXd& covariances, const unsig
         }
         return 0;
     }
-
     return 1;
 }
-
 
 // _____________________________________________________________________________
 // Build matrices
@@ -176,17 +170,54 @@ int MatrixBuilder::buildMatrices(TString src) {
     }
 
     // _________________________________________________________________________
-    // Get trigger tower reverse map
-    const std::map<unsigned, bool>& ttrmap = ttmap_ -> getTriggerTowerReverseMap(po_.tower);
-
-
-    // _________________________________________________________________________
-    // Loop over all events (filter)
+    // Loop over all events and filter them
 
     if (verbose_)  std::cout << Info() << "Begin event filtering" << std::endl;
 
-    // Event decisions
-    std::vector<bool> keepEvents;
+    if (loopEventsAndFilter(reader))
+        return 1;
+
+    // _________________________________________________________________________
+    // Loop over all events and solve for C & T (first loop)
+
+    if (verbose_)  std::cout << Info() << "Begin first loop on tracks" << std::endl;
+
+    if (loopEventsAndSolveCT(reader))
+        return 1;
+
+    // _________________________________________________________________________
+    // Loop over all events and solve for eigenvectors (second loop)
+
+    if (verbose_)  std::cout << Info() << "Begin second loop on tracks" << std::endl;
+
+    if (loopEventsAndSolveEigenvectors(reader))
+        return 1;
+
+    // _________________________________________________________________________
+    // Loop over all events and solve for D (third loop)
+
+    if (verbose_)  std::cout << Info() << "Begin third loop on tracks" << std::endl;
+
+    if (loopEventsAndSolveD(reader))
+        return 1;
+
+    // _________________________________________________________________________
+    // Loop over all events and evaluate biases and resolutions (fourth loop)
+
+    if (verbose_)  std::cout << Info() << "Begin fourth loop on tracks" << std::endl;
+
+    if (loopEventsAndEval(reader))
+        return 1;
+
+    return 0;
+}
+
+// _____________________________________________________________________________
+// Loop over all events and filter them
+int MatrixBuilder::loopEventsAndFilter(TTStubReader& reader) {
+
+    // Get trigger tower reverse map
+    const std::map<unsigned, bool>& ttrmap = ttmap_ -> getTriggerTowerReverseMap(po_.tower);
 
     // Bookkeepers
     long int nRead = 0, nKept = 0;
@@ -203,7 +234,7 @@ int MatrixBuilder::buildMatrices(TString src) {
         double simChargeOverPt = float(reader.vp_charge->front())/reader.vp_pt->front();
         if (simChargeOverPt < po_.minInvPt || po_.maxInvPt < simChargeOverPt) {
             ++nRead;
-            keepEvents.push_back(false);
+            keepEvents_.push_back(false);
             continue;
         }
 
@@ -217,14 +248,14 @@ int MatrixBuilder::buildMatrices(TString src) {
         }
         if (ngoodstubs != po_.nLayers) {
             ++nRead;
-            keepEvents.push_back(false);
+            keepEvents_.push_back(false);
             continue;
         }
         assert(nstubs == po_.nLayers);
 
         ++nKept;
         ++nRead;
-        keepEvents.push_back(true);
+        keepEvents_.push_back(true);
     }
 
     if (nRead == 0) {
@@ -233,12 +264,12 @@ int MatrixBuilder::buildMatrices(TString src) {
     }
 
     if (verbose_)  std::cout << Info() << Form("Read: %7ld, kept: %7ld", nRead, nKept) << std::endl;
+    return 0;
+}
 
-
-    // _________________________________________________________________________
-    // Loop over all events (first loop)
-
-    if (verbose_)  std::cout << Info() << "Begin first loop on tracks" << std::endl;
+// _____________________________________________________________________________
+// Loop over all events and solve for C & T
+int MatrixBuilder::loopEventsAndSolveCT(TTStubReader& reader) {
 
     // Mean vector and covariance matrix
     Eigen::VectorXd means = Eigen::VectorXd::Zero(nvariables_);
@@ -251,7 +282,7 @@ int MatrixBuilder::buildMatrices(TString src) {
     Eigen::MatrixXd covariancesT = Eigen::MatrixXd::Zero(1, nvariables_/2);
 
     // Bookkeepers
-    nRead = 0, nKept = 0;
+    long int nRead = 0, nKept = 0;
 
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         if (reader.loadTree(ievt) < 0)  break;
@@ -260,7 +291,7 @@ int MatrixBuilder::buildMatrices(TString src) {
         const unsigned nstubs = reader.vb_modId->size();
         if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
 
-        if (!keepEvents.at(ievt)) {
+        if (!keepEvents_.at(ievt)) {
             ++nRead;
             continue;
         }
@@ -366,18 +397,25 @@ int MatrixBuilder::buildMatrices(TString src) {
         std::cout << solutionsT << std::endl << std::endl;
     }
 
+    // Set PCAMatrix
+    mat_.meansR = meansR_;
+    mat_.meansC = meansC;
+    mat_.meansT = meansT;
+    mat_.solutionsC = solutionsC;
+    mat_.solutionsT = solutionsT;
+    return 0;
+}
 
-    // _________________________________________________________________________
-    // Loop over all events (second loop)
-
-    if (verbose_)  std::cout << Info() << "Begin second loop on tracks" << std::endl;
+// _____________________________________________________________________________
+// Loop over all events and solve for eigenvectors
+int MatrixBuilder::loopEventsAndSolveEigenvectors(TTStubReader& reader) {
 
     // Mean vector and covariance matrix
-    means = Eigen::VectorXd::Zero(nvariables_);  // reset
-    covariances = Eigen::MatrixXd::Zero(nvariables_, nvariables_);  // reset
+    Eigen::VectorXd means = Eigen::VectorXd::Zero(nvariables_);
+    Eigen::MatrixXd covariances = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
 
     // Bookkeepers
-    nRead = 0, nKept = 0;
+    long int nRead = 0, nKept = 0;
 
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         if (reader.loadTree(ievt) < 0)  break;
@@ -386,7 +424,7 @@ int MatrixBuilder::buildMatrices(TString src) {
         const unsigned nstubs = reader.vb_modId->size();
         if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
 
-        if (!keepEvents.at(ievt)) {
+        if (!keepEvents_.at(ievt)) {
             ++nRead;
             continue;
         }
@@ -410,8 +448,8 @@ int MatrixBuilder::buildMatrices(TString src) {
         }
         setVariableToZero(variables1, variables2, variables3, po_.hitBits);
 
-        variables1 += ((solutionsC * variables1)(0,0)) * variables3;
-        variables2 += ((solutionsT * variables2)(0,0)) * variables3;
+        variables1 += ((mat_.solutionsC * variables1)(0,0)) * variables3;
+        variables2 += ((mat_.solutionsT * variables2)(0,0)) * variables3;
 
         Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);
         variables << variables1, variables2;
@@ -467,11 +505,16 @@ int MatrixBuilder::buildMatrices(TString src) {
         std::cout << V << std::endl << std::endl;
     }
 
+    // Set PCA matrix
+    mat_.sqrtEigenvalues = sqrtEigenvalues;
+    mat_.V = V;
 
-    // _________________________________________________________________________
-    // Loop over all events (third loop)
+    return 0;
+}
 
-    if (verbose_)  std::cout << Info() << "Begin third loop on tracks" << std::endl;
+// _____________________________________________________________________________
+// Loop over all events and solve for D
+int MatrixBuilder::loopEventsAndSolveD(TTStubReader& reader) {
 
     // Mean vector and covariance matrix for principal components and track parameters
     Eigen::VectorXd meansV = Eigen::VectorXd::Zero(nvariables_);
@@ -481,7 +524,7 @@ int MatrixBuilder::buildMatrices(TString src) {
     Eigen::MatrixXd covariancesPV = Eigen::MatrixXd::Zero(nparameters_, nvariables_);
 
     // Bookkeepers
-    nRead = 0, nKept = 0;
+    long int nRead = 0, nKept = 0;
 
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         if (reader.loadTree(ievt) < 0)  break;
@@ -490,7 +533,7 @@ int MatrixBuilder::buildMatrices(TString src) {
         const unsigned nstubs = reader.vb_modId->size();
         if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
 
-        if (!keepEvents.at(ievt)) {
+        if (!keepEvents_.at(ievt)) {
             ++nRead;
             continue;
         }
@@ -514,8 +557,8 @@ int MatrixBuilder::buildMatrices(TString src) {
         }
         setVariableToZero(variables1, variables2, variables3, po_.hitBits);
 
-        variables1 += ((solutionsC * variables1)(0,0)) * variables3;
-        variables2 += ((solutionsT * variables2)(0,0)) * variables3;
+        variables1 += ((mat_.solutionsC * variables1)(0,0)) * variables3;
+        variables2 += ((mat_.solutionsT * variables2)(0,0)) * variables3;
 
         Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);
         variables << variables1, variables2;
@@ -539,7 +582,7 @@ int MatrixBuilder::buildMatrices(TString src) {
 
         // Transform coordinates to principal components
         Eigen::VectorXd principals = Eigen::VectorXd::Zero(nvariables_);
-        principals = V * (variables - means);
+        principals = mat_.V * variables;  // not using delta here!
 
         // Update mean vectors
         long int nTracks = nKept + 1;
@@ -579,7 +622,7 @@ int MatrixBuilder::buildMatrices(TString src) {
     D = (covariancesV.colPivHouseholderQr().solve(covariancesPV.transpose())).transpose();
 
     Eigen::MatrixXd DV = Eigen::MatrixXd::Zero(nparameters_, nvariables_);
-    DV = D * V;
+    DV = D * mat_.V;
 
     if (verbose_>1) {
         std::cout << Info() << "meansV: " << std::endl;
@@ -597,15 +640,20 @@ int MatrixBuilder::buildMatrices(TString src) {
         std::cout << DV << std::endl << std::endl;
     }
 
+    // Set PCAMatrix
+    mat_.D = D;
+    mat_.DV = DV;
 
-    // _________________________________________________________________________
-    // Loop over all events (fourth loop)
+    return 0;
+}
 
-    if (verbose_)  std::cout << Info() << "Begin fourth loop on tracks" << std::endl;
+// _____________________________________________________________________________
+// Loop over all events and evaluate biases and resolutions
+int MatrixBuilder::loopEventsAndEval(TTStubReader& reader) {
 
     // Get mean values again
-    meansV = Eigen::VectorXd::Zero(nvariables_);
-    meansP = Eigen::VectorXd::Zero(nparameters_);
+    Eigen::VectorXd meansV = Eigen::VectorXd::Zero(nvariables_);
+    Eigen::VectorXd meansP = Eigen::VectorXd::Zero(nparameters_);
 
     // Statistics
     std::vector<Statistics> statCT(2);
@@ -614,7 +662,7 @@ int MatrixBuilder::buildMatrices(TString src) {
     std::vector<Statistics> statP(nparameters_);
 
     // Bookkeepers
-    nRead = 0, nKept = 0;
+    long int nRead = 0, nKept = 0;
 
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         if (reader.loadTree(ievt) < 0)  break;
@@ -623,7 +671,7 @@ int MatrixBuilder::buildMatrices(TString src) {
         const unsigned nstubs = reader.vb_modId->size();
         if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
 
-        if (!keepEvents.at(ievt)) {
+        if (!keepEvents_.at(ievt)) {
             ++nRead;
             continue;
         }
@@ -647,8 +695,8 @@ int MatrixBuilder::buildMatrices(TString src) {
         }
         setVariableToZero(variables1, variables2, variables3, po_.hitBits);
 
-        variables1 += ((solutionsC * variables1)(0,0)) * variables3;
-        variables2 += ((solutionsT * variables2)(0,0)) * variables3;
+        variables1 += ((mat_.solutionsC * variables1)(0,0)) * variables3;
+        variables2 += ((mat_.solutionsT * variables2)(0,0)) * variables3;
 
         Eigen::VectorXd variables = Eigen::VectorXd::Zero(nvariables_);
         variables << variables1, variables2;
@@ -671,10 +719,10 @@ int MatrixBuilder::buildMatrices(TString src) {
         }
 
         Eigen::VectorXd principals = Eigen::VectorXd::Zero(nvariables_);
-        principals = V * variables;  // not using delta here!
+        principals = mat_.V * variables;  // not using delta here!
 
         Eigen::VectorXd parameters_fit = Eigen::VectorXd::Zero(nparameters_);
-        parameters_fit = DV * variables;  // not using delta here!
+        parameters_fit = mat_.DV * variables;  // not using delta here!
 
         // Update mean vectors
         long int nTracks = nKept + 1;
@@ -687,8 +735,8 @@ int MatrixBuilder::buildMatrices(TString src) {
         }
 
         // Collect statistics and fill histograms
-        statCT.at(0).fill(((solutionsC * variables1)(0,0)) - simC);
-        statCT.at(1).fill(((solutionsT * variables2)(0,0)) - simT);
+        statCT.at(0).fill(((mat_.solutionsC * variables1)(0,0)) - simC);
+        statCT.at(1).fill(((mat_.solutionsT * variables2)(0,0)) - simT);
 
         TString hname;
         for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
@@ -703,7 +751,7 @@ int MatrixBuilder::buildMatrices(TString src) {
                 histograms_[hname]->Fill(principals(ivar));
 
                 hname = Form("npc%i", ivar);
-                histograms_[hname]->Fill((principals(ivar)- meansV(ivar)) / sqrtEigenvalues(ivar));
+                histograms_[hname]->Fill((principals(ivar)- meansV(ivar)) / mat_.sqrtEigenvalues(ivar));
             }
         }
 
@@ -749,38 +797,25 @@ int MatrixBuilder::buildMatrices(TString src) {
     }
 
     // Set PCAMatrix
-    mat_.meansR = meansR_;
-    mat_.meansC = meansC;
-    mat_.meansT = meansT;
-    mat_.solutionsC = solutionsC;
-    mat_.solutionsT = solutionsT;
-    mat_.sqrtEigenvalues = sqrtEigenvalues;
     mat_.meansV = meansV;
     mat_.meansP = meansP;
-    mat_.V = V;
-    mat_.D = D;
-    mat_.DV = DV;
-
-    if (verbose_) {
-        std::cout << Info() << "The matrices are:" << std::endl;
-        mat_.print();
-    }
-
     return 0;
 }
-
 
 // _____________________________________________________________________________
 // Write matrices
 int MatrixBuilder::writeMatrices(TString out) {
+    if (verbose_) {
+        std::cout << Info() << "The matrices are:" << std::endl;
+        mat_.print();
+    }
     mat_.write(out.Data());
 
     return 0;
 }
 
-
 // _____________________________________________________________________________
-// Write matrices
+// Write histograms
 int MatrixBuilder::writeHistograms(TString out) {
     TFile* outfile = TFile::Open(out.ReplaceAll(".txt",".root"), "RECREATE");
     for (std::map<TString, TH1F *>::const_iterator it=histograms_.begin();

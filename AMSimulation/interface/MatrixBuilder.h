@@ -10,6 +10,9 @@ using namespace slhcl1tt;
 #include "TH1F.h"
 #include "TString.h"
 
+namespace slhcl1tt {
+class TTStubReader;
+}
 
 class MatrixBuilder {
   public:
@@ -77,6 +80,16 @@ class MatrixBuilder {
     // Build matrices
     int buildMatrices(TString src);
 
+    int loopEventsAndFilter(TTStubReader& reader);
+
+    int loopEventsAndSolveCT(TTStubReader& reader);
+
+    int loopEventsAndSolveEigenvectors(TTStubReader& reader);
+
+    int loopEventsAndSolveD(TTStubReader& reader);
+
+    int loopEventsAndEval(TTStubReader& reader);
+
     // Write matrices
     int writeMatrices(TString out);
     int writeHistograms(TString out);
@@ -97,6 +110,9 @@ class MatrixBuilder {
     // Matrices
     Eigen::VectorXd meansR_;
     PCAMatrix mat_;
+
+    // Event filter decisions
+    std::vector<bool> keepEvents_;
 
     // Histograms
     std::map<TString, TH1F *>  histograms_;
