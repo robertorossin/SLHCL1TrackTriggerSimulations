@@ -31,11 +31,17 @@ MCTruthAssociator::MCTruthAssociator() {
     //cut_z0_       = 0.0819977   * sigma;
     //cut_d0_       = 1.00000     * sigma;
 
-    cut_invPt_    = 0.002759 * sigma;
-    cut_phi0_     = 0.000646 * sigma;
-    cut_cottheta_ = 0.002695 * sigma;
-    cut_z0_       = 0.08586  * sigma;
-    cut_d0_       = 1.00000  * sigma;
+    //cut_invPt_    = 0.002759 * sigma;
+    //cut_phi0_     = 0.000646 * sigma;
+    //cut_cottheta_ = 0.002695 * sigma;
+    //cut_z0_       = 0.08586  * sigma;
+    //cut_d0_       = 1.00000  * sigma;
+
+    cut_invPt_    = 0.001283 * sigma;
+    cut_phi0_     = 0.000453 * sigma;
+    cut_cottheta_ = 0.002403 * sigma;
+    cut_z0_       = 0.083406 * sigma;
+    cut_d0_       = 1.000000 * sigma;
 }
 
 // _____________________________________________________________________________
@@ -102,7 +108,7 @@ void MCTruthAssociator::associate(std::vector<TrackingParticle>& trkParts, std::
                 if (!foundTheBest) {
                     mcCategories.at(ipart) = ParticleCategory::FOUND;
                     //recoCategories.at(itrack) = TrackCategory::GOOD;
-                    recoCategories.at(itrack) = itrack;
+                    recoCategories.at(itrack) = trkParts.at(ipart).tpId;
                     foundTheBest = true;
 
                 } else {

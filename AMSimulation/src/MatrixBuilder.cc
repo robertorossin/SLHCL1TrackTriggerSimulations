@@ -447,6 +447,8 @@ int MatrixBuilder::buildMatrices(TString src) {
     Eigen::VectorXd sqrtEigenvalues = Eigen::VectorXd::Zero(nvariables_);
     sqrtEigenvalues = eigensolver.eigenvalues();
     for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
+        if (sqrtEigenvalues(ivar) <= 0.)
+            sqrtEigenvalues(ivar) = 0.;
         sqrtEigenvalues(ivar) = std::sqrt(sqrtEigenvalues(ivar));  // take the square root
     }
 
