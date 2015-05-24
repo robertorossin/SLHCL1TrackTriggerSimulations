@@ -3,7 +3,7 @@
 import subprocess
 import sys
 
-input   = "../stubs_tt27_5M.2.root"
+input   = "../stubs_tt27_5M.3.root"
 output  = "matrices_tt27_pt{ptSegment}_hb{hitBits}.txt"
 
 cmd = "amsim -M -i {input} -o {output} -v 2 --minInvPt {minInvPt:.6f} --maxInvPt {maxInvPt:.6f} --hitBits {hitBits} --no-color >& {log}"
