@@ -87,6 +87,9 @@ int TrackFitter::makeTracks(TString src, TString out) {
         for (unsigned iroad=0; iroad<nroads; ++iroad) {
             if (iroad >= (unsigned) po_.maxRoads)  break;
 
+            const unsigned patternRef = reader.vr_patternRef->at(iroad);
+            if (patternRef >= (unsigned) po_.maxPatterns)  continue;
+
             // Get combinations of stubRefs
             std::vector<std::vector<unsigned> > stubRefs = reader.vr_stubRefs->at(iroad);
             for (unsigned ilayer=0; ilayer<stubRefs.size(); ++ilayer) {
@@ -111,7 +114,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 TTRoadComb acomb;
                 acomb.roadRef    = iroad;
                 acomb.combRef    = icomb;
-                acomb.patternRef = reader.vr_patternRef->at(iroad);
+                acomb.patternRef = patternRef;
                 acomb.ptSegment  = getPtSegment(reader.vr_patternInvPt->at(iroad));
                 acomb.stubRefs   = combinations.at(icomb);
 
@@ -224,7 +227,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
                         0.
                     });
 
-                    if (verbose_>2)  std::cout << Debug() << "... ... part: " << ipart << " primary: " << primary << " " << trkParts.back() << std::endl;
+                    if (verbose_>3)  std::cout << Debug() << "... ... part: " << ipart << " primary: " << primary << " " << trkParts.back();
                 }
             }
             truthAssociator_.associate(trkParts, tracks);
