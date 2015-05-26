@@ -22,8 +22,11 @@ class PatternAnalyzer {
       nEvents_(po.maxEvents), verbose_(po.verbose) {
 
         // Initialize
-        ttmap_   = new TriggerTowerMap();
+        ttmap_ = new TriggerTowerMap();
+        ttmap_->read(po_.datadir);
+
         arbiter_ = new SuperstripArbiter();
+        arbiter_->setDefinition(po_.superstrip, po_.tower, ttmap_);
     }
 
     // Destructor
@@ -38,9 +41,6 @@ class PatternAnalyzer {
 
   private:
     // Member functions
-    // Setup trigger tower and superstrip definitions
-    int setupTriggerTower(TString datadir);
-    int setupSuperstrip();
 
     // Load pattern bank
     int loadPatterns(TString bank);

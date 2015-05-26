@@ -7,31 +7,6 @@
 
 
 // _____________________________________________________________________________
-int MatrixTester::setupTriggerTower(TString datadir) {
-    TString csvfile1 = datadir + "trigger_sector_map.csv";
-    TString csvfile2 = datadir + "trigger_sector_boundaries.csv";
-
-    try {
-        ttmap_ -> readTriggerTowerMap(csvfile1);
-
-    } catch (const std::invalid_argument& e) {
-        std::cout << Error() << "Failed to parse: " << csvfile1 << ". What: " << e.what() << std::endl;
-        return 1;
-    }
-
-    try {
-        ttmap_ -> readTriggerTowerBoundaries(csvfile2);
-
-    } catch (const std::invalid_argument& e) {
-        std::cout << Error() << "Failed to parse: " << csvfile2 << ". What: " << e.what() << std::endl;
-        return 1;
-    }
-
-    //ttmap_ -> print();
-    return 0;
-}
-
-// _____________________________________________________________________________
 // Build matrices
 int MatrixTester::testMatrices(TString src) {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events and generating patterns." << std::endl;
@@ -258,10 +233,6 @@ int MatrixTester::testMatrices(TString src) {
 int MatrixTester::run() {
     int exitcode = 0;
     Timing(1);
-
-    exitcode = setupTriggerTower(po_.datadir);
-    if (exitcode)  return exitcode;
-    Timing();
 
     exitcode = testMatrices(po_.input);
     if (exitcode)  return exitcode;

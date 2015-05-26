@@ -37,6 +37,9 @@ class TriggerTowerMap {
     ~TriggerTowerMap() {}
 
     // Functions
+    // Read trigger tower map and boundaries csv files
+    void read(TString datadir);
+
     // Read trigger tower map csv file
     void readTriggerTowerMap(TString csvfile);
 

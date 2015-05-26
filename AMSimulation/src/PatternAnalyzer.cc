@@ -13,45 +13,6 @@ bool sortByInvPt(const std::pair<pattern_type, Attributes *>& lhs, const std::pa
 
 
 // _____________________________________________________________________________
-int PatternAnalyzer::setupTriggerTower(TString datadir) {
-    TString csvfile1 = datadir + "trigger_sector_map.csv";
-    TString csvfile2 = datadir + "trigger_sector_boundaries.csv";
-
-    try {
-        ttmap_ -> readTriggerTowerMap(csvfile1);
-
-    } catch (const std::invalid_argument& e) {
-        std::cout << Error() << "Failed to parse: " << csvfile1 << ". What: " << e.what() << std::endl;
-        return 1;
-    }
-
-    try {
-        ttmap_ -> readTriggerTowerBoundaries(csvfile2);
-
-    } catch (const std::invalid_argument& e) {
-        std::cout << Error() << "Failed to parse: " << csvfile2 << ". What: " << e.what() << std::endl;
-        return 1;
-    }
-
-    //ttmap_ -> print();
-    return 0;
-}
-
-// _____________________________________________________________________________
-int PatternAnalyzer::setupSuperstrip() {
-    try {
-        arbiter_ -> setDefinition(po_.superstrip, po_.tower, ttmap_);
-
-    } catch (const std::invalid_argument& e) {
-        std::cout << Error() << "Failed to set definition: " << po_.superstrip << ". What: " << e.what() << std::endl;
-        return 1;
-    }
-
-    //arbiter_ -> print();
-    return 0;
-}
-
-// _____________________________________________________________________________
 int PatternAnalyzer::loadPatterns(TString bank) {
     if (verbose_)  std::cout << Info() << "Loading patterns from " << bank << std::endl;
 
@@ -431,14 +392,6 @@ int PatternAnalyzer::writePatterns(TString out) {
 int PatternAnalyzer::run() {
     int exitcode = 0;
     Timing(1);
-
-    exitcode = setupTriggerTower(po_.datadir);
-    if (exitcode)  return exitcode;
-    Timing();
-
-    exitcode = setupSuperstrip();
-    if (exitcode)  return exitcode;
-    Timing();
 
     exitcode = loadPatterns(po_.bankfile);
     if (exitcode)  return exitcode;
