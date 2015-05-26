@@ -2,11 +2,13 @@
 #define AMSimulation_TrackFitter_h_
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterOption.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoLinearized.h"
-//#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoToyPCA.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoPCA.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoATF.h"
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoRetina.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoLTF.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/CombinationFactory.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/GhostBuster.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/MCTruthAssociator.h"
 using namespace slhcl1tt;
 
 
@@ -14,76 +16,60 @@ class TrackFitter {
 
   public:
     // Constructor
-    TrackFitter(TrackFitterOption po)
+    TrackFitter(const ProgramOption& po)
     : po_(po),
-      prefixRoad_("AMTTRoads_"), prefixTrack_("AMTTTracks_"), suffix_(""),
-      nEvents_(999999999), maxCombs_(999999999), maxTracks_(999999999),
-      verbose_(1) {
+      nEvents_(po.maxEvents), verbose_(po.verbose),
+      prefixRoad_("AMTTRoads_"), prefixTrack_("AMTTTracks_"), suffix_("") {
 
         // Decide the track fitter to use
-        // fitterLin_    = 0;
-        // fitterATF_    = 0;
-        // fitterRetina_ = 0;
-        // if (po_.mode=="ATF4")      fitterATF_ = new TrackFitterAlgoATF(false);
-        // else if (po_.mode=="ATF5") fitterATF_ = new TrackFitterAlgoATF(true);
-        // else if (po_.mode=="PCA4") fitterLin_ = new TrackFitterAlgoToyPCA();
-        // else if (po_.mode=="RET")  fitterRetina_ = new TrackFitterAlgoRetina();
-	fitter_ = 0;
-        if (po_.mode=="ATF4")      fitter_ = new TrackFitterAlgoATF(false);
-        else if (po_.mode=="ATF5") fitter_ = new TrackFitterAlgoATF(true);
-        //else if (po_.mode=="PCA4") fitter_ = new TrackFitterAlgoToyPCA("matrixVD_0_FirstEstimate.txt");
-        else if (po_.mode=="LTF") fitter_ = new TrackFitterAlgoLinearized();
-        else if (po_.mode=="RET")  fitter_ = new TrackFitterAlgoRetina();
-	else {
-	  std::cout << "Error: unknown fitter type " << po_.mode << std::endl;
-	  throw;
-	}
-        
+        fitter_ = 0;
+        if (po.algo == "PCA4" || po.algo == "PCA5") {
+            fitter_ = new TrackFitterAlgoPCA(po);
+        } else if (po.algo == "ATF4") {
+            fitter_ = new TrackFitterAlgoATF(false);
+        } else if (po.algo == "ATF5") {
+            fitter_ = new TrackFitterAlgoATF(true);
+        } else if (po.algo == "LTF") {
+            fitter_ = new TrackFitterAlgoLTF(po);
+        } else {
+            throw std::invalid_argument("unknown track fitter algo.");
+        }
     }
 
     // Destructor
     ~TrackFitter() {
-        // if (fitterLin_)    delete fitterLin_;
-        // if (fitterATF_)    delete fitterATF_;
-        // if (fitterRetina_) delete fitterRetina_;
-      delete fitter_;
+        if (fitter_)  delete fitter_;
     }
 
-
-    // Setters
-    void setNEvents(long long n)    { if (n != -1)  nEvents_     = n > 0 ? n : 0; }
-    void setMaxCombinations(int n)  { if (n != -1)  maxCombs_    = n > 0 ? n : 0; }
-    void setMaxTracks(int n)        { if (n != -1)  maxTracks_   = n > 0 ? n : 0; }
-    void setVerbosity(int v)        { verbose_ = v; }
-
-    // Getters
-    // none
-
     // Main driver
-    int run(TString src, TString out);
+    int run();
 
 
   private:
     // Member functions
     int makeTracks(TString src, TString out);
 
+    // Program options
+    const ProgramOption po_;
+    long long nEvents_;
+    int verbose_;
+
     // Configurations
-    const TrackFitterOption po_;
     const TString prefixRoad_;
     const TString prefixTrack_;
     const TString suffix_;
 
-    // Program options
-    long long nEvents_;
-    int maxCombs_;   // max number of combinations per road
-    int maxTracks_;  // max number of tracks per event
-    int verbose_;
+    // Track fitter
+    TrackFitterAlgoBase *  fitter_;
 
-    // Track fitters
-    // TrackFitterAlgoToyPCA * fitterLin_;
-    // TrackFitterAlgoATF *        fitterATF_;
-    // TrackFitterAlgoRetina *     fitterRetina_;
-    TrackFitterAlgoBase * fitter_;
+    // Combination factory
+    CombinationFactory combinationFactory_;
+
+    // Ghost buster
+    GhostBuster ghostBuster_;
+
+    // MC truth associator
+    MCTruthAssociator truthAssociator_;
 };
 
 #endif

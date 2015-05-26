@@ -2,9 +2,7 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/PatternBankReader.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubReader.h"
-
-static const unsigned MIN_NGOODSTUBS = 3;
-static const unsigned MAX_NGOODSTUBS = 8;
+#include <fstream>
 
 namespace {
 // Comparator
@@ -66,8 +64,8 @@ int PatternAnalyzer::loadPatterns(TString bank) {
     }
 
     long long npatterns = pbreader.getPatterns();
-    if (npatterns > maxPatterns_)
-        npatterns = maxPatterns_;
+    if (npatterns > po_.maxPatterns)
+        npatterns = po_.maxPatterns;
     assert(npatterns > 0);
 
     // Allocate memory
@@ -83,7 +81,7 @@ int PatternAnalyzer::loadPatterns(TString bank) {
 
     for (long long ipatt=0; ipatt<npatterns; ++ipatt) {
         pbreader.getPattern(ipatt);
-        if (pbreader.pb_frequency < minFrequency_)
+        if (pbreader.pb_frequency < po_.minFrequency)
             break;
 
         assert(pbreader.pb_superstripIds->size() == po_.nLayers);
@@ -92,7 +90,7 @@ int PatternAnalyzer::loadPatterns(TString bank) {
         std::copy(pbreader.pb_superstripIds->begin(), pbreader.pb_superstripIds->end(), patt.begin());
 
         // Insert the pattern
-        ret = patternBank_map_.insert(std::make_pair(patt, &(patternAttributes_.at(ipatt))));
+        ret = patternAttributes_map_.insert(std::make_pair(patt, &(patternAttributes_.at(ipatt))));
 
         if (!ret.second) {
             std::cout << Warning() << "Failed to insert: " << patt << std::endl;
@@ -114,31 +112,6 @@ int PatternAnalyzer::makePatterns(TString src) {
     if (reader.init(src, false)) {
         std::cout << Error() << "Failed to initialize TTStubReader." << std::endl;
         return 1;
-
-    } else {
-        // Only read certain branches
-        TChain* tchain = reader.getChain();
-        tchain->SetBranchStatus("*"                 , 0);
-        tchain->SetBranchStatus("genParts_pt"       , 1);
-        tchain->SetBranchStatus("genParts_eta"      , 1);
-        tchain->SetBranchStatus("genParts_phi"      , 1);
-        tchain->SetBranchStatus("genParts_vx"       , 1);
-        tchain->SetBranchStatus("genParts_vy"       , 1);
-        tchain->SetBranchStatus("genParts_vz"       , 1);
-        tchain->SetBranchStatus("genParts_charge"   , 1);
-      //tchain->SetBranchStatus("TTStubs_x"         , 1);
-      //tchain->SetBranchStatus("TTStubs_y"         , 1);
-        tchain->SetBranchStatus("TTStubs_z"         , 1);
-        tchain->SetBranchStatus("TTStubs_r"         , 1);
-      //tchain->SetBranchStatus("TTStubs_eta"       , 1);
-        tchain->SetBranchStatus("TTStubs_phi"       , 1);
-        tchain->SetBranchStatus("TTStubs_coordx"    , 1);
-        tchain->SetBranchStatus("TTStubs_coordy"    , 1);
-        tchain->SetBranchStatus("TTStubs_trigBend"  , 1);
-      //tchain->SetBranchStatus("TTStubs_roughPt"   , 1);
-      //tchain->SetBranchStatus("TTStubs_clusWidth" , 1);
-        tchain->SetBranchStatus("TTStubs_modId"     , 1);
-      //tchain->SetBranchStatus("TTStubs_tpId"      , 1);
     }
 
     // _________________________________________________________________________
@@ -155,16 +128,15 @@ int PatternAnalyzer::makePatterns(TString src) {
 
 
     // _________________________________________________________________________
-    // Loop over all events
+    // Loop over all events (filter)
 
-    pattern_type patt;
-    patt.fill(0);
+    if (verbose_)  std::cout << Info() << "Begin event filtering" << std::endl;
+
+    // Event decisions
+    std::vector<bool> keepEvents;
 
     // Bookkeepers
     long int nRead = 0, nKept = 0;
-
-    // Cache
-    std::vector<std::pair<float, Attributes *> >  cache;  // save pointer to the attr for every valid track
 
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         if (reader.loadTree(ievt) < 0)  break;
@@ -174,32 +146,11 @@ int PatternAnalyzer::makePatterns(TString src) {
         if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
-        if (nstubs < MIN_NGOODSTUBS) {  // skip if not enough stubs
-            ++nRead;
-            continue;
-        }
-
-        if (nstubs > MAX_NGOODSTUBS) {
-            std::cout << Error() << "Too many stubs: " << nstubs << std::endl;
-            return 1;
-        }
-
-        // Check sim info
-        assert(reader.vp_pt->size() == 1);
-        float simPt           = reader.vp_pt->front();
-        float simEta          = reader.vp_eta->front();
-        float simPhi          = reader.vp_phi->front();
-        //float simVx           = reader.vp_vx->front();
-        //float simVy           = reader.vp_vy->front();
-        float simVz           = reader.vp_vz->front();
-        int   simCharge       = reader.vp_charge->front();
-
-        float simCotTheta     = std::sinh(simEta);
-        float simChargeOverPt = float(simCharge)/simPt;
-
         // Apply track pt requirement
+        float simPt = reader.vp_pt->front();
         if (simPt < po_.minPt || po_.maxPt < simPt) {
             ++nRead;
+            keepEvents.push_back(false);
             continue;
         }
 
@@ -213,9 +164,62 @@ int PatternAnalyzer::makePatterns(TString src) {
         }
         if (ngoodstubs != po_.nLayers) {
             ++nRead;
+            keepEvents.push_back(false);
             continue;
         }
         assert(nstubs == po_.nLayers);
+
+        ++nKept;
+        ++nRead;
+        keepEvents.push_back(true);
+    }
+
+    if (nRead == 0) {
+        std::cout << Error() << "Failed to read any event." << std::endl;
+        return 1;
+    }
+
+    if (verbose_)  std::cout << Info() << Form("Read: %7ld, kept: %7ld", nRead, nKept) << std::endl;
+
+
+    // _________________________________________________________________________
+    // Loop over all events
+
+    if (verbose_)  std::cout << Info() << "Begin first loop on tracks" << std::endl;
+
+    pattern_type patt;
+    patt.fill(0);
+
+    // Save pointer to the attribute for every valid track
+    std::vector<std::pair<float, Attributes *> >  attrs;
+
+    // Bookkeepers
+    nRead = 0, nKept = 0;
+
+    for (long long ievt=0; ievt<nEvents_; ++ievt) {
+        if (reader.loadTree(ievt) < 0)  break;
+        reader.getEntry(ievt);
+
+        const unsigned nstubs = reader.vb_modId->size();
+        if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
+
+        if (!keepEvents.at(ievt)) {
+            ++nRead;
+            continue;
+        }
+
+        // Get sim info
+        assert(reader.vp_pt->size() == 1);
+        float simPt           = reader.vp_pt->front();
+        float simEta          = reader.vp_eta->front();
+        float simPhi          = reader.vp_phi->front();
+        //float simVx           = reader.vp_vx->front();
+        //float simVy           = reader.vp_vy->front();
+        float simVz           = reader.vp_vz->front();
+        int   simCharge       = reader.vp_charge->front();
+
+        float simCotTheta     = std::sinh(simEta);
+        float simChargeOverPt = float(simCharge)/simPt;
 
         // _____________________________________________________________________
         // Start generating patterns
@@ -249,9 +253,9 @@ int PatternAnalyzer::makePatterns(TString src) {
 
         }
 
-        // Find pattern in the bank
-        std::map<pattern_type, Attributes *>::iterator found = patternBank_map_.find(patt);
-        if (found != patternBank_map_.end()) {
+        // Find pattern in the bank, update the attributes
+        std::map<pattern_type, Attributes *>::iterator found = patternAttributes_map_.find(patt);
+        if (found != patternAttributes_map_.end()) {
             Attributes * attr = found->second;
             ++ attr->n;
             attr->invPt.fill(simChargeOverPt);
@@ -259,10 +263,12 @@ int PatternAnalyzer::makePatterns(TString src) {
             attr->phi.fill(simPhi);
             attr->z0.fill(simVz);
 
-            cache.push_back(std::make_pair(simChargeOverPt, attr));
+            attrs.push_back(std::make_pair(simChargeOverPt, attr));
 
         } else {
             //std::cout << Warning() << "Failed to find: " << patt << std::endl;
+
+            keepEvents.at(ievt) = false;
         }
 
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " patt: " << patt << std::endl;
@@ -271,35 +277,33 @@ int PatternAnalyzer::makePatterns(TString src) {
         ++nRead;
     }
 
-    if (verbose_)  std::cout << Info() << Form("Read: %7ld, kept: %7ld", nRead, nKept) << std::endl;
-
 
     // _________________________________________________________________________
     // Sort by mean invPt
 
     // Convert map to vector of pairs
-    const unsigned origSize = patternBank_map_.size();
-    //patternBank_pairs_.reserve(patternBank_map_.size());  // can cause bad_alloc
-    //patternBank_pairs_.insert(patternBank_pairs_.end(), patternBank_map_.begin(), patternBank_map_.end());
+    const unsigned origSize = patternAttributes_map_.size();
+    //patternAttributes_pairs_.reserve(patternAttributes_map_.size());  // can cause bad_alloc
+    //patternAttributes_pairs_.insert(patternAttributes_pairs_.end(), patternAttributes_map_.begin(), patternAttributes_map_.end());
 
-    for (std::map<pattern_type, Attributes *>::const_iterator it = patternBank_map_.begin();
-         it != patternBank_map_.end(); ) {  // should not cause bad_alloc
-        patternBank_pairs_.push_back(*it);
-        it = patternBank_map_.erase(it);
+    for (std::map<pattern_type, Attributes *>::const_iterator it = patternAttributes_map_.begin();
+         it != patternAttributes_map_.end(); ) {  // should not cause bad_alloc
+        patternAttributes_pairs_.push_back(*it);
+        it = patternAttributes_map_.erase(it);
     }
-    assert(patternBank_pairs_.size() == origSize);
+    assert(patternAttributes_pairs_.size() == origSize);
 
     // Clear map and release memory
     std::map<pattern_type, Attributes *> mapEmpty;
-    patternBank_map_.clear();
-    patternBank_map_.swap(mapEmpty);
+    patternAttributes_map_.clear();
+    patternAttributes_map_.swap(mapEmpty);
 
     // Sort by invPt
-    std::stable_sort(patternBank_pairs_.begin(), patternBank_pairs_.end(), sortByInvPt);
+    std::stable_sort(patternAttributes_pairs_.begin(), patternAttributes_pairs_.end(), sortByInvPt);
 
     // Assign sorted pattern id
-    for (unsigned i=0; i<patternBank_pairs_.size(); ++i) {
-        patternBank_pairs_.at(i).second->id = i;
+    for (unsigned i=0; i<patternAttributes_pairs_.size(); ++i) {
+        patternAttributes_pairs_.at(i).second->id = i;
     }
 
 
@@ -307,15 +311,15 @@ int PatternAnalyzer::makePatterns(TString src) {
     // Fill histograms
 
     // CUIDADO: this assumes all the pattern attributes are populated well (ntracks > npatterns)
-    const unsigned npatterns = patternBank_pairs_.size();
-    for (std::vector<std::pair<float, Attributes *> >::const_iterator it=cache.begin();
-         it!=cache.end(); ++it) {
+    const unsigned npatterns = patternAttributes_pairs_.size();
+    for (std::vector<std::pair<float, Attributes *> >::const_iterator it=attrs.begin();
+         it!=attrs.end(); ++it) {
 
         float approx = 1.0 / po_.minPt * (-1. + 2./(npatterns-1) * it->second->id);
         if (it->second->n <= 1)
             std::cout << Warning() << "Too few entries: " << it->second->n << " id: " << it->second->id << std::endl;
         if (verbose_>3)
-            std::cout << Debug() << "... good evt: " << it-cache.begin() << " invPt: " << it->first << " mean: " << it->second->invPt.getMean() << " id: " << it->second->id << " approx: " << approx << std::endl;
+            std::cout << Debug() << "... good evt: " << it-attrs.begin() << " invPt: " << it->first << " mean: " << it->second->invPt.getMean() << " id: " << it->second->id << " approx: " << approx << std::endl;
 
         // Mean is like a measured quantity. Usually difference is defined as "measured" - "true"
         histogram2Ds["diff_invPt_vs_invPt1"]->Fill(it->first, it->second->invPt.getMean() - it->first);
@@ -323,6 +327,20 @@ int PatternAnalyzer::makePatterns(TString src) {
         histogramPRs["diff_invPt_pr_invPt1"]->Fill(it->first, it->second->invPt.getMean() - it->first);
         histogramPRs["diff_invPt_pr_invPt2"]->Fill(it->first, approx - it->first);
     }
+
+
+    // _________________________________________________________________________
+    // Dump event decisions
+
+    TString out = "keepEvents.txt";
+    std::ofstream outfile(out.Data());
+    if (!outfile) {
+        std::cout << Error() << "Unable to open " << out << std::endl;
+        return 1;
+    }
+    for (unsigned i=0; i<keepEvents.size(); ++i)
+        outfile << keepEvents.at(i) << std::endl;
+    outfile.close();
 
     return 0;
 }
@@ -350,17 +368,20 @@ int PatternAnalyzer::writePatterns(TString out) {
 
     // _________________________________________________________________________
     // Save pattern bank
-    const long long npatterns = patternBank_pairs_.size();
+    const long long npatterns = patternAttributes_pairs_.size();
+
+    // Bookkeepers
+    long int nKept = 0;
 
     for (long long ipatt=0; ipatt<npatterns; ++ipatt) {
-        if (verbose_>1 && ipatt%100==0) {
-            std::cout << Debug() << Form("... Writing event: %7lld", ipatt) << std::endl;
+        if (verbose_>1 && ipatt%1000==0) {
+            std::cout << Debug() << Form("... Writing event: %7lld, total freq: %7lu", ipatt, nKept) << std::endl;
         }
 
-        const Attributes * attr = patternBank_pairs_.at(ipatt).second;
+        const Attributes * attr = patternAttributes_pairs_.at(ipatt).second;
 
         writer.pb_superstripIds->clear();
-        const pattern_type& patt = patternBank_pairs_.at(ipatt).first;
+        const pattern_type& patt = patternAttributes_pairs_.at(ipatt).first;
         for (unsigned ilayer=0; ilayer<po_.nLayers; ++ilayer) {
             writer.pb_superstripIds->push_back(patt.at(ilayer));
         }
@@ -377,6 +398,8 @@ int PatternAnalyzer::writePatterns(TString out) {
 
         writer.fillPatternBank();
         writer.fillPatternAttributes();
+
+        nKept += attr->n;
     }
 
     // _________________________________________________________________________
@@ -405,11 +428,11 @@ int PatternAnalyzer::writePatterns(TString out) {
 
 // _____________________________________________________________________________
 // Main driver
-int PatternAnalyzer::run(TString src, TString bank, TString datadir, TString out) {
+int PatternAnalyzer::run() {
     int exitcode = 0;
     Timing(1);
 
-    exitcode = setupTriggerTower(datadir);
+    exitcode = setupTriggerTower(po_.datadir);
     if (exitcode)  return exitcode;
     Timing();
 
@@ -417,15 +440,15 @@ int PatternAnalyzer::run(TString src, TString bank, TString datadir, TString out
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = loadPatterns(bank);
+    exitcode = loadPatterns(po_.bankfile);
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = makePatterns(src);
+    exitcode = makePatterns(po_.input);
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = writePatterns(out);
+    exitcode = writePatterns(po_.output);
     if (exitcode)  return exitcode;
     Timing();
 

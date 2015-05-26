@@ -1,18 +1,14 @@
+<export>
+</export>
 <environment>
   <bin   name="TestNTuple" file="TestNTuple.cpp">
     <flags   TEST_RUNNER_ARGS=" /bin/bash SLHCL1TrackTriggerSimulations/NTupleTools/test runtests_ntuple.sh"/>
     <use   name="FWCore/Utilities"/>
   </bin>
-  <library   file="*.cc" name="SLHCL1TrackTriggerSimulationsNTupleToolsTests">
-    <flags   EDM_PLUGIN="1"/>
-    <flags   CXXFLAGS="-Wno-error=unused-but-set-variable -Wno-error=unused-variable"/>
-    <use   name="FWCore/ParameterSet"/>
-    <!--use   name="FWCore/Framework"/-->
-    <use   name="CommonTools/UtilAlgos"/>
-    <use   name="DataFormats/Common"/>
-    <use   name="Geometry/Records"/>
-    <use   name="Geometry/TrackerGeometryBuilder"/>
-    <use   name="clhep"/>
-    <use   name="root"/>
-  </library>
 </environment>
+
+<library   file="*.cc" name="SLHCL1TrackTriggerSimulations_tests">
+  <flags   CXXFLAGS="-Wno-error=unused-but-set-variable -Wno-error=unused-variable"/>
+  <use   name="SLHCL1TrackTriggerSimulations/NTupleTools"/>
+  <flags   EDM_PLUGIN="1"/>
+</library>

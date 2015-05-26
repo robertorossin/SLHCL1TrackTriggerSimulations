@@ -14,10 +14,10 @@
 #define __LinearizedTrackFitting__Statistics__
 
 class Statistics {
-public:
-    long int nEntries;
-    double mean;
-    double variance;
+  public:
+    long int n_;
+    double mean_;
+    double variance_;
 
     Statistics();
     ~Statistics() {}
@@ -28,6 +28,25 @@ public:
     double   getMean()      const;
     double   getVariance()  const;
     double   getSigma()     const;
+};
+
+class Statistics2 {
+  public:
+    long int n_;
+    double mean1_;
+    double mean2_;
+    double covariance_;
+
+    Statistics2();
+    ~Statistics2() {}
+
+    void fill(double x, double y);
+
+    long int getEntries()     const;
+    double   getMeanX()       const;
+    double   getMeanY()       const;
+    double   getCovariance()  const;
+    double   getSigma()       const;
 };
 
 #endif /* defined(__LinearizedTrackFitting__Statistics__) */

@@ -2,8 +2,7 @@
 #define AMSimulationIO_TTStubReader_h_
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/BasicReader.h"
-#include "TObjArray.h"
-#include "TTreeFormula.h"
+
 
 namespace slhcl1tt {
 
@@ -14,13 +13,6 @@ class TTStubReader : public BasicReader {
     ~TTStubReader();
 
     int init(TString src, bool full=true);
-
-    TTreeFormula* addFormula(TString formula);
-
-    Long64_t loadTree(Long64_t entry);
-
-  protected:
-    TObjArray ttformulas;
 };
 
 

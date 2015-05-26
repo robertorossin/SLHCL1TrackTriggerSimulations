@@ -112,19 +112,21 @@ int NTupleMaker::writeTree(TString out) {
         connectors.back()->connect(chain_roads_);
     }
 
-    // FIXME: tracks are commented out for now
-    //chain_tracks_->SetBranchStatus("*", 0);
-    //chain_tracks_->SetBranchStatus("AMTTTracks_*", 1);
-    //TObjArray* branches_tracks = chain_tracks_->GetListOfBranches();
-    //for (int i=0; i<branches_tracks->GetEntries(); ++i) {
-    //    TBranch* branch = (TBranch*) branches_tracks->At(i);
-    //    if (!chain_tracks_->GetBranchStatus(branch->GetName()))  continue;
-    //    makeConnector(branch, ttree);
-    //    connectors.back()->connect(chain_tracks_);
-    //}
+    chain_tracks_->SetBranchStatus("*", 0);
+    chain_tracks_->SetBranchStatus("AMTTTracks_*", 1);
+    TObjArray* branches_tracks = chain_tracks_->GetListOfBranches();
+    for (int i=0; i<branches_tracks->GetEntries(); ++i) {
+        TBranch* branch = (TBranch*) branches_tracks->At(i);
+        if (!chain_tracks_->GetBranchStatus(branch->GetName()))  continue;
+        makeConnector(branch, ttree);
+        connectors.back()->connect(chain_tracks_);
+    }
 
     // _________________________________________________________________________
     // Loop over all events
+
+    // Bookkeepers
+    long int nRead = 0;
 
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         Long64_t local_entry = chain_->LoadTree(ievt);  // for TChain
@@ -134,13 +136,19 @@ int NTupleMaker::writeTree(TString out) {
         assert(chain_roads_->LoadTree(ievt) >= 0);
         chain_roads_->GetEntry(ievt);
 
-        // FIXME: tracks are commented out for now
-        //assert(chain_tracks_->LoadTree(ievt) >= 0);
-        //chain_tracks_->GetEntry(ievt);
+        assert(chain_tracks_->LoadTree(ievt) >= 0);
+        chain_tracks_->GetEntry(ievt);
 
         if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Writing event: %7lld", ievt) << std::endl;
 
         ttree->Fill();
+
+        ++nRead;
+    }
+
+    if (nRead == 0) {
+        std::cout << Error() << "Failed to read any event." << std::endl;
+        return 1;
     }
 
     tfile->Write();
@@ -151,7 +159,7 @@ int NTupleMaker::writeTree(TString out) {
 
 
 // _____________________________________________________________________________
-// Private functions
+// Connect branch
 
 // TypedBranchConnector constructor
 template <class T>
@@ -282,25 +290,23 @@ void NTupleMaker::makeConnector(const TBranch* branch, TTree* tree) {
 
 // _____________________________________________________________________________
 // Main driver
-int NTupleMaker::run(TString src, TString roadfile, TString trackfile, TString out) {
-    gROOT->ProcessLine("#include <vector>");  // how is it not loaded?
-
+int NTupleMaker::run() {
     int exitcode = 0;
     Timing(1);
 
-    exitcode = readRoads(roadfile);
+    exitcode = readRoads(po_.roadfile);
     if (exitcode)  return exitcode;
     Timing();
 
-    //exitcode = readTracks(trackfile);
-    //if (exitcode)  return exitcode;
-    //Timing();
-
-    exitcode = readFile(src);
+    exitcode = readTracks(po_.trackfile);
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = writeTree(out);
+    exitcode = readFile(po_.input);
+    if (exitcode)  return exitcode;
+    Timing();
+
+    exitcode = writeTree(po_.output);
     if (exitcode)  return exitcode;
     Timing();
 

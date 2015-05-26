@@ -7,6 +7,7 @@
 #include "TROOT.h"
 #include "TString.h"
 #include "TTree.h"
+#include <cassert>
 #include <memory>
 #include <vector>
 
@@ -21,7 +22,10 @@ class BasicReader {
 
     int init(TString src, bool full=true);
 
-    void nullStubs(const std::vector<bool>& nulling);
+    template <typename T>
+    void nullVectorElements(std::vector<T>* v, const std::vector<bool>& nulling);
+
+    void nullStubs(const std::vector<bool>& nulling, bool full=true);
 
     Long64_t loadTree(Long64_t entry) { return tchain->LoadTree(entry); }
 
@@ -49,7 +53,8 @@ class BasicReader {
     std::vector<float> *          vb_coordy;
     std::vector<float> *          vb_trigBend;
     std::vector<float> *          vb_roughPt;
-    std::vector<float> *          vb_clusWidth;
+    std::vector<float> *          vb_clusWidth0;
+    std::vector<float> *          vb_clusWidth1;
     std::vector<unsigned> *       vb_modId;
     std::vector<int> *            vb_tpId;
 
@@ -75,6 +80,18 @@ class BasicWriter {
     TTree* ttree;
     const int verbose_;
 };
+
+
+// _____________________________________________________________________________
+// Template implementation
+template <typename T>
+void BasicReader::nullVectorElements(std::vector<T>* v, const std::vector<bool>& nulling) {
+    assert(v->size() == nulling.size());
+    for (unsigned i=0; i<nulling.size(); ++i) {
+        if (nulling.at(i))
+            v->at(i) = 0;
+    }
+}
 
 }  // namespace slhcl1tt
 
