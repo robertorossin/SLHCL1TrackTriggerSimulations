@@ -14,28 +14,37 @@ bool sortByPt(const TrackingParticle& lhs, const TrackingParticle& rhs) {
 }
 
 bool sortByMatchQuality(const std::pair<unsigned, float>& lhs, const std::pair<unsigned, float>& rhs) {
-    return lhs.second < rhs.second;
+    return lhs.second < rhs.second;  // smaller is better
 }
 
-float diff(float lhs, float rhs) {
+float absDiff(float lhs, float rhs) {
     return std::abs(lhs - rhs);
+}
+
+float squaredNormDiff(float lhs, float rhs, float scale) {
+    return std::pow((lhs - rhs)/scale, 2.0);
 }
 }
 
 // _____________________________________________________________________________
 MCTruthAssociator::MCTruthAssociator() {
-    const float sigma = 5.;
-    //cut_invPt_    = 0.000165559 * sigma;
-    //cut_phi0_     = 7.29527e-05 * sigma;
-    //cut_cottheta_ = 0.00215212  * sigma;
-    //cut_z0_       = 0.0819977   * sigma;
-    //cut_d0_       = 1.00000     * sigma;
+    //rms_invPt_    = 0.000165559;
+    //rms_phi0_     = 7.29527e-05;
+    //rms_cottheta_ = 0.00215212 ;
+    //rms_z0_       = 0.0819977  ;
+    //rms_d0_       = 1.00000    ;
 
-    cut_invPt_    = 0.002759 * sigma;
-    cut_phi0_     = 0.000646 * sigma;
-    cut_cottheta_ = 0.002695 * sigma;
-    cut_z0_       = 0.08586  * sigma;
-    cut_d0_       = 1.00000  * sigma;
+    //rms_invPt_    = 0.002759;
+    //rms_phi0_     = 0.000646;
+    //rms_cottheta_ = 0.002695;
+    //rms_z0_       = 0.08586 ;
+    //rms_d0_       = 1.00000 ;
+
+    rms_invPt_    = 0.001283;
+    rms_phi0_     = 0.000453;
+    rms_cottheta_ = 0.002403;
+    rms_z0_       = 0.083406;
+    rms_d0_       = 1.000000;
 }
 
 // _____________________________________________________________________________
@@ -49,24 +58,35 @@ void MCTruthAssociator::associate(std::vector<TrackingParticle>& trkParts, std::
 
     // Create the map for matching
     std::map<unsigned, std::vector<std::pair<unsigned, float> > > matches;  // key=ipart, value=vector of (itrack, quality) pair
-    for (unsigned ipart=0; ipart<nparts; ++ipart) {
-        matches[ipart] = std::vector<std::pair<unsigned, float> >();
-    }
 
     // Loop on all tracking particles
     for (unsigned ipart=0; ipart<nparts; ++ipart) {
         const TrackingParticle& trkPart = trkParts.at(ipart);
+        assert(trkParts.at(ipart).tpId >= 0);
+
+        std::vector<std::pair<unsigned, float> >& ipart_matches = matches[ipart];
+        assert(ipart_matches.size() == 0);
 
         // Loop on all reconstructed tracks
         for (unsigned itrack=0; itrack<ntracks; ++itrack) {
             const TTTrack2& track = tracks.at(itrack);
+            float quality = 999.;  // smaller is better
 
-            if (accept(trkPart, track)) {
-                float quality = diff(trkPart.invPt   , track.invPt());  // using diff in invPt as quality
-                matches.at(ipart).push_back(std::make_pair(itrack, quality));
+            if (accept(trkPart, track, quality)) {
+                ipart_matches.push_back(std::make_pair(itrack, quality));
             }
         }
     }
+
+    // Debug
+    //for (unsigned ipart=0; ipart<nparts; ++ipart) {
+    //    const std::vector<std::pair<unsigned, float> >& ipart_matches = matches.at(ipart);
+    //    for (unsigned imatch=0; imatch<ipart_matches.size(); ++imatch) {
+    //        unsigned itrack = ipart_matches.at(imatch).first;
+    //        float quality = ipart_matches.at(imatch).second;
+    //        std::cout << "ipart: " << ipart << " itrack: " << itrack << " quality: " << quality << std::endl;
+    //    }
+    //}
 
     std::vector<int> mcCategories(nparts, ParticleCategory::NOTFOUND);
     std::vector<int> recoCategories(ntracks, TrackCategory::FAKE);
@@ -86,19 +106,22 @@ void MCTruthAssociator::associate(std::vector<TrackingParticle>& trkParts, std::
 
                 //if (recoCategories.at(itrack) == TrackCategory::GOOD)
                 //    continue;
-                if (recoCategories.at(itrack) > 0)
+                if (recoCategories.at(itrack) >= 0)
                     continue;
 
                 if (!foundTheBest) {
                     mcCategories.at(ipart) = ParticleCategory::FOUND;
                     //recoCategories.at(itrack) = TrackCategory::GOOD;
-                    recoCategories.at(itrack) = itrack;
+                    recoCategories.at(itrack) = trkParts.at(ipart).tpId;
                     foundTheBest = true;
 
                 } else {
                     mcCategories.at(ipart) = ParticleCategory::FOUND;
                     recoCategories.at(itrack) = TrackCategory::DUPLICATE;
                 }
+
+                // Debug
+                //std::cout << "ipart: " << ipart << " itrack: " << itrack << " quality: " << ipart_matches.at(imatch).second << " chi2Red: " << tracks.at(itrack).chi2()/tracks.at(itrack).ndof() << " ndof: " << tracks.at(itrack).ndof() << " patternRef: " << tracks.at(itrack).patternRef() << " mcCategory: " << mcCategories.at(ipart) << " recoCategoy: " << recoCategories.at(itrack) << std::endl;
             }
         }
     }
@@ -132,18 +155,23 @@ void MCTruthAssociator::associate(std::vector<TrackingParticle>& trkParts, std::
 }
 
 // _____________________________________________________________________________
-bool MCTruthAssociator::accept(const TrackingParticle& trkPart, const TTTrack2& track) {
-    if ((diff(trkPart.invPt   , track.invPt())    < cut_invPt_   ) &&
-        (diff(trkPart.phi0    , track.phi0())     < cut_phi0_    ) &&
-        (diff(trkPart.cottheta, track.cottheta()) < cut_cottheta_) &&
-        (diff(trkPart.z0      , track.z0())       < cut_z0_      ) &&
-        (diff(trkPart.d0      , track.d0())       < cut_d0_      )) {
-        return true;
-    }
-    return false;
+bool MCTruthAssociator::accept(const TrackingParticle& trkPart, const TTTrack2& track, float& quality) {
+    static const float sigma = 5.;
+    bool acc =  (absDiff(trkPart.invPt   , track.invPt()   ) < (rms_invPt_    * sigma)) &&
+                (absDiff(trkPart.phi0    , track.phi0()    ) < (rms_phi0_     * sigma)) &&
+                (absDiff(trkPart.cottheta, track.cottheta()) < (rms_cottheta_ * sigma)) &&
+                (absDiff(trkPart.z0      , track.z0()      ) < (rms_z0_       * sigma)) &&
+                (absDiff(trkPart.d0      , track.d0()      ) < (rms_d0_       * sigma));
+
+    quality = squaredNormDiff(trkPart.invPt   , track.invPt()   , rms_invPt_   ) +
+              squaredNormDiff(trkPart.phi0    , track.phi0()    , rms_phi0_    ) +
+              squaredNormDiff(trkPart.cottheta, track.cottheta(), rms_cottheta_) +
+              squaredNormDiff(trkPart.z0      , track.z0()      , rms_z0_      ) +
+              squaredNormDiff(trkPart.d0      , track.d0()      , rms_d0_      );
+    return acc;
 }
 
 // _____________________________________________________________________________
 void MCTruthAssociator::print() {
-    std::cout << "cuts on invPt: " << cut_invPt_ << " phi0: " << cut_phi0_ << " cottheta: " << cut_cottheta_ << " z0: " << cut_z0_ << " d0: " << cut_d0_ << std::endl;
+    std::cout << "rms invPt: " << rms_invPt_ << " phi0: " << rms_phi0_ << " cottheta: " << rms_cottheta_ << " z0: " << rms_z0_ << " d0: " << rms_d0_ << std::endl;
 }

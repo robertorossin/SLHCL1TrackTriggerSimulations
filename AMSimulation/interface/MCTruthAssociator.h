@@ -44,7 +44,7 @@ class MCTruthAssociator {
 
     void associate(std::vector<TrackingParticle>& trkParts, std::vector<TTTrack2>& tracks);
 
-    bool accept(const TrackingParticle& trkPart, const TTTrack2& track);
+    bool accept(const TrackingParticle& trkPart, const TTTrack2& track, float& quality);
 
     // Debug
     void print();
@@ -52,11 +52,11 @@ class MCTruthAssociator {
   private:
 
     // Member data
-    float cut_invPt_;
-    float cut_phi0_;
-    float cut_cottheta_;
-    float cut_z0_;
-    float cut_d0_;
+    float rms_invPt_;
+    float rms_phi0_;
+    float rms_cottheta_;
+    float rms_z0_;
+    float rms_d0_;
 
 };
 

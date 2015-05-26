@@ -4,7 +4,7 @@
 namespace slhcl1tt {
 
 std::ostream& operator<<(std::ostream& o, const TTRoadComb& comb) {
-    o << "Road no: " << comb.roadRef << " comb no: " << comb.combRef << " ptSegment: " << comb.ptSegment << " hitBits: " << comb.hitBits << " stubs: (";
+    o << "roadRef: " << comb.roadRef << " combRef: " << comb.combRef << " patternRef: " << comb.patternRef << " ptSegment: " << comb.ptSegment << " hitBits: " << comb.hitBits << " stubs: (";
     for (unsigned i=0; i<comb.stubRefs.size(); ++i)
         std::cout << "(" << comb.stubs_r.at(i) << "," << comb.stubs_phi.at(i) << "," << comb.stubs_z.at(i) << "," << comb.stubs_bool.at(i) << "), ";
     o << ")" << std::endl;

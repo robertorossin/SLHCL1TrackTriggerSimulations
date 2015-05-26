@@ -42,13 +42,15 @@ void insertSorted(RandomAccessIterator first, Size len, Size pos, const T value)
 }
 
 float calcIdealPhi(float simPhi, float simChargeOverPt, float r) {
-    static const float c = 0.3*3.8*1e-2/2.0;
-    //return simPhi - c * r * simChargeOverPt;
-    return simPhi - std::asin(c * r * simChargeOverPt);
+    static const float mPtFactor = 0.3*3.8*1e-2/2.0;
+    //return simPhi - mPtFactor * r * simChargeOverPt;
+    return simPhi - std::asin(mPtFactor * r * simChargeOverPt);
 }
 
-float calcIdealZ(float simVz, float simCotTheta, float r) {
-    return simVz + r * simCotTheta;
+float calcIdealZ(float simVz, float simCotTheta, float simChargeOverPt, float r) {
+    static const float mPtFactor = 0.3*3.8*1e-2/2.0;
+    //return simVz + r * simCotTheta;
+    return simVz + (1.0 / (mPtFactor * simChargeOverPt) * std::asin(mPtFactor * r * simChargeOverPt)) * simCotTheta;
 }
 }
 
@@ -64,9 +66,6 @@ int StubCleaner::cleanStubs(TString src, TString out) {
         std::cout << Error() << "Failed to initialize TTStubReader." << std::endl;
         return 1;
     }
-
-    // For event selection
-    TTreeFormula* ttf_event = reader.addFormula(eventSelect_);
 
     // For writing
     TTStubWriter writer(verbose_);
@@ -109,11 +108,6 @@ int StubCleaner::cleanStubs(TString src, TString out) {
         // Events that fail don't exit the loop immediately, so that event info
         // can still be printed when verbosity is turned on.
         bool keep = true;
-
-        // Check event selection
-        int ndata = ttf_event->GetNdata();
-        if (ndata)
-            keep = (ttf_event->EvalInstance() != 0);
 
         // Check min # of stubs
         bool require = (nstubs >= MIN_NGOODSTUBS);
@@ -167,7 +161,7 @@ int StubCleaner::cleanStubs(TString src, TString out) {
             // CUIDADO: simVx and simVy are currently not used in the calculation
             //          therefore d0 is assumed to be zero, and z0 is assumed to be equal to vz
             float idealPhi = calcIdealPhi(simPhi, simChargeOverPt, stub_r);
-            float idealZ   = calcIdealZ(simVz, simCotTheta, stub_r);
+            float idealZ   = calcIdealZ(simVz, simCotTheta, simChargeOverPt, stub_r);
             float idealR   = stub_r;
 
             if (lay16 >= 6) {  // for endcap

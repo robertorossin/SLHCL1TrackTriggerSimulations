@@ -7,6 +7,7 @@
 #include "TROOT.h"
 #include "TString.h"
 #include "TTree.h"
+#include <cassert>
 #include <memory>
 #include <vector>
 
@@ -20,6 +21,9 @@ class BasicReader {
     ~BasicReader();
 
     int init(TString src, bool full=true);
+
+    template <typename T>
+    void nullVectorElements(std::vector<T>* v, const std::vector<bool>& nulling);
 
     void nullStubs(const std::vector<bool>& nulling, bool full=true);
 
@@ -76,6 +80,18 @@ class BasicWriter {
     TTree* ttree;
     const int verbose_;
 };
+
+
+// _____________________________________________________________________________
+// Template implementation
+template <typename T>
+void BasicReader::nullVectorElements(std::vector<T>* v, const std::vector<bool>& nulling) {
+    assert(v->size() == nulling.size());
+    for (unsigned i=0; i<nulling.size(); ++i) {
+        if (nulling.at(i))
+            v->at(i) = 0;
+    }
+}
 
 }  // namespace slhcl1tt
 

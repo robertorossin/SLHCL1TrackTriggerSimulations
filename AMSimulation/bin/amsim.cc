@@ -15,7 +15,8 @@
 int main(int argc, char **argv) {
 
     // Log the input arguments
-    std::cout << "amsim arguments << ";
+    std::cout << Color("lgreenb") << "Command:" << EndColor() << std::endl;
+    std::cout << argv[0] << " ";
     for(int i = 1; i < argc-1; ++i) {
         std::cout << argv[i] << " ";
     }
@@ -102,7 +103,7 @@ int main(int argc, char **argv) {
         ("hitBits"      , po::value<unsigned>(&option.hitBits)->default_value(0), "Specify hit bits (0: all hit, 1: miss layer 1, ..., 6: miss layer 6)")
 
         // Only for track fitting
-        ("maxChi2"      , po::value<float>(&option.maxChi2)->default_value(999.), "Specify maximum reduced chi-squared")
+        ("maxChi2"      , po::value<float>(&option.maxChi2)->default_value(5.), "Specify maximum reduced chi-squared")
         ("minNdof"      , po::value<int>(&option.minNdof)->default_value(1), "Specify minimum degree of freedom")
         ("maxCombs"     , po::value<int>(&option.maxCombs)->default_value(999999999), "Specfiy max number of combinations per road")
         ("maxTracks"    , po::value<int>(&option.maxTracks)->default_value(999999999), "Specfiy max number of tracks per event")

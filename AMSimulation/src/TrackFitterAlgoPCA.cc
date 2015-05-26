@@ -18,10 +18,11 @@ int TrackFitterAlgoPCA::loadConstants() {
         for (unsigned j=0; j<PCA_NHITBITS; ++j) {
             std::string filename = Form("matrix/matrices_tt%i_pt%i_hb%i.txt", tower_, i, j);
 
-            PCAMatrix matrix;
-            matrix.read(datadir_ + filename, nvariables_, nparameters_);
+            PCAMatrix mat;
+            mat.read(datadir_ + filename);
+            assert(mat.nvariables == nvariables_ && mat.nparameters == nparameters_);
 
-            matrices.push_back(matrix);
+            matrices.push_back(mat);
         }
     }
 
@@ -61,30 +62,34 @@ int TrackFitterAlgoPCA::fit(const TTRoadComb& acomb, TTTrack2& atrack) {
     parameters_fit = mat.DV * variables;
     parameters_fit -= mat.meansP;
 
-    unsigned ndof = nvariables_ - nparameters_;
+    unsigned begin_ivar = 0;
     if (1 <= acomb.hitBits && acomb.hitBits <= 6) {
         if (nvariables_ == 6 * 2)
-            ndof -= 2;
+            begin_ivar = 2;
         else if (nvariables_ == 6)
-            ndof -= 1;
+            begin_ivar = 1;
     }
 
     double chi2 = 0.;
-    for (unsigned i=0; i<ndof; ++i) {
-        chi2 += (principals(i)/mat.sqrtEigenvalues(i))*(principals(i)/mat.sqrtEigenvalues(i));
+    unsigned ndof = 0;
+    for (unsigned ivar=begin_ivar; ivar<(nvariables_ - nparameters_); ++ivar) {
+        assert(mat.sqrtEigenvalues(ivar) > 0.);
+        chi2 += (principals(ivar)/mat.sqrtEigenvalues(ivar))*(principals(ivar)/mat.sqrtEigenvalues(ivar));
+        ndof += 1;
     }
+    assert(ndof == 3 || ndof == 4 || ndof == 6 || ndof == 8);
 
-    double rinv      = 0.003 * 3.8 * parameters_fit(3);
-    double phi0      = parameters_fit(0);
-    double cottheta0 = parameters_fit(1);
-    double z0        = parameters_fit(2);
-    double d0        = 0.;
-
-    atrack.setTrackParams(rinv, phi0, cottheta0, z0, d0, chi2, ndof, 0., 0.);
+    //void setTrackParams(float rinv, float phi0, float cottheta, float z0, float d0,
+    //                    float chi2, int ndof, float chi2_phi, float chi2_z)
+    atrack.setTrackParams(0.003 * 3.8 * parameters_fit(3), parameters_fit(0), parameters_fit(1), parameters_fit(2), 0.,
+                          chi2, ndof, 0., 0.);
 
     std::vector<float> principals_vec;
     for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
-        principals_vec.push_back(principals(ivar));
+        if (mat.sqrtEigenvalues(ivar) <= 0.)
+            principals_vec.push_back(0.);
+        else
+            principals_vec.push_back(principals(ivar)/mat.sqrtEigenvalues(ivar));
     }
     atrack.setPrincipals(principals_vec);
 

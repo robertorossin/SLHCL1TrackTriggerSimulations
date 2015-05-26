@@ -67,7 +67,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
         reader.getEntry(ievt);
 
         const unsigned nroads = reader.vr_patternRef->size();
-        if (verbose_>1 && ievt%1000==0)  std::cout << Debug() << Form("... Processing event: %7lld, fitting: %7ld", ievt, nKept) << std::endl;
+        if (verbose_>1 && ievt%100==0)  std::cout << Debug() << Form("... Processing event: %7lld, fitting: %7ld", ievt, nKept) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # roads: " << nroads << std::endl;
 
         if (!nroads) {  // skip if no road
@@ -86,6 +86,9 @@ int TrackFitter::makeTracks(TString src, TString out) {
         // Loop over the roads
         for (unsigned iroad=0; iroad<nroads; ++iroad) {
             if (iroad >= (unsigned) po_.maxRoads)  break;
+
+            const unsigned patternRef = reader.vr_patternRef->at(iroad);
+            if (patternRef >= (unsigned) po_.maxPatterns)  continue;
 
             // Get combinations of stubRefs
             std::vector<std::vector<unsigned> > stubRefs = reader.vr_stubRefs->at(iroad);
@@ -111,6 +114,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 TTRoadComb acomb;
                 acomb.roadRef    = iroad;
                 acomb.combRef    = icomb;
+                acomb.patternRef = patternRef;
                 acomb.ptSegment  = getPtSegment(reader.vr_patternInvPt->at(iroad));
                 acomb.stubRefs   = combinations.at(icomb);
 
@@ -146,17 +150,18 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 TTTrack2 atrack;
                 fitstatus = fitter_->fit(acomb, atrack);
 
-                atrack.setTower    (po_.tower);
-                atrack.setRoadRef  (acomb.roadRef);
-                atrack.setCombRef  (acomb.combRef);
-                atrack.setPtSegment(acomb.ptSegment);
-                atrack.setHitBits  (acomb.hitBits);
-                atrack.setStubRefs (acomb.stubRefs);
+                atrack.setTower     (po_.tower);
+                atrack.setRoadRef   (acomb.roadRef);
+                atrack.setCombRef   (acomb.combRef);
+                atrack.setPatternRef(acomb.patternRef);
+                atrack.setPtSegment (acomb.ptSegment);
+                atrack.setHitBits   (acomb.hitBits);
+                atrack.setStubRefs  (acomb.stubRefs);
 
-                if (atrack.chi2Red() > po_.maxChi2)  // reduced chi^2 = chi^2 / ndof
+                if (atrack.chi2Red() < po_.maxChi2)  // reduced chi^2 = chi^2 / ndof
                     tracks.push_back(atrack);
 
-                if (verbose_>2)  std::cout << Debug() << "... ... ... track: " << icomb << " status: " << fitstatus << std::endl;
+                if (verbose_>2)  std::cout << Debug() << "... ... ... track: " << icomb << " status: " << fitstatus << " reduced chi2: " << atrack.chi2Red() << " invPt: " << atrack.invPt() << " phi0: " << atrack.phi0() << " cottheta: " << atrack.cottheta() << " z0: " << atrack.z0() << std::endl;
             }
         }  // loop over the roads
 
@@ -193,39 +198,39 @@ int TrackFitter::makeTracks(TString src, TString out) {
         // Track categorization
 
         if (po_.speedup<1) {
-            const unsigned nparts = reader.vp_pt->size();
+            const unsigned nparts = reader.vp2_primary->size();
+            if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # particles: " << nparts << std::endl;
 
             std::vector<TrackingParticle> trkParts;
             for (unsigned ipart=0; ipart<nparts; ++ipart) {
-                float simPt           = reader.vp_pt->at(ipart);
-                float simEta          = reader.vp_eta->at(ipart);
-                float simPhi          = reader.vp_phi->at(ipart);
-                //float simVx           = reader.vp_vx->at(ipart);
-                //float simVy           = reader.vp_vy->at(ipart);
-                float simVz           = reader.vp_vz->at(ipart);
-                int   simCharge       = reader.vp_charge->at(ipart);
+                bool  primary         = reader.vp2_primary->at(ipart);
+                int   simCharge       = reader.vp2_charge->at(ipart);
 
-                float simCotTheta     = std::sinh(simEta);
-                float simChargeOverPt = float(simCharge)/simPt;
+                if (simCharge!=0 && primary) {
+                    float simPt           = reader.vp2_pt->at(ipart);
+                    float simEta          = reader.vp2_eta->at(ipart);
+                    float simPhi          = reader.vp2_phi->at(ipart);
+                    //float simVx           = reader.vp2_vx->at(ipart);
+                    //float simVy           = reader.vp2_vy->at(ipart);
+                    float simVz           = reader.vp2_vz->at(ipart);
+                    int   simCharge       = reader.vp2_charge->at(ipart);
 
-                //bool  signal          = reader.vp_signal->at(ipart);
-                //bool  intime          = reader.vp_intime->at(ipart);
-                bool  primary         = reader.vp_primary->at(ipart);
-                int   pdgId           = reader.vp_pdgId->at(ipart);
+                    float simCotTheta     = std::sinh(simEta);
+                    float simChargeOverPt = float(simCharge)/simPt;
 
-                if (primary) {
                     trkParts.emplace_back(TrackingParticle{  // using POD type constructor
                         (int) ipart,
-                        pdgId,
                         simChargeOverPt,
                         simPhi,
                         simCotTheta,
                         simVz,
                         0.
                     });
+
+                    if (verbose_>3)  std::cout << Debug() << "... ... part: " << ipart << " primary: " << primary << " " << trkParts.back();
                 }
             }
-
+            truthAssociator_.associate(trkParts, tracks);
         }
 
         writer.fill(tracks);

@@ -3,24 +3,6 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/Helper.h"
 using namespace slhcl1tt;
 
-namespace{
-void nullVectorElements(std::vector<float>* v, const std::vector<bool>& nulling) {
-    assert(v->size() == nulling.size());
-    for (unsigned i=0; i<nulling.size(); ++i) {
-        if (nulling.at(i))
-            v->at(i) = 0.;
-    }
-}
-
-void nullVectorElements(std::vector<int>* v, const std::vector<bool>& nulling) {
-    assert(v->size() == nulling.size());
-    for (unsigned i=0; i<nulling.size(); ++i) {
-        if (nulling.at(i))
-            v->at(i) = 0;
-    }
-}
-}
-
 
 // _____________________________________________________________________________
 BasicReader::BasicReader(int verbose)
@@ -143,7 +125,7 @@ void BasicReader::nullStubs(const std::vector<bool>& nulling, bool full) {
     if (full)  nullVectorElements(vb_roughPt   , nulling);
     if (full)  nullVectorElements(vb_clusWidth0, nulling);
     if (full)  nullVectorElements(vb_clusWidth1, nulling);
-  //nullVectorElements(vb_modId     , nulling);  // don't null this guy
+    //nullVectorElements(vb_modId     , nulling);  // don't null this guy
     nullVectorElements(vb_tpId      , nulling);
 }
 

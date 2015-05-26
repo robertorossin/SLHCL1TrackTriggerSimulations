@@ -2,13 +2,10 @@
 
 from rootdrawing import *
 from parser import *
-from helper import *
-
-donotdelete = []  # persist in memory
 
 
 # ______________________________________________________________________________
-def bookPatterns():
+def drawer_book():
     histos = {}
 
     hname = "npatterns"
@@ -19,7 +16,7 @@ def bookPatterns():
     donotdelete.append(histos)
     return histos
 
-def checkoutPatterns(tfile, histos, options):
+def drawer_checkout(tfile, histos, options):
     def style(h):
         h.SetTitleOffset(0.9, "X")
         h.SetTitleOffset(1.25, "Y")
@@ -44,7 +41,7 @@ def checkoutPatterns(tfile, histos, options):
     h = histos[hname] = style(tfile.Get(hname))
     h.SetMinimum(-0.05); h.SetMaximum(0.05)
 
-def projectPatterns(tree, histos, options):
+def drawer_project(tree, histos, options):
     tree.SetBranchStatus("*", 0)
     tree.SetBranchStatus("invPt_mean" , 1)
     tree.SetBranchStatus("invPt_sigma", 1)
@@ -69,27 +66,45 @@ def projectPatterns(tree, histos, options):
         ey.append(sigma)
         zeroes.append(0)
 
+    # Rebin
+    nbinsx = 50
+    nelemsx = len(x)
+    x_1, y_1, ex_1, ey_1, zeroes_1 = array('d'), array('d'), array('d'), array('d'), array('d')
+    for ievt in xrange(nbinsx):
+        binwidth = int(nelemsx / nbinsx)
+        beg = binwidth * ievt
+        end = binwidth * (ievt+1)
+
+        x_1.append(ievt*binwidth)
+        y_1.append(sum(y[beg:end]) / binwidth)
+        ex_1.append(sum(ex[beg:end]) / binwidth)
+        ey_1.append(sum(ey[beg:end]) / binwidth)
+        zeroes_1.append(sum(zeroes[beg:end]) / binwidth)
+
     hname = "gr_invPt_meanrms_vs_id"
-    h = histos[hname] = style(TGraphErrors(len(x), x, y, zeroes, ey))
+    #h = histos[hname] = style(TGraphErrors(len(x), x, y, zeroes, ey))
+    h = histos[hname] = style(TGraphErrors(len(x_1), x_1, y_1, zeroes_1, ey_1))
     h.SetName(hname)
     h.SetTitle("; sorted pattern ID; <signed 1/p_{T}> [1/GeV]")
 
     hname = "gr_invPt_rms_vs_id"
-    h = histos[hname] = style(TGraphErrors(len(x), x, zeroes, zeroes, ey))
+    #h = histos[hname] = style(TGraphErrors(len(x), x, zeroes, zeroes, ey))
+    h = histos[hname] = style(TGraphErrors(len(x_1), x_1, zeroes_1, zeroes_1, ey_1))
     h.SetName(hname)
     h.SetTitle("; sorted pattern ID; #sigma(signed 1/p_{T}) [1/GeV]")
-    h.SetMinimum(-0.03); h.SetMaximum(0.03)
+    h.SetMinimum(-0.01); h.SetMaximum(0.01)
 
     hname = "gr_invPt_rms_vs_mean"
-    h = histos[hname] = style(TGraphErrors(len(x), y, zeroes, zeroes, ey))
+    #h = histos[hname] = style(TGraphErrors(len(x), y, zeroes, zeroes, ey))
+    h = histos[hname] = style(TGraphErrors(len(x_1), y_1, zeroes_1, zeroes_1, ey_1))
     h.SetName(hname)
     h.SetTitle("; <signed 1/p_{T}> [1/GeV]; #sigma(signed 1/p_{T}) [1/GeV]")
-    h.SetMinimum(-0.03); h.SetMaximum(0.03)
+    h.SetMinimum(-0.01); h.SetMaximum(0.01)
 
     tree.SetBranchStatus("*", 1)
     return
 
-def drawPatterns(histos, options):
+def drawer_draw(histos, options):
     for hname, h in histos.iteritems():
         if "gr_" not in hname:
             if "vs_" not in hname and "pr_" not in hname:
@@ -111,7 +126,8 @@ def drawPatterns(histos, options):
                 save(options.outdir, hname, dot_root=True, dot_pdf=False)
         else:
             # TGraph
-            h.Draw("A3")
+            #h.Draw("A3")
+            h.Draw("AP")
             CMS_label()
             save(options.outdir, hname, redraw_axis=False, dot_root=True, dot_pdf=False)
 
@@ -124,9 +140,8 @@ def drawPatterns(histos, options):
         CMS_label()
         save(options.outdir, hname, dot_root=True, dot_pdf=False)
 
-
-def sitrepPatterns(histos,options):
-    pass
+def drawer_sitrep(histos, options):
+    print "--- SITREP ---------------------------------------------------------"
 
 
 # ______________________________________________________________________________
@@ -139,11 +154,11 @@ def main(options):
     ttree = tfile.Get("patternAttributes")
 
     # Process
-    histos = bookPatterns()
-    checkoutPatterns(tfile, histos, options)
-    projectPatterns(ttree, histos, options)
-    drawPatterns(histos, options)
-    sitrepPatterns(histos,options)
+    histos = drawer_book()
+    drawer_checkout(tfile, histos, options)
+    drawer_project(ttree, histos, options)
+    drawer_draw(histos, options)
+    drawer_sitrep(histos, options)
 
 
 # ______________________________________________________________________________

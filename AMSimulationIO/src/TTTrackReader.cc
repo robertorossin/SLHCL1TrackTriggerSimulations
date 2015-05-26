@@ -49,6 +49,7 @@ TTTrackWriter::TTTrackWriter(int verbose)
   vt_ptSegment    (new std::vector<unsigned>()),
   vt_roadRef      (new std::vector<unsigned>()),
   vt_combRef      (new std::vector<unsigned>()),
+  vt_patternRef   (new std::vector<unsigned>()),
   vt_stubRefs     (new std::vector<std::vector<unsigned> >()),
   vt_principals   (new std::vector<std::vector<float> >()) {}
 
@@ -86,6 +87,7 @@ int TTTrackWriter::init(TChain* tchain, TString out, TString prefix, TString suf
     ttree->Branch(prefix + "ptSegment"      + suffix, &(*vt_ptSegment));
     ttree->Branch(prefix + "roadRef"        + suffix, &(*vt_roadRef));
     ttree->Branch(prefix + "combRef"        + suffix, &(*vt_combRef));
+    ttree->Branch(prefix + "patternRef"     + suffix, &(*vt_patternRef));
     ttree->Branch(prefix + "stubRefs"       + suffix, &(*vt_stubRefs));
     ttree->Branch(prefix + "principals"     + suffix, &(*vt_principals));
     return 0;
@@ -178,6 +180,7 @@ void TTTrackWriter::fill(const std::vector<TTTrack2>& tracks) {
     vt_ptSegment       ->clear();
     vt_roadRef         ->clear();
     vt_combRef         ->clear();
+    vt_patternRef      ->clear();
     vt_stubRefs        ->clear();
     vt_principals      ->clear();
 
@@ -212,6 +215,7 @@ void TTTrackWriter::fill(const std::vector<TTTrack2>& tracks) {
         vt_ptSegment       ->push_back(track.ptSegment());
         vt_roadRef         ->push_back(track.roadRef());
         vt_combRef         ->push_back(track.combRef());
+        vt_patternRef      ->push_back(track.patternRef());
         vt_stubRefs        ->push_back(track.stubRefs());
         vt_principals      ->push_back(track.principals());
     }

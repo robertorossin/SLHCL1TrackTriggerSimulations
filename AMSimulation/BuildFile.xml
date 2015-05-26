@@ -1,6 +1,7 @@
 <Flags CXXFLAGS="-O3 -Wno-error=unused-but-set-variable -Wno-error=unused-variable"/>
 <use   name="SLHCL1TrackTriggerSimulations/AMSimulationDataFormats"/>
 <use   name="SLHCL1TrackTriggerSimulations/AMSimulationIO"/>
+<use   name="LinearizedTrackFit/LinearizedTrackFit"/>
 <!--use   name="fas"/-->
 <use   name="root"/>
 <use   name="rootcore"/>

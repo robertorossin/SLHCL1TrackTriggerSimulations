@@ -17,17 +17,20 @@ class PCAMatrix {
     Eigen::MatrixXd solutionsT;
 
     Eigen::VectorXd sqrtEigenvalues;
+    Eigen::VectorXd meansX;
     Eigen::VectorXd meansV;
     Eigen::VectorXd meansP;
     Eigen::MatrixXd V;
     Eigen::MatrixXd D;
     Eigen::MatrixXd DV;
 
+    unsigned nvariables;
+    unsigned nparameters;
     std::string filename;
 
-    int read(std::string txt, unsigned nvariables, unsigned nparameters);
+    int read(const std::string txt);
 
-    int write(std::string txt);
+    int write(const std::string txt);
 
     void print();
 };

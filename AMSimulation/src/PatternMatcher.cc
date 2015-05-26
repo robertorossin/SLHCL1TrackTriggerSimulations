@@ -213,6 +213,24 @@ int PatternMatcher::makeRoads(TString src, TString out) {
 
 
         // _____________________________________________________________________
+        // Skip tracking particles
+
+        std::vector<bool> trkPartsNotPrimary;  // true: not primary
+
+        const unsigned nparts = reader.vp2_primary->size();
+        for (unsigned ipart=0; ipart<nparts; ++ipart) {
+
+            // Skip if not primary
+            bool  primary         = reader.vp2_primary->at(ipart);
+            int   simCharge       = reader.vp2_charge->at(ipart);
+            trkPartsNotPrimary.push_back(!(simCharge!=0 && primary));
+        }
+
+        // Null trkPart information for those that are not primary
+        reader.nullParticles(trkPartsNotPrimary);
+
+
+        // _____________________________________________________________________
         // Start pattern recognition
         hitBuffer_.reset();
 

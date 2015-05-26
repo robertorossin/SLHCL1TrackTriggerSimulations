@@ -2,32 +2,33 @@
 
 from rootdrawing import *
 from parser import *
-from helper import *
-import itertools
 
 # Configurations
 colors1 = blkrgb[:3]
 colors2 = blkrgb[:1] + blkrgb[3:]
 
+maxMisses = 0
+requiredLayers = [5, 6, 7, 8, 9, 10]
+
+
+# ______________________________________________________________________________
 # Load trigger tower map
 ttmap = json.load(open("../data/trigger_sector_map.json"), object_pairs_hook=convert_key_to_int)
 ttrmap = get_reverse_map(ttmap)
 
-donotdelete = []  # persist in memory
-
 
 # ______________________________________________________________________________
-def bookCoverage():
+def drawer_book():
     histos = {}
 
     prefix = "coverage_"  # coverage is efficiency in the fiducial region
     ytitle = "coverage"
     for i in xrange(3):
         hname = (prefix + "pt_%i") % i
-        histos[hname]       = TProfile(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 200., 0., 2., "")
+        histos[hname]       = TProfile(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 2000., 0., 2., "")
 
         hname = (prefix + "ppt_%i") % i  # pt, but zoomed in to 0-5 GeV
-        histos[hname]       = TProfile(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 5., 0., 2., "")
+        histos[hname]       = TProfile(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 10., 0., 2., "")
 
         hname = (prefix + "eta_%i") % i
         histos[hname]       = TProfile(hname, "; #eta; %s" % ytitle,        120, -3.0, 3.0, 0., 2., "")
@@ -41,14 +42,14 @@ def bookCoverage():
         hname = (prefix + "charge_%i") % i
         histos[hname]       = TProfile(hname, "; charge; %s" % ytitle,      5, -2.5, 2.5, 0., 2., "")
 
-    prefix = "efficiency_"  # coverage is efficiency in the fiducial region
-    ytitle = "#varepsilon_{AM PR}"     # including acceptance effect
+    prefix = "efficiency_"  # including acceptance effect
+    ytitle = "#varepsilon_{AM PR}"
     for i in xrange(3):
         hname = (prefix + "pt_%i") % i
-        histos[hname]       = TProfile(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 200., 0., 2., "")
+        histos[hname]       = TProfile(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 2000., 0., 2., "")
 
         hname = (prefix + "ppt_%i") % i  # pt, but zoomed in to 0-5 GeV
-        histos[hname]       = TProfile(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 5., 0., 2., "")
+        histos[hname]       = TProfile(hname, "; p_{T} [GeV]; %s" % ytitle, 120, 0., 10., 0., 2., "")
 
         hname = (prefix + "eta_%i") % i
         histos[hname]       = TProfile(hname, "; #eta; %s" % ytitle,        120, -3.0, 3.0, 0., 2., "")
@@ -77,13 +78,10 @@ def bookCoverage():
     return histos
 
 
-def projectCoverage(tree, histos, options):
-    # Merge barrel and endcap layers
-    layermap = {
-        5:0, 6:1, 7:2, 8:3, 9:4, 10:5,
-        11:5, 12:4, 13:3, 14:2, 15:1,
-        18:5, 19:4, 20:3, 21:2, 22:1,
-    }
+def drawer_project(tree, histos, options):
+    moduleId_set = set()
+    for moduleId in ttmap[options.tower]:
+        moduleId_set.add(moduleId)
 
     tree.SetBranchStatus("*", 0)
     tree.SetBranchStatus("genParts_pt"           , 1)
@@ -117,7 +115,7 @@ def projectCoverage(tree, histos, options):
                 histos[prefix + "phi_1"   ].Fill(phi     , trigger)
                 histos[prefix + "vz_1"    ].Fill(vz      , trigger)
                 histos[prefix + "charge_1"].Fill(charge  , trigger)
-            elif pt >= 2:
+            elif pt >= options.ptmin:
                 histos[prefix + "eta_2"   ].Fill(eta     , trigger)
                 histos[prefix + "phi_2"   ].Fill(phi     , trigger)
                 histos[prefix + "vz_2"    ].Fill(vz      , trigger)
@@ -144,7 +142,7 @@ def projectCoverage(tree, histos, options):
             histos[prefix + "phi_1"   ].Fill(phi     , trigger)
             histos[prefix + "vz_1"    ].Fill(vz      , trigger)
             histos[prefix + "charge_1"].Fill(charge  , trigger)
-        elif pt >= 2:
+        elif pt >= options.ptmin:
             histos[prefix + "eta_2"   ].Fill(eta     , trigger)
             histos[prefix + "phi_2"   ].Fill(phi     , trigger)
             histos[prefix + "vz_2"    ].Fill(vz      , trigger)
@@ -166,44 +164,33 @@ def projectCoverage(tree, histos, options):
         if not (options.etamin < eta < options.etamax and options.phimin < phi < options.phimax):
             continue
 
+        lay_counts = {}
+        for lay in requiredLayers:
+            lay_counts[lay] = 0
+
+        for istub, moduleId in enumerate(evt.TTStubs_modId):
+            if moduleId not in moduleId_set:
+                continue
+
+            lay = decodeLayer(moduleId)
+            if lay in lay_counts:
+                lay_counts[lay] += 1
+
+        accept_count = 0
+        for lay in requiredLayers:
+            if lay_counts[lay] > 0:
+                accept_count += 1
+
+        if accept_count >= len(requiredLayers) - maxMisses:
+            accept = True
+        else:
+            accept = False
+
         # Get trigger results
         trigger = False
         for patternRef in evt.AMTTRoads_patternRef:
             if patternRef < options.npatterns:
                 trigger = True
-
-        # Loop over stub moduleIds
-        moduleIds_by_mlayers = [[], [], [], [], [], []]  # 6 mlayers
-        for moduleId in evt.TTStubs_modId:
-            lay = decodeLayer(moduleId)
-            mlay = layermap[lay]
-            if moduleId in ttrmap:
-                moduleIds_by_mlayers[mlay].append(moduleId)
-
-        # At least one stub in every mlayer
-        accept = True
-        for moduleIds in moduleIds_by_mlayers:
-            if not len(moduleIds):
-                accept = False
-                break
-
-        # At least one stub combination is fully contained in at least one trigger tower
-        if accept:
-            accept = False
-            for combination in itertools.product(*moduleIds_by_mlayers):
-                count_by_tt = {}
-                for moduleId in combination:
-                    for tt in ttrmap[moduleId]:
-                        count_by_tt[tt] = count_by_tt.get(tt, 0) + 1
-                for tt, count in count_by_tt.iteritems():
-                    # Apply trigger tower requirement
-                    if not (tt == options.tower):
-                        continue
-                    if count == 6:
-                        accept = True
-                        break
-                if accept:
-                    break
 
         # Debug
         #print ievt
@@ -217,7 +204,7 @@ def projectCoverage(tree, histos, options):
     return
 
 
-def drawCoverage(histos, options, hnlambda):
+def drawer_draw(histos, options, hnlambda):
     def parse_ss(ss):
         if "lu" in ss:
             ss = ss.replace("lu", "")
@@ -230,15 +217,18 @@ def drawCoverage(histos, options, hnlambda):
     for hvar in ["pt", "ppt", "eta", "phi", "vz", "charge"]:
         ymax = 1.2
 
+        # Draw first one
         hname = "%s_%i" % (hvar,0)
         h = histos[hnlambda(hname)]
         h.SetStats(0); h.SetMinimum(0); h.SetMaximum(ymax)
         h.Draw()
 
-        # Reference lines for 0.4 and 1.0
+        # Reference lines for 0.9, 0.95 and 1.0
         xmin, xmax = h.GetXaxis().GetXmin(), h.GetXaxis().GetXmax()
-        tline.DrawLine(xmin, 1.0, xmax, 1.0)
-        tline.DrawLine(xmin, 0.4, xmax, 0.4)
+        for y in [0.5, 0.8, 0.9, 0.95, 1.0]:
+            tline.DrawLine(xmin, y, xmax, y)
+
+        # Draw all
         for i in xrange(3):
             hname1 = "%s_%i" % (hvar,i)
             histos[hnlambda(hname1)].Draw("same")
@@ -247,12 +237,10 @@ def drawCoverage(histos, options, hnlambda):
         tboxes = []
         if hvar == "pt" or hvar == "ppt":
             tboxes = [
-                TBox(xmin, 0, 2.0, ymax),
-                TBox(min(xmax,200.0), 0, xmax, ymax),
+                TBox(xmin, 0, options.ptmin, ymax),
+                TBox(min(xmax,options.ptmax), 0, xmax, ymax),
             ]
-
-        # Apply trigger tower requirement
-        if hvar == "eta":
+        elif hvar == "eta":
             tboxes = [
                 TBox(xmin, 0, options.etamin, ymax),
                 TBox(options.etamax, 0, xmax, ymax),
@@ -261,6 +249,12 @@ def drawCoverage(histos, options, hnlambda):
             tboxes = [
                 TBox(xmin, 0, options.phimin, ymax),
                 TBox(options.phimax, 0, xmax, ymax),
+            ]
+        elif hvar == "charge":
+            tboxes = [
+                TBox(xmin, 0, -1.5, ymax),
+                TBox(-0.5, 0, 0.5, ymax),
+                TBox(1.5, 0, xmax, ymax),
             ]
 
         for box in tboxes:
@@ -279,14 +273,14 @@ def drawCoverage(histos, options, hnlambda):
             writeme = [
                 "20 #leq p_{T} < #infty  GeV",
                 "  5 #leq p_{T} < 20 GeV",
-                "  2 #leq p_{T} <   5 GeV",
+                "  %.0f #leq p_{T} <   5 GeV" % options.ptmin,
             ]
         for i in xrange(3):
             hname1 = "%s_%i" % (hvar,i)
             tlegend.AddEntry(histos[hnlambda(hname1)], writeme[i], "lp")
         tlegend.Draw()
 
-        tlatex.DrawLatex(0.6, 0.185, "%s [%.2fM bank]" % (parse_ss(options.ss), options.npatterns*1e-6))
+        tlatex.DrawLatex(0.6, 0.185, "%s [%.0fK bank]" % (parse_ss(options.ss), options.npatterns*1e-3))
         CMS_label()
         save(options.outdir, "%s_%s" % (hnlambda(hname), options.ss), dot_root=True)
 
@@ -294,7 +288,7 @@ def drawCoverage(histos, options, hnlambda):
     return
 
 
-def sitrepCoverage(histos, options):
+def drawer_sitrep(histos, options):
     print "--- SITREP ---------------------------------------------------------"
     print "--- Using tt{0}, pu{1}, ss={2}, npatterns={3}, coverage={4}".format(options.tower, options.pu, options.ss, options.npatterns, options.coverage)
     print "eta=[{1:.3f},{2:.3f}], phi=[{3:.3f},{4:.3f}]".format(options.tower,
@@ -310,12 +304,14 @@ def main(options):
     tchain = TChain("ntupler/tree", "")
     tchain.AddFileInfoList(options.tfilecoll.GetList())
 
+    gStyle.SetNdivisions(510, "Y")
+
     # Process
-    histos = bookCoverage()
-    projectCoverage(tchain, histos, options)
-    drawCoverage(histos, options, lambda x: "coverage_"+x)
-    drawCoverage(histos, options, lambda x: "efficiency_"+x)
-    sitrepCoverage(histos,options)
+    histos = drawer_book(options)
+    drawer_project(tchain, histos, options)
+    drawer_draw(histos, options, lambda x: "coverage_"+x)
+    drawer_draw(histos, options, lambda x: "efficiency_"+x)
+    drawer_sitrep(histos, options)
 
 
 # ______________________________________________________________________________
@@ -330,25 +326,14 @@ if __name__ == '__main__':
     # Add more arguments
     parser.add_argument("ss", help="short name of superstrip definition (e.g. ss256)")
     parser.add_argument("npatterns", type=int, help="number of patterns to reach the desired coverage")
-    parser.add_argument("--coverage", type=float, default=0.9, help="desired coverage (default: %(default)s)")
+    parser.add_argument("--coverage", type=float, default=0.95, help="desired coverage (default: %(default)s)")
+    parser.add_argument("--minPt", type=float, default=2, help="min pT (default: %(default)s)")
 
     # Parse default arguments
     options = parser.parse_args()
     parse_drawer_options(options)
     options.pu = 0  # assume zero pileup
-
-    # Calculate trigger tower fiducial region
-    if options.tower != 99:
-        ieta = options.tower/8
-        iphi = options.tower%8
-        options.etamin = -2.2 + (4.4/6) * ieta
-        options.etamax = -2.2 + (4.4/6) * (ieta+1)
-        if iphi < 6:
-            options.phimin = -pi/2 + (2*pi/8) * iphi
-            options.phimax = -pi/2 + (2*pi/8) * (iphi+1)
-        else:
-            options.phimin = -2*pi -pi/2 + (2*pi/8) * iphi
-            options.phimax = -2*pi -pi/2 + (2*pi/8) * (iphi+1)
+    options.ptmin = options.minPt
 
     # Call the main function
     main(options)
