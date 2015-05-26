@@ -16,10 +16,10 @@ using namespace slhcl1tt;
 class TrackFitterAlgoATF : public TrackFitterAlgoBase
 {
   public:
-    TrackFitterAlgoATF(bool fiveParameters) : TrackFitterAlgoBase(), fiveParameters_(fiveParameters){}
-    virtual ~TrackFitterAlgoATF() {}
+    TrackFitterAlgoATF(bool fiveParameters) : TrackFitterAlgoBase(), fiveParameters_(fiveParameters) {}
+    ~TrackFitterAlgoATF() {}
 
-    virtual int fit(const std::vector<TTHit>& hits, TTTrack2& track);
+    int fit(const std::vector<TTHit>& hits, TTTrack2& track);
     
   private:
     bool fiveParameters_=false;

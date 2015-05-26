@@ -12,8 +12,8 @@ using namespace slhcl1tt;
 //
 
 
-class TrackFitterAlgoRetina : public TrackFitterAlgoBase
-{
+class TrackFitterAlgoRetina : public TrackFitterAlgoBase {
+
  private:
 
   // This contains the retina configuration parameters,
@@ -41,11 +41,10 @@ class TrackFitterAlgoRetina : public TrackFitterAlgoBase
 
   TrackFitterAlgoRetina();
 
-  virtual ~TrackFitterAlgoRetina();
+  ~TrackFitterAlgoRetina();
 
   //int fit(std::vector<TTHit>& hits, std::vector<TTTrack2>& tracks);
-  // virtual int fit(unsigned tower, unsigned eventNum, unsigned roadRef, const std::vector<TTHit>& hits, std::vector<TTTrack2>& tracks);
-  virtual int fit(const std::vector<TTHit>& hits, std::vector<TTTrack2>& tracks, unsigned tower, unsigned roadRef);
+  int fit(unsigned tower, unsigned eventNum, unsigned roadRef, const std::vector<TTHit>& hits, std::vector<TTTrack2>& tracks);
 
 };
 

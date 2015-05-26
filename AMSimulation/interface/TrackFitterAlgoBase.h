@@ -13,10 +13,9 @@ using namespace slhcl1tt;
 class TrackFitterAlgoBase {
   public:
     TrackFitterAlgoBase() {}
-    virtual ~TrackFitterAlgoBase() {}
+    ~TrackFitterAlgoBase() {}
 
-    virtual int fit(const std::vector<TTHit>& hits, TTTrack2& track) { return 0; }
-    virtual int fit(const std::vector<TTHit>& hits, std::vector<TTTrack2>& track, unsigned tower, unsigned roadRef) { return 0; }
+    //virtual int fit(const std::vector<TTHit>& hits, TTTrack2& track) = 0;
 
 };
 

@@ -63,11 +63,6 @@ int TrackFitter::makeTracks(TString src, TString out) {
         std::cout << Error() << "Failed to initialize TTTrackWriter." << std::endl;
         return 1;
     }
-    
-    //  _________________________________________________________________________
-    // Initialize fitter outside loop when necessary
-    // if (po_.mode=="PCA4") fitterLin_->loadVD("matrixVD_0_cOverPt_FirstEstimate.txt");
-    // if (po_.mode=="PCA4") fitterLin_->loadVD("matrixVD_0_FirstEstimate.txt");
 
     // _________________________________________________________________________
     // Loop over all events
@@ -138,9 +133,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 // _____________________________________________________________
                 // Fit
 
-                // fitstatus = fitterRetina_->fit(tower, ievt, iroad, hits, tracks);
-                // fitstatus = fitterRetina_->fit(hits, tracks, tower, iroad);
-                fitstatus = fitter_->fit(hits, tracks, tower, iroad);
+                fitstatus = fitterRetina_->fit(tower, ievt, iroad, hits, tracks);
 
                 if (verbose_>3)  std::cout << Debug() << "... ... road: " << iroad << " # tracks: " << tracks.size() << " status: " << fitstatus << std::endl;
 
@@ -184,11 +177,8 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 }
 
             }  // loop over the roads
-            
-        }
-        
-        else // All the combination-specific fitters
-        {
+
+        } else if (po_.mode=="ATF4" || po_.mode=="ATF5" || po_.mode=="PCA4" || po_.mode=="PCA5") {
             // _________________________________________________________________
             // Track fitters taking fit combinations
 
@@ -244,18 +234,11 @@ int TrackFitter::makeTracks(TString src, TString out) {
                     atrack.setTower(tower);
                     atrack.setStubRefs(stubRefs);
 
-                    // if (po_.mode=="ATF4" || po_.mode=="ATF5")
-                    // {
-		    //     // fitstatus = fitterATF_->fit(hits, atrack);
-		    //     fitstatus = fitterATF_->fit(hits, atrack, tower, iroad);
-                    // }
-                    // else if (po_.mode=="PCA4")
-                    // {
-		    //     // fitstatus = fitterLin_->fit(hits, atrack);
-		    //     fitstatus = fitterLin_->fit(hits, atrack, tower, iroad);
-                    // }
-                        
-		    fitstatus = fitter_->fit(hits, atrack);
+                    if (po_.mode=="ATF4" || po_.mode=="ATF5")
+                        fitstatus = fitterATF_->fit(hits, atrack);
+                    else if (po_.mode=="PCA4" || po_.mode=="PCA5")
+                        fitstatus = fitterLin_->fit(hits, atrack);
+
                     tracks.push_back(atrack);
 
                     if (verbose_>3)  std::cout << Debug() << "... ... ... track: " << icomb << " status: " << fitstatus << std::endl;
@@ -282,10 +265,6 @@ int TrackFitter::makeTracks(TString src, TString out) {
         writer.fill(tracks);
         ++nRead;
     }
-    
-    //  _________________________________________________________________________
-    // Save plots outside loop when necessary
-    // if (po_.mode=="PCA4") fitterLin_->savePlots();
 
     if (verbose_)  std::cout << Info() << Form("Read: %7ld, triggered: %7ld", nRead, nKept) << std::endl;
 

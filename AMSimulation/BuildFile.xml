@@ -6,7 +6,6 @@
 <use   name="rootcore"/>
 <!--use   name="rootmath"/-->
 <!--use   name="rootmathcore"/-->
-<use   name="LinearizedTrackFit/LinearizedTrackFit"/>
 <export>
    <lib   name="1"/>
 </export>
