@@ -4,7 +4,7 @@ from ROOT import TFile, TTree, gROOT, gSystem, vector
 
 
 class TestAMSim(unittest.TestCase):
-    """Test the pattern recognition results using PatternMatcher"""
+    """Test the pattern recognition results produced by PatternMatcher"""
 
     infile = "roads.root"
 

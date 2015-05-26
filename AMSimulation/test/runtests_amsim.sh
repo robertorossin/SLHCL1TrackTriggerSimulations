@@ -11,20 +11,23 @@ PYTHONTEST=${CMSSW_BASE}/src/SLHCL1TrackTriggerSimulations/AMSimulation/python/t
 (amsim -C -i test_ntuple.root -o stubs.root -n 100 --timing) || die 'Failure during stub cleaning' $?
 (python ${PYTHONTEST}/testStubCleaning.py ${LOCAL_TOP_DIR}/stubs.root) || die 'Failure using tesStubCleaning.py' $?
 
-(amsim -G -i stubs.root -o patternBank.root -n 100 --timing) || die 'Failure during pattern bank generation' $?
-#WONTFIX# (python ${PYTHONTEST}/testPatternBankGeneration.py ${LOCAL_TOP_DIR}/patternBank.root) || die 'Failure using patternBankGeneration.py' $?
+(amsim -B -i stubs.root -o bank.root -n 100 --timing) || die 'Failure during pattern bank generation' $?
+#WONTFIX# (python ${PYTHONTEST}/testBankGeneration.py ${LOCAL_TOP_DIR}/bank.root) || die 'Failure using testBankGeneration.py' $?
 
-(amsim -R -i test_ntuple.root -o roads.root -B patternBank.root -n 100 --timing) || die 'Failure during pattern recognition' $?
+(amsim -R -i test_ntuple.root -o roads.root -b bank.root -n 100 --timing) || die 'Failure during pattern recognition' $?
 #WONTFIX# (python ${PYTHONTEST}/testPatternRecognition.py ${LOCAL_TOP_DIR}/roads.root) || die 'Failure using testPatternRecognition.py' $?
 
-(amsim -T -i roads.root -o tracks.root -n 100 --timing) || die 'Failure during track fitting' $?
+(amsim -M -i stubs.root -o matrices.txt -n 100 --timing) || die 'Failure during matrix building' $?
+#WONTFIX# (python ${PYTHONTEST}/testMatrixBuilding.py ${LOCAL_TOP_DIR}/matrices.txt) || die 'Failure using testMatrixBuilding.py' $?
+
+(amsim -T -i roads.root -o tracks.root -m matrices.txt -n 100 --timing) || die 'Failure during track fitting' $?
 #WONTFIX# (python ${PYTHONTEST}/testTrackFitting.py ${LOCAL_TOP_DIR}/tracks.root) || die 'Failure using testTrackFitting.py' $?
 
-(amsim -A -i stubs.root -o attribs.root -B patternBank.root -n 100 --timing) || die 'Failure during pattern bank analysis' $?
+(amsim -A -i stubs.root -o attribs.root -b bank.root -n 100 --timing) || die 'Failure during pattern bank analysis' $?
+#WONTFIX# (python ${PYTHONTEST}/testBankAnalysis.py ${LOCAL_TOP_DIR}/attribs.root) || die 'Failure using testBankAnalysis.py' $?
+
+(amsim -U -i stubs.root -o tracks_test.root -m matrices.txt -n 100 --timing) || die 'Failure during matrix testing' $?
+#WONTFIX# (python ${PYTHONTEST}/testMatrixTesting.py ${LOCAL_TOP_DIR}/tracks_test.root) || die 'Failure using testMatrixTesting.py' $?
 
 (amsim -W -i test_ntuple.root -o results.root --roads roads.root --tracks tracks.root -n 100 --timing) || die 'Failure during ntuple writing' $?
 #WONTFIX# (python ${PYTHONTEST}/testWriting.py ${LOCAL_TOP_DIR}/results.root) || die 'Failure using testWriting.py' $?
-
-(amconvert -B -i patternBank.root -o patternBank.txt -n 100 --format x) || die 'Failure during bank conversion' $?
-#WONTFIX# CHARCOUNT=`wc -m < "${LOCAL_TOP_DIR}/patternBank.txt"`
-#WONTFIX# [ "${CHARCOUNT}" -eq 4311 ] || die 'Failure checking the character counts' $?

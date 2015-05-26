@@ -14,6 +14,11 @@
 
 // TODO: factorize tracks from clusters/stubs?
 
+class ModuleIdFunctor {
+  public:
+    uint32_t operator() (const DetId& id) const;
+};
+
 class NTupleStubs : public edm::EDProducer {
   public:
     explicit NTupleStubs(const edm::ParameterSet&);
@@ -25,12 +30,6 @@ class NTupleStubs : public edm::EDProducer {
 
     virtual void beginRun(const edm::Run&, const edm::EventSetup&);
     virtual void endRun(const edm::Run&, const edm::EventSetup&) {}
-
-    unsigned findById(const std::vector<unsigned>& vec, unsigned id, bool throwError=true);
-    unsigned getModuleLayer(const DetId& id);
-    unsigned getModuleLadder(const DetId& id);
-    unsigned getModuleModule(const DetId& id);
-    unsigned getModuleId(const DetId& id);
 
     // For event setup
     const TrackerGeometry * theGeometry;

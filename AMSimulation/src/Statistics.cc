@@ -14,26 +14,65 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Statistics.h"
 
 
+// _____________________________________________________________________________
 Statistics::Statistics()
-:   nEntries(0),
-    mean(0.),
-    variance(0){}
+: n_(0),
+  mean_(0.),
+  variance_(0.) {}
 
 void Statistics::fill(double x) {
-    ++ nEntries;
-    mean += (x - mean)/nEntries;
-    if(nEntries >=2) variance += (x - mean)*(x - mean)/(nEntries-1) - variance/nEntries;
+    ++ n_;
+    mean_ += (x - mean_)/n_;
+    if (n_ > 1)  variance_ += (x - mean_)*(x - mean_)/(n_-1) - variance_/n_;
 }
 
 long int Statistics::getEntries() const {
-    return nEntries;
+    return n_;
 };
+
 double Statistics::getMean() const {
-    return mean;
+    return mean_;
 };
+
 double Statistics::getVariance() const {
-    return variance;
+    return variance_;
 };
+
 double Statistics::getSigma() const {
-    return std::sqrt(variance);
+    return std::sqrt(variance_);
+};
+
+
+// _____________________________________________________________________________
+Statistics2::Statistics2()
+: n_(0),
+  mean1_(0.),
+  mean2_(0.),
+  covariance_(0.) {}
+
+void Statistics2::fill(double x, double y) {
+    ++ n_;
+    mean1_ += (x - mean1_)/n_;
+    mean2_ += (y - mean2_)/n_;
+    if (n_ > 1)  covariance_ += (x - mean1_)*(y - mean2_)/(n_-1) - covariance_/n_;
+}
+
+long int Statistics2::getEntries() const {
+    return n_;
+};
+
+double Statistics2::getMeanX() const {
+    return mean1_;
+};
+
+double Statistics2::getMeanY() const {
+    return mean2_;
+};
+
+double Statistics2::getCovariance() const {
+    return covariance_;
+};
+
+double Statistics2::getSigma() const {
+    return std::sqrt(covariance_);
 };

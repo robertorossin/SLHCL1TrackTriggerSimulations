@@ -3,8 +3,6 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/PatternBankReader.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubReader.h"
 
-static const unsigned MIN_NGOODSTUBS = 3;
-static const unsigned MAX_NGOODSTUBS = 8;
 static const unsigned MAX_FREQUENCY = 0xffffffff;  // unsigned
 
 namespace {
@@ -65,31 +63,6 @@ int PatternGenerator::makePatterns(TString src) {
     if (reader.init(src, false)) {
         std::cout << Error() << "Failed to initialize TTStubReader." << std::endl;
         return 1;
-
-    } else {
-        // Only read certain branches
-        TChain* tchain = reader.getChain();
-        tchain->SetBranchStatus("*"                 , 0);
-        tchain->SetBranchStatus("genParts_pt"       , 1);
-      //tchain->SetBranchStatus("genParts_eta"      , 1);
-      //tchain->SetBranchStatus("genParts_phi"      , 1);
-      //tchain->SetBranchStatus("genParts_vx"       , 1);
-      //tchain->SetBranchStatus("genParts_vy"       , 1);
-      //tchain->SetBranchStatus("genParts_vz"       , 1);
-      //tchain->SetBranchStatus("genParts_charge"   , 1);
-      //tchain->SetBranchStatus("TTStubs_x"         , 1);
-      //tchain->SetBranchStatus("TTStubs_y"         , 1);
-        tchain->SetBranchStatus("TTStubs_z"         , 1);
-        tchain->SetBranchStatus("TTStubs_r"         , 1);
-      //tchain->SetBranchStatus("TTStubs_eta"       , 1);
-        tchain->SetBranchStatus("TTStubs_phi"       , 1);
-        tchain->SetBranchStatus("TTStubs_coordx"    , 1);
-        tchain->SetBranchStatus("TTStubs_coordy"    , 1);
-        tchain->SetBranchStatus("TTStubs_trigBend"  , 1);
-      //tchain->SetBranchStatus("TTStubs_roughPt"   , 1);
-      //tchain->SetBranchStatus("TTStubs_clusWidth" , 1);
-        tchain->SetBranchStatus("TTStubs_modId"     , 1);
-      //tchain->SetBranchStatus("TTStubs_tpId"      , 1);
     }
 
     // _________________________________________________________________________
@@ -127,18 +100,19 @@ int PatternGenerator::makePatterns(TString src) {
         const unsigned nstubs = reader.vb_modId->size();
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
-        if (nstubs < MIN_NGOODSTUBS) {  // skip if not enough stubs
-            ++nRead;
-            continue;
-        }
+        // Get sim info
+        float simPt           = reader.vp_pt->front();
+        float simEta          = reader.vp_eta->front();
+        float simPhi          = reader.vp_phi->front();
+        //float simVx           = reader.vp_vx->front();
+        //float simVy           = reader.vp_vy->front();
+        float simVz           = reader.vp_vz->front();
+        int   simCharge       = reader.vp_charge->front();
 
-        if (nstubs > MAX_NGOODSTUBS) {
-            std::cout << Error() << "Too many stubs: " << nstubs << std::endl;
-            return 1;
-        }
+        float simCotTheta     = std::sinh(simEta);
+        float simChargeOverPt = float(simCharge)/simPt;
 
         // Apply track pt requirement
-        float simPt = reader.vp_pt->front();
         if (simPt < po_.minPt || po_.maxPt < simPt) {
             ++nRead;
             continue;
@@ -161,6 +135,7 @@ int PatternGenerator::makePatterns(TString src) {
 
         // _____________________________________________________________________
         // Start generating patterns
+
         patt.fill(0);
 
         // Loop over reconstructed stubs
@@ -193,10 +168,28 @@ int PatternGenerator::makePatterns(TString src) {
         // Insert pattern into the bank
         ++patternBank_map_[patt];
 
+        // Update the attributes
+        if (po_.speedup<1) {
+            std::pair<std::map<pattern_type, Attributes *>::iterator, bool> ins = patternAttributes_map_.insert(std::make_pair(patt, new Attributes()));
+            Attributes * attr = ins.first->second;
+            if (attr) {
+                ++ attr->n;
+                attr->invPt.fill(simChargeOverPt);
+                attr->cotTheta.fill(simCotTheta);
+                attr->phi.fill(simPhi);
+                attr->z0.fill(simVz);
+            }
+        }
+
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " patt: " << patt << std::endl;
 
         ++nKept;
         ++nRead;
+    }
+
+    if (nRead == 0) {
+        std::cout << Error() << "Failed to read any event." << std::endl;
+        return 1;
     }
 
     if (verbose_)  std::cout << Info() << Form("Read: %7ld, kept: %7ld, # patterns: %7lu, coverage: %7.5f", nRead, nKept, patternBank_map_.size(), coverage) << std::endl;
@@ -293,7 +286,7 @@ int PatternGenerator::writePatterns(TString out) {
         oldFreq = freq;
         nKept += freq;
 
-        if (freq < (unsigned) minFrequency_)  // cut off
+        if (freq < (unsigned) po_.minFrequency)  // cut off
             break;
 
         writer.pb_superstripIds->clear();
@@ -302,7 +295,21 @@ int PatternGenerator::writePatterns(TString out) {
             writer.pb_superstripIds->push_back(patt.at(ilayer));
         }
         *(writer.pb_frequency) = freq;
+
+        if (po_.speedup<1) {
+            const Attributes * attr = patternAttributes_map_.at(patt);
+            *(writer.pb_invPt_mean)     = attr->invPt.getMean();
+            *(writer.pb_invPt_sigma)    = attr->invPt.getSigma();
+            *(writer.pb_cotTheta_mean)  = attr->cotTheta.getMean();
+            *(writer.pb_cotTheta_sigma) = attr->cotTheta.getSigma();
+            *(writer.pb_phi_mean)       = attr->phi.getMean();
+            *(writer.pb_phi_sigma)      = attr->phi.getSigma();
+            *(writer.pb_z0_mean)        = attr->z0.getMean();
+            *(writer.pb_z0_sigma)       = attr->z0.getSigma();
+        }
+
         writer.fillPatternBank();
+        writer.fillPatternAttributes();
     }
 
     long long nentries = writer.writeTree();
@@ -317,11 +324,11 @@ int PatternGenerator::writePatterns(TString out) {
 
 // _____________________________________________________________________________
 // Main driver
-int PatternGenerator::run(TString src, TString datadir, TString out) {
+int PatternGenerator::run() {
     int exitcode = 0;
     Timing(1);
 
-    exitcode = setupTriggerTower(datadir);
+    exitcode = setupTriggerTower(po_.datadir);
     if (exitcode)  return exitcode;
     Timing();
 
@@ -329,11 +336,11 @@ int PatternGenerator::run(TString src, TString datadir, TString out) {
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = makePatterns(src);
+    exitcode = makePatterns(po_.input);
     if (exitcode)  return exitcode;
     Timing();
 
-    exitcode = writePatterns(out);
+    exitcode = writePatterns(po_.output);
     if (exitcode)  return exitcode;
     Timing();
 

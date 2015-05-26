@@ -2,9 +2,41 @@
 
 from rootdrawing import *
 from parser import *
-from helper import *
 
-donotdelete = []  # persist in memory
+
+# ______________________________________________________________________________
+def drawer_book():
+    histos = {}
+
+    # Style
+    for hname, h in histos.iteritems():
+        h.SetLineWidth(2); h.SetMarkerSize(0)
+        h.SetLineColor(col); h.SetFillColor(fcol)
+    donotdelete.append(histos)
+    return histos
+
+def drawer_project(tree, histos, options):
+    tree.SetBranchStatus("*", 0)
+
+    # Loop over events
+    for ievt, evt in enumerate(tree):
+        if (ievt == options.nentries):  break
+
+    tree.SetBranchStatus("*", 1)
+    return
+
+def drawer_draw(histos, options):
+    for hname, h in histos.iteritems():
+
+        h.Draw("hist")
+        gPad.SetLogy(options.logy)
+
+        CMS_label()
+        save(options.outdir, hname)
+    return
+
+def drawer_sitrep(histos, options):
+    print "--- SITREP ---------------------------------------------------------"
 
 
 # ______________________________________________________________________________
@@ -17,10 +49,10 @@ def main(options):
     tchain.AddFileInfoList(options.tfilecoll.GetList())
 
     # Process
-
-    #
-    # ... DO STUFF HERE ...
-    #
+    histos = drawer_book()
+    drawer_project(tchain, histos, options)
+    drawer_draw(histos, options)
+    drawer_sitrep(histos, options)
 
 
 # ______________________________________________________________________________

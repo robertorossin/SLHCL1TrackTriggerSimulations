@@ -17,6 +17,8 @@
 //#include "Geometry/TrackerGeometryBuilder/interface/PixelGeomDetUnit.h"
 //#include "Geometry/TrackerNumberingBuilder/interface/GeometricDet.h"
 
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleStubs.h"
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -64,66 +66,6 @@ AnalyzerModuleVertices::AnalyzerModuleVertices(const edm::ParameterSet& iConfig)
 AnalyzerModuleVertices::~AnalyzerModuleVertices() {}
 
 
-namespace {
-uint32_t getModuleLayer(const DetId& id) {
-    if (id.subdetId() == (int) PixelSubdetector::PixelBarrel) {
-        PXBDetId pxbId(id);
-        uint32_t layer  = pxbId.layer();
-        return layer;
-    } else if (id.subdetId() == (int) PixelSubdetector::PixelEndcap) {
-        PXFDetId pxfId(id);
-        uint32_t side   = pxfId.side();
-        uint32_t disk   = pxfId.disk();
-        uint32_t layer  = (side == 2) ? disk : disk+7;
-        return layer;
-    } else {  // error
-        return 999999;
-    }
-}
-
-uint32_t getModuleLadder(const DetId& id) {
-    if (id.subdetId() == (int) PixelSubdetector::PixelBarrel) {
-        PXBDetId pxbId(id);
-        uint32_t ladder = pxbId.ladder();
-        return ladder;
-    } else if (id.subdetId() == (int) PixelSubdetector::PixelEndcap) {
-        PXFDetId pxfId(id);
-        uint32_t ring   = pxfId.ring();
-        uint32_t blade  = pxfId.blade();
-        uint32_t panel  = pxfId.panel();
-        if(panel != 1 || ring != blade) {  // error
-            return 999999;
-        }
-        return ring;
-    } else {  // error
-        return 999999;
-    }
-}
-
-uint32_t getModuleModule(const DetId& id) {
-    if (id.subdetId() == (int) PixelSubdetector::PixelBarrel) {
-        PXBDetId pxbId(id);
-        uint32_t module = pxbId.module();
-        return module;
-    } else if (id.subdetId() == (int) PixelSubdetector::PixelEndcap) {
-        PXFDetId pxfId(id);
-        uint32_t module = pxfId.module();
-        return module;
-    } else {  // error
-        return 999999;
-    }
-}
-
-uint32_t getModuleId(const DetId& id) {
-    uint32_t layer  = getModuleLayer(id);
-    uint32_t ladder = getModuleLadder(id);
-    uint32_t module = getModuleModule(id);
-    assert(layer != 999999 && ladder != 999999 && module != 999999);
-    return 10000*layer + 100*(ladder-1) + (module-1)/2;
-}
-}
-
-
 // Here we make the layout of the detector
 void AnalyzerModuleVertices::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup) {
     /// Geometry setup
@@ -142,6 +84,8 @@ void AnalyzerModuleVertices::beginRun(const edm::Run& iRun, const edm::EventSetu
     moduleId1ToStackId.clear();
     moduleId0ToGeoId.clear();
     moduleId1ToGeoId.clear();
+
+    ModuleIdFunctor getModuleId;
 
     /// Loop over the detector elements
     StackedTrackerGeometry::StackContainerIterator  stkIterator;

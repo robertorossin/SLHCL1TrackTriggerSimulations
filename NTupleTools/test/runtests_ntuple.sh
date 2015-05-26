@@ -3,8 +3,7 @@
 # Pass in name and status
 function die { echo $1: status $2 ;  exit $2; }
 
-[ -e rawsim_numEvent100.root ] && rm rawsim_numEvent100.root
-ln -s ${LOCAL_TEST_DIR}/rawsim_numEvent100.root || die 'Failure getting input file' $?
+[ -e rawsim_numEvent100.root ] || die 'Failure getting input file' $?
 (cmsRun ${LOCAL_TEST_DIR}/test_ntuple_cfg.py ) || die 'Failure using test_ntuple_cfg.py' $?
 
 #[ -e test_ntuple.root ] && rm test_ntuple.root

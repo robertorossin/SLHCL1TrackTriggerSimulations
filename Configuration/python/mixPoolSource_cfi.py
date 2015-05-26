@@ -3,7 +3,9 @@ import FWCore.ParameterSet.Config as cms
 
 #fname = "input_MinBias_TuneZ2star_TTI2023Upg14.txt"
 #fname = "input_MinBias_TuneZ2star_private_20140926.txt"
-fname = "input_MinBias_TuneCUEP6S1_private_20140926.txt"
+#fname = "input_MinBias_TuneCUEP6S1_private_20140926.txt"
+fname = "input_MinBias_TuneCUEP6S1_20150408.txt"
+#fname = "input_MinBias_TuneZ2star_20150408.txt"
 
 import os
 dirname = os.environ["CMSSW_BASE"] + "/src/SLHCL1TrackTriggerSimulations/Configuration/data/"
