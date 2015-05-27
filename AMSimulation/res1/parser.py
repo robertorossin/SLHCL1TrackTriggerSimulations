@@ -16,7 +16,7 @@ def add_drawer_arguments(parser):
     parser.add_argument("--logy", action="store_true", help="draw plots with log y scale (default: %(default)s)")
     parser.add_argument("-n", "--nentries", type=int, default=-1, help="number of entries (default: %(default)s)")
     parser.add_argument("-b", "--batch", action="store_true", help="batch mode without graphics (default: %(default)s)")
-    parser.add_argument("-v", "--verbosity", action="count", default=0, help="verbosity (default: %(default)s)")
+    parser.add_argument("-v", "--verbose", action="count", default=0, help="verbosity (default: %(default)s)")
 
 def parse_drawer_options(options):
     # Create outdir if necessary

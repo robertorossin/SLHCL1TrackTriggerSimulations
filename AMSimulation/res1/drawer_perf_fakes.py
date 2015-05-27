@@ -15,7 +15,6 @@ fcol = TColor.GetColor("#a6cee3")  # mu0
 
 # ______________________________________________________________________________
 parnames = ["#phi", "cot #theta", "z_{0}", "1/p_{T}"]
-verbose = 0
 
 
 # ______________________________________________________________________________
@@ -157,7 +156,7 @@ def drawer_project(tree, histos, options):
 
             ngoods += 1
 
-        if verbose:  print ievt, nroads, ncombs, ntracks, ngoods, nduplicates, nfakes
+        if options.verbose:  print ievt, nroads, ncombs, ntracks, ngoods, nduplicates, nfakes
 
         assert(ntracks == ngoods + nduplicates + nfakes)
         histos["nroads_per_event"       ].Fill(nroads)

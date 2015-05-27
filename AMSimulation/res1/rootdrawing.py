@@ -28,6 +28,7 @@ class DrawerInit:
         gStyle.SetPadRightMargin(0.05)
         gStyle.SetTitleOffset(1.1, "Y")
         gStyle.SetLabelSize(0.04, "Y")
+        gStyle.SetLabelSize(0.04, "Z")
         gStyle.SetNdivisions(505, "XY")
 
         gStyle.SetPalette(55)  # rainbow color map
@@ -78,7 +79,7 @@ def moveLegend(x1, y1, x2, y2):
     tlegend.SetX1(x1); tlegend.SetY1(y1); tlegend.SetX2(x2); tlegend.SetY2(y2)
     tlegend.SetX1NDC(x1); tlegend.SetY1NDC(y1); tlegend.SetX2NDC(x2); tlegend.SetY2NDC(y2)
 
-def movePalette(h, x1=0.91, y1=0.13, x2=0.95, y2=0.95):
+def movePalette(h, x1=0.88, y1=0.13, x2=0.92, y2=0.95):
     paletteObj = h.FindObject("palette")
     paletteObj.SetX1NDC(x1); paletteObj.SetY1NDC(y1); paletteObj.SetX2NDC(x2); paletteObj.SetY2NDC(y2)
 
@@ -112,7 +113,7 @@ def getMaximum(histos):
         maxima.append(h.h.GetMaximum())
     return max(maxima)
 
-def save(imgdir, imgname, redraw_axis=True, dot_pdf=True, dot_root=False):
+def save(imgdir, imgname, redraw_axis=True, dot_pdf=True, dot_root=False, dot_c=False):
     if redraw_axis:
         gPad.RedrawAxis()
     #gPad.Modified(); gPad.Update()
@@ -129,4 +130,6 @@ def save(imgdir, imgname, redraw_axis=True, dot_pdf=True, dot_root=False):
         tfile = TFile.Open(imgdir+imgname+".root", "RECREATE")
         save_for_root(gPad)
         tfile.Close()
+    if dot_c:
+        gPad.Print(imgdir+imgname+".C")
 

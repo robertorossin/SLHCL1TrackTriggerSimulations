@@ -10,7 +10,6 @@ c_pdgName = pdgName.pdgName()
 
 # ______________________________________________________________________________
 parnames = ["#phi", "cot #theta", "z_{0}", "1/p_{T}"]
-verbose = 0
 
 def use_TEfficiency():
     del ROOT.TEfficiency
@@ -52,8 +51,12 @@ def drawer_book(options):
     hname = prefix + "pdgName"
     histos[hname] = TProfile   (hname, "; pdgName; %s" % ytitle,     50, -25, 25, 0., 2., "")
 
-    if options.pu >= 140:  # low stat
-        prefix = "efficiency_"
+    if options.low_stat:
+        histos[prefix + "pt"  ].SetBins(50, 0., 500.)
+        histos[prefix + "ppt" ].SetBins(50, 0., 50.)
+        histos[prefix + "pppt"].SetBins(50, 0., 10.)
+
+    if options.low_low_stat:
         histos[prefix + "pt"  ].SetBins(20, 0., 500.)
         histos[prefix + "ppt" ].SetBins(20, 0., 50.)
         histos[prefix + "pppt"].SetBins(20, 0., 10.)
@@ -81,6 +84,11 @@ def parse_parname(s):
     s = s.replace("}","")
     return s
 
+def repr_cppvector(v):
+    s = ",".join([str(x) for x in v])
+    s = "[" + s + "]"
+    return s
+
 def drawer_project(tree, histos, options):
     tree.SetBranchStatus("*", 0)
     tree.SetBranchStatus("trkParts_pt"     , 1)
@@ -93,8 +101,6 @@ def drawer_project(tree, histos, options):
     tree.SetBranchStatus("trkParts_primary", 1)
     tree.SetBranchStatus("trkParts_signal" , 1)
     tree.SetBranchStatus("trkParts_pdgId"  , 1)
-    tree.SetBranchStatus("AMTTRoads_patternRef" , 1)
-    tree.SetBranchStatus("AMTTRoads_stubRefs"   , 1)
     tree.SetBranchStatus("AMTTTracks_invPt"     , 1)
     tree.SetBranchStatus("AMTTTracks_phi0"      , 1)
     tree.SetBranchStatus("AMTTTracks_cottheta"  , 1)
@@ -104,6 +110,7 @@ def drawer_project(tree, histos, options):
     tree.SetBranchStatus("AMTTTracks_synTpId"   , 1)
     tree.SetBranchStatus("AMTTTracks_roadRef"   , 1)
     tree.SetBranchStatus("AMTTTracks_patternRef", 1)
+    tree.SetBranchStatus("AMTTTracks_stubRefs"  , 1)
 
     # Loop over events
     numEntries, denomEntries = 0, 0
@@ -117,7 +124,7 @@ def drawer_project(tree, histos, options):
         trkparts = {}
 
         for ipart in xrange(nparts_all):
-            if options.singlesignal:
+            if options.pu == 0:  # single-track events
                 if ipart > 0:
                     break
 
@@ -134,19 +141,11 @@ def drawer_project(tree, histos, options):
             pt      = evt.trkParts_pt     [ipart]
             eta     = evt.trkParts_eta    [ipart]
             phi     = evt.trkParts_phi    [ipart]
-            vx      = evt.trkParts_vx     [ipart]
-            vy      = evt.trkParts_vy     [ipart]
             vz      = evt.trkParts_vz     [ipart]
             pdgId   = evt.trkParts_pdgId  [ipart]
 
-            if options.pu == 0:
-                if not (sqrt(vx*vx+vy*vy)<0.005):  # apply tighter primary vertex cut
-                    continue
-
             trkparts[ipart] = (pt, eta, phi, vz, charge, pdgId)
-
-        if options.pu == 0:  # single-track events
-            assert(len(trkparts) == 1)
+            if options.verbose:  print ievt, "part ", ipart, 1.0/pt
 
 
         ntracks_all = evt.AMTTTracks_patternRef.size()
@@ -176,6 +175,8 @@ def drawer_project(tree, histos, options):
 
             if trigger:
                 trkparts_trigger[synTpId] = True
+
+                if options.verbose and (synTpId in trkparts):  print ievt, "track", itrack, invPt, repr_cppvector(evt.AMTTTracks_stubRefs[itrack])
 
         #for k, v in trkparts_trigger.iteritems():
         #    assert k in trkparts
@@ -219,17 +220,18 @@ def drawer_draw(histos, options):
             h.LabelsOption("a")
 
         if h.ClassName() == "TEfficiency":
-            h = h.GetCopyTotalHisto(); h.Reset()
-        h.SetMinimum(0); h.SetMaximum(ymax)
-        h.SetStats(0); h.Draw()
+            h1 = h.GetCopyTotalHisto(); h1.Reset()
+        else:
+            h1 = h
+        h1.SetMinimum(0); h1.SetMaximum(ymax)
+        h1.SetStats(0); h1.Draw()
 
         # Reference lines for 0.9, 0.95 and 1.0
-        xmin, xmax = h.GetXaxis().GetXmin(), h.GetXaxis().GetXmax()
+        xmin, xmax = h1.GetXaxis().GetXmin(), h1.GetXaxis().GetXmax()
         for y in [0.5, 0.8, 0.9, 0.95, 1.0]:
             tline.DrawLine(xmin, y, xmax, y)
 
         if h.ClassName() == "TEfficiency":
-            h = histos[hname]
             h.gr = h.CreateGraph()
             h.gr.Draw("p")
         else:
@@ -295,7 +297,8 @@ if __name__ == '__main__':
     parser.add_argument("--coverage", type=float, default=0.95, help="desired coverage (default: %(default)s)")
     parser.add_argument("--minPt", type=float, default=2, help="min pT (default: %(default)s)")
     parser.add_argument("--maxChi2", type=float, default=5, help="max reduced chi-squared (default: %(default)s)")
-    parser.add_argument("--singlesignal", action="store_true", help="select single signal track (default: %(default)s)")
+    parser.add_argument("--low-stat", action="store_true", help="low statistics (default: %(default)s)")
+    parser.add_argument("--low-low-stat", action="store_true", help="low low statistics (default: %(default)s)")
 
     # Parse default arguments
     options = parser.parse_args()

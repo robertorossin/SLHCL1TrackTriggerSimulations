@@ -150,7 +150,7 @@ def drawer_project(tree, histos, options):
     for ievt, evt in enumerate(tree):
         if (ievt == options.nentries):  break
 
-        if not options.randomCharge:
+        if not options.random_charge:
             charge = evt.genParts_charge[0]
             if charge > 0:  continue
 
@@ -160,6 +160,41 @@ def drawer_project(tree, histos, options):
 
     tree.SetBranchStatus("*", 1)
     return
+
+def drawer_draw_frame_only(histos, view, tpolylines, options):
+    if view == "XY":
+        hname = "xy"
+    elif view == "RZ":
+        hname = "rz"
+
+    h = histos[hname]
+    hframe = h.Clone("hframe")
+    hframe.Reset()
+    hframe.SetLineColor(0)
+    hframe.SetStats(0); hframe.Draw()
+
+    for l in tpolylines:
+        l.Draw()
+
+    if view == "XY":
+        for phi in [options.phimin, options.phimax]:
+            if phi < 1.0:
+                tline2.DrawLine(0, 0, xmax, xmax*tan(phi))
+            else:
+                tline2.DrawLine(0, 0, ymax/tan(phi), ymax)
+    elif view == "RZ":
+        for eta in [options.etamin, options.etamax]:
+            theta = 2.0 * atan(exp(-eta))
+            if theta < 1.0:
+                tline2.DrawLine(0, 0, zmax, zmax*tan(theta))
+            else:
+                tline2.DrawLine(0, 0, ymax/tan(theta), ymax)
+
+    #CMS_label()
+    save(options.outdir, "%s_frame" % hname, dot_c=True)
+    donotdelete.append([hframe, tpolylines])
+    return
+
 
 def drawer_draw(histos, view, tpolylines, tgraph_p, tgraph_m, options):
     if view == "XY":
@@ -173,12 +208,12 @@ def drawer_draw(histos, view, tpolylines, tgraph_p, tgraph_m, options):
 
     hframe = h.Clone("hframe")
     hframe.Reset()
-    hframe.SetLineColor(kWhite)
+    hframe.SetLineColor(0)
     hframe.SetStats(0); hframe.Draw()
 
     for l in tpolylines:
         l.Draw()
-    if not options.randomCharge:
+    if not options.random_charge:
         tgraph_m.Draw("l")
     else:
         tgraph_p.Draw("l")
@@ -204,11 +239,10 @@ def drawer_draw(histos, view, tpolylines, tgraph_p, tgraph_m, options):
     tlegend.AddEntry(hframe, "#phi  = %i#pi/8" % (options.phi*8/pi), "l")
     tlegend.Draw()
     h.Draw("same")
+
     CMS_label()
     save(options.outdir, "%s_pt%i" % (hname, i_pt))
-
-    donotdelete.append(hframe)
-    donotdelete.append([tpolylines, tgraph_p, tgraph_m])
+    donotdelete.append([hframe, tpolylines, tgraph_p, tgraph_m])
     return
 
 def drawer_sitrep(histos, options):
@@ -231,8 +265,12 @@ def main(options):
     tpolylines_xy = get_tpolylines("XY")
     tpolylines_rz = get_tpolylines("RZ")
     tgraphs = get_tgraphs(options.pt, options.eta, options.phi, options.vz)
-    drawer_draw(histos, "XY", tpolylines_xy, tgraphs[0], tgraphs[1], options)
-    drawer_draw(histos, "RZ", tpolylines_rz, tgraphs[2], tgraphs[2], options)
+    if options.frame_only:
+        drawer_draw_frame_only(histos, "XY", tpolylines_xy, options)
+        drawer_draw_frame_only(histos, "RZ", tpolylines_rz, options)
+    else:
+        drawer_draw(histos, "XY", tpolylines_xy, tgraphs[0], tgraphs[1], options)
+        drawer_draw(histos, "RZ", tpolylines_rz, tgraphs[2], tgraphs[2], options)
     drawer_sitrep(histos, options)
 
 
@@ -250,7 +288,8 @@ if __name__ == '__main__':
     parser.add_argument("--eta", type=float, default=1.1/3, help="generated track eta (default: %(default)s)")
     parser.add_argument("--phi", type=float, default=pi*3/8, help="generated track phi (default: %(default)s)")
     parser.add_argument("--vz", type=float, default=0., help="generated track vz (default: %(default)s)")
-    parser.add_argument("--randomCharge", action="store_true", help="use tracks of both charges (default: %(default)s)")
+    parser.add_argument("--random-charge", action="store_true", help="use tracks of both charges (default: %(default)s)")
+    parser.add_argument("--frame-only", action="store_true", help="draw the frame only (default: %(default)s)")
 
     # Parse default arguments
     options = parser.parse_args()

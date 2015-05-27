@@ -49,7 +49,7 @@ def drawer_book():
                 x.append(x_i)
                 cov.append(cov_i)
                 freq.append(freq_i)
-                print "..", x_i, cov_i, freq_i
+                if options.verbose:  print "..", x_i, cov_i, freq_i
 
                 x_i += pointwidth
 
@@ -59,7 +59,7 @@ def drawer_book():
                 x.append(x_i)
                 cov.append(cov_i)
                 freq.append(freq_i)
-                print "..", x_i, cov_i, freq_i
+                if options.verbose:  print "..", x_i, cov_i, freq_i
 
                 assert((integral_i + freq_i) == bank_count)
 
@@ -72,7 +72,7 @@ def drawer_book():
                 break
 
         superstrips.append((ss, npatterns, bank_coverage, bank_count, npatterns_stop))
-        print superstrips[-1]
+        if options.verbose:  print superstrips[-1]
 
         npoints = len(x)
         gname = "gr_%s" % ss
@@ -101,7 +101,6 @@ def drawer_draw_cov(superstrips, graphs, options):
 
     hframe = TH1F("hframe", "; # of patterns; running estimate for coverage", 1000, options.xmin, options.xmax)
     hframe.SetStats(0); hframe.SetMinimum(0); hframe.SetMaximum(1.2)
-    hframe.SetNdivisions(510, "Y")
 
     # Style
     for i, ss in enumerate(superstrips):
@@ -147,7 +146,6 @@ def drawer_draw_freq(superstrips, graphs, options):
 
     hframe = TH1F("hframe", "; # of patterns; frequency", 1000, options.xmin, options.xmax)
     hframe.SetStats(0); hframe.SetMinimum(0.5); hframe.SetMaximum(1e5)
-    hframe.SetNdivisions(510, "Y")
 
     # Style
     for i, ss in enumerate(superstrips):
@@ -205,6 +203,7 @@ def main(options):
     drawerInit = DrawerInit()
     gStyle.SetPadRightMargin(0.1)
     gStyle.SetTitleSize(0.05, "Y")
+    gStyle.SetNdivisions(510, "Y")
 
     # Process
     (superstrips, graphs) = drawer_book()

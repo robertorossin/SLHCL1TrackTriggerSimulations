@@ -11,7 +11,6 @@ fcol = TColor.GetColor("#a6cee3")  # mu0
 parnames = ["#phi", "cot #theta", "z_{0}", "1/p_{T}"]
 nvariables = 12
 nparameters = 4
-verbose = 0
 
 
 # ______________________________________________________________________________
@@ -125,7 +124,7 @@ def drawer_project(tree, histos, options):
         hname = "chi2Red"
         histos[hname].Fill(minChi2Red)
 
-        if verbose:  print ievt, itrack, "/", ntracks, minChi2Red
+        if options.verbose:  print ievt, itrack, "/", ntracks, minChi2Red
 
         if ntracks and minChi2Red != 999999. and minChi2Red < options.maxChi2:
             phi0       = evt.AMTTTracks_phi0      [itrack]
@@ -151,7 +150,7 @@ def drawer_project(tree, histos, options):
                 hname = "errpar%i" % i
                 histos[hname].Fill(pairs[i][1]-pairs[i][0])
 
-                if verbose:  print ".. {0:9} {1:15f} {2:15f} {3:15f}".format(parse_parname(parnames[i]), pairs[i][0], pairs[i][1], pairs[i][1]-pairs[i][0])
+                if options.verbose:  print ".. {0:9} {1:15f} {2:15f} {3:15f}".format(parse_parname(parnames[i]), pairs[i][0], pairs[i][1], pairs[i][1]-pairs[i][0])
 
     tree.SetBranchStatus("*", 1)
     return
