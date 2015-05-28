@@ -24,6 +24,7 @@ class TTStubPlusTPReader : public BasicReader {
     std::vector<float> *          vp2_vy;
     std::vector<float> *          vp2_vz;
     std::vector<int> *            vp2_charge;
+    std::vector<int> *            vp2_pdgId;
     std::vector<bool> *           vp2_signal;
     std::vector<bool> *           vp2_intime;
     std::vector<bool> *           vp2_primary;

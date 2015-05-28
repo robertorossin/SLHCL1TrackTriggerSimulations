@@ -214,12 +214,14 @@ int TrackFitter::makeTracks(TString src, TString out) {
                     //float simVy           = reader.vp2_vy->at(ipart);
                     float simVz           = reader.vp2_vz->at(ipart);
                     int   simCharge       = reader.vp2_charge->at(ipart);
+                    int   simPdgId        = reader.vp2_pdgId->at(ipart);
 
                     float simCotTheta     = std::sinh(simEta);
                     float simChargeOverPt = float(simCharge)/simPt;
 
                     trkParts.emplace_back(TrackingParticle{  // using POD type constructor
                         (int) ipart,
+                        simPdgId,
                         simChargeOverPt,
                         simPhi,
                         simCotTheta,
