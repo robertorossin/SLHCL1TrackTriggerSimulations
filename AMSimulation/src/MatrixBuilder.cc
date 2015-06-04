@@ -778,6 +778,7 @@ int MatrixBuilder::loopEventsAndEval(TTStubReader& reader) {
     std::vector<Statistics> statX(nvariables_);
     std::vector<Statistics> statV(nvariables_);
     std::vector<Statistics> statP(nparameters_);
+    std::vector<Statistics> statP100GeV(nparameters_);
 
     // Bookkeepers
     long int nRead = 0, nKept = 0;
@@ -884,6 +885,10 @@ int MatrixBuilder::loopEventsAndEval(TTStubReader& reader) {
         for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
             statP.at(ipar).fill(parameters_fit(ipar) - parameters(ipar));
 
+            if (std::abs(simChargeOverPt) < 1.0/100.) {
+                statP100GeV.at(ipar).fill(parameters_fit(ipar) - parameters(ipar));
+            }
+
             if (po_.speedup<1) {
                 hname = Form("par%i", ipar);
                 histograms_[hname]->Fill(parameters(ipar));
@@ -912,12 +917,16 @@ int MatrixBuilder::loopEventsAndEval(TTStubReader& reader) {
             std::cout << "principal " << ivar << ": " << statV.at(ivar).getEntries() << " " << statV.at(ivar).getMean() << " " << statV.at(ivar).getSigma() << std::endl;
         }
         std::cout << Info() << "statCT: " << std::endl;
-        for (unsigned ivar=0; ivar<2; ++ivar) {
-            std::cout << "parameter " << ivar << ": " << statCT.at(ivar).getEntries() << " " << statCT.at(ivar).getMean() << " " << statCT.at(ivar).getSigma() << std::endl;
+        for (unsigned ipar=0; ipar<2; ++ipar) {
+            std::cout << "parameter " << ipar << ": " << statCT.at(ipar).getEntries() << " " << statCT.at(ipar).getMean() << " " << statCT.at(ipar).getSigma() << std::endl;
         }
         std::cout << Info() << "statP: " << std::endl;
         for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
             std::cout << "parameter " << ipar << ": " << statP.at(ipar).getEntries() << " " << statP.at(ipar).getMean() << " " << statP.at(ipar).getSigma() << std::endl;
+        }
+        std::cout << Info() << "statP100GeV: " << std::endl;
+        for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
+            std::cout << "parameter " << ipar << ": " << statP100GeV.at(ipar).getEntries() << " " << statP100GeV.at(ipar).getMean() << " " << statP100GeV.at(ipar).getSigma() << std::endl;
         }
         std::cout.flags(flags);
     }
