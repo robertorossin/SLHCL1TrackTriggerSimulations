@@ -8,7 +8,7 @@ col  = TColor.GetColor("#1f78b4")  # mu0
 fcol = TColor.GetColor("#a6cee3")  # mu0
 
 # ______________________________________________________________________________
-parnames = ["#phi", "cot #theta", "z_{0}", "1/p_{T}"]
+parnames = ["#phi", "cot #theta", "z_{0} [cm]", "1/p_{T} [1/GeV]"]
 nvariables = 12
 nparameters = 4
 
@@ -59,6 +59,8 @@ def drawer_book():
     return histos
 
 def parse_parname(s):
+    s = s.replace("[GeV]","")
+    s = s.replace("[cm]","")
     s = s.replace("#","")
     s = s.replace(" ","")
     s = s.replace("_","")
@@ -94,8 +96,8 @@ def drawer_project(tree, histos, options):
         pt      = evt.genParts_pt    [ipart]
         eta     = evt.genParts_eta   [ipart]
         phi     = evt.genParts_phi   [ipart]
-        vx      = evt.genParts_vx    [ipart]
-        vy      = evt.genParts_vy    [ipart]
+        #vx      = evt.genParts_vx    [ipart]
+        #vy      = evt.genParts_vy    [ipart]
         vz      = evt.genParts_vz    [ipart]
         charge  = evt.genParts_charge[ipart]
 
@@ -103,6 +105,8 @@ def drawer_project(tree, histos, options):
         gen_cottheta = sinh(eta)
         gen_z0       = vz
         gen_invPt    = float(charge) / pt
+        #gen_pt       = float(charge) * pt
+        #gen_eta      = eta
 
 
         ntracks = evt.AMTTTracks_ndof.size()
