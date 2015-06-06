@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 
 class pdgName:
+    '''
+    Convert a pdgId to a string name
+    Taken from HepPDT src/HepPID/ParticleName.cc
+    http://lcgapp.cern.ch/project/simu/HepPDT/HepPDT.3.04.01/html/ParticleName_8cc-source.html
+    '''
+
     def __init__(self):
         self.namemap = {
               1:  "d",
@@ -44,6 +50,8 @@ class pdgName:
            -323:  "K*(892)^-",
             411:  "D^+",
            -411:  "D^-",
+            521:  "B^+",
+           -521:  "B^-",
            2112:  "n^0",
           -2112:  "n~^0",
            2212:  "p^+",

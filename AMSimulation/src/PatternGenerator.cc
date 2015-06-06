@@ -14,45 +14,6 @@ bool sortByFrequency(const std::pair<pattern_type, unsigned>& lhs, const std::pa
 
 
 // _____________________________________________________________________________
-int PatternGenerator::setupTriggerTower(TString datadir) {
-    TString csvfile1 = datadir + "trigger_sector_map.csv";
-    TString csvfile2 = datadir + "trigger_sector_boundaries.csv";
-
-    try {
-        ttmap_ -> readTriggerTowerMap(csvfile1);
-
-    } catch (const std::invalid_argument& e) {
-        std::cout << Error() << "Failed to parse: " << csvfile1 << ". What: " << e.what() << std::endl;
-        return 1;
-    }
-
-    try {
-        ttmap_ -> readTriggerTowerBoundaries(csvfile2);
-
-    } catch (const std::invalid_argument& e) {
-        std::cout << Error() << "Failed to parse: " << csvfile2 << ". What: " << e.what() << std::endl;
-        return 1;
-    }
-
-    //ttmap_ -> print();
-    return 0;
-}
-
-// _____________________________________________________________________________
-int PatternGenerator::setupSuperstrip() {
-    try {
-        arbiter_ -> setDefinition(po_.superstrip, po_.tower, ttmap_);
-
-    } catch (const std::invalid_argument& e) {
-        std::cout << Error() << "Failed to set definition: " << po_.superstrip << ". What: " << e.what() << std::endl;
-        return 1;
-    }
-
-    //arbiter_ -> print();
-    return 0;
-}
-
-// _____________________________________________________________________________
 // Make the patterns
 int PatternGenerator::makePatterns(TString src) {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events and generating patterns." << std::endl;
@@ -327,14 +288,6 @@ int PatternGenerator::writePatterns(TString out) {
 int PatternGenerator::run() {
     int exitcode = 0;
     Timing(1);
-
-    exitcode = setupTriggerTower(po_.datadir);
-    if (exitcode)  return exitcode;
-    Timing();
-
-    exitcode = setupSuperstrip();
-    if (exitcode)  return exitcode;
-    Timing();
 
     exitcode = makePatterns(po_.input);
     if (exitcode)  return exitcode;

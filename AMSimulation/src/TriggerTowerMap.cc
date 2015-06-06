@@ -25,6 +25,16 @@ TriggerTowerMap::TriggerTowerMap() {
 }
 
 // _____________________________________________________________________________
+void TriggerTowerMap::read(TString datadir) {
+    TString csvfile1 = datadir + "trigger_sector_map.csv";
+    TString csvfile2 = datadir + "trigger_sector_boundaries.csv";
+
+    readTriggerTowerMap(csvfile1);
+
+    readTriggerTowerBoundaries(csvfile2);
+}
+
+// _____________________________________________________________________________
 void TriggerTowerMap::readTriggerTowerMap(TString csvfile) {
 
     if (!csvfile.EndsWith(".csv"))

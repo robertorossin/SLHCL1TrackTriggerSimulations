@@ -171,7 +171,20 @@ def drawer_draw(histos, options):
 
 def drawer_sitrep(histos, options):
     print "--- SITREP ---------------------------------------------------------"
-    print "n/a"
+
+    h = histos["trkParts_pdgName"]
+    bincontents = {}
+    integral = 0
+    for i in xrange(1,h.GetNbinsX()+1):
+        #print i, h.GetXaxis().GetBinLabel(i), h.GetBinContent(i)
+        binlabel = h.GetXaxis().GetBinLabel(i).replace("~","").replace("^+","^+-").replace("^-","^+-")
+        bincontents[binlabel] = bincontents.get(binlabel,0) + h.GetBinContent(i)
+        integral += h.GetBinContent(i)
+    assert(integral == h.Integral())
+
+    print "Primary tracking particle composition:"
+    for k, v in sorted(bincontents.items(), key=lambda x: x[1], reverse=True):
+        print "{0:8s} {1:.3f}".format(k, float(v)/integral)
 
 
 # ______________________________________________________________________________

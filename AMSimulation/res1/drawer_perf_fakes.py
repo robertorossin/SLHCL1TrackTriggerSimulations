@@ -2,7 +2,6 @@
 
 from rootdrawing import *
 from parser import *
-from math import sinh
 
 col  = TColor.GetColor("#1f78b4")  # mu0
 fcol = TColor.GetColor("#a6cee3")  # mu0
@@ -16,7 +15,6 @@ fcol = TColor.GetColor("#a6cee3")  # mu0
 
 # ______________________________________________________________________________
 parnames = ["#phi", "cot #theta", "z_{0}", "1/p_{T}"]
-verbose = 0
 
 
 # ______________________________________________________________________________
@@ -76,8 +74,8 @@ def drawer_project(tree, histos, options):
     tree.SetBranchStatus("trkParts_pt"     , 1)
     tree.SetBranchStatus("trkParts_eta"    , 1)
     tree.SetBranchStatus("trkParts_phi"    , 1)
-    tree.SetBranchStatus("trkParts_vx"     , 1)
-    tree.SetBranchStatus("trkParts_vy"     , 1)
+    #tree.SetBranchStatus("trkParts_vx"     , 1)
+    #tree.SetBranchStatus("trkParts_vy"     , 1)
     tree.SetBranchStatus("trkParts_vz"     , 1)
     tree.SetBranchStatus("trkParts_charge" , 1)
     tree.SetBranchStatus("trkParts_primary", 1)
@@ -96,6 +94,8 @@ def drawer_project(tree, histos, options):
     # Loop over events
     for ievt, evt in enumerate(tree):
         if (ievt == options.nentries):  break
+
+        if (ievt % 10 == 0):  print "Processing event: %i" % ievt
 
         if options.pu == 0:  # single-track events
             pt = evt.trkParts_pt[0]
@@ -156,7 +156,7 @@ def drawer_project(tree, histos, options):
 
             ngoods += 1
 
-        if verbose:  print ievt, nroads, ncombs, ntracks, ngoods, nduplicates, nfakes
+        if options.verbose:  print ievt, nroads, ncombs, ntracks, ngoods, nduplicates, nfakes
 
         assert(ntracks == ngoods + nduplicates + nfakes)
         histos["nroads_per_event"       ].Fill(nroads)

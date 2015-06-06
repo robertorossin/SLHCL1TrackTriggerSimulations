@@ -36,10 +36,6 @@ def drawer_book():
     histos = {}
 
     # TH1F
-    hname = "stub_ds_all"
-    nbinsx, xmin, xmax = modify_binning(40, -10., 10.)
-    histos[hname] = TH1F(hname, "; stub #Delta s_{all}", nbinsx, xmin, xmax)
-
     for i in xrange(6):
         hname = "stub_ds_%i" % i
         nbinsx, xmin, xmax = modify_binning(40, -10., 10.)
@@ -47,55 +43,52 @@ def drawer_book():
 
         hname = "stub_dphi_%i" % i
         nbinsx, xmin, xmax = modify_binning(1000, -0.01, 0.01)
-        histos[hname] = TH1F(hname, "; stub #delta #phi_{L%i}" % i, nbinsx, xmin, xmax)
+        histos[hname] = TH1F(hname, "; stub #delta #phi_{L%i} [rad]" % i, nbinsx, xmin, xmax)
 
         hname = "stub_dphi_corr_%i" % i
-        histos[hname] = TH1F(hname, "; stub #delta #phi_{L%i} (corr)" % i, nbinsx, xmin, xmax)
+        histos[hname] = TH1F(hname, "; stub #delta #phi_{L%i} (corr) [rad]" % i, nbinsx, xmin, xmax)
 
         hname = "stub_dphi_four_%i" % i
-        histos[hname] = TH1F(hname, "; stub #delta #phi_{L%i} (@stub r)" % i, nbinsx, xmin, xmax)
+        histos[hname] = TH1F(hname, "; stub #delta #phi_{L%i} (@stub r) [rad]" % i, nbinsx, xmin, xmax)
 
         hname = "stub_absdphi_%i" % i
         nbinsx, xmin, xmax = modify_binning(1000, -0.01, 0.01)
-        histos[hname] = TH1F(hname, "; stub |#delta #phi|_{L%i}" % i, nbinsx, xmin, xmax)
+        histos[hname] = TH1F(hname, "; stub |#delta #phi|_{L%i} [rad]" % i, nbinsx, xmin, xmax)
 
         hname = "stub_absdphi_corr_%i" % i
-        histos[hname] = TH1F(hname, "; stub |#delta #phi|_{L%i} (corr)" % i, nbinsx, xmin, xmax)
+        histos[hname] = TH1F(hname, "; stub |#delta #phi|_{L%i} (corr) [rad]" % i, nbinsx, xmin, xmax)
 
         hname = "stub_absdphi_four_%i" % i
-        histos[hname] = TH1F(hname, "; stub |#delta #phi|_{L%i} (@stub r)" % i, nbinsx, xmin, xmax)
+        histos[hname] = TH1F(hname, "; stub |#delta #phi|_{L%i} (@stub r) [rad]" % i, nbinsx, xmin, xmax)
 
         hname = "stub_dz_%i" % i
         nbinsx, xmin, xmax = modify_binning(1000, -1., 1.) if i < 3 else modify_binning(1000, -10., 10.)
-        histos[hname] = TH1F(hname, "; stub #delta z_{L%i}" % i, nbinsx, xmin, xmax)
+        histos[hname] = TH1F(hname, "; stub #delta z_{L%i} [cm]" % i, nbinsx, xmin, xmax)
 
         #hname = "stub_dz_corr_%i" % i
-        #histos[hname] = TH1F(hname, "; stub #delta z_{L%i} (corr)" % i, nbinsx, xmin, xmax)
+        #histos[hname] = TH1F(hname, "; stub #delta z_{L%i} (corr) [cm]" % i, nbinsx, xmin, xmax)
 
         hname = "stub_dz_four_%i" % i
-        histos[hname] = TH1F(hname, "; stub #delta z_{L%i} (@stub r)" % i, nbinsx, xmin, xmax)
+        histos[hname] = TH1F(hname, "; stub #delta z_{L%i} (@stub r) [cm]" % i, nbinsx, xmin, xmax)
 
         hname = "stub_absdz_%i" % i
         nbinsx, xmin, xmax = modify_binning(1000, -1., 1.) if i < 3 else modify_binning(1000, -10., 10.)
-        histos[hname] = TH1F(hname, "; stub |#delta z|_{L%i}" % i, nbinsx, xmin, xmax)
+        histos[hname] = TH1F(hname, "; stub |#delta z|_{L%i} [cm]" % i, nbinsx, xmin, xmax)
 
         #hname = "stub_absdz_corr_%i" % i
-        #histos[hname] = TH1F(hname, "; stub |#delta z|_{L%i} (corr)" % i, nbinsx, xmin, xmax)
+        #histos[hname] = TH1F(hname, "; stub |#delta z|_{L%i} (corr) [cm]" % i, nbinsx, xmin, xmax)
 
         hname = "stub_absdz_four_%i" % i
-        histos[hname] = TH1F(hname, "; stub |#delta z|_{L%i} (@stub r)" % i, nbinsx, xmin, xmax)
+        histos[hname] = TH1F(hname, "; stub |#delta z|_{L%i} (@stub r) [cm]" % i, nbinsx, xmin, xmax)
 
     # TH2F
-    hname = "stub_invPt_vs_ds_all"
-    nbinsx, xmin, xmax = modify_binning(40, -10., 10.)
-    nbinsy, ymin, ymax = 1000, -0.6, 0.6
-    histos[hname] = TH2F(hname, "; stub #Delta s_{all}; signed 1/p_{T} [1/GeV]", nbinsx, xmin, xmax, nbinsy, ymin, ymax)
-
+    barrel_ds_cuts = [2.5, 2.5, 3.0, 4.5, 5.5, 6.5]
     for i in xrange(6):
-        hname = "stub_invPt_vs_ds_%i" % i
-        nbinsx, xmin, xmax = modify_binning(40, -10., 10.)
-        nbinsy, ymin, ymax = 1000, -0.6, 0.6
-        histos[hname] = TH2F(hname, "; stub #Delta s_{L%i}; signed 1/p_{T} [1/GeV]" % i, nbinsx, xmin, xmax, nbinsy, ymin, ymax)
+        hname = "stub_ds_vs_invPt_%i" % i
+        nbinsx, xmin, xmax = 60, -0.6, 0.6
+        nbinsy, ymin, ymax = modify_binning(40, -10., 10.)
+        histos[hname] = TH2F(hname, "; signed 1/p_{T} [1/GeV]; stub #Delta s_{L%i}" % i, nbinsx, xmin, xmax, nbinsy, ymin, ymax)
+        histos[hname].ds_cut = barrel_ds_cuts[i]
 
     # Style
     for hname, h in histos.iteritems():
@@ -123,6 +116,8 @@ def drawer_project(tree, histos, options):
     # Loop over events
     for ievt, evt in enumerate(tree):
         if (ievt == options.nentries):  break
+
+        if (ievt % 1000 == 0):  print "Processing event: %i" % ievt
 
         # Only tracks with 6 stubs
         if evt.TTStubs_modId.size() != 6:
@@ -152,11 +147,9 @@ def drawer_project(tree, histos, options):
             stub_ds  = evt.TTStubs_trigBend[i]
             stub_dr  = rMeans[i] - stub_r
 
-            histos["stub_ds_all"].Fill(stub_ds)
             histos["stub_ds_%i" % i].Fill(stub_ds)
 
-            histos["stub_invPt_vs_ds_all"].Fill(stub_ds, gen_invPt)
-            histos["stub_invPt_vs_ds_%i" % i].Fill(stub_ds, gen_invPt)
+            histos["stub_ds_vs_invPt_%i" % i].Fill(gen_invPt, stub_ds)
 
             ideal_phi_at_stub_r = calcIdealPhi(gen_phi, gen_invPt, stub_r)
             ideal_phi_at_mean_r = calcIdealPhi(gen_phi, gen_invPt, rMeans[i])
@@ -182,7 +175,7 @@ def drawer_project(tree, histos, options):
             #histos["stub_absdz_corr_%i" % i].Fill(abs(stub_z_corr - ideal_z_at_mean_r))
             histos["stub_absdz_four_%i" % i].Fill(abs(stub_z - ideal_z_at_stub_r))
 
-
+    options.nentries = ievt
     tree.SetBranchStatus("*", 1)
     return
 
@@ -197,8 +190,27 @@ def drawer_draw(histos, options):
         else:
             # TH2F
             h.SetStats(0); h.Draw()
+
+            if hname.startswith("stub_ds_vs_invPt"):
+                pf = h.ProfileX("pf_"+hname, 1, -1, "s")
+                h.SetMinimum(1); h.SetMaximum(options.nentries/1e2); h.Draw("COLZ")
+                gPad.SetLogz(1)
+                gPad.SetRightMargin(0.12)
+                gPad.Modified(); gPad.Update()
+                movePalette(h)
+                gPad.Modified(); gPad.Update()
+                pf.Fit("pol1", "N")
+                pf.Draw("same")
+
+                tline.DrawLine(h.GetXaxis().GetXmin(), h.ds_cut+0.25, h.GetXaxis().GetXmax(), h.ds_cut+0.25)
+                tline.DrawLine(h.GetXaxis().GetXmin(), -h.ds_cut-0.25, h.GetXaxis().GetXmax(), -h.ds_cut-0.25)
+
             CMS_label()
             save(options.outdir, hname, dot_root=True, dot_pdf=False)
+
+            if hname.startswith("stub_ds_vs_invPt"):
+                gPad.SetLogz(0)
+                gPad.SetRightMargin(0.05)
 
 def drawer_sitrep(histos, options):
     # Get one-sided confidence interval

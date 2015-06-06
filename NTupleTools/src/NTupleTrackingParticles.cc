@@ -99,7 +99,8 @@ void NTupleTrackingParticles::produce(edm::Event& iEvent, const edm::EventSetup&
                 //}
 
                 // Primary: pT > 0.2 GeV, |rho0| < 0.5 cm, |z0| < 30 cm (Nicola Pozzobon's definition)
-                bool primary = (it->pt() > 0.2 && sqrt(it->vx() * it->vx() + it->vy() * it->vy()) < 0.5 && fabs(it->vz()) < 30.0);
+                bool primary = (it->charge() != 0 && it->pt() > 0.2 && fabs(it->eta()) < 2.5 && sqrt(it->vx() * it->vx() + it->vy() * it->vy()) < 0.5 && fabs(it->vz()) < 30.0);
+                //bool primary = (it->pt() > 0.2 && sqrt(it->vx() * it->vx() + it->vy() * it->vy()) < 0.5 && fabs(it->vz()) < 30.0);
                 //bool primary = (it->pt() > 0.2 && sqrt(it->vx() * it->vx() + it->vy() * it->vy()) < 0.1 && fabs(it->vz()) < 25.0);
 
                 // Fill the vectors

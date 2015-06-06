@@ -8,10 +8,9 @@ col  = TColor.GetColor("#1f78b4")  # mu0
 fcol = TColor.GetColor("#a6cee3")  # mu0
 
 # ______________________________________________________________________________
-parnames = ["#phi", "cot #theta", "z_{0}", "1/p_{T}"]
+parnames = ["#phi", "cot #theta", "z_{0} [cm]", "1/p_{T} [1/GeV]"]
 nvariables = 12
 nparameters = 4
-verbose = 0
 
 
 # ______________________________________________________________________________
@@ -60,6 +59,8 @@ def drawer_book():
     return histos
 
 def parse_parname(s):
+    s = s.replace("[GeV]","")
+    s = s.replace("[cm]","")
     s = s.replace("#","")
     s = s.replace(" ","")
     s = s.replace("_","")
@@ -95,8 +96,8 @@ def drawer_project(tree, histos, options):
         pt      = evt.genParts_pt    [ipart]
         eta     = evt.genParts_eta   [ipart]
         phi     = evt.genParts_phi   [ipart]
-        vx      = evt.genParts_vx    [ipart]
-        vy      = evt.genParts_vy    [ipart]
+        #vx      = evt.genParts_vx    [ipart]
+        #vy      = evt.genParts_vy    [ipart]
         vz      = evt.genParts_vz    [ipart]
         charge  = evt.genParts_charge[ipart]
 
@@ -104,6 +105,8 @@ def drawer_project(tree, histos, options):
         gen_cottheta = sinh(eta)
         gen_z0       = vz
         gen_invPt    = float(charge) / pt
+        #gen_pt       = float(charge) * pt
+        #gen_eta      = eta
 
 
         ntracks = evt.AMTTTracks_ndof.size()
@@ -125,7 +128,7 @@ def drawer_project(tree, histos, options):
         hname = "chi2Red"
         histos[hname].Fill(minChi2Red)
 
-        if verbose:  print ievt, itrack, "/", ntracks, minChi2Red
+        if options.verbose:  print ievt, itrack, "/", ntracks, minChi2Red
 
         if ntracks and minChi2Red != 999999. and minChi2Red < options.maxChi2:
             phi0       = evt.AMTTTracks_phi0      [itrack]
@@ -151,7 +154,7 @@ def drawer_project(tree, histos, options):
                 hname = "errpar%i" % i
                 histos[hname].Fill(pairs[i][1]-pairs[i][0])
 
-                if verbose:  print ".. {0:9} {1:15f} {2:15f} {3:15f}".format(parse_parname(parnames[i]), pairs[i][0], pairs[i][1], pairs[i][1]-pairs[i][0])
+                if options.verbose:  print ".. {0:9} {1:15f} {2:15f} {3:15f}".format(parse_parname(parnames[i]), pairs[i][0], pairs[i][1], pairs[i][1]-pairs[i][0])
 
     tree.SetBranchStatus("*", 1)
     return

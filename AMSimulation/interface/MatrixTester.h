@@ -16,7 +16,8 @@ class MatrixTester {
       nEvents_(po.maxEvents), verbose_(po.verbose) {
 
         // Initialize
-        ttmap_   = new TriggerTowerMap();
+        ttmap_ = new TriggerTowerMap();
+        ttmap_->read(po_.datadir);
 
         fitterPCA_ = new TrackFitterAlgoPCA(po);
         nvariables_ = fitterPCA_ -> nvariables();
@@ -35,8 +36,6 @@ class MatrixTester {
 
   private:
     // Member functions
-    // Setup trigger tower
-    int setupTriggerTower(TString datadir);
 
     // Build matrices
     int testMatrices(TString src);

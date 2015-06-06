@@ -7,31 +7,6 @@
 
 
 // _____________________________________________________________________________
-int MatrixTester::setupTriggerTower(TString datadir) {
-    TString csvfile1 = datadir + "trigger_sector_map.csv";
-    TString csvfile2 = datadir + "trigger_sector_boundaries.csv";
-
-    try {
-        ttmap_ -> readTriggerTowerMap(csvfile1);
-
-    } catch (const std::invalid_argument& e) {
-        std::cout << Error() << "Failed to parse: " << csvfile1 << ". What: " << e.what() << std::endl;
-        return 1;
-    }
-
-    try {
-        ttmap_ -> readTriggerTowerBoundaries(csvfile2);
-
-    } catch (const std::invalid_argument& e) {
-        std::cout << Error() << "Failed to parse: " << csvfile2 << ". What: " << e.what() << std::endl;
-        return 1;
-    }
-
-    //ttmap_ -> print();
-    return 0;
-}
-
-// _____________________________________________________________________________
 // Build matrices
 int MatrixTester::testMatrices(TString src) {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events and generating patterns." << std::endl;
@@ -67,8 +42,10 @@ int MatrixTester::testMatrices(TString src) {
         if (verbose_>1 && ievt%100000==0)  std::cout << Debug() << Form("... Processing event: %7lld, keeping: %7ld", ievt, nKept) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << std::endl;
 
-        // Apply track pt requirement
+        // Apply track invPt requirement
+        assert(reader.vp_pt->size() == 1);
         double simChargeOverPt = float(reader.vp_charge->front())/reader.vp_pt->front();
+        //double simCotTheta     = std::sinh(reader.vp_eta->front());
         if (simChargeOverPt < po_.minInvPt || po_.maxInvPt < simChargeOverPt) {
             ++nRead;
             keepEvents.push_back(false);
@@ -141,6 +118,7 @@ int MatrixTester::testMatrices(TString src) {
         TTRoadComb acomb;
         acomb.roadRef    = 0;
         acomb.combRef    = 0;
+        acomb.patternRef = 0;
         acomb.ptSegment  = 0;
         acomb.hitBits    = 0;
 
@@ -174,12 +152,13 @@ int MatrixTester::testMatrices(TString src) {
         TTTrack2 atrack;
         fitstatus = fitterPCA_->fit(acomb, atrack);
 
-        atrack.setTower    (po_.tower);
-        atrack.setRoadRef  (acomb.roadRef);
-        atrack.setCombRef  (acomb.combRef);
-        atrack.setPtSegment(acomb.ptSegment);
-        atrack.setHitBits  (acomb.hitBits);
-        atrack.setStubRefs (acomb.stubRefs);
+        atrack.setTower     (po_.tower);
+        atrack.setRoadRef   (acomb.roadRef);
+        atrack.setCombRef   (acomb.combRef);
+        atrack.setPatternRef(acomb.patternRef);
+        atrack.setPtSegment (acomb.ptSegment);
+        atrack.setHitBits   (acomb.hitBits);
+        atrack.setStubRefs  (acomb.stubRefs);
         tracks.push_back(atrack);
 
         if (verbose_>2)  std::cout << Debug() << "... track: " << 0 << " status: " << fitstatus << std::endl;
@@ -254,10 +233,6 @@ int MatrixTester::testMatrices(TString src) {
 int MatrixTester::run() {
     int exitcode = 0;
     Timing(1);
-
-    exitcode = setupTriggerTower(po_.datadir);
-    if (exitcode)  return exitcode;
-    Timing();
 
     exitcode = testMatrices(po_.input);
     if (exitcode)  return exitcode;
