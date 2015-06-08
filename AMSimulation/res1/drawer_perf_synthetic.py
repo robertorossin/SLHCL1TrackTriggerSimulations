@@ -228,7 +228,7 @@ def drawer_draw(histos, options):
 
     for hname, h in histos.iteritems():
         ymax = h.GetMaximum() * 1.4
-        h.SetMaximum(ymax); h.SetMinimum(0.)
+        h.SetMinimum(0); h.SetMaximum(ymax)
 
         h.Draw("hist")
         displayGaus(h, ignorebins=10)

@@ -87,7 +87,7 @@ def drawer_book(options):
     # Style
     for hname, h in histos.iteritems():
         h.SetLineWidth(2); h.SetFillStyle(0)
-        h.SetMarkerStyle(24); h.SetMarkerSize(0.9)
+        h.SetMarkerStyle(24); h.SetMarkerSize(1)
 
         i = int(hname[-1])
         hname = hname[:-2]
