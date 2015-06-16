@@ -133,7 +133,8 @@ def cust_useTrackerOnly(process, sequential=False, intime=False, ntuple=True):
 
         # Straight to ntuples
         process.load("SLHCL1TrackTriggerSimulations.NTupleTools.sequences_cff")
-        process.p = cms.Path(process.ntupleSequence_TTI)
+        process.p = cms.Path(process.ntupleSequence)
+        #process.p = cms.Path(process.ntupleSequence_TTI)
         process.schedule.append(process.p)
 
     return (process)
