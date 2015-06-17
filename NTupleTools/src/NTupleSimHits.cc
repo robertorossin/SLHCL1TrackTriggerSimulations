@@ -1,15 +1,28 @@
-#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTuplePSimHits.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleSimHits.h"
 
 #include "SimDataFormats/TrackingHit/interface/PSimHit.h"
 #include "SimDataFormats/TrackingHit/interface/PSimHitContainer.h"
+#include "DataFormats/DetId/interface/DetId.h"
+#include "DataFormats/SiPixelDetId/interface/PixelSubdetector.h"
 
 
-NTuplePSimHits::NTuplePSimHits(const edm::ParameterSet& iConfig) :
+NTupleSimHits::NTupleSimHits(const edm::ParameterSet& iConfig) :
   inputTag_(iConfig.getParameter<edm::InputTag>("inputTag")),
+  simHitCollectionConfig_(iConfig.getParameter<edm::ParameterSet>("simHitCollections")),
   prefix_  (iConfig.getParameter<std::string>("prefix")),
   suffix_  (iConfig.getParameter<std::string>("suffix")),
   selector_(iConfig.existsAs<std::string>("cut") ? iConfig.getParameter<std::string>("cut") : "", true),
   maxN_    (iConfig.getParameter<unsigned>("maxN")) {
+
+    const std::vector<std::string>& parameterNames = simHitCollectionConfig_.getParameterNames();
+    for (unsigned ipn=0; ipn<parameterNames.size(); ++ipn) {
+        const std::string parameterName = parameterNames.at(ipn);
+        const std::vector<edm::InputTag>& collectionTags = simHitCollectionConfig_.getParameter<std::vector<edm::InputTag> >(parameterName);
+        for (unsigned ict=0; ict<collectionTags.size(); ++ict) {
+            const edm::InputTag collectionTag = collectionTags.at(ict);
+            simHitCollections_.push_back(collectionTag);
+        }
+    }
 
     produces<std::vector<float> >    (prefix_ + "localx"       + suffix_);
     produces<std::vector<float> >    (prefix_ + "localy"       + suffix_);
@@ -24,10 +37,12 @@ NTuplePSimHits::NTuplePSimHits(const edm::ParameterSet& iConfig) :
     produces<std::vector<unsigned> > (prefix_ + "detUnitId"    + suffix_);
     produces<std::vector<unsigned> > (prefix_ + "trkId"        + suffix_);
     produces<std::vector<unsigned> > (prefix_ + "evtId"        + suffix_);
+    produces<std::vector<bool> >     (prefix_ + "barrel"       + suffix_);
+    produces<std::vector<bool> >     (prefix_ + "lowTof"       + suffix_);
     produces<unsigned>               (prefix_ + "size"         + suffix_);
 }
 
-void NTuplePSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+void NTupleSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
     std::auto_ptr<std::vector<float> >    v_localx      (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    v_localy      (new std::vector<float>());
@@ -42,45 +57,59 @@ void NTuplePSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
     std::auto_ptr<std::vector<unsigned> > v_detUnitId   (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> > v_trkId       (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> > v_evtId       (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<bool> >     v_barrel      (new std::vector<bool>());
+    std::auto_ptr<std::vector<bool> >     v_lowTof      (new std::vector<bool>());
     std::auto_ptr<unsigned>               v_size        (new unsigned(0));
 
     //__________________________________________________________________________
     if (!iEvent.isRealData()) {
-        edm::Handle<edm::PSimHitContainer> simhits;
-        iEvent.getByLabel(inputTag_, simhits);
 
-        if (simhits.isValid()) {
-            edm::LogInfo("NTuplePSimHits") << "Size: " << simhits->size();
+        unsigned n = 0;
+        for (unsigned ict=0; ict<simHitCollections_.size(); ++ict) {
+            const edm::InputTag collectionTag = simHitCollections_.at(ict);
 
-            unsigned n = 0;
-            for (edm::PSimHitContainer::const_iterator it = simhits->begin(); it != simhits->end(); ++it) {
-                if (n >= maxN_)
-                    break;
-                if (!selector_(*it))
-                    continue;
+            edm::Handle<edm::PSimHitContainer> simHits;
+            iEvent.getByLabel(collectionTag, simHits);
 
-                // Fill the vectors
-                const Local3DPoint& localPosition = it->localPosition();
-                v_localx->push_back(localPosition.x());
-                v_localy->push_back(localPosition.y());
-                v_localz->push_back(localPosition.z());
-                v_pabs->push_back(it->pabs());
-                v_energyLoss->push_back(it->energyLoss());
-                v_thetaAtEntry->push_back(it->thetaAtEntry());
-                v_phiAtEntry->push_back(it->phiAtEntry());
-                v_tof->push_back(it->tof());
-                v_particleType->push_back(it->particleType());
-                v_processType->push_back(it->processType());
-                v_detUnitId->push_back(it->detUnitId());
-                v_trkId->push_back(it->trackId());
-                v_evtId->push_back(it->eventId().rawId());
+            if (simHits.isValid()) {
+                edm::LogInfo("NTupleSimHits") << "Size: " << simHits->size();
 
-                n++;
+                //unsigned n = 0;
+                for (edm::PSimHitContainer::const_iterator it = simHits->begin(); it != simHits->end(); ++it) {
+                    if (n >= maxN_)
+                        break;
+                    if (!selector_(*it))
+                        continue;
+
+                    const DetId geoId(it->detUnitId());
+                    bool isBarrel = (geoId.subdetId() == (int) PixelSubdetector::PixelBarrel);
+                    bool isLowTof = (collectionTag.instance().find(std::string("LowTof")) != std::string::npos);
+
+                    // Fill the vectors
+                    const Local3DPoint& localPosition = it->localPosition();
+                    v_localx->push_back(localPosition.x());
+                    v_localy->push_back(localPosition.y());
+                    v_localz->push_back(localPosition.z());
+                    v_pabs->push_back(it->pabs());
+                    v_energyLoss->push_back(it->energyLoss());
+                    v_thetaAtEntry->push_back(it->thetaAtEntry());
+                    v_phiAtEntry->push_back(it->phiAtEntry());
+                    v_tof->push_back(it->timeOfFlight());
+                    v_particleType->push_back(it->particleType());
+                    v_processType->push_back(it->processType());
+                    v_detUnitId->push_back(it->detUnitId());
+                    v_trkId->push_back(it->trackId());
+                    v_evtId->push_back(it->eventId().rawId());
+                    v_barrel->push_back(isBarrel);
+                    v_lowTof->push_back(isLowTof);
+
+                    n++;
+                }
+                *v_size = v_localx->size();
+
+            } else {
+                edm::LogError("NTupleSimHits") << "Cannot get the product: " << collectionTag;
             }
-            *v_size = v_localx->size();
-
-        } else {
-            edm::LogError("NTuplePSimHits") << "Cannot get the product: " << inputTag_;
         }
     }
 
@@ -98,5 +127,7 @@ void NTuplePSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
     iEvent.put(v_detUnitId   , prefix_ + "detUnitId"    + suffix_);
     iEvent.put(v_trkId       , prefix_ + "trkId"        + suffix_);
     iEvent.put(v_evtId       , prefix_ + "evtId"        + suffix_);
+    iEvent.put(v_barrel      , prefix_ + "barrel"       + suffix_);
+    iEvent.put(v_lowTof      , prefix_ + "lowTof"       + suffix_);
     iEvent.put(v_size        , prefix_ + "size"         + suffix_);
 }
