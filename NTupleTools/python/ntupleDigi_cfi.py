@@ -18,6 +18,7 @@ ntupleTrackingVertices = cms.EDProducer('NTupleTrackingVertices',
 
 ntupleMixedSimHits = cms.EDProducer('NTupleMixedSimHits',
     inputTag = cms.InputTag('mix'),
+    inputTagTP = cms.InputTag('mix', 'MergedTrackTruth'),
     simHitCollections = cms.PSet(
         pixel = cms.VInputTag(
             cms.InputTag('mix','g4SimHitsTrackerHitsPixelBarrelLowTof'),

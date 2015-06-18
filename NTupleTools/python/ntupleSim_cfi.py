@@ -32,5 +32,6 @@ ntupleSimHits = cms.EDProducer('NTupleSimHits',
     maxN = cms.uint32(999999)
 )
 
-ntupleSim = cms.Sequence(ntupleSimTracks * ntupleSimVertices * ntupleSimHits)
+#ntupleSim = cms.Sequence(ntupleSimTracks * ntupleSimVertices * ntupleSimHits)
+ntupleSim = cms.Sequence(ntupleSimTracks * ntupleSimVertices)
 

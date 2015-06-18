@@ -3,6 +3,9 @@
 
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleCommon.h"
 
+#include "Geometry/Records/interface/StackedTrackerGeometryRecord.h"
+#include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
+
 
 class PSimHit;
 
@@ -15,7 +18,13 @@ class NTupleMixedSimHits : public edm::EDProducer {
     virtual void produce(edm::Event&, const edm::EventSetup&);
     //virtual void endJob();
 
-    const edm::InputTag         inputTag_;
+    virtual void beginRun(const edm::Run&, const edm::EventSetup&);
+    //virtual void endRun(const edm::Run&, const edm::EventSetup&);
+
+    // For event setup
+    const TrackerGeometry * theGeometry;
+
+    const edm::InputTag         inputTag_, inputTagTP_;
     edm::ParameterSet           simHitCollectionConfig_;
     std::vector<edm::InputTag>  simHitCollections_;
     const std::string           prefix_, suffix_;

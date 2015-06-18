@@ -4,6 +4,7 @@
 #include "SimDataFormats/TrackingHit/interface/PSimHitContainer.h"
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/SiPixelDetId/interface/PixelSubdetector.h"
+#include "Geometry/TrackerGeometryBuilder/interface/PixelGeomDetUnit.h"
 
 
 NTupleSimHits::NTupleSimHits(const edm::ParameterSet& iConfig) :
@@ -24,6 +25,12 @@ NTupleSimHits::NTupleSimHits(const edm::ParameterSet& iConfig) :
         }
     }
 
+    produces<std::vector<float> >    (prefix_ + "x"            + suffix_);
+    produces<std::vector<float> >    (prefix_ + "y"            + suffix_);
+    produces<std::vector<float> >    (prefix_ + "z"            + suffix_);
+    produces<std::vector<float> >    (prefix_ + "r"            + suffix_);
+    produces<std::vector<float> >    (prefix_ + "eta"          + suffix_);
+    produces<std::vector<float> >    (prefix_ + "phi"          + suffix_);
     produces<std::vector<float> >    (prefix_ + "localx"       + suffix_);
     produces<std::vector<float> >    (prefix_ + "localy"       + suffix_);
     produces<std::vector<float> >    (prefix_ + "localz"       + suffix_);
@@ -38,12 +45,25 @@ NTupleSimHits::NTupleSimHits(const edm::ParameterSet& iConfig) :
     produces<std::vector<unsigned> > (prefix_ + "trkId"        + suffix_);
     produces<std::vector<unsigned> > (prefix_ + "evtId"        + suffix_);
     produces<std::vector<bool> >     (prefix_ + "barrel"       + suffix_);
-    produces<std::vector<bool> >     (prefix_ + "lowTof"       + suffix_);
+    produces<std::vector<bool> >     (prefix_ + "tofBin"       + suffix_);
     produces<unsigned>               (prefix_ + "size"         + suffix_);
+}
+
+void NTupleSimHits::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup) {
+    /// Geometry setup
+    edm::ESHandle<TrackerGeometry> geometryHandle;
+    iSetup.get<TrackerDigiGeometryRecord>().get(geometryHandle);
+    theGeometry = geometryHandle.product();
 }
 
 void NTupleSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
+    std::auto_ptr<std::vector<float> >    v_x           (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >    v_y           (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >    v_z           (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >    v_r           (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >    v_eta         (new std::vector<float>());
+    std::auto_ptr<std::vector<float> >    v_phi         (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    v_localx      (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    v_localy      (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    v_localz      (new std::vector<float>());
@@ -58,7 +78,7 @@ void NTupleSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<unsigned> > v_trkId       (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> > v_evtId       (new std::vector<unsigned>());
     std::auto_ptr<std::vector<bool> >     v_barrel      (new std::vector<bool>());
-    std::auto_ptr<std::vector<bool> >     v_lowTof      (new std::vector<bool>());
+    std::auto_ptr<std::vector<bool> >     v_tofBin      (new std::vector<bool>());
     std::auto_ptr<unsigned>               v_size        (new unsigned(0));
 
     //__________________________________________________________________________
@@ -74,7 +94,6 @@ void NTupleSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
             if (simHits.isValid()) {
                 edm::LogInfo("NTupleSimHits") << "Size: " << simHits->size();
 
-                //unsigned n = 0;
                 for (edm::PSimHitContainer::const_iterator it = simHits->begin(); it != simHits->end(); ++it) {
                     if (n >= maxN_)
                         break;
@@ -82,11 +101,23 @@ void NTupleSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                         continue;
 
                     const DetId geoId(it->detUnitId());
+                    assert(geoId.det() == DetId::Tracker);
                     bool isBarrel = (geoId.subdetId() == (int) PixelSubdetector::PixelBarrel);
-                    bool isLowTof = (collectionTag.instance().find(std::string("LowTof")) != std::string::npos);
+                    bool tofBin = (collectionTag.instance().find(std::string("HighTof")) != std::string::npos);
+
+                    const PixelGeomDetUnit* geomDetUnit = dynamic_cast<const PixelGeomDetUnit*>(theGeometry->idToDetUnit(geoId));
+
+                    const Local3DPoint& localPosition = it->localPosition();
+                    const GlobalPoint& globalPosition = geomDetUnit->surface().toGlobal(localPosition);
+
 
                     // Fill the vectors
-                    const Local3DPoint& localPosition = it->localPosition();
+                    v_x->push_back(globalPosition.x());
+                    v_y->push_back(globalPosition.y());
+                    v_z->push_back(globalPosition.z());
+                    v_r->push_back(globalPosition.perp());
+                    v_eta->push_back(globalPosition.eta());
+                    v_phi->push_back(globalPosition.phi());
                     v_localx->push_back(localPosition.x());
                     v_localy->push_back(localPosition.y());
                     v_localz->push_back(localPosition.z());
@@ -94,14 +125,14 @@ void NTupleSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                     v_energyLoss->push_back(it->energyLoss());
                     v_thetaAtEntry->push_back(it->thetaAtEntry());
                     v_phiAtEntry->push_back(it->phiAtEntry());
-                    v_tof->push_back(it->timeOfFlight());
+                    v_tof->push_back(it->timeOfFlight());  // in nanoseconds
                     v_particleType->push_back(it->particleType());
                     v_processType->push_back(it->processType());
                     v_detUnitId->push_back(it->detUnitId());
                     v_trkId->push_back(it->trackId());
                     v_evtId->push_back(it->eventId().rawId());
                     v_barrel->push_back(isBarrel);
-                    v_lowTof->push_back(isLowTof);
+                    v_tofBin->push_back(tofBin);
 
                     n++;
                 }
@@ -114,6 +145,12 @@ void NTupleSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     }
 
     //__________________________________________________________________________
+    iEvent.put(v_x           , prefix_ + "x"            + suffix_);
+    iEvent.put(v_y           , prefix_ + "y"            + suffix_);
+    iEvent.put(v_z           , prefix_ + "z"            + suffix_);
+    iEvent.put(v_r           , prefix_ + "r"            + suffix_);
+    iEvent.put(v_eta         , prefix_ + "eta"          + suffix_);
+    iEvent.put(v_phi         , prefix_ + "phi"          + suffix_);
     iEvent.put(v_localx      , prefix_ + "localx"       + suffix_);
     iEvent.put(v_localy      , prefix_ + "localy"       + suffix_);
     iEvent.put(v_localz      , prefix_ + "localz"       + suffix_);
@@ -128,6 +165,6 @@ void NTupleSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(v_trkId       , prefix_ + "trkId"        + suffix_);
     iEvent.put(v_evtId       , prefix_ + "evtId"        + suffix_);
     iEvent.put(v_barrel      , prefix_ + "barrel"       + suffix_);
-    iEvent.put(v_lowTof      , prefix_ + "lowTof"       + suffix_);
+    iEvent.put(v_tofBin      , prefix_ + "tofBin"       + suffix_);
     iEvent.put(v_size        , prefix_ + "size"         + suffix_);
 }
