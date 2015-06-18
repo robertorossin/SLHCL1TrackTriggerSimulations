@@ -1,0 +1,15 @@
+diff --git a/SimG4Core/Application/python/g4SimHits_cfi.py b/SimG4Core/Application/python/g4SimHits_cfi.py
+index 3725c85..dbd3d9a 100644
+--- a/SimG4Core/Application/python/g4SimHits_cfi.py
++++ b/SimG4Core/Application/python/g4SimHits_cfi.py
+@@ -202,8 +202,8 @@ g4SimHits = cms.EDProducer("OscarProducer",
+         PrintHits = cms.bool(False),
+         ElectronicSigmaInNanoSeconds = cms.double(12.06),
+         NeverAccumulate = cms.bool(False),
+-        EnergyThresholdForPersistencyInGeV = cms.double(0.2),
+-        EnergyThresholdForHistoryInGeV = cms.double(0.05)
++        EnergyThresholdForPersistencyInGeV = cms.double(0.001),
++        EnergyThresholdForHistoryInGeV = cms.double(0.001)
+     ),
+     MuonSD = cms.PSet(
+         EnergyThresholdForPersistency = cms.double(1.0),
