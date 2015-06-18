@@ -1,6 +1,5 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleStubs.h"
 
-#include "FWCore/Framework/interface/ESHandle.h"
 #include "DataFormats/Common/interface/DetSetVector.h"
 #include "DataFormats/Common/interface/DetSetVectorNew.h"
 #include "DataFormats/SiPixelDigi/interface/PixelDigi.h"
@@ -227,12 +226,10 @@ NTupleStubs::NTupleStubs(const edm::ParameterSet& iConfig) :
 
 void NTupleStubs::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup) {
     /// Geometry setup
-    /// Set pointers to Geometry
     edm::ESHandle<TrackerGeometry> geometryHandle;
     iSetup.get<TrackerDigiGeometryRecord>().get(geometryHandle);
     theGeometry = geometryHandle.product();
 
-    /// Set pointers to Stacked Modules
     edm::ESHandle<StackedTrackerGeometry> stackedGeometryHandle;
     iSetup.get<StackedTrackerGeometryRecord>().get(stackedGeometryHandle);
     theStackedGeometry = stackedGeometryHandle.product();
@@ -923,7 +920,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
             if (!isBarrel && !isEndcap)
                 continue;  // only tracker
 
-            const PixelGeomDetUnit* geomDetUnit = dynamic_cast<const PixelGeomDetUnit*>(theGeometry->idToDet(geoId));
+            const PixelGeomDetUnit* geomDetUnit = dynamic_cast<const PixelGeomDetUnit*>(theGeometry->idToDetUnit(geoId));
             const PixelTopology* topology = dynamic_cast<const PixelTopology*>(&(geomDetUnit->specificTopology()) );
             //int ncolumns = topology->ncolumns();
             //int nrows = topology->nrows();

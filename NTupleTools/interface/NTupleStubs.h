@@ -29,7 +29,7 @@ class NTupleStubs : public edm::EDProducer {
     //virtual void endJob();
 
     virtual void beginRun(const edm::Run&, const edm::EventSetup&);
-    virtual void endRun(const edm::Run&, const edm::EventSetup&) {}
+    //virtual void endRun(const edm::Run&, const edm::EventSetup&);
 
     // For event setup
     const TrackerGeometry * theGeometry;
