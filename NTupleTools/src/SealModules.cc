@@ -14,7 +14,11 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleTrackingParticles.h"
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleTrackingVertices.h"
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleMixedSimHits.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTuplePixelDigis.h"
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleStubs.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleTTClusters.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleTTStubs.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleTTTracks.h"
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleMaker.h"
 
 DEFINE_FWK_MODULE(NTupleBeamSpot);
@@ -30,6 +34,10 @@ DEFINE_FWK_MODULE(NTupleSimHits);
 DEFINE_FWK_MODULE(NTupleTrackingParticles);
 DEFINE_FWK_MODULE(NTupleTrackingVertices);
 DEFINE_FWK_MODULE(NTupleMixedSimHits);
+DEFINE_FWK_MODULE(NTuplePixelDigis);
 DEFINE_FWK_MODULE(NTupleStubs);
+DEFINE_FWK_MODULE(NTupleTTClusters);
+DEFINE_FWK_MODULE(NTupleTTStubs);
+DEFINE_FWK_MODULE(NTupleTTTracks);
 DEFINE_FWK_MODULE(NTupleMaker);
 
