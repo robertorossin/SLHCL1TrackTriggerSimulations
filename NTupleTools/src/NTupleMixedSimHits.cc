@@ -1,7 +1,6 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleMixedSimHits.h"
 
-#include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
-#include "SimDataFormats/TrackingAnalysis/interface/TrackingParticleFwd.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/SimTrackToTrackingParticleMap.h"
 #include "SimDataFormats/TrackingHit/interface/PSimHit.h"
 #include "SimDataFormats/TrackingHit/interface/PSimHitContainer.h"
 #include "SimDataFormats/CrossingFrame/interface/CrossingFrame.h"
@@ -10,29 +9,15 @@
 #include "DataFormats/SiPixelDetId/interface/PixelSubdetector.h"
 #include "Geometry/TrackerGeometryBuilder/interface/PixelGeomDetUnit.h"
 
-typedef std::pair<unsigned, EncodedEventId> MixedSimTrackId;
-
-namespace {
-template <typename T>
-int get_tpId(const std::map<MixedSimTrackId, TrackingParticleRef>& trkToTPMap, T x) {
-    MixedSimTrackId trkId(x->trackId(), x->eventId());
-    std::map<MixedSimTrackId, TrackingParticleRef>::const_iterator found = trkToTPMap.find(trkId);
-    if (found != trkToTPMap.end()) {
-        return found->second.key();
-    }
-    return -1;
-}
-}
-
 
 NTupleMixedSimHits::NTupleMixedSimHits(const edm::ParameterSet& iConfig) :
-  inputTag_(iConfig.getParameter<edm::InputTag>("inputTag")),
+  inputTag_  (iConfig.getParameter<edm::InputTag>("inputTag")),
   inputTagTP_(iConfig.getParameter<edm::InputTag>("inputTagTP")),
   simHitCollectionConfig_(iConfig.getParameter<edm::ParameterSet>("simHitCollections")),
-  prefix_  (iConfig.getParameter<std::string>("prefix")),
-  suffix_  (iConfig.getParameter<std::string>("suffix")),
-  selector_(iConfig.existsAs<std::string>("cut") ? iConfig.getParameter<std::string>("cut") : "", true),
-  maxN_    (iConfig.getParameter<unsigned>("maxN")) {
+  prefix_    (iConfig.getParameter<std::string>("prefix")),
+  suffix_    (iConfig.getParameter<std::string>("suffix")),
+  selector_  (iConfig.existsAs<std::string>("cut") ? iConfig.getParameter<std::string>("cut") : "", true),
+  maxN_      (iConfig.getParameter<unsigned>("maxN")) {
 
     const std::vector<std::string>& parameterNames = simHitCollectionConfig_.getParameterNames();
     for (unsigned ipn=0; ipn<parameterNames.size(); ++ipn) {
@@ -105,21 +90,12 @@ void NTupleMixedSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSet
     //__________________________________________________________________________
     if (!iEvent.isRealData()) {
 
-        // Prepare a map of simTrack -> trackingParticle
+        /// Prepare a map of simTrack -> trackingParticle
         edm::Handle<TrackingParticleCollection> trackingParticleHandle;
         iEvent.getByLabel(inputTagTP_, trackingParticleHandle);
 
-        std::map<MixedSimTrackId, TrackingParticleRef> trkToTPMap;
-        if (trackingParticleHandle.isValid()) {
-            for (unsigned itp=0; itp < trackingParticleHandle->size(); ++itp) {
-                TrackingParticleRef tpref(trackingParticleHandle, itp);
-                for (TrackingParticle::g4t_iterator itrk = tpref->g4Track_begin(); itrk != tpref->g4Track_end(); ++itrk) {
-                    MixedSimTrackId trkId(itrk->trackId(), tpref->eventId());
-                    trkToTPMap.insert(std::make_pair(trkId, tpref));
-                }
-            }
-        }
-
+        SimTrackToTrackingParticleMap trkToTPMap;
+        trkToTPMap.setup(trackingParticleHandle);
 
         unsigned n = 0;
         for (unsigned ict=0; ict<simHitCollections_.size(); ++ict) {
@@ -149,7 +125,7 @@ void NTupleMixedSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSet
                     const GlobalPoint& globalPosition = geomDetUnit->surface().toGlobal(localPosition);
 
                     // Get the matching tracking particle
-                    int tpId = get_tpId(trkToTPMap, it);
+                    int tpId = trkToTPMap.get(it->trackId(), it->eventId());
 
                     // Fill the vectors
                     v_x->push_back(globalPosition.x());
