@@ -1,0 +1,40 @@
+diff --git a/SimGeneral/MixingModule/python/trackingTruthProducerSelection_cfi.py b/SimGeneral/MixingModule/python/trackingTruthProducerSelection_cfi.py
+index da63b18..2428ae5 100644
+--- a/SimGeneral/MixingModule/python/trackingTruthProducerSelection_cfi.py
++++ b/SimGeneral/MixingModule/python/trackingTruthProducerSelection_cfi.py
+@@ -7,9 +7,9 @@ trackingParticles.select = cms.PSet(
+     stableOnlyTP = cms.bool(False),
+     pdgIdTP = cms.vint32(),
+     signalOnlyTP = cms.bool(False),
+-    minRapidityTP = cms.double(-5.0),
++    minRapidityTP = cms.double(-2.5),
+     minHitTP = cms.int32(0),
+-    ptMinTP = cms.double(0.1),
+-    maxRapidityTP = cms.double(5.0),
++    ptMinTP = cms.double(0.2),
++    maxRapidityTP = cms.double(2.5),
+     tipTP = cms.double(1000)
+ )
+diff --git a/SimGeneral/MixingModule/python/trackingTruthProducer_cfi.py b/SimGeneral/MixingModule/python/trackingTruthProducer_cfi.py
+index eb53674..b77d011 100644
+--- a/SimGeneral/MixingModule/python/trackingTruthProducer_cfi.py
++++ b/SimGeneral/MixingModule/python/trackingTruthProducer_cfi.py
+@@ -6,8 +6,8 @@ trackingParticles = cms.PSet(
+ 	createUnmergedCollection = cms.bool(False),
+ 	createMergedBremsstrahlung = cms.bool(True),
+ 	alwaysAddAncestors = cms.bool(True),
+-	maximumPreviousBunchCrossing = cms.uint32(5),
+-	maximumSubsequentBunchCrossing = cms.uint32(9999),
++	maximumPreviousBunchCrossing = cms.uint32(0),
++	maximumSubsequentBunchCrossing = cms.uint32(0),
+ 	simHitCollections = cms.PSet(
+ 		muon = cms.VInputTag( cms.InputTag('g4SimHits','MuonDTHits'),
+ 			cms.InputTag('g4SimHits','MuonCSCHits'),
+@@ -31,6 +31,6 @@ trackingParticles = cms.PSet(
+ 	removeDeadModules = cms.bool(False), # currently not implemented
+ 	volumeRadius = cms.double(120.0),
+ 	volumeZ = cms.double(300.0),
+-	ignoreTracksOutsideVolume = cms.bool(False),
++	ignoreTracksOutsideVolume = cms.bool(True),
+ 	allowDifferentSimHitProcesses = cms.bool(False) # should be True for FastSim, False for FullSim
+ )
