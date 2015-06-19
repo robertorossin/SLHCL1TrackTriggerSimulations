@@ -17,7 +17,7 @@
 //#include "Geometry/TrackerGeometryBuilder/interface/PixelGeomDetUnit.h"
 //#include "Geometry/TrackerNumberingBuilder/interface/GeometricDet.h"
 
-#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleStubs.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/ModuleIdFunctor.h"
 
 #include <iostream>
 #include <iomanip>

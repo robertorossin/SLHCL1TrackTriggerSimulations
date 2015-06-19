@@ -2,6 +2,7 @@
 #define NTupleTools_NTupleStubs_h_
 
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleCommon.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/ModuleIdFunctor.h"
 
 #include "Geometry/Records/interface/StackedTrackerGeometryRecord.h"
 #include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
@@ -11,13 +12,6 @@
 #include "MagneticField/Engine/interface/MagneticField.h"
 #include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
 
-
-// TODO: factorize tracks from clusters/stubs?
-
-class ModuleIdFunctor {
-  public:
-    uint32_t operator() (const DetId& id) const;
-};
 
 class NTupleStubs : public edm::EDProducer {
   public:
