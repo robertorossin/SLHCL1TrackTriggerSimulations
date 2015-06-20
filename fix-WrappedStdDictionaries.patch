@@ -1,33 +1,45 @@
 diff --git a/DataFormats/WrappedStdDictionaries/src/classes.h b/DataFormats/WrappedStdDictionaries/src/classes.h
-index 20e3f5e..ab3d12d 100644
+index 20e3f5e..b9860de 100644
 --- a/DataFormats/WrappedStdDictionaries/src/classes.h
 +++ b/DataFormats/WrappedStdDictionaries/src/classes.h
-@@ -11,6 +11,7 @@ namespace {
+@@ -9,8 +9,10 @@
+ 
+ namespace {
    struct dictionary {
++  std::vector<std::vector<bool> > dum1;
    edm::Wrapper<std::vector<unsigned long> > dummy1;
    edm::Wrapper<std::vector<unsigned int> > dummy2;
 +  edm::Wrapper<std::vector<std::vector<unsigned int> > > dummy2v;
    edm::Wrapper<std::vector<long> > dummy3;
    edm::Wrapper<std::vector<int> > dummy4;
    edm::Wrapper<std::vector<std::vector<int> > > dummy4v;
-@@ -25,6 +26,7 @@ namespace {
+@@ -25,7 +27,9 @@ namespace {
    edm::Wrapper<std::vector<double> > dummy10;
    edm::Wrapper<std::vector<long double> > dummy11;
    edm::Wrapper<std::vector<float> > dummy12;
 +  edm::Wrapper<std::vector<std::vector<float> > > dummy12v;
    edm::Wrapper<std::vector<bool> > dummy13;
++  edm::Wrapper<std::vector<std::vector<bool> > > dummy13v;
    edm::Wrapper<std::vector<unsigned long long> > dummy14;
    edm::Wrapper<std::vector<long long> > dummy15;
+   edm::Wrapper<std::vector<std::pair<std::basic_string<char>,double> > > dummy16;
 diff --git a/DataFormats/WrappedStdDictionaries/src/classes_def.xml b/DataFormats/WrappedStdDictionaries/src/classes_def.xml
-index 8376345..3cbc725 100644
+index 8376345..331273c 100644
 --- a/DataFormats/WrappedStdDictionaries/src/classes_def.xml
 +++ b/DataFormats/WrappedStdDictionaries/src/classes_def.xml
-@@ -40,6 +40,8 @@
+@@ -1,4 +1,5 @@
+ <lcgdict>
++ <class name="std::vector<std::vector<bool> >"/>
+  <class name="edm::Wrapper<bool>"/>
+  <class name="edm::Wrapper<char>"/>
+  <class name="edm::Wrapper<double>"/>
+@@ -40,6 +41,9 @@
   <class name="edm::Wrapper<std::vector<short> >"/>
   <class name="edm::Wrapper<std::vector<std::basic_string<char> > >"/>
   <class name="edm::Wrapper<std::vector<std::pair<std::basic_string<char>,float> > >" />
 + <class name="edm::Wrapper<std::vector<std::vector<float> > >"/>
 + <class name="edm::Wrapper<std::vector<std::vector<unsigned int> > >"/>
++ <class name="edm::Wrapper<std::vector<std::vector<bool> > >"/>
   <class name="edm::Wrapper<std::vector<std::vector<int> > >"/>
   <class name="edm::Wrapper<std::vector<unsigned char> >"/>
   <class name="edm::Wrapper<std::vector<unsigned int> >"/>
