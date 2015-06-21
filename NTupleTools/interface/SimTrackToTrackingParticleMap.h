@@ -10,9 +10,12 @@ class SimTrackToTrackingParticleMap {
   public:
     typedef std::pair<unsigned, EncodedEventId> MixedSimTrackId;
 
+    SimTrackToTrackingParticleMap() {}
+    ~SimTrackToTrackingParticleMap() {}
+
     void setup(const edm::Handle<TrackingParticleCollection>& tphandle);
 
-    int get(unsigned trackId, EncodedEventId eventId);
+    int get(const unsigned trackId, const EncodedEventId eventId);
 
   private:
     std::map<MixedSimTrackId, TrackingParticleRef> mapping;
