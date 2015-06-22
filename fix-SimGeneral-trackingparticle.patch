@@ -1,8 +1,14 @@
 diff --git a/SimGeneral/MixingModule/python/trackingTruthProducerSelection_cfi.py b/SimGeneral/MixingModule/python/trackingTruthProducerSelection_cfi.py
-index da63b18..2428ae5 100644
+index da63b18..05444b1 100644
 --- a/SimGeneral/MixingModule/python/trackingTruthProducerSelection_cfi.py
 +++ b/SimGeneral/MixingModule/python/trackingTruthProducerSelection_cfi.py
-@@ -7,9 +7,9 @@ trackingParticles.select = cms.PSet(
+@@ -2,14 +2,14 @@ import FWCore.ParameterSet.Config as cms
+ from SimGeneral.MixingModule.trackingTruthProducer_cfi import trackingParticles
+ 
+ trackingParticles.select = cms.PSet(
+-    lipTP = cms.double(1000),
++    lipTP = cms.double(300.0),
+     chargedOnlyTP = cms.bool(True),
      stableOnlyTP = cms.bool(False),
      pdgIdTP = cms.vint32(),
      signalOnlyTP = cms.bool(False),
@@ -11,9 +17,10 @@ index da63b18..2428ae5 100644
      minHitTP = cms.int32(0),
 -    ptMinTP = cms.double(0.1),
 -    maxRapidityTP = cms.double(5.0),
+-    tipTP = cms.double(1000)
 +    ptMinTP = cms.double(0.2),
 +    maxRapidityTP = cms.double(2.5),
-     tipTP = cms.double(1000)
++    tipTP = cms.double(120.0)
  )
 diff --git a/SimGeneral/MixingModule/python/trackingTruthProducer_cfi.py b/SimGeneral/MixingModule/python/trackingTruthProducer_cfi.py
 index eb53674..b77d011 100644
