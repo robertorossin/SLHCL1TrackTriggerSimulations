@@ -1,0 +1,27 @@
+diff --git a/SimTracker/SiPixelDigitizer/plugins/SiPixelDigitizerAlgorithm.cc b/SimTracker/SiPixelDigitizer/plugins/SiPixelDigitizerAlgorithm.cc
+index ae9b2b3..88edcf4 100644
+--- a/SimTracker/SiPixelDigitizer/plugins/SiPixelDigitizerAlgorithm.cc
++++ b/SimTracker/SiPixelDigitizer/plugins/SiPixelDigitizerAlgorithm.cc
+@@ -1194,10 +1194,12 @@ void SiPixelDigitizerAlgorithm::make_digis(float thePixelThresholdInE,
+         //digilink
+         if((*i).second.trackIds().size()>0){
+           simlink_map simi;
++	  float denominator = 0.;
+ 	  unsigned int il=0;
+ 	  for( std::vector<unsigned int>::const_iterator itid = (*i).second.trackIds().begin();
+ 	       itid != (*i).second.trackIds().end(); ++itid) {
+ 	    simi[*itid].push_back((*i).second.individualampl()[il]);
++	    denominator += (*i).second.individualampl()[il];
+ 	    il++;
+ 	  }
+ 
+@@ -1210,7 +1212,8 @@ void SiPixelDigitizerAlgorithm::make_digis(float thePixelThresholdInE,
+ 	    for (unsigned int iii=0;iii<(*simiiter).second.size();iii++){
+ 	      sum_samechannel+=(*simiiter).second[iii];
+ 	    }
+-	    float fraction=sum_samechannel/(*i).second;
++	    //float fraction=sum_samechannel/(*i).second;
++	    float fraction=sum_samechannel/denominator;
+ 	    if(fraction>1.) fraction=1.;
+ 	    simlinks.emplace_back((*i).first, (*simiiter).first, (*i).second.hitIndex(), (*i).second.tofBin(), (*i).second.eventId(), fraction);
+ 	  }
