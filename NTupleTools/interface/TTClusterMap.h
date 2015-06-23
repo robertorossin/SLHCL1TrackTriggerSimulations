@@ -17,6 +17,8 @@ class TTClusterMap {
 
     void setup(const edm::Handle<dsv_clus>& handle);
 
+    unsigned size() const { return mapping.size(); }
+
     unsigned get(const ref_clus aref);
 
   private:

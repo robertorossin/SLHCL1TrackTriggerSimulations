@@ -18,6 +18,8 @@ class PixelDigiMap {
 
     void setup(const edm::Handle<dsv_digi>& handle, const TrackerGeometry * theGeometry);
 
+    unsigned size() const { return mapping.size(); }
+
     //unsigned get(const Ref_PixelDigi_ aref);
     unsigned get(const unsigned channel);
 

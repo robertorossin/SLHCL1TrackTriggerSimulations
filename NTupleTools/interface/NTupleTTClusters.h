@@ -30,7 +30,7 @@ class NTupleTTClusters : public edm::EDProducer {
     const StackedTrackerGeometry * theStackedGeometry;
     const MagneticField* theMagneticField;
 
-    const edm::InputTag inputTag_, inputTagMC_, inputTagDigi_;
+    const edm::InputTag inputTag_, inputTagMC_, inputTagDigi_, inputTagTP_;
     const std::string   prefix_, suffix_;
 
     StringCutObjectSelector<TTCluster<Ref_PixelDigi_> > selector_;

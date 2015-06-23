@@ -4,7 +4,9 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleCommon.h"
 
 #include "Geometry/Records/interface/StackedTrackerGeometryRecord.h"
+#include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
+#include "Geometry/TrackerGeometryBuilder/interface/StackedTrackerGeometry.h"
 
 
 class PixelDigi;
@@ -23,9 +25,12 @@ class NTuplePixelDigis : public edm::EDProducer {
 
     // For event setup
     const TrackerGeometry * theGeometry;
+    const StackedTrackerGeometry * theStackedGeometry;
 
-    const edm::InputTag inputTag_, inputTagTP_;
-    const std::string   prefix_, suffix_;
+    const edm::InputTag         inputTag_, inputTagTP_;
+    edm::ParameterSet           simHitCollectionConfig_;
+    std::vector<edm::InputTag>  simHitCollections_;
+    const std::string           prefix_, suffix_;
 
     StringCutObjectSelector<PixelDigi> selector_;
     const unsigned maxN_;

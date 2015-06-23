@@ -15,6 +15,8 @@ class SimTrackToTrackingParticleMap {
 
     void setup(const edm::Handle<TrackingParticleCollection>& tphandle);
 
+    unsigned size() const { return mapping.size(); }
+
     int get(const unsigned trackId, const EncodedEventId eventId);
 
   private:

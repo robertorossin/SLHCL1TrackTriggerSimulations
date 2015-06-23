@@ -43,6 +43,7 @@ NTupleSimHits::NTupleSimHits(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >    (prefix_ + "tof"          + suffix_);
     produces<std::vector<int> >      (prefix_ + "particleType" + suffix_);
     produces<std::vector<int> >      (prefix_ + "processType"  + suffix_);
+    produces<std::vector<int> >      (prefix_ + "pdgId"        + suffix_);
     produces<std::vector<unsigned> > (prefix_ + "trkId"        + suffix_);
     produces<std::vector<unsigned> > (prefix_ + "evtId"        + suffix_);
     produces<std::vector<bool> >     (prefix_ + "tofBin"       + suffix_);
@@ -77,6 +78,7 @@ void NTupleSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     std::auto_ptr<std::vector<float> >    v_tof         (new std::vector<float>());
     std::auto_ptr<std::vector<int> >      v_particleType(new std::vector<int>());
     std::auto_ptr<std::vector<int> >      v_processType (new std::vector<int>());
+    std::auto_ptr<std::vector<int> >      v_pdgId       (new std::vector<int>());
     std::auto_ptr<std::vector<unsigned> > v_trkId       (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> > v_evtId       (new std::vector<unsigned>());
     std::auto_ptr<std::vector<bool> >     v_tofBin      (new std::vector<bool>());
@@ -118,6 +120,8 @@ void NTupleSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                     const LocalPoint& localPosition = it->localPosition();
                     const GlobalPoint& globalPosition = geomDetUnit->surface().toGlobal(localPosition);
 
+                    // Get pdgId from simTrack?
+                    int pdgId = 0;
 
                     // Fill the vectors
                     v_x->push_back(globalPosition.x());
@@ -139,6 +143,7 @@ void NTupleSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                     v_tof->push_back(it->timeOfFlight());  // in nanoseconds
                     v_particleType->push_back(it->particleType());
                     v_processType->push_back(it->processType());
+                    v_pdgId->push_back(pdgId);
                     v_trkId->push_back(it->trackId());
                     v_evtId->push_back(it->eventId().rawId());
                     v_tofBin->push_back(tofBin);  // 0=lowTof, 1=highTof
@@ -173,6 +178,7 @@ void NTupleSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(v_tof         , prefix_ + "tof"          + suffix_);
     iEvent.put(v_particleType, prefix_ + "particleType" + suffix_);
     iEvent.put(v_processType , prefix_ + "processType"  + suffix_);
+    iEvent.put(v_pdgId       , prefix_ + "pdgId"        + suffix_);
     iEvent.put(v_trkId       , prefix_ + "trkId"        + suffix_);
     iEvent.put(v_evtId       , prefix_ + "evtId"        + suffix_);
     iEvent.put(v_tofBin      , prefix_ + "tofBin"       + suffix_);

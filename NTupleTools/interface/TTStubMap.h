@@ -17,6 +17,8 @@ class TTStubMap {
 
     void setup(const edm::Handle<dsv_stub>& handle);
 
+    unsigned size() const { return mapping.size(); }
+
     unsigned get(const ref_stub aref);
 
   private:

@@ -30,7 +30,7 @@ class NTupleTTStubs : public edm::EDProducer {
     const StackedTrackerGeometry * theStackedGeometry;
     const MagneticField* theMagneticField;
 
-    const edm::InputTag inputTag_, inputTagMC_, inputTagClus_, inputTagDigi_;
+    const edm::InputTag inputTag_, inputTagMC_, inputTagClus_, inputTagDigi_, inputTagTP_;
     const std::string   prefix_, suffix_;
 
     StringCutObjectSelector<TTStub<Ref_PixelDigi_> > selector_;
