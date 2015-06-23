@@ -9,29 +9,6 @@ ntuplePixelDigis = cms.EDProducer('NTuplePixelDigis',
     maxN = cms.uint32(999999)
 )
 
-ntupleStubs = cms.EDProducer('NTupleStubs',
-    inputTagClus = cms.InputTag('TTClustersFromPixelDigis', 'ClusterInclusive'),
-    inputTagStub = cms.InputTag('TTStubsFromPixelDigis', 'StubAccepted'),
-    inputTagTrack = cms.InputTag('TTTracksFromPixelDigis', 'Level1TTTracks'),
-    inputTagDigi = cms.InputTag('simSiPixelDigis'),
-    inputTagClusMCAssoc = cms.InputTag('TTClusterAssociatorFromPixelDigis', 'ClusterInclusive'),
-    inputTagStubMCAssoc = cms.InputTag('TTStubAssociatorFromPixelDigis', 'StubAccepted'),
-    inputTagTrackMCAssoc = cms.InputTag('TTTrackAssociatorFromPixelDigis', 'Level1TTTracks'),
-    prefixClus = cms.string('TTClusters2@'),
-    prefixStub = cms.string('TTStubs2@'),
-    prefixTrack = cms.string('TTTracks@'),
-    prefixDigi = cms.string('simPixelDigis@'),
-    suffix = cms.string(''),
-    #cut = cms.string(''),
-    #maxN = cms.uint32(999999)
-)
-
-ntupleStubsTTI = ntupleStubs.clone(
-    inputTagDigi = cms.InputTag(''),
-    inputTagClus = cms.InputTag('TTStubsFromPixelDigis', 'ClusterAccepted'),
-    inputTagClusMCAssoc = cms.InputTag('TTClusterAssociatorFromPixelDigis', 'ClusterAccepted'),
-)
-
 ntupleTTClusters = cms.EDProducer('NTupleTTClusters',
     inputTag = cms.InputTag('TTClustersFromPixelDigis', 'ClusterInclusive'),
     inputTagMC = cms.InputTag('TTClusterAssociatorFromPixelDigis', 'ClusterInclusive'),
@@ -64,6 +41,17 @@ ntupleTTTracks = cms.EDProducer('NTupleTTTracks',
     maxN = cms.uint32(999999)
 )
 
-ntupleL1TrackTrigger = cms.Sequence(ntuplePixelDigis * ntupleStubs * ntupleTTClusters * ntupleTTStubs * ntupleTTTracks)
-ntupleL1TrackTrigger_TTI = cms.Sequence(ntuplePixelDigis * ntupleStubsTTI * ntupleTTClusters * ntupleTTStubs * ntupleTTTracks)
+ntupleTTClustersForTTI = ntupleTTClusters.clone(
+    inputTag = cms.InputTag('TTStubsFromPixelDigis', 'ClusterAccepted'),
+    inputTagMC = cms.InputTag('TTClusterAssociatorFromPixelDigis', 'ClusterAccepted'),
+    inputTagDigi = cms.InputTag(''),
+)
+
+ntupleTTStubsForTTI = ntupleTTStubs.clone(
+    inputTagClus = cms.InputTag('TTStubsFromPixelDigis', 'ClusterAccepted'),
+    inputTagDigi = cms.InputTag(''),
+)
+
+ntupleL1TrackTrigger = cms.Sequence(ntuplePixelDigis * ntupleTTClusters * ntupleTTStubs * ntupleTTTracks)
+ntupleL1TrackTrigger_TTI = cms.Sequence(ntupleTTClustersForTTI * ntupleTTStubsForTTI * ntupleTTTracks)
 
