@@ -11,7 +11,7 @@ void MapMixedSimHits::setup(const std::vector<edm::InputTag>& simHitCollections,
     unsigned n = 0;
     for (unsigned ict=0; ict<simHitCollections.size(); ++ict) {
         const edm::InputTag collectionTag = simHitCollections.at(ict);
-         edm::Handle<CrossingFrame<PSimHit> > simHits;
+        edm::Handle<CrossingFrame<PSimHit> > simHits;
         iEvent.getByLabel(collectionTag, simHits);
 
         if (simHits.isValid()) {
@@ -22,8 +22,14 @@ void MapMixedSimHits::setup(const std::vector<edm::InputTag>& simHitCollections,
                 const DetId geoId(it->detUnitId());
                 DetId::Detector det = geoId.det();  // Tracker=1,Muon=2,Ecal=3,Hcal=4,Calo=5,Forward=6
                 int subdet = geoId.subdetId();      // PXB=1,PXF=2,...
-                assert(det == DetId::Tracker);
+                bool isTracker = (det == DetId::Tracker);
+                bool isBarrel = (subdet == (int) PixelSubdetector::PixelBarrel);
+                bool isEndcap = (subdet == (int) PixelSubdetector::PixelEndcap);
                 bool tofBin = (collectionTag.instance().find(std::string("HighTof")) != std::string::npos);
+                if (!isTracker)
+                    continue;  // only tracker
+                if (!isBarrel && !isEndcap)
+                    continue;  // only tracker
 
                 const unsigned anId = (unsigned(subdet) << 24) + (unsigned(tofBin) << 23) + CFposition;
                 mapping.insert(std::make_pair(anId, n));

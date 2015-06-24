@@ -21,11 +21,11 @@ class MapPixelDigis {
     unsigned size() const { return mapping.size(); }
 
     //unsigned get(const Ref_PixelDigi_ aref);
-    unsigned get(const unsigned channel);
+    unsigned get(const unsigned geoId, const unsigned channel);
 
   private:
     //std::map<Ref_PixelDigi_, unsigned> mapping;
-    std::map<unsigned, unsigned> mapping;
+    std::map<std::pair<unsigned, unsigned>, unsigned> mapping;
 };
 
 #endif

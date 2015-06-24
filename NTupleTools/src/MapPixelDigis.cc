@@ -30,7 +30,7 @@ void MapPixelDigis::setup(const edm::Handle<dsv_digi>& handle, const TrackerGeom
                 //mapping.insert(std::make_pair(aref, n));
 
                 const unsigned channel = it->channel();
-                mapping.insert(std::make_pair(channel, n));
+                mapping.insert(std::make_pair(std::make_pair(geoId.rawId(), channel), n));
 
                 n++;
             }
@@ -42,6 +42,6 @@ void MapPixelDigis::setup(const edm::Handle<dsv_digi>& handle, const TrackerGeom
 //    return mapping.at(aref);  // must exist
 //}
 
-unsigned MapPixelDigis::get(const unsigned channel) {
-    return mapping.at(channel);  // must exist
+unsigned MapPixelDigis::get(const unsigned geoId, const unsigned channel) {
+    return mapping.at(std::make_pair(geoId, channel));  // must exist
 }

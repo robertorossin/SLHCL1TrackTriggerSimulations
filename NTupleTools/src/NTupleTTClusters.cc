@@ -162,6 +162,9 @@ void NTupleTTClusters::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
         for (dsv_clus::const_iterator itv = pixelDigiTTClusters->begin(); itv != pixelDigiTTClusters->end(); ++itv) {
 
             for (ds_clus::const_iterator it = itv->begin(); it != itv->end(); ++it) {
+                //if (!selector_(*it))
+                //    continue;
+
                 const StackedTrackerDetId stackDetId(it->getDetId());
 
                 bool isBarrel = stackDetId.isBarrel();
@@ -207,7 +210,7 @@ void NTupleTTClusters::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                 std::vector<unsigned> digiRefs;
                 for (unsigned idigi=0; idigi<ndigis; ++idigi) {
                     const int channel = PixelDigi::pixelToChannel(theRows.at(idigi), theCols.at(idigi));
-                    const unsigned ref = digiMap.size() > 0 ? digiMap.get(channel) : 0;
+                    const unsigned ref = digiMap.size() > 0 ? digiMap.get(geoId.rawId(), channel) : 0;
                     digiChannels.push_back(channel);
                     digiRefs.push_back(ref);
                 }
@@ -274,12 +277,14 @@ void NTupleTTClusters::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                     const std::vector<Ref_PixelDigi_>& theHits = it->getHits();
                     assert(theHits.size() == theCols.size());
 
-                    const ds_digisimlink& simlink = (*pixelDigiSimLinks)[geoId];
-                    for (ds_digisimlink::const_iterator itsim = simlink.data.begin(); itsim != simlink.data.end(); ++itsim) {
-                        for (unsigned ihit=0; ihit<theHits.size(); ++ihit) {
-                            if ((unsigned) theHits.at(ihit)->channel() == itsim->channel()) {
-                                if (itsim->fraction() > 0.3)  // 0.3 is arbitrary
-                                    tpIds.push_back(trkToTPMap.get(itsim->SimTrackId(), itsim->eventId()));
+                    if (pixelDigiSimLinks->find(geoId) != pixelDigiSimLinks->end()) {
+                        const ds_digisimlink& simlink = (*pixelDigiSimLinks)[geoId];
+                        for (ds_digisimlink::const_iterator itsim = simlink.data.begin(); itsim != simlink.data.end(); ++itsim) {
+                            for (unsigned ihit=0; ihit<theHits.size(); ++ihit) {
+                                if ((unsigned) theHits.at(ihit)->channel() == itsim->channel()) {
+                                    if (itsim->fraction() > 0.3)  // 0.3 is arbitrary
+                                        tpIds.push_back(trkToTPMap.get(itsim->SimTrackId(), itsim->eventId()));
+                                }
                             }
                         }
                     }

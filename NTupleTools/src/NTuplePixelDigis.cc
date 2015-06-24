@@ -42,7 +42,6 @@ NTuplePixelDigis::NTuplePixelDigis(const edm::ParameterSet& iConfig) :
     produces<std::vector<unsigned> >                (prefix_ + "geoId"          + suffix_);
     //produces<std::vector<unsigned> >                (prefix_ + "stackId"        + suffix_);
     produces<std::vector<bool> >                    (prefix_ + "barrel"         + suffix_);
-    //produces<std::vector<bool> >                    (prefix_ + "psmodule"       + suffix_);
     produces<std::vector<bool> >                    (prefix_ + "outer"          + suffix_);
     //produces<std::vector<unsigned> >                (prefix_ + "subdet"         + suffix_);
     produces<std::vector<int> >                     (prefix_ + "col"            + suffix_);
@@ -56,6 +55,7 @@ NTuplePixelDigis::NTuplePixelDigis(const edm::ParameterSet& iConfig) :
     produces<std::vector<std::vector<unsigned> > >  (prefix_ + "simHitRefs"     + suffix_);
     produces<std::vector<std::vector<bool> > >      (prefix_ + "tofBins"        + suffix_);
     produces<std::vector<std::vector<float> > >     (prefix_ + "fractions"      + suffix_);
+    //produces<std::vector<std::vector<float> > >     (prefix_ + "amplitudes"     + suffix_);
     produces<unsigned>                              (prefix_ + "size"           + suffix_);
 }
 
@@ -86,7 +86,6 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
     std::auto_ptr<std::vector<unsigned> >               v_geoId       (new std::vector<unsigned>());
     //std::auto_ptr<std::vector<unsigned> >               v_stackId       (new std::vector<unsigned>());
     std::auto_ptr<std::vector<bool> >                   v_barrel        (new std::vector<bool>());
-    //std::auto_ptr<std::vector<bool> >                   v_psmodule      (new std::vector<bool>());
     std::auto_ptr<std::vector<bool> >                   v_outer         (new std::vector<bool>());
     //std::auto_ptr<std::vector<unsigned> >               v_subdet      (new std::vector<unsigned>());
     std::auto_ptr<std::vector<int> >                    v_col         (new std::vector<int>());
@@ -100,6 +99,7 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
     std::auto_ptr<std::vector<std::vector<unsigned> > > v_simHitRefs  (new std::vector<std::vector<unsigned> >());
     std::auto_ptr<std::vector<std::vector<bool> > >     v_tofBins     (new std::vector<std::vector<bool> >());
     std::auto_ptr<std::vector<std::vector<float> > >    v_fractions   (new std::vector<std::vector<float> >());
+    //std::auto_ptr<std::vector<std::vector<float> > >    v_amplitudes  (new std::vector<std::vector<float> >());
     std::auto_ptr<unsigned>                             v_size        (new unsigned(0));
 
     // _________________________________________________________________________
@@ -159,10 +159,7 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
             const unsigned moduleId = getModuleId(geoId);
             edm::LogInfo("NTuplePixelDigis") << "geoId: " << geoId.rawId() << " det: " << det << " subdet: " << subdet << " modId: " << moduleId << " size: " << itv->size();
 
-            /// StackedTrackerDetId
-            //StackedTrackerDetId stackDetId = ...
-
-            // stackMember
+            /// Stack member: inner sensor=0, outer sensor=1
             unsigned stackMember = ((geoId>>2)%2 == 0);
 
             for (ds_digi::const_iterator it = itv->begin(); it != itv->end(); ++it) {
@@ -172,7 +169,7 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                 int row = it->row();
                 int col = it->column();
                 int channel = it->channel();  // = ((row << 11) | col)
-                unsigned short adc = it->adc();
+                unsigned adc = it->adc();
                 edm::LogInfo("NTuplePixelDigis") << "row: " << row << " col: " << col << " channel: " << channel << " adc: " << adc;
 
                 MeasurementPoint mp((float) row + 0.5, (float) col + 0.5);
@@ -187,6 +184,7 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                 std::vector<unsigned> simHitRefs;
                 std::vector<bool>     tofBins;
                 std::vector<float>    fractions;
+                //std::vector<float>    amplitudes;
                 if (pixelDigiSimLinks.isValid() && pixelDigiSimLinks->find(geoId) != pixelDigiSimLinks->end()) {
                     const ds_digisimlink& simlink = (*pixelDigiSimLinks)[geoId];
                     for (ds_digisimlink::const_iterator itsim = simlink.data.begin(); itsim != simlink.data.end(); ++itsim) {
@@ -198,6 +196,7 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                             simHitRefs .push_back(mixedSimHitMap.get(subdet, itsim->TofBin(), itsim->CFposition()));
                             tofBins    .push_back(itsim->TofBin());
                             fractions  .push_back(itsim->fraction());
+                            //amplitudes .push_back(itsim->amplitude());
                             //edm::LogInfo("NTuplePixelDigis") << "trkId: " << trkIds.back() << " evtId: " << evtIds.back() << " tpId: " << tpIds.back() << " cfPosition: " << cfPositions.back() << " simHitRef: " << simHitRefs.back() << " tofBin: " << tofBins.back() << " fraction: " << fractions.back();
                         }
                     }
@@ -216,7 +215,6 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                 v_geoId->push_back(geoId.rawId());
                 //v_stackId->push_back(stackDetId.rawId());
                 v_barrel->push_back(isBarrel);
-                //v_psmodule->push_back(isPSModule);
                 v_outer->push_back(stackMember);
                 //v_subdet->push_back(subdet);
                 v_col->push_back(col);
@@ -230,6 +228,7 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                 v_simHitRefs->push_back(simHitRefs);
                 v_tofBins->push_back(tofBins);
                 v_fractions->push_back(fractions);
+                //v_amplitudes->push_back(amplitudes);
 
                 n++;
             }
@@ -255,7 +254,6 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
     iEvent.put(v_geoId         , prefix_ + "geoId"          + suffix_);
     //iEvent.put(v_stackId       , prefix_ + "stackId"        + suffix_);
     iEvent.put(v_barrel        , prefix_ + "barrel"         + suffix_);
-    //iEvent.put(v_psmodule      , prefix_ + "psmodule"       + suffix_);
     iEvent.put(v_outer         , prefix_ + "outer"          + suffix_);
     //iEvent.put(v_subdet        , prefix_ + "subdet"         + suffix_);
     iEvent.put(v_col           , prefix_ + "col"            + suffix_);
@@ -269,5 +267,6 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
     iEvent.put(v_simHitRefs    , prefix_ + "simHitRefs"     + suffix_);
     iEvent.put(v_tofBins       , prefix_ + "tofBins"        + suffix_);
     iEvent.put(v_fractions     , prefix_ + "fractions"      + suffix_);
+    //iEvent.put(v_amplitudes    , prefix_ + "amplitudes"     + suffix_);
     iEvent.put(v_size          , prefix_ + "size"           + suffix_);
 }

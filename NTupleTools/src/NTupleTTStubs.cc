@@ -187,6 +187,9 @@ void NTupleTTStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
         for (dsv_stub::const_iterator itv = pixelDigiTTStubs->begin(); itv != pixelDigiTTStubs->end(); ++itv) {
 
             for (ds_stub::const_iterator it = itv->begin(); it != itv->end(); ++it) {
+                //if (!selector_(*it))
+                //    continue;
+
                 const StackedTrackerDetId stackDetId(it->getDetId());
 
                 bool isBarrel = stackDetId.isBarrel();
@@ -244,7 +247,7 @@ void NTupleTTStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 std::vector<unsigned> digiRefs;
                 for (unsigned idigi=0; idigi<ndigis; ++idigi) {
                     const int channel = PixelDigi::pixelToChannel(theRows.at(idigi), theCols.at(idigi));
-                    const unsigned ref = digiMap.size() > 0 ? digiMap.get(channel) : 0;
+                    const unsigned ref = digiMap.size() > 0 ? digiMap.get(geoId0.rawId(), channel) : 0;
                     digiChannels.push_back(channel);
                     digiRefs.push_back(ref);
                 }
@@ -318,23 +321,28 @@ void NTupleTTStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                     const std::vector<Ref_PixelDigi_>& theHits0 = cluster0->getHits();
                     assert(theHits0.size() == theCols.size());
 
-                    const ds_digisimlink& simlink0 = (*pixelDigiSimLinks)[geoId0];
-                    for (ds_digisimlink::const_iterator itsim = simlink0.data.begin(); itsim != simlink0.data.end(); ++itsim) {
-                        for (unsigned ihit=0; ihit<theHits0.size(); ++ihit) {
-                            if ((unsigned) theHits0.at(ihit)->channel() == itsim->channel()) {
-                                if (itsim->fraction() > 0.3)  // 0.3 is arbitrary
-                                    tpIds0.push_back(trkToTPMap.get(itsim->SimTrackId(), itsim->eventId()));
+                    if (pixelDigiSimLinks->find(geoId0) != pixelDigiSimLinks->end()) {
+                        const ds_digisimlink& simlink0 = (*pixelDigiSimLinks)[geoId0];
+                        for (ds_digisimlink::const_iterator itsim = simlink0.data.begin(); itsim != simlink0.data.end(); ++itsim) {
+                            for (unsigned ihit=0; ihit<theHits0.size(); ++ihit) {
+                                if ((unsigned) theHits0.at(ihit)->channel() == itsim->channel()) {
+                                    if (itsim->fraction() > 0.3)  // 0.3 is arbitrary
+                                        tpIds0.push_back(trkToTPMap.get(itsim->SimTrackId(), itsim->eventId()));
+                                }
                             }
                         }
                     }
 
                     const std::vector<Ref_PixelDigi_>& theHits1 = cluster1->getHits();
-                    const ds_digisimlink& simlink1 = (*pixelDigiSimLinks)[geoId1];
-                    for (ds_digisimlink::const_iterator itsim = simlink1.data.begin(); itsim != simlink1.data.end(); ++itsim) {
-                        for (unsigned ihit=0; ihit<theHits1.size(); ++ihit) {
-                            if ((unsigned) theHits1.at(ihit)->channel() == itsim->channel()) {
-                                if (itsim->fraction() > 0.3)  // 0.3 is arbitrary
-                                    tpIds1.push_back(trkToTPMap.get(itsim->SimTrackId(), itsim->eventId()));
+
+                    if (pixelDigiSimLinks->find(geoId1) != pixelDigiSimLinks->end()) {
+                        const ds_digisimlink& simlink1 = (*pixelDigiSimLinks)[geoId1];
+                        for (ds_digisimlink::const_iterator itsim = simlink1.data.begin(); itsim != simlink1.data.end(); ++itsim) {
+                            for (unsigned ihit=0; ihit<theHits1.size(); ++ihit) {
+                                if ((unsigned) theHits1.at(ihit)->channel() == itsim->channel()) {
+                                    if (itsim->fraction() > 0.3)  // 0.3 is arbitrary
+                                        tpIds1.push_back(trkToTPMap.get(itsim->SimTrackId(), itsim->eventId()));
+                                }
                             }
                         }
                     }
@@ -343,6 +351,8 @@ void NTupleTTStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                     std::vector<int> tpIds;
                     std::sort(tpIds0.begin(), tpIds0.end());
                     std::sort(tpIds1.begin(), tpIds1.end());
+                    tpIds0.erase(std::unique(tpIds0.begin(), tpIds0.end()), tpIds0.end());
+                    tpIds1.erase(std::unique(tpIds1.begin(), tpIds1.end()), tpIds1.end());
                     std::set_intersection(tpIds0.begin(), tpIds0.end(), tpIds1.begin(), tpIds1.end(),
                                           std::back_inserter(tpIds));
                     v_tpIds->back() = tpIds;
