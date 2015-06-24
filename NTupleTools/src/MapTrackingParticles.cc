@@ -1,6 +1,6 @@
-#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/SimTrackToTrackingParticleMap.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/MapTrackingParticles.h"
 
-void SimTrackToTrackingParticleMap::setup(const edm::Handle<TrackingParticleCollection>& tphandle) {
+void MapTrackingParticles::setup(const edm::Handle<TrackingParticleCollection>& tphandle) {
     if (tphandle.isValid()) {
         for (unsigned itp=0; itp<tphandle->size(); ++itp) {
             const TrackingParticleRef tpref(tphandle, itp);
@@ -12,7 +12,7 @@ void SimTrackToTrackingParticleMap::setup(const edm::Handle<TrackingParticleColl
     }
 }
 
-int SimTrackToTrackingParticleMap::get(const unsigned trackId, const EncodedEventId eventId) {
+int MapTrackingParticles::get(const unsigned trackId, const EncodedEventId eventId) {
     const MixedSimTrackId trkId(trackId, eventId);
     std::map<MixedSimTrackId, TrackingParticleRef>::const_iterator found = mapping.find(trkId);
     if (found != mapping.end()) {

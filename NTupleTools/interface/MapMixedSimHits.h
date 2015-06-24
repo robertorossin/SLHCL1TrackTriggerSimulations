@@ -1,5 +1,5 @@
-#ifndef NTupleTools_MixedSimHitMap_h_
-#define NTupleTools_MixedSimHitMap_h_
+#ifndef NTupleTools_MapMixedSimHits_h_
+#define NTupleTools_MapMixedSimHits_h_
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Utilities/interface/InputTag.h"
@@ -8,10 +8,10 @@
 
 class TrackerGeometry;
 
-class MixedSimHitMap {
+class MapMixedSimHits {
   public:
-    MixedSimHitMap() {}
-    ~MixedSimHitMap() {}
+    MapMixedSimHits() {}
+    ~MapMixedSimHits() {}
 
     void setup(const std::vector<edm::InputTag>& simHitCollections, const edm::Event& iEvent);
 

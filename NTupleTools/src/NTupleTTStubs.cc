@@ -1,9 +1,9 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleTTStubs.h"
 
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/ModuleIdFunctor.h"
-#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/SimTrackToTrackingParticleMap.h"
-#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/PixelDigiMap.h"
-#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/TTClusterMap.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/MapTrackingParticles.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/MapPixelDigis.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/MapTTClusters.h"
 #include "DataFormats/Common/interface/DetSetVector.h"
 #include "DataFormats/Common/interface/DetSetVectorNew.h"
 #include "SimTracker/TrackTriggerAssociation/interface/TTClusterAssociationMap.h"
@@ -145,7 +145,7 @@ void NTupleTTStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     if (inputTagDigi_.encode() != "")
         iEvent.getByLabel(inputTagDigi_, pixelDigis);
 
-    PixelDigiMap digiMap;
+    MapPixelDigis digiMap;
     digiMap.setup(pixelDigis, theGeometry);
 
     /// PixelDigiSimLink
@@ -157,14 +157,14 @@ void NTupleTTStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     edm::Handle<TrackingParticleCollection> trackingParticleHandle;
     iEvent.getByLabel(inputTagTP_, trackingParticleHandle);
 
-    SimTrackToTrackingParticleMap trkToTPMap;
+    MapTrackingParticles trkToTPMap;
     trkToTPMap.setup(trackingParticleHandle);
 
     /// TTCluster
     edm::Handle<dsv_clus> pixelDigiTTClusters;
     iEvent.getByLabel(inputTagClus_, pixelDigiTTClusters);
 
-    TTClusterMap clusMap;
+    MapTTClusters clusMap;
     clusMap.setup(pixelDigiTTClusters);
 
     /// TTStub

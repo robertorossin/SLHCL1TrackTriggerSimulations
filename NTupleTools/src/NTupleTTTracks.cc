@@ -1,7 +1,7 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleTTTracks.h"
 
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/ModuleIdFunctor.h"
-#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/TTStubMap.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/MapTTStubs.h"
 #include "SimTracker/TrackTriggerAssociation/interface/TTClusterAssociationMap.h"
 #include "SimTracker/TrackTriggerAssociation/interface/TTStubAssociationMap.h"
 #include "SimTracker/TrackTriggerAssociation/interface/TTTrackAssociationMap.h"
@@ -93,7 +93,7 @@ void NTupleTTTracks::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
     edm::Handle<dsv_stub> pixelDigiTTStubs;
     iEvent.getByLabel(inputTagStub_, pixelDigiTTStubs);
 
-    TTStubMap stubMap;
+    MapTTStubs stubMap;
     stubMap.setup(pixelDigiTTStubs);
 
     /// TTTrack

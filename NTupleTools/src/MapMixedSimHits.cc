@@ -1,4 +1,4 @@
-#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/MixedSimHitMap.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/MapMixedSimHits.h"
 
 #include "SimDataFormats/TrackingHit/interface/PSimHit.h"
 #include "SimDataFormats/TrackingHit/interface/PSimHitContainer.h"
@@ -7,7 +7,7 @@
 #include "DataFormats/SiPixelDetId/interface/PixelSubdetector.h"
 #include "Geometry/TrackerGeometryBuilder/interface/PixelGeomDetUnit.h"
 
-void MixedSimHitMap::setup(const std::vector<edm::InputTag>& simHitCollections, const edm::Event& iEvent) {
+void MapMixedSimHits::setup(const std::vector<edm::InputTag>& simHitCollections, const edm::Event& iEvent) {
     unsigned n = 0;
     for (unsigned ict=0; ict<simHitCollections.size(); ++ict) {
         const edm::InputTag collectionTag = simHitCollections.at(ict);
@@ -34,7 +34,7 @@ void MixedSimHitMap::setup(const std::vector<edm::InputTag>& simHitCollections, 
     }
 }
 
-unsigned MixedSimHitMap::get(const unsigned subdet, const unsigned tofBin, const unsigned CFposition) {
+unsigned MapMixedSimHits::get(const unsigned subdet, const unsigned tofBin, const unsigned CFposition) {
     const unsigned anId = (unsigned(subdet) << 24) + (unsigned(tofBin) << 23) + CFposition;
     return mapping.at(anId);  // must exist
 }

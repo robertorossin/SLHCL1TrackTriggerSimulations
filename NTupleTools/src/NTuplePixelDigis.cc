@@ -1,8 +1,8 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTuplePixelDigis.h"
 
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/ModuleIdFunctor.h"
-#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/SimTrackToTrackingParticleMap.h"
-#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/MixedSimHitMap.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/MapTrackingParticles.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/MapMixedSimHits.h"
 #include "DataFormats/Common/interface/DetSetVector.h"
 #include "DataFormats/SiPixelDigi/interface/PixelDigi.h"
 #include "SimDataFormats/TrackerDigiSimLink/interface/PixelDigiSimLink.h"
@@ -122,11 +122,11 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
     edm::Handle<TrackingParticleCollection> trackingParticleHandle;
     iEvent.getByLabel(inputTagTP_, trackingParticleHandle);
 
-    SimTrackToTrackingParticleMap trkToTPMap;
+    MapTrackingParticles trkToTPMap;
     trkToTPMap.setup(trackingParticleHandle);
 
     /// Prepare a map of CFposition -> simHits
-    MixedSimHitMap mixedSimHitMap;
+    MapMixedSimHits mixedSimHitMap;
     mixedSimHitMap.setup(simHitCollections_, iEvent);
 
     /// Prepare detId -> moduleId

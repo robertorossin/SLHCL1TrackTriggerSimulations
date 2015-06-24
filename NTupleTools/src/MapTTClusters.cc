@@ -1,6 +1,6 @@
-#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/TTClusterMap.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/MapTTClusters.h"
 
-void TTClusterMap::setup(const edm::Handle<dsv_clus>& handle) {
+void MapTTClusters::setup(const edm::Handle<dsv_clus>& handle) {
     if (handle.isValid()) {
         unsigned n = 0;
         for (dsv_clus::const_iterator itv = handle->begin(); itv != handle->end(); ++itv) {
@@ -17,11 +17,11 @@ void TTClusterMap::setup(const edm::Handle<dsv_clus>& handle) {
     }
 }
 
-//unsigned TTClusterMap::get(const ref_clus aref) {
+//unsigned MapTTClusters::get(const ref_clus aref) {
 //    return mapping.at(aref);  // must exist
 //}
 
-unsigned TTClusterMap::get(const ref_clus aref) {
+unsigned MapTTClusters::get(const ref_clus aref) {
     return mapping.at(std::make_pair(aref->getDetId(), aref->getHits()));
 }
 

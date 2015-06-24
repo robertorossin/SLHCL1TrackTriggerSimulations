@@ -1,7 +1,7 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleMixedSimHits.h"
 
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/ModuleIdFunctor.h"
-#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/SimTrackToTrackingParticleMap.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/MapTrackingParticles.h"
 #include "SimDataFormats/TrackingHit/interface/PSimHit.h"
 #include "SimDataFormats/TrackingHit/interface/PSimHitContainer.h"
 #include "SimDataFormats/CrossingFrame/interface/CrossingFrame.h"
@@ -97,7 +97,7 @@ void NTupleMixedSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSet
         edm::Handle<TrackingParticleCollection> trackingParticleHandle;
         iEvent.getByLabel(inputTagTP_, trackingParticleHandle);
 
-        SimTrackToTrackingParticleMap trkToTPMap;
+        MapTrackingParticles trkToTPMap;
         trkToTPMap.setup(trackingParticleHandle);
 
         /// Prepare detId -> moduleId

@@ -1,5 +1,5 @@
-#ifndef NTupleTools_PixelDigiMap_h_
-#define NTupleTools_PixelDigiMap_h_
+#ifndef NTupleTools_MapPixelDigis_h_
+#define NTupleTools_MapPixelDigis_h_
 
 #include "DataFormats/SiPixelDigi/interface/PixelDigi.h"
 #include "DataFormats/L1TrackTrigger/interface/TTTypes.h"
@@ -8,13 +8,13 @@
 
 class TrackerGeometry;
 
-class PixelDigiMap {
+class MapPixelDigis {
   public:
     typedef edm::DetSetVector<PixelDigi> dsv_digi;
     typedef edm::DetSet<PixelDigi>       ds_digi;
 
-    PixelDigiMap() {}
-    ~PixelDigiMap() {}
+    MapPixelDigis() {}
+    ~MapPixelDigis() {}
 
     void setup(const edm::Handle<dsv_digi>& handle, const TrackerGeometry * theGeometry);
 

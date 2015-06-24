@@ -1,17 +1,17 @@
-#ifndef NTupleTools_SimTrackToTrackingParticleMap_h_
-#define NTupleTools_SimTrackToTrackingParticleMap_h_
+#ifndef NTupleTools_MapTrackingParticles_h_
+#define NTupleTools_MapTrackingParticles_h_
 
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticleFwd.h"
 #include <map>
 
 
-class SimTrackToTrackingParticleMap {
+class MapTrackingParticles {
   public:
     typedef std::pair<unsigned, EncodedEventId> MixedSimTrackId;
 
-    SimTrackToTrackingParticleMap() {}
-    ~SimTrackToTrackingParticleMap() {}
+    MapTrackingParticles() {}
+    ~MapTrackingParticles() {}
 
     void setup(const edm::Handle<TrackingParticleCollection>& tphandle);
 

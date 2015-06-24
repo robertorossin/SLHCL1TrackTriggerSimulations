@@ -1,6 +1,6 @@
-#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/TTStubMap.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/MapTTStubs.h"
 
-void TTStubMap::setup(const edm::Handle<dsv_stub>& handle) {
+void MapTTStubs::setup(const edm::Handle<dsv_stub>& handle) {
     if (handle.isValid()) {
         unsigned n = 0;
         for (dsv_stub::const_iterator itv = handle->begin(); itv != handle->end(); ++itv) {
@@ -14,6 +14,6 @@ void TTStubMap::setup(const edm::Handle<dsv_stub>& handle) {
     }
 }
 
-unsigned TTStubMap::get(const ref_stub aref) {
+unsigned MapTTStubs::get(const ref_stub aref) {
     return mapping.at(aref);  // must exist
 }

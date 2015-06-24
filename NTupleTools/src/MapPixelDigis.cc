@@ -1,10 +1,10 @@
-#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/PixelDigiMap.h"
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/MapPixelDigis.h"
 
 #include "DataFormats/SiPixelDetId/interface/PixelSubdetector.h"
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include "Geometry/TrackerGeometryBuilder/interface/PixelGeomDetUnit.h"
 
-void PixelDigiMap::setup(const edm::Handle<dsv_digi>& handle, const TrackerGeometry * theGeometry) {
+void MapPixelDigis::setup(const edm::Handle<dsv_digi>& handle, const TrackerGeometry * theGeometry) {
     if (handle.isValid()) {
         unsigned n = 0;
         for (dsv_digi::const_iterator itv = handle->begin(); itv != handle->end(); ++itv) {
@@ -38,10 +38,10 @@ void PixelDigiMap::setup(const edm::Handle<dsv_digi>& handle, const TrackerGeome
     }
 }
 
-//unsigned PixelDigiMap::get(const Ref_PixelDigi_ aref) {
+//unsigned MapPixelDigis::get(const Ref_PixelDigi_ aref) {
 //    return mapping.at(aref);  // must exist
 //}
 
-unsigned PixelDigiMap::get(const unsigned channel) {
+unsigned MapPixelDigis::get(const unsigned channel) {
     return mapping.at(channel);  // must exist
 }
