@@ -273,7 +273,7 @@ if __name__ == '__main__':
     parser.add_argument("ss", help="short name of superstrip definition (e.g. ss256)")
     parser.add_argument("npatterns", type=int, help="number of patterns to reach the desired coverage")
     parser.add_argument("--coverage", type=float, default=0.95, help="desired coverage (default: %(default)s)")
-    parser.add_argument("--minPt", type=float, default=2, help="min pT for gen particle (default: %(default)s)")
+    #parser.add_argument("--minPt", type=float, default=2, help="min pT for gen particle (default: %(default)s)")
     parser.add_argument("--maxChi2", type=float, default=5, help="max reduced chi-squared (default: %(default)s)")
 
     # Parse default arguments
