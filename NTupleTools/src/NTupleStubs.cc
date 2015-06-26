@@ -1,5 +1,6 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleStubs.h"
 
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/ModuleIdFunctor.h"
 #include "DataFormats/Common/interface/DetSetVector.h"
 #include "DataFormats/Common/interface/DetSetVectorNew.h"
 #include "DataFormats/SiPixelDigi/interface/PixelDigi.h"
@@ -396,6 +397,7 @@ void NTupleStubs::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     if (inputTagDigi_.encode() != "")
         iEvent.getByLabel(inputTagDigi_, pixelDigiSimLinks);
 
+    /// Prepare detId -> moduleId
     ModuleIdFunctor getModuleId;
 
     //__________________________________________________________________________

@@ -1,12 +1,11 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleMixedSimHits.h"
 
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/ModuleIdFunctor.h"
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/SimTrackToTrackingParticleMap.h"
 #include "SimDataFormats/TrackingHit/interface/PSimHit.h"
 #include "SimDataFormats/TrackingHit/interface/PSimHitContainer.h"
 #include "SimDataFormats/CrossingFrame/interface/CrossingFrame.h"
 #include "SimDataFormats/CrossingFrame/interface/MixCollection.h"
-#include "DataFormats/DetId/interface/DetId.h"
-#include "DataFormats/SiPixelDetId/interface/PixelSubdetector.h"
 #include "Geometry/TrackerGeometryBuilder/interface/PixelGeomDetUnit.h"
 
 
@@ -38,6 +37,8 @@ NTupleMixedSimHits::NTupleMixedSimHits(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >    (prefix_ + "localx"       + suffix_);
     produces<std::vector<float> >    (prefix_ + "localy"       + suffix_);
     produces<std::vector<float> >    (prefix_ + "localz"       + suffix_);
+    produces<std::vector<unsigned> > (prefix_ + "modId"        + suffix_);
+    produces<std::vector<unsigned> > (prefix_ + "geoId"        + suffix_);
     produces<std::vector<float> >    (prefix_ + "pabs"         + suffix_);
     produces<std::vector<float> >    (prefix_ + "energyLoss"   + suffix_);
     produces<std::vector<float> >    (prefix_ + "thetaAtEntry" + suffix_);
@@ -45,11 +46,9 @@ NTupleMixedSimHits::NTupleMixedSimHits(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >    (prefix_ + "tof"          + suffix_);
     produces<std::vector<int> >      (prefix_ + "particleType" + suffix_);
     produces<std::vector<int> >      (prefix_ + "processType"  + suffix_);
-    produces<std::vector<unsigned> > (prefix_ + "detUnitId"    + suffix_);
     produces<std::vector<unsigned> > (prefix_ + "trkId"        + suffix_);
     produces<std::vector<unsigned> > (prefix_ + "evtId"        + suffix_);
     produces<std::vector<int> >      (prefix_ + "tpId"         + suffix_);
-    produces<std::vector<bool> >     (prefix_ + "barrel"       + suffix_);
     produces<std::vector<bool> >     (prefix_ + "tofBin"       + suffix_);
     produces<unsigned>               (prefix_ + "size"         + suffix_);
 }
@@ -72,6 +71,8 @@ void NTupleMixedSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSet
     std::auto_ptr<std::vector<float> >    v_localx      (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    v_localy      (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    v_localz      (new std::vector<float>());
+    std::auto_ptr<std::vector<unsigned> > v_modId       (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > v_geoId       (new std::vector<unsigned>());
     std::auto_ptr<std::vector<float> >    v_pabs        (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    v_energyLoss  (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    v_thetaAtEntry(new std::vector<float>());
@@ -79,11 +80,9 @@ void NTupleMixedSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSet
     std::auto_ptr<std::vector<float> >    v_tof         (new std::vector<float>());
     std::auto_ptr<std::vector<int> >      v_particleType(new std::vector<int>());
     std::auto_ptr<std::vector<int> >      v_processType (new std::vector<int>());
-    std::auto_ptr<std::vector<unsigned> > v_detUnitId   (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> > v_trkId       (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> > v_evtId       (new std::vector<unsigned>());
     std::auto_ptr<std::vector<int> >      v_tpId        (new std::vector<int>());
-    std::auto_ptr<std::vector<bool> >     v_barrel      (new std::vector<bool>());
     std::auto_ptr<std::vector<bool> >     v_tofBin      (new std::vector<bool>());
     std::auto_ptr<unsigned>               v_size        (new unsigned(0));
 
@@ -96,6 +95,9 @@ void NTupleMixedSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSet
 
         SimTrackToTrackingParticleMap trkToTPMap;
         trkToTPMap.setup(trackingParticleHandle);
+
+        /// Prepare detId -> moduleId
+        ModuleIdFunctor getModuleId;
 
         unsigned n = 0;
         for (unsigned ict=0; ict<simHitCollections_.size(); ++ict) {
@@ -116,12 +118,14 @@ void NTupleMixedSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSet
 
                     const DetId geoId(it->detUnitId());
                     assert(geoId.det() == DetId::Tracker);
-                    bool isBarrel = (geoId.subdetId() == (int) PixelSubdetector::PixelBarrel);
                     bool tofBin = (collectionTag.instance().find(std::string("HighTof")) != std::string::npos);
+
+                    /// Module ID
+                    unsigned moduleId = getModuleId(geoId);
 
                     const PixelGeomDetUnit* geomDetUnit = dynamic_cast<const PixelGeomDetUnit*>(theGeometry->idToDetUnit(geoId));
 
-                    const Local3DPoint& localPosition = it->localPosition();
+                    const LocalPoint& localPosition = it->localPosition();
                     const GlobalPoint& globalPosition = geomDetUnit->surface().toGlobal(localPosition);
 
                     // Get the matching tracking particle
@@ -137,6 +141,8 @@ void NTupleMixedSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSet
                     v_localx->push_back(localPosition.x());
                     v_localy->push_back(localPosition.y());
                     v_localz->push_back(localPosition.z());
+                    v_modId->push_back(moduleId);
+                    v_geoId->push_back(geoId.rawId());
                     v_pabs->push_back(it->pabs());
                     v_energyLoss->push_back(it->energyLoss());
                     v_thetaAtEntry->push_back(it->thetaAtEntry());
@@ -144,12 +150,10 @@ void NTupleMixedSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSet
                     v_tof->push_back(it->timeOfFlight());  // in nanoseconds
                     v_particleType->push_back(it->particleType());
                     v_processType->push_back(it->processType());
-                    v_detUnitId->push_back(it->detUnitId());
                     v_trkId->push_back(it->trackId());
                     v_evtId->push_back(it->eventId().rawId());
                     v_tpId->push_back(tpId);
-                    v_barrel->push_back(isBarrel);
-                    v_tofBin->push_back(tofBin);
+                    v_tofBin->push_back(tofBin);  // 0=lowTof, 1=highTof
 
                     n++;
                 }
@@ -171,6 +175,8 @@ void NTupleMixedSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSet
     iEvent.put(v_localx      , prefix_ + "localx"       + suffix_);
     iEvent.put(v_localy      , prefix_ + "localy"       + suffix_);
     iEvent.put(v_localz      , prefix_ + "localz"       + suffix_);
+    iEvent.put(v_modId       , prefix_ + "modId"        + suffix_);
+    iEvent.put(v_geoId       , prefix_ + "geoId"        + suffix_);
     iEvent.put(v_pabs        , prefix_ + "pabs"         + suffix_);
     iEvent.put(v_energyLoss  , prefix_ + "energyLoss"   + suffix_);
     iEvent.put(v_thetaAtEntry, prefix_ + "thetaAtEntry" + suffix_);
@@ -178,11 +184,9 @@ void NTupleMixedSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSet
     iEvent.put(v_tof         , prefix_ + "tof"          + suffix_);
     iEvent.put(v_particleType, prefix_ + "particleType" + suffix_);
     iEvent.put(v_processType , prefix_ + "processType"  + suffix_);
-    iEvent.put(v_detUnitId   , prefix_ + "detUnitId"    + suffix_);
     iEvent.put(v_trkId       , prefix_ + "trkId"        + suffix_);
     iEvent.put(v_evtId       , prefix_ + "evtId"        + suffix_);
     iEvent.put(v_tpId        , prefix_ + "tpId"         + suffix_);
-    iEvent.put(v_barrel      , prefix_ + "barrel"       + suffix_);
     iEvent.put(v_tofBin      , prefix_ + "tofBin"       + suffix_);
     iEvent.put(v_size        , prefix_ + "size"         + suffix_);
 }
