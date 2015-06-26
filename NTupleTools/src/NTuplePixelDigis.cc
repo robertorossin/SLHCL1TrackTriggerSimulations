@@ -15,28 +15,29 @@ NTuplePixelDigis::NTuplePixelDigis(const edm::ParameterSet& iConfig) :
   selector_  (iConfig.existsAs<std::string>("cut") ? iConfig.getParameter<std::string>("cut") : "", true),
   maxN_      (iConfig.getParameter<unsigned>("maxN")) {
 
-    produces<std::vector<float> >                   (prefix_ + "x"              + suffix_);
-    produces<std::vector<float> >                   (prefix_ + "y"              + suffix_);
-    produces<std::vector<float> >                   (prefix_ + "z"              + suffix_);
-    produces<std::vector<float> >                   (prefix_ + "r"              + suffix_);
-    produces<std::vector<float> >                   (prefix_ + "eta"            + suffix_);
-    produces<std::vector<float> >                   (prefix_ + "phi"            + suffix_);
-    produces<std::vector<float> >                   (prefix_ + "localx"         + suffix_);
-    produces<std::vector<float> >                   (prefix_ + "localy"         + suffix_);
-    produces<std::vector<float> >                   (prefix_ + "localz"         + suffix_);
-    produces<std::vector<unsigned> >                (prefix_ + "modId"          + suffix_);
-    produces<std::vector<unsigned> >                (prefix_ + "geoId"          + suffix_);
-    //produces<std::vector<int> >                     (prefix_ + "col"            + suffix_);
-    //produces<std::vector<int> >                     (prefix_ + "row"            + suffix_);
-    produces<std::vector<int> >                     (prefix_ + "adc"            + suffix_);
-    produces<std::vector<int> >                     (prefix_ + "chan"           + suffix_);
-    produces<std::vector<std::vector<unsigned> > >  (prefix_ + "trkIds"         + suffix_);
-    produces<std::vector<std::vector<unsigned> > >  (prefix_ + "evtIds"         + suffix_);
-    produces<std::vector<std::vector<int> > >       (prefix_ + "tpIds"          + suffix_);
-    produces<std::vector<std::vector<unsigned> > >  (prefix_ + "cfPositions"    + suffix_);
-    produces<std::vector<std::vector<bool> > >      (prefix_ + "tofBins"        + suffix_);
-    produces<std::vector<std::vector<float> > >     (prefix_ + "fractions"      + suffix_);
-    produces<unsigned>                              (prefix_ + "size"           + suffix_);
+    produces<std::vector<float> >                   (prefix_ + "x"            + suffix_);
+    produces<std::vector<float> >                   (prefix_ + "y"            + suffix_);
+    produces<std::vector<float> >                   (prefix_ + "z"            + suffix_);
+    produces<std::vector<float> >                   (prefix_ + "r"            + suffix_);
+    produces<std::vector<float> >                   (prefix_ + "eta"          + suffix_);
+    produces<std::vector<float> >                   (prefix_ + "phi"          + suffix_);
+    //produces<std::vector<float> >                   (prefix_ + "localx"       + suffix_);
+    //produces<std::vector<float> >                   (prefix_ + "localy"       + suffix_);
+    //produces<std::vector<float> >                   (prefix_ + "localz"       + suffix_);
+    produces<std::vector<unsigned> >                (prefix_ + "modId"        + suffix_);
+    produces<std::vector<unsigned> >                (prefix_ + "geoId"        + suffix_);
+    produces<std::vector<unsigned> >                (prefix_ + "subdet"       + suffix_);
+    produces<std::vector<int> >                     (prefix_ + "col"          + suffix_);
+    produces<std::vector<int> >                     (prefix_ + "row"          + suffix_);
+    produces<std::vector<int> >                     (prefix_ + "adc"          + suffix_);
+    produces<std::vector<int> >                     (prefix_ + "chan"         + suffix_);
+    produces<std::vector<std::vector<unsigned> > >  (prefix_ + "trkIds"       + suffix_);
+    produces<std::vector<std::vector<unsigned> > >  (prefix_ + "evtIds"       + suffix_);
+    produces<std::vector<std::vector<int> > >       (prefix_ + "tpIds"        + suffix_);
+    produces<std::vector<std::vector<unsigned> > >  (prefix_ + "cfPositions"  + suffix_);
+    produces<std::vector<std::vector<bool> > >      (prefix_ + "tofBins"      + suffix_);
+    produces<std::vector<std::vector<float> > >     (prefix_ + "fractions"    + suffix_);
+    produces<unsigned>                              (prefix_ + "size"         + suffix_);
 }
 
 void NTuplePixelDigis::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup) {
@@ -54,13 +55,14 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
     std::auto_ptr<std::vector<float> >                  v_r           (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  v_eta         (new std::vector<float>());
     std::auto_ptr<std::vector<float> >                  v_phi         (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >                  v_localx      (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >                  v_localy      (new std::vector<float>());
-    std::auto_ptr<std::vector<float> >                  v_localz      (new std::vector<float>());
+    //std::auto_ptr<std::vector<float> >                  v_localx      (new std::vector<float>());
+    //std::auto_ptr<std::vector<float> >                  v_localy      (new std::vector<float>());
+    //std::auto_ptr<std::vector<float> >                  v_localz      (new std::vector<float>());
     std::auto_ptr<std::vector<unsigned> >               v_modId       (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> >               v_geoId       (new std::vector<unsigned>());
-    //std::auto_ptr<std::vector<int> >                    v_col         (new std::vector<int>());
-    //std::auto_ptr<std::vector<int> >                    v_row         (new std::vector<int>());
+    std::auto_ptr<std::vector<unsigned> >               v_subdet      (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<int> >                    v_col         (new std::vector<int>());
+    std::auto_ptr<std::vector<int> >                    v_row         (new std::vector<int>());
     std::auto_ptr<std::vector<int> >                    v_adc         (new std::vector<int>());
     std::auto_ptr<std::vector<int> >                    v_chan        (new std::vector<int>());
     std::auto_ptr<std::vector<std::vector<unsigned> > > v_trkIds      (new std::vector<std::vector<unsigned> >());
@@ -71,11 +73,20 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
     std::auto_ptr<std::vector<std::vector<float> > >    v_fractions   (new std::vector<std::vector<float> >());
     std::auto_ptr<unsigned>                             v_size        (new unsigned(0));
 
-    edm::Handle<edm::DetSetVector<PixelDigi> > pixelDigis;
-    iEvent.getByLabel(inputTag_, pixelDigis);
+    // _________________________________________________________________________
+    typedef edm::DetSetVector<PixelDigi>                     dsv_digi;
+    typedef edm::DetSet<PixelDigi>                           ds_digi;
+    typedef edm::DetSetVector<PixelDigiSimLink>              dsv_digisimlink;
+    typedef edm::DetSet<PixelDigiSimLink>                    ds_digisimlink;
 
-    edm::Handle<edm::DetSetVector<PixelDigiSimLink> >  pixelDigiSimLinks;
-    if (!iEvent.isRealData())
+    /// PixelDigi
+    edm::Handle<dsv_digi> pixelDigis;
+    if (inputTag_.encode() != "")
+        iEvent.getByLabel(inputTag_, pixelDigis);
+
+    /// PixelDigiSimLink
+    edm::Handle<dsv_digisimlink> pixelDigiSimLinks;
+    if (inputTag_.encode() != "" && !iEvent.isRealData())
         iEvent.getByLabel(inputTag_, pixelDigiSimLinks);
 
     /// Prepare a map of simTrack -> trackingParticle
@@ -91,18 +102,16 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
     if (pixelDigis.isValid()) {
         edm::LogInfo("NTuplePixelDigis") << "Size: " << pixelDigis->size();
 
-        typedef edm::DetSetVector<PixelDigi>::const_iterator const_dsv_iterator;
-        typedef edm::DetSet      <PixelDigi>::const_iterator const_ds_iterator;
-        typedef edm::DetSet      <PixelDigiSimLink>::const_iterator const_dslink_iterator;
-
         unsigned n = 0;
-        for (const_dsv_iterator itv = pixelDigis->begin(); itv != pixelDigis->end(); ++itv) {
-            uint32_t rawId = itv->detId();
-            const DetId geoId(rawId);
+        for (dsv_digi::const_iterator itv = pixelDigis->begin(); itv != pixelDigis->end(); ++itv) {
+            const DetId geoId(itv->detId());
             DetId::Detector det = geoId.det();  // Tracker=1,Muon=2,Ecal=3,Hcal=4,Calo=5,Forward=6
-            int subdetId = geoId.subdetId();  // PXB=1,PXF=2,...
-            bool isBarrel = (subdetId == (int) PixelSubdetector::PixelBarrel);
-            bool isEndcap = (subdetId == (int) PixelSubdetector::PixelEndcap);
+            int subdet = geoId.subdetId();      // PXB=1,PXF=2,...
+            bool isTracker = (det == DetId::Tracker);
+            bool isBarrel = (subdet == (int) PixelSubdetector::PixelBarrel);
+            bool isEndcap = (subdet == (int) PixelSubdetector::PixelEndcap);
+            if (!isTracker)
+                continue;  // only tracker
             if (!isBarrel && !isEndcap)
                 continue;  // only tracker
 
@@ -114,10 +123,10 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                 continue;  // only outer tracker
 
             /// Module ID
-            unsigned moduleId = getModuleId(geoId);
-            edm::LogInfo("NTuplePixelDigis") << "rawId: " << geoId.rawId() << " det: " << det << " subdetId: " << subdetId << " modId: " << moduleId << " size: " << itv->size();
+            const unsigned moduleId = getModuleId(geoId);
+            edm::LogInfo("NTuplePixelDigis") << "geoId: " << geoId.rawId() << " det: " << det << " subdet: " << subdet << " modId: " << moduleId << " size: " << itv->size();
 
-            for (const_ds_iterator it = itv->begin(); it != itv->end(); ++it) {
+            for (ds_digi::const_iterator it = itv->begin(); it != itv->end(); ++it) {
                 //if (!selector_(*it))
                 //    continue;
 
@@ -138,9 +147,9 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                 std::vector<unsigned> cfPositions;
                 std::vector<bool>     tofBins;
                 std::vector<float>    fractions;
-                if (pixelDigiSimLinks->find(geoId) != pixelDigiSimLinks->end()) {
-                    const edm::DetSet<PixelDigiSimLink>& simlink = (*pixelDigiSimLinks)[geoId];
-                    for (const_dslink_iterator itsim = simlink.data.begin(); itsim != simlink.data.end(); ++itsim) {
+                if (pixelDigiSimLinks.isValid() && pixelDigiSimLinks->find(geoId) != pixelDigiSimLinks->end()) {
+                    const ds_digisimlink& simlink = (*pixelDigiSimLinks)[geoId];
+                    for (ds_digisimlink::const_iterator itsim = simlink.data.begin(); itsim != simlink.data.end(); ++itsim) {
                         if (channel == (int) itsim->channel()) {
                             trkIds     .push_back(itsim->SimTrackId());
                             evtIds     .push_back(itsim->eventId().rawId());
@@ -148,6 +157,7 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                             cfPositions.push_back(itsim->CFposition());
                             tofBins    .push_back(itsim->TofBin());
                             fractions  .push_back(itsim->fraction());
+                            edm::LogInfo("NTuplePixelDigis") << "trkId: " << trkIds.back() << " evtId: " << evtIds.back() << " tpId: " << tpIds.back() << " cfPosition: " << cfPositions.back() << " tofBin: " << tofBins.back() << " fraction: " << fractions.back();
                         }
                     }
                 }
@@ -158,13 +168,14 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                 v_r->push_back(globalPosition.perp());
                 v_eta->push_back(globalPosition.eta());
                 v_phi->push_back(globalPosition.phi());
-                v_localx->push_back(localPosition.x());
-                v_localy->push_back(localPosition.y());
-                v_localz->push_back(localPosition.z());
+                //v_localx->push_back(localPosition.x());
+                //v_localy->push_back(localPosition.y());
+                //v_localz->push_back(localPosition.z());
                 v_modId->push_back(moduleId);
                 v_geoId->push_back(geoId.rawId());
-                //v_col->push_back(col);
-                //v_row->push_back(row);
+                v_subdet->push_back(subdet);
+                v_col->push_back(col);
+                v_row->push_back(row);
                 v_adc->push_back(adc);
                 v_chan->push_back(channel);
                 v_trkIds->push_back(trkIds);
@@ -191,13 +202,14 @@ void NTuplePixelDigis::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
     iEvent.put(v_r           , prefix_ + "r"            + suffix_);
     iEvent.put(v_eta         , prefix_ + "eta"          + suffix_);
     iEvent.put(v_phi         , prefix_ + "phi"          + suffix_);
-    iEvent.put(v_localx      , prefix_ + "localx"       + suffix_);
-    iEvent.put(v_localy      , prefix_ + "localy"       + suffix_);
-    iEvent.put(v_localz      , prefix_ + "localz"       + suffix_);
+    //iEvent.put(v_localx      , prefix_ + "localx"       + suffix_);
+    //iEvent.put(v_localy      , prefix_ + "localy"       + suffix_);
+    //iEvent.put(v_localz      , prefix_ + "localz"       + suffix_);
     iEvent.put(v_modId       , prefix_ + "modId"        + suffix_);
     iEvent.put(v_geoId       , prefix_ + "geoId"        + suffix_);
-    //iEvent.put(v_col         , prefix_ + "col"          + suffix_);
-    //iEvent.put(v_row         , prefix_ + "row"          + suffix_);
+    iEvent.put(v_subdet      , prefix_ + "subdet"       + suffix_);
+    iEvent.put(v_col         , prefix_ + "col"          + suffix_);
+    iEvent.put(v_row         , prefix_ + "row"          + suffix_);
     iEvent.put(v_adc         , prefix_ + "adc"          + suffix_);
     iEvent.put(v_chan        , prefix_ + "chan"         + suffix_);
     iEvent.put(v_trkIds      , prefix_ + "trkIds"       + suffix_);

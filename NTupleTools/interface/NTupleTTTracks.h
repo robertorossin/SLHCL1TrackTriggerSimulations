@@ -15,7 +15,7 @@ class NTupleTTTracks : public edm::EDProducer {
     virtual void produce(edm::Event&, const edm::EventSetup&);
     //virtual void endJob();
 
-    const edm::InputTag inputTag_, inputTagMC_;
+    const edm::InputTag inputTag_, inputTagMC_, inputTagStub_;
     const int nparameters_;
     const std::string   prefix_, suffix_;
 

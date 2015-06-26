@@ -39,6 +39,7 @@ NTupleMixedSimHits::NTupleMixedSimHits(const edm::ParameterSet& iConfig) :
     produces<std::vector<float> >    (prefix_ + "localz"       + suffix_);
     produces<std::vector<unsigned> > (prefix_ + "modId"        + suffix_);
     produces<std::vector<unsigned> > (prefix_ + "geoId"        + suffix_);
+    produces<std::vector<unsigned> > (prefix_ + "subdet"       + suffix_);
     produces<std::vector<float> >    (prefix_ + "pabs"         + suffix_);
     produces<std::vector<float> >    (prefix_ + "energyLoss"   + suffix_);
     produces<std::vector<float> >    (prefix_ + "thetaAtEntry" + suffix_);
@@ -73,6 +74,7 @@ void NTupleMixedSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSet
     std::auto_ptr<std::vector<float> >    v_localz      (new std::vector<float>());
     std::auto_ptr<std::vector<unsigned> > v_modId       (new std::vector<unsigned>());
     std::auto_ptr<std::vector<unsigned> > v_geoId       (new std::vector<unsigned>());
+    std::auto_ptr<std::vector<unsigned> > v_subdet      (new std::vector<unsigned>());
     std::auto_ptr<std::vector<float> >    v_pabs        (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    v_energyLoss  (new std::vector<float>());
     std::auto_ptr<std::vector<float> >    v_thetaAtEntry(new std::vector<float>());
@@ -117,7 +119,9 @@ void NTupleMixedSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSet
                         continue;
 
                     const DetId geoId(it->detUnitId());
-                    assert(geoId.det() == DetId::Tracker);
+                    DetId::Detector det = geoId.det();  // Tracker=1,Muon=2,Ecal=3,Hcal=4,Calo=5,Forward=6
+                    int subdet = geoId.subdetId();      // PXB=1,PXF=2,...
+                    assert(det == DetId::Tracker);
                     bool tofBin = (collectionTag.instance().find(std::string("HighTof")) != std::string::npos);
 
                     /// Module ID
@@ -143,6 +147,7 @@ void NTupleMixedSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSet
                     v_localz->push_back(localPosition.z());
                     v_modId->push_back(moduleId);
                     v_geoId->push_back(geoId.rawId());
+                    v_subdet->push_back(subdet);
                     v_pabs->push_back(it->pabs());
                     v_energyLoss->push_back(it->energyLoss());
                     v_thetaAtEntry->push_back(it->thetaAtEntry());
@@ -177,6 +182,7 @@ void NTupleMixedSimHits::produce(edm::Event& iEvent, const edm::EventSetup& iSet
     iEvent.put(v_localz      , prefix_ + "localz"       + suffix_);
     iEvent.put(v_modId       , prefix_ + "modId"        + suffix_);
     iEvent.put(v_geoId       , prefix_ + "geoId"        + suffix_);
+    iEvent.put(v_subdet      , prefix_ + "subdet"       + suffix_);
     iEvent.put(v_pabs        , prefix_ + "pabs"         + suffix_);
     iEvent.put(v_energyLoss  , prefix_ + "energyLoss"   + suffix_);
     iEvent.put(v_thetaAtEntry, prefix_ + "thetaAtEntry" + suffix_);

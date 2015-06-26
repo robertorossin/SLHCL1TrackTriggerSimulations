@@ -1,19 +1,21 @@
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/NTupleTTTracks.h"
 
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/ModuleIdFunctor.h"
-#include "SimTracker/TrackTriggerAssociation/interface/TTClusterAssociationMap.h"  // This should have been included by TTTrackAssociationMap.h
-#include "SimTracker/TrackTriggerAssociation/interface/TTStubAssociationMap.h"  // This should have been included by TTTrackAssociationMap.h
+#include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/TTStubMap.h"
+#include "SimTracker/TrackTriggerAssociation/interface/TTClusterAssociationMap.h"
+#include "SimTracker/TrackTriggerAssociation/interface/TTStubAssociationMap.h"
 #include "SimTracker/TrackTriggerAssociation/interface/TTTrackAssociationMap.h"
 
 
 NTupleTTTracks::NTupleTTTracks(const edm::ParameterSet& iConfig) :
-  inputTag_   (iConfig.getParameter<edm::InputTag>("inputTag")),
-  inputTagMC_ (iConfig.getParameter<edm::InputTag>("inputTagMC")),
-  nparameters_(iConfig.getParameter<int>("nparameters")),
-  prefix_     (iConfig.getParameter<std::string>("prefix")),
-  suffix_     (iConfig.getParameter<std::string>("suffix")),
-  selector_   (iConfig.existsAs<std::string>("cut") ? iConfig.getParameter<std::string>("cut") : "", true),
-  maxN_       (iConfig.getParameter<unsigned>("maxN")) {
+  inputTag_    (iConfig.getParameter<edm::InputTag>("inputTag")),
+  inputTagMC_  (iConfig.getParameter<edm::InputTag>("inputTagMC")),
+  inputTagStub_(iConfig.getParameter<edm::InputTag>("inputTagStub")),
+  nparameters_ (iConfig.getParameter<int>("nparameters")),
+  prefix_      (iConfig.getParameter<std::string>("prefix")),
+  suffix_      (iConfig.getParameter<std::string>("suffix")),
+  selector_    (iConfig.existsAs<std::string>("cut") ? iConfig.getParameter<std::string>("cut") : "", true),
+  maxN_        (iConfig.getParameter<unsigned>("maxN")) {
 
     produces<std::vector<float> >                   (prefix_ + "px"             + suffix_);
     produces<std::vector<float> >                   (prefix_ + "py"             + suffix_);
@@ -81,41 +83,50 @@ void NTupleTTTracks::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
     std::auto_ptr<unsigned>                             v_size          (new unsigned(0));
 
     // _________________________________________________________________________
+    typedef edmNew::DetSetVector<TTStub<Ref_PixelDigi_> > dsv_stub;
+    typedef edm::Ref<dsv_stub, TTStub<Ref_PixelDigi_> >   ref_stub;
+    typedef std::vector<TTTrack<Ref_PixelDigi_> >         vec_track;
+    typedef TTTrackAssociationMap<Ref_PixelDigi_>         assocmap_track;
+    typedef edm::Ptr<TTTrack<Ref_PixelDigi_> >            ptr_track;
+
+    /// TTStub
+    edm::Handle<dsv_stub> pixelDigiTTStubs;
+    iEvent.getByLabel(inputTagStub_, pixelDigiTTStubs);
+
+    TTStubMap stubMap;
+    stubMap.setup(pixelDigiTTStubs);
+
     /// TTTrack
-    edm::Handle<std::vector<TTTrack<Ref_PixelDigi_> > > pixelDigiTTTracks;
+    edm::Handle<vec_track> pixelDigiTTTracks;
     iEvent.getByLabel(inputTag_, pixelDigiTTTracks);
 
     /// MC truth association map
-    edm::Handle<TTTrackAssociationMap<Ref_PixelDigi_> > mcAssocTTTracks;
-    iEvent.getByLabel(inputTagMC_, mcAssocTTTracks);
+    edm::Handle<assocmap_track> mcAssocTTTracks;
+    if (!iEvent.isRealData())
+        iEvent.getByLabel(inputTagMC_, mcAssocTTTracks);
+
 
     if (pixelDigiTTTracks.isValid()) {
         edm::LogInfo("NTupleTracks") << "Size: " << pixelDigiTTTracks->size();
 
-        typedef typename std::vector<TTTrack<Ref_PixelDigi_> >::const_iterator const_iterator;
-        typedef edm::Ptr<TTTrack<Ref_PixelDigi_> > pointer;
-        typedef edm::Ref<edmNew::DetSetVector<TTStub<Ref_PixelDigi_> >, TTStub<Ref_PixelDigi_> > dsv_ref_stub;
-        //typedef typename edmNew::DetSetVector<TTStub<Ref_PixelDigi_> >::const_iterator const_dsv_iter_stub;
-        //typedef typename edmNew::DetSet      <TTStub<Ref_PixelDigi_> >::const_iterator const_ds_iter_stub;
-
         unsigned nPar = nparameters_;
         unsigned n = 0;
-        for (const_iterator it = pixelDigiTTTracks->begin(); it != pixelDigiTTTracks->end(); ++it) {
+        for (vec_track::const_iterator it = pixelDigiTTTracks->begin(); it != pixelDigiTTTracks->end(); ++it) {
             if (n >= maxN_)
                 break;
             if (!selector_(*it))
                 continue;
 
-            const GlobalVector&              momentum = it->getMomentum(nPar);
-            const GlobalPoint&               poca     = it->getPOCA(nPar);  // point of closest approach
-            const std::vector<dsv_ref_stub>& stubRefs = it->getStubRefs();
+            const GlobalVector&          momentum = it->getMomentum(nPar);
+            const GlobalPoint&           poca     = it->getPOCA(nPar);  // point of closest approach
+            const std::vector<ref_stub>& stubRefs = it->getStubRefs();
 
             std::vector<unsigned> myStubRefs;
-            //for (const_dsv_iter_stub itv = pixelDigiTTStubs->begin(); itv != pixelDigiTTStubs->end(); ++itv) {
-            //    for (const_ds_iter_stub it = itv->begin(); it != itv->end(); ++it) {
-            //        myStubRefs.push_back();
-            //    }
-            //}
+            for (std::vector<ref_stub>::const_iterator itstub = stubRefs.begin();
+                 itstub != stubRefs.end(); ++itstub) {
+                unsigned myStubRef = stubMap.get(*itstub);
+                myStubRefs.push_back(myStubRef);
+            }
 
             v_px->push_back(momentum.x());
             v_py->push_back(momentum.y());
@@ -137,7 +148,7 @@ void NTupleTTTracks::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
             v_sector->push_back(it->getSector());
             v_wedge->push_back(it->getWedge());
             v_ptconsistency->push_back(it->getStubPtConsistency(nPar));
-            v_stubRefs->push_back(myStubRefs);  // FIXME
+            v_stubRefs->push_back(myStubRefs);
 
             // Set to dummy values first
             v_isGenuine->push_back(false);
@@ -151,11 +162,11 @@ void NTupleTTTracks::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
             /// Retrieve MC association
             if (mcAssocTTTracks.isValid()) {
-                pointer iptr(pixelDigiTTTracks, it - pixelDigiTTTracks->begin());
+                const ptr_track iptr(pixelDigiTTTracks, it - pixelDigiTTTracks->begin());
                 v_isGenuine->back() = mcAssocTTTracks->isGenuine(iptr);
                 v_isUnknown->back() = mcAssocTTTracks->isUnknown(iptr);
                 v_isCombinatoric->back() = mcAssocTTTracks->isCombinatoric(iptr);
-                edm::Ptr<TrackingParticle> tpptr = mcAssocTTTracks->findTrackingParticlePtr(iptr);
+                const edm::Ptr<TrackingParticle> tpptr = mcAssocTTTracks->findTrackingParticlePtr(iptr);
                 if (tpptr.isNonnull()) {
                     assert(v_isGenuine->back() == true);
                     v_tpId->back() = tpptr.key();

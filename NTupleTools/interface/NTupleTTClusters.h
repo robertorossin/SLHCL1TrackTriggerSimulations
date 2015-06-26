@@ -5,6 +5,13 @@
 #include "DataFormats/L1TrackTrigger/interface/TTCluster.h"
 #include "DataFormats/L1TrackTrigger/interface/TTTypes.h"
 
+#include "Geometry/Records/interface/StackedTrackerGeometryRecord.h"
+#include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
+#include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
+#include "Geometry/TrackerGeometryBuilder/interface/StackedTrackerGeometry.h"
+#include "MagneticField/Engine/interface/MagneticField.h"
+#include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
+
 
 class NTupleTTClusters : public edm::EDProducer {
   public:
@@ -15,7 +22,15 @@ class NTupleTTClusters : public edm::EDProducer {
     virtual void produce(edm::Event&, const edm::EventSetup&);
     //virtual void endJob();
 
-    const edm::InputTag inputTag_, inputTagMC_;
+    virtual void beginRun(const edm::Run&, const edm::EventSetup&);
+    //virtual void endRun(const edm::Run&, const edm::EventSetup&);
+
+    // For event setup
+    const TrackerGeometry * theGeometry;
+    const StackedTrackerGeometry * theStackedGeometry;
+    const MagneticField* theMagneticField;
+
+    const edm::InputTag inputTag_, inputTagMC_, inputTagDigi_;
     const std::string   prefix_, suffix_;
 
     StringCutObjectSelector<TTCluster<Ref_PixelDigi_> > selector_;
