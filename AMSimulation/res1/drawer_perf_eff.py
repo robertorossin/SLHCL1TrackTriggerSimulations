@@ -282,10 +282,11 @@ def drawer_draw(histos, options):
 
     for hname, h in histos.iteritems():
 
+        h.additional = []
         if h.ClassName() == "TEfficiency":
             ymax = 1.2
 
-            h1 = h.GetCopyTotalHisto(); h1.Reset()
+            h1 = h.GetCopyTotalHisto(); h1.SetName(h1.GetName()+"_frame"); h1.Reset()
             h1.SetMinimum(0); h1.SetMaximum(ymax)
             h1.SetStats(0); h1.Draw()
 
@@ -296,6 +297,8 @@ def drawer_draw(histos, options):
 
             h.gr = h.CreateGraph()
             h.gr.Draw("p")
+
+            h.additional += [h.GetCopyPassedHisto(), h.GetCopyTotalHisto()]
 
         elif h.ClassName() == "TH1F":
             ymax = h.GetMaximum() * 1.4
@@ -344,7 +347,7 @@ def drawer_draw(histos, options):
             gr2.Draw("p")
 
         CMS_label()
-        save(options.outdir, "%s_%s" % (hname, options.ss), dot_root=True)
+        save(options.outdir, "%s_%s" % (hname, options.ss), dot_root=True, additional=h.additional)
     return
 
 
@@ -390,7 +393,7 @@ if __name__ == '__main__':
     parser.add_argument("ss", help="short name of superstrip definition (e.g. ss256)")
     parser.add_argument("npatterns", type=int, help="number of patterns to reach the desired coverage")
     parser.add_argument("--coverage", type=float, default=0.95, help="desired coverage (default: %(default)s)")
-    parser.add_argument("--minPt", type=float, default=2, help="min pT for gen particle (default: %(default)s)")
+    parser.add_argument("--minPt", type=float, default=3, help="min pT for gen particle (default: %(default)s)")
     parser.add_argument("--maxChi2", type=float, default=5, help="max reduced chi-squared (default: %(default)s)")
     parser.add_argument("--low-stat", action="store_true", help="low statistics (default: %(default)s)")
     parser.add_argument("--low-low-stat", action="store_true", help="low low statistics (default: %(default)s)")
