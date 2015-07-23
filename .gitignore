@@ -72,4 +72,7 @@ log
 *.bak
 *.orig
 
+# Eclipse
+.cproject
+.autotools
 
