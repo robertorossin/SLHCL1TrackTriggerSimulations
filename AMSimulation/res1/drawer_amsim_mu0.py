@@ -16,57 +16,78 @@ requiredLayers = [5, 6, 7, 8, 9, 10]
 ttmap = json.load(open("../data/trigger_sector_map.json"), object_pairs_hook=convert_key_to_int)
 ttrmap = get_reverse_map(ttmap)
 
+def use_TEfficiency():
+    del ROOT.TEfficiency
+    gROOT.ProcessLine(".L ./fixes/TEfficiency.cxx+")
+    #gSystem.Load("./fixes/TEfficiency_cxx.so")
+
+    global TEfficiency
+    TEfficiency = ROOT.TEfficiency
+
 
 # ______________________________________________________________________________
-def drawer_book():
+def drawer_book(options):
     histos = {}
 
     prefix = "coverage_"  # coverage is efficiency in the fiducial region
     ytitle = "coverage"
     for i in xrange(3):
         hname = (prefix + "pt_%i") % i
-        histos[hname]       = TProfile(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 2000., 0., 2., "")
+        histos[hname] = TEfficiency(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 500.)
 
-        hname = (prefix + "ppt_%i") % i  # pt, but zoomed in to 0-5 GeV
-        histos[hname]       = TProfile(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 10., 0., 2., "")
+        hname = (prefix + "ppt_%i") % i  # pt, but zoomed in to 0-50 GeV
+        histos[hname] = TEfficiency(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 50.)
+
+        hname = (prefix + "pppt_%i") % i  # pt, but zoomed in to 0-10 GeV
+        histos[hname] = TEfficiency(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 10.)
 
         hname = (prefix + "eta_%i") % i
-        histos[hname]       = TProfile(hname, "; #eta; %s" % ytitle,        120, -3.0, 3.0, 0., 2., "")
+        histos[hname] = TEfficiency(hname, "; #eta; %s" % ytitle,        120, -3.0, 3.0)
 
         hname = (prefix + "phi_%i") % i
-        histos[hname]       = TProfile(hname, "; #phi; %s" % ytitle,        128, -3.2, 3.2, 0., 2., "")
+        histos[hname] = TEfficiency(hname, "; #phi; %s" % ytitle,        128, -3.2, 3.2)
 
         hname = (prefix + "vz_%i") % i
-        histos[hname]       = TProfile(hname, "; v_{z} [cm]; %s" % ytitle,  120, -30, 30, 0., 2., "")
+        histos[hname] = TEfficiency(hname, "; v_{z} [cm]; %s" % ytitle,  120, -30, 30)
 
         hname = (prefix + "charge_%i") % i
-        histos[hname]       = TProfile(hname, "; charge; %s" % ytitle,      5, -2.5, 2.5, 0., 2., "")
+        histos[hname] = TEfficiency(hname, "; charge; %s" % ytitle,      5, -2.5, 2.5)
 
     prefix = "efficiency_"  # including acceptance effect
     ytitle = "#varepsilon_{AM PR}"
     for i in xrange(3):
         hname = (prefix + "pt_%i") % i
-        histos[hname]       = TProfile(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 2000., 0., 2., "")
+        histos[hname] = TEfficiency(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 500.)
 
-        hname = (prefix + "ppt_%i") % i  # pt, but zoomed in to 0-5 GeV
-        histos[hname]       = TProfile(hname, "; p_{T} [GeV]; %s" % ytitle, 120, 0., 10., 0., 2., "")
+        hname = (prefix + "ppt_%i") % i  # pt, but zoomed in to 0-50 GeV
+        histos[hname] = TEfficiency(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 50.)
+
+        hname = (prefix + "pppt_%i") % i  # pt, but zoomed in to 0-10 GeV
+        histos[hname] = TEfficiency(hname, "; p_{T} [GeV]; %s" % ytitle, 100, 0., 10.)
 
         hname = (prefix + "eta_%i") % i
-        histos[hname]       = TProfile(hname, "; #eta; %s" % ytitle,        120, -3.0, 3.0, 0., 2., "")
+        histos[hname] = TEfficiency(hname, "; #eta; %s" % ytitle,        120, -3.0, 3.0)
 
         hname = (prefix + "phi_%i") % i
-        histos[hname]       = TProfile(hname, "; #phi; %s" % ytitle,        128, -3.2, 3.2, 0., 2., "")
+        histos[hname] = TEfficiency(hname, "; #phi; %s" % ytitle,        128, -3.2, 3.2)
 
         hname = (prefix + "vz_%i") % i
-        histos[hname]       = TProfile(hname, "; v_{z} [cm]; %s" % ytitle,  120, -30, 30, 0., 2., "")
+        histos[hname] = TEfficiency(hname, "; v_{z} [cm]; %s" % ytitle,  120, -30, 30)
 
         hname = (prefix + "charge_%i") % i
-        histos[hname]       = TProfile(hname, "; charge; %s" % ytitle,      5, -2.5, 2.5, 0., 2., "")
+        histos[hname] = TEfficiency(hname, "; charge; %s" % ytitle,      5, -2.5, 2.5)
+
+    # Error statistics
+    for hname, h in histos.iteritems():
+        if h.ClassName() == "TEfficiency":
+            h.SetConfidenceLevel(0.682689492137)  # 1-sigma
+            h.SetStatisticOption(0)  # kFCP
+            #h.SetStatisticOption(6)  # kBUniform
 
     # Style
     for hname, h in histos.iteritems():
         h.SetLineWidth(2); h.SetFillStyle(0)
-        h.SetMarkerStyle(24); h.SetMarkerSize(0.9)
+        h.SetMarkerStyle(24); h.SetMarkerSize(1)
 
         i = int(hname[-1])
         hname = hname[:-2]
@@ -79,9 +100,9 @@ def drawer_book():
 
 
 def drawer_project(tree, histos, options):
-    moduleId_set = set()
+    moduleIds_tt = set()
     for moduleId in ttmap[options.tower]:
-        moduleId_set.add(moduleId)
+        moduleIds_tt.add(moduleId)
 
     tree.SetBranchStatus("*", 0)
     tree.SetBranchStatus("genParts_pt"           , 1)
@@ -96,57 +117,63 @@ def drawer_project(tree, histos, options):
         if accept:
             prefix = "coverage_"
             if abs(eta) < 2.2/3:
-                histos[prefix + "pt_0"    ].Fill(pt      , trigger)
-                histos[prefix + "ppt_0"   ].Fill(pt      , trigger)
+                histos[prefix + "pt_0"    ].Fill(trigger, pt)
+                histos[prefix + "ppt_0"   ].Fill(trigger, pt)
+                histos[prefix + "pppt_0"  ].Fill(trigger, pt)
             elif abs(eta) < 4.4/3:
-                histos[prefix + "pt_1"    ].Fill(pt      , trigger)
-                histos[prefix + "ppt_1"   ].Fill(pt      , trigger)
+                histos[prefix + "pt_1"    ].Fill(trigger, pt)
+                histos[prefix + "ppt_1"   ].Fill(trigger, pt)
+                histos[prefix + "pppt_1"  ].Fill(trigger, pt)
             elif abs(eta) < 6.6/3:
-                histos[prefix + "pt_2"    ].Fill(pt      , trigger)
-                histos[prefix + "ppt_2"   ].Fill(pt      , trigger)
+                histos[prefix + "pt_2"    ].Fill(trigger, pt)
+                histos[prefix + "ppt_2"   ].Fill(trigger, pt)
+                histos[prefix + "pppt_2"  ].Fill(trigger, pt)
 
             if pt >= 20:
-                histos[prefix + "eta_0"   ].Fill(eta     , trigger)
-                histos[prefix + "phi_0"   ].Fill(phi     , trigger)
-                histos[prefix + "vz_0"    ].Fill(vz      , trigger)
-                histos[prefix + "charge_0"].Fill(charge  , trigger)
+                histos[prefix + "eta_0"   ].Fill(trigger, eta)
+                histos[prefix + "phi_0"   ].Fill(trigger, phi)
+                histos[prefix + "vz_0"    ].Fill(trigger, vz)
+                histos[prefix + "charge_0"].Fill(trigger, charge)
             elif pt >= 5:
-                histos[prefix + "eta_1"   ].Fill(eta     , trigger)
-                histos[prefix + "phi_1"   ].Fill(phi     , trigger)
-                histos[prefix + "vz_1"    ].Fill(vz      , trigger)
-                histos[prefix + "charge_1"].Fill(charge  , trigger)
+                histos[prefix + "eta_1"   ].Fill(trigger, eta)
+                histos[prefix + "phi_1"   ].Fill(trigger, phi)
+                histos[prefix + "vz_1"    ].Fill(trigger, vz)
+                histos[prefix + "charge_1"].Fill(trigger, charge)
             elif pt >= options.ptmin:
-                histos[prefix + "eta_2"   ].Fill(eta     , trigger)
-                histos[prefix + "phi_2"   ].Fill(phi     , trigger)
-                histos[prefix + "vz_2"    ].Fill(vz      , trigger)
-                histos[prefix + "charge_2"].Fill(charge  , trigger)
+                histos[prefix + "eta_2"   ].Fill(trigger, eta)
+                histos[prefix + "phi_2"   ].Fill(trigger, phi)
+                histos[prefix + "vz_2"    ].Fill(trigger, vz)
+                histos[prefix + "charge_2"].Fill(trigger, charge)
 
         prefix = "efficiency_"
         if abs(eta) < 2.2/3:
-            histos[prefix + "pt_0"    ].Fill(pt      , trigger)
-            histos[prefix + "ppt_0"   ].Fill(pt      , trigger)
+            histos[prefix + "pt_0"    ].Fill(trigger, pt)
+            histos[prefix + "ppt_0"   ].Fill(trigger, pt)
+            histos[prefix + "pppt_0"  ].Fill(trigger, pt)
         elif abs(eta) < 4.4/3:
-            histos[prefix + "pt_1"    ].Fill(pt      , trigger)
-            histos[prefix + "ppt_1"   ].Fill(pt      , trigger)
+            histos[prefix + "pt_1"    ].Fill(trigger, pt)
+            histos[prefix + "ppt_1"   ].Fill(trigger, pt)
+            histos[prefix + "pppt_1"  ].Fill(trigger, pt)
         elif abs(eta) < 6.6/3:
-            histos[prefix + "pt_2"    ].Fill(pt      , trigger)
-            histos[prefix + "ppt_2"   ].Fill(pt      , trigger)
+            histos[prefix + "pt_2"    ].Fill(trigger, pt)
+            histos[prefix + "ppt_2"   ].Fill(trigger, pt)
+            histos[prefix + "pppt_2"  ].Fill(trigger, pt)
 
         if pt >= 20:
-            histos[prefix + "eta_0"   ].Fill(eta     , trigger)
-            histos[prefix + "phi_0"   ].Fill(phi     , trigger)
-            histos[prefix + "vz_0"    ].Fill(vz      , trigger)
-            histos[prefix + "charge_0"].Fill(charge  , trigger)
+            histos[prefix + "eta_0"   ].Fill(trigger, eta)
+            histos[prefix + "phi_0"   ].Fill(trigger, phi)
+            histos[prefix + "vz_0"    ].Fill(trigger, vz)
+            histos[prefix + "charge_0"].Fill(trigger, charge)
         elif pt >= 5:
-            histos[prefix + "eta_1"   ].Fill(eta     , trigger)
-            histos[prefix + "phi_1"   ].Fill(phi     , trigger)
-            histos[prefix + "vz_1"    ].Fill(vz      , trigger)
-            histos[prefix + "charge_1"].Fill(charge  , trigger)
+            histos[prefix + "eta_1"   ].Fill(trigger, eta)
+            histos[prefix + "phi_1"   ].Fill(trigger, phi)
+            histos[prefix + "vz_1"    ].Fill(trigger, vz)
+            histos[prefix + "charge_1"].Fill(trigger, charge)
         elif pt >= options.ptmin:
-            histos[prefix + "eta_2"   ].Fill(eta     , trigger)
-            histos[prefix + "phi_2"   ].Fill(phi     , trigger)
-            histos[prefix + "vz_2"    ].Fill(vz      , trigger)
-            histos[prefix + "charge_2"].Fill(charge  , trigger)
+            histos[prefix + "eta_2"   ].Fill(trigger, eta)
+            histos[prefix + "phi_2"   ].Fill(trigger, phi)
+            histos[prefix + "vz_2"    ].Fill(trigger, vz)
+            histos[prefix + "charge_2"].Fill(trigger, charge)
 
 
     # Loop over events
@@ -169,7 +196,7 @@ def drawer_project(tree, histos, options):
             lay_counts[lay] = 0
 
         for istub, moduleId in enumerate(evt.TTStubs_modId):
-            if moduleId not in moduleId_set:
+            if moduleId not in moduleIds_tt:
                 continue
 
             lay = decodeLayer(moduleId)
@@ -214,14 +241,15 @@ def drawer_draw(histos, options, hnlambda):
         ss = ss.replace("_", " ")
         return ss
 
-    for hvar in ["pt", "ppt", "eta", "phi", "vz", "charge"]:
+    for hvar in ["pt", "ppt", "pppt", "eta", "phi", "vz", "charge"]:
         ymax = 1.2
 
         # Draw first one
         hname = "%s_%i" % (hvar,0)
-        h = histos[hnlambda(hname)]
-        h.SetStats(0); h.SetMinimum(0); h.SetMaximum(ymax)
-        h.Draw()
+        #h = histos[hnlambda(hname)]
+        h = histos[hnlambda(hname)].GetCopyTotalHisto(); h.Reset()
+        h.SetMinimum(0); h.SetMaximum(ymax)
+        h.SetStats(0); h.Draw()
 
         # Reference lines for 0.9, 0.95 and 1.0
         xmin, xmax = h.GetXaxis().GetXmin(), h.GetXaxis().GetXmax()
@@ -231,11 +259,14 @@ def drawer_draw(histos, options, hnlambda):
         # Draw all
         for i in xrange(3):
             hname1 = "%s_%i" % (hvar,i)
-            histos[hnlambda(hname1)].Draw("same")
+            #histos[hnlambda(hname1)].Draw("same")
+
+            histos[hnlambda(hname1)].gr = histos[hnlambda(hname1)].CreateGraph()
+            histos[hnlambda(hname1)].gr.Draw("p")
 
         # Out of sample range
         tboxes = []
-        if hvar == "pt" or hvar == "ppt":
+        if hvar == "pt" or hvar == "ppt" or hvar == "pppt":
             tboxes = [
                 TBox(xmin, 0, options.ptmin, ymax),
                 TBox(min(xmax,options.ptmax), 0, xmax, ymax),
@@ -263,21 +294,24 @@ def drawer_draw(histos, options, hnlambda):
 
         # Legend
         moveLegend(0.48,0.22,0.94,0.34); tlegend.Clear()
-        if hvar == "pt" or hvar == "ppt":
+        if hvar == "pt" or hvar == "ppt" or hvar == "pppt":
             writeme = [
                 "0.000 #leq |#eta| < 0.733",
                 "0.733 #leq |#eta| < 1.467",
                 "1.467 #leq |#eta| < 2.200",
             ]
+            for i in xrange(1):
+                hname1 = "%s_%i" % (hvar,i)
+                tlegend.AddEntry(histos[hnlambda(hname1)], writeme[i], "lp")
         else:
             writeme = [
                 "20 #leq p_{T} < #infty  GeV",
                 "  5 #leq p_{T} < 20 GeV",
                 "  %.0f #leq p_{T} <   5 GeV" % options.ptmin,
             ]
-        for i in xrange(3):
-            hname1 = "%s_%i" % (hvar,i)
-            tlegend.AddEntry(histos[hnlambda(hname1)], writeme[i], "lp")
+            for i in xrange(3):
+                hname1 = "%s_%i" % (hvar,i)
+                tlegend.AddEntry(histos[hnlambda(hname1)], writeme[i], "lp")
         tlegend.Draw()
 
         tlatex.DrawLatex(0.6, 0.185, "%s [%.0fK bank]" % (parse_ss(options.ss), options.npatterns*1e-3))
@@ -305,6 +339,8 @@ def main(options):
     tchain.AddFileInfoList(options.tfilecoll.GetList())
 
     gStyle.SetNdivisions(510, "Y")
+    gStyle.SetEndErrorSize(0)
+    use_TEfficiency()
 
     # Process
     histos = drawer_book(options)

@@ -27,6 +27,11 @@ unsigned getHitBits(const std::vector<bool>& stubs_bool) {
     default      :  return 7;
     }
 }
+
+// Comparator
+bool sortByPt(const TTTrack2& lhs, const TTTrack2& rhs) {
+    return lhs.pt() > rhs.pt();
+}
 }
 
 
@@ -165,6 +170,8 @@ int TrackFitter::makeTracks(TString src, TString out) {
             }
         }  // loop over the roads
 
+        std::sort(tracks.begin(), tracks.end(), sortByPt);
+
 
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # tracks: " << tracks.size() << std::endl;
         if (verbose_>3) {
@@ -214,12 +221,14 @@ int TrackFitter::makeTracks(TString src, TString out) {
                     //float simVy           = reader.vp2_vy->at(ipart);
                     float simVz           = reader.vp2_vz->at(ipart);
                     int   simCharge       = reader.vp2_charge->at(ipart);
+                    int   simPdgId        = reader.vp2_pdgId->at(ipart);
 
                     float simCotTheta     = std::sinh(simEta);
                     float simChargeOverPt = float(simCharge)/simPt;
 
                     trkParts.emplace_back(TrackingParticle{  // using POD type constructor
                         (int) ipart,
+                        simPdgId,
                         simChargeOverPt,
                         simPhi,
                         simCotTheta,

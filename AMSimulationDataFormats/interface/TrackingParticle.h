@@ -9,6 +9,7 @@ namespace slhcl1tt {
 
 struct TrackingParticle {
     int   tpId;
+    int   pdgId;
     float invPt;
     float phi0;
     float cottheta;

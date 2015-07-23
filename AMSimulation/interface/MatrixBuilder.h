@@ -51,7 +51,8 @@ class MatrixBuilder {
         meansR_ << 22.5913, 35.4772, 50.5402, 68.3101, 88.5002, 107.71;
 
         // Initialize
-        ttmap_   = new TriggerTowerMap();
+        ttmap_ = new TriggerTowerMap();
+        ttmap_->read(po_.datadir);
     }
 
     // Destructor
@@ -65,9 +66,6 @@ class MatrixBuilder {
 
   private:
     // Member functions
-
-    // Setup trigger tower
-    int setupTriggerTower(TString datadir);
 
     // Book histograms
     int bookHistograms();

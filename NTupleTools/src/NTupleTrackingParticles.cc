@@ -33,7 +33,8 @@ NTupleTrackingParticles::NTupleTrackingParticles(const edm::ParameterSet& iConfi
     produces<std::vector<int> >      (prefix_ + "trkId"     + suffix_);
     produces<std::vector<int> >      (prefix_ + "genpId"    + suffix_);
     produces<std::vector<unsigned> > (prefix_ + "evtId"     + suffix_);
-    produces<std::vector<std::vector<unsigned> > > (prefix_ + "trkIds" + suffix_);
+    produces<std::vector<std::vector<unsigned> > > (prefix_ + "trkIds"  + suffix_);
+    produces<std::vector<std::vector<unsigned> > > (prefix_ + "genpIds" + suffix_);
     produces<unsigned>               (prefix_ + "size"      + suffix_);
 }
 
@@ -60,7 +61,8 @@ void NTupleTrackingParticles::produce(edm::Event& iEvent, const edm::EventSetup&
     std::auto_ptr<std::vector<int> >      v_trkId    (new std::vector<int>());
     std::auto_ptr<std::vector<int> >      v_genpId   (new std::vector<int>());
     std::auto_ptr<std::vector<unsigned> > v_evtId    (new std::vector<unsigned>());
-    std::auto_ptr<std::vector<std::vector<unsigned> > > v_trkIds(new std::vector<std::vector<unsigned> >());
+    std::auto_ptr<std::vector<std::vector<unsigned> > > v_trkIds (new std::vector<std::vector<unsigned> >());
+    std::auto_ptr<std::vector<std::vector<unsigned> > > v_genpIds(new std::vector<std::vector<unsigned> >());
     std::auto_ptr<unsigned>               v_size     (new unsigned(0));
 
     //__________________________________________________________________________
@@ -99,7 +101,8 @@ void NTupleTrackingParticles::produce(edm::Event& iEvent, const edm::EventSetup&
                 //}
 
                 // Primary: pT > 0.2 GeV, |rho0| < 0.5 cm, |z0| < 30 cm (Nicola Pozzobon's definition)
-                bool primary = (it->pt() > 0.2 && sqrt(it->vx() * it->vx() + it->vy() * it->vy()) < 0.5 && fabs(it->vz()) < 30.0);
+                bool primary = (it->charge() != 0 && it->pt() > 0.2 && fabs(it->eta()) < 2.5 && sqrt(it->vx() * it->vx() + it->vy() * it->vy()) < 0.5 && fabs(it->vz()) < 30.0);
+                //bool primary = (it->pt() > 0.2 && sqrt(it->vx() * it->vx() + it->vy() * it->vy()) < 0.5 && fabs(it->vz()) < 30.0);
                 //bool primary = (it->pt() > 0.2 && sqrt(it->vx() * it->vx() + it->vy() * it->vy()) < 0.1 && fabs(it->vz()) < 25.0);
 
                 // Fill the vectors
@@ -120,7 +123,7 @@ void NTupleTrackingParticles::produce(edm::Event& iEvent, const edm::EventSetup&
                 v_signal->push_back(signal);
                 v_intime->push_back(intime);
                 v_primary->push_back(primary);
-                v_pdgId->push_back(it->pdgId());
+                v_pdgId->push_back(it->pdgId());  // pdgId of the first genParticle, or type() of the first simTrack
                 int trkId = it->g4Tracks().empty() ? -99 : it->g4Tracks().begin()->trackId();
                 v_trkId->push_back(trkId);
                 int genpId = it->genParticles().empty() ? -99 : it->genParticles().begin()->key();
@@ -132,6 +135,12 @@ void NTupleTrackingParticles::produce(edm::Event& iEvent, const edm::EventSetup&
                     trkIds.push_back(itsim->trackId());
                 }
                 v_trkIds->push_back(trkIds);
+
+                std::vector<unsigned> genpIds;
+                for (TrackingParticle::genp_iterator itgen = it->genParticle_begin(); itgen != it->genParticle_end(); ++itgen) {
+                    genpIds.push_back(itgen->key());
+                }
+                v_genpIds->push_back(genpIds);
 
                 n++;
             }
@@ -165,5 +174,6 @@ void NTupleTrackingParticles::produce(edm::Event& iEvent, const edm::EventSetup&
     iEvent.put(v_genpId   , prefix_ + "genpId"    + suffix_);
     iEvent.put(v_evtId    , prefix_ + "evtId"     + suffix_);
     iEvent.put(v_trkIds   , prefix_ + "trkIds"    + suffix_);
+    iEvent.put(v_genpIds  , prefix_ + "genpIds"   + suffix_);
     iEvent.put(v_size     , prefix_ + "size"      + suffix_);
 }

@@ -8,31 +8,6 @@
 
 
 // _____________________________________________________________________________
-int MatrixBuilder::setupTriggerTower(TString datadir) {
-    TString csvfile1 = datadir + "trigger_sector_map.csv";
-    TString csvfile2 = datadir + "trigger_sector_boundaries.csv";
-
-    try {
-        ttmap_ -> readTriggerTowerMap(csvfile1);
-
-    } catch (const std::invalid_argument& e) {
-        std::cout << Error() << "Failed to parse: " << csvfile1 << ". What: " << e.what() << std::endl;
-        return 1;
-    }
-
-    try {
-        ttmap_ -> readTriggerTowerBoundaries(csvfile2);
-
-    } catch (const std::invalid_argument& e) {
-        std::cout << Error() << "Failed to parse: " << csvfile2 << ". What: " << e.what() << std::endl;
-        return 1;
-    }
-
-    //ttmap_ -> print();
-    return 0;
-}
-
-// _____________________________________________________________________________
 int MatrixBuilder::bookHistograms() {
     TH1::AddDirectory(kFALSE);
     TString hname;
@@ -803,6 +778,7 @@ int MatrixBuilder::loopEventsAndEval(TTStubReader& reader) {
     std::vector<Statistics> statX(nvariables_);
     std::vector<Statistics> statV(nvariables_);
     std::vector<Statistics> statP(nparameters_);
+    std::vector<Statistics> statP100GeV(nparameters_);
 
     // Bookkeepers
     long int nRead = 0, nKept = 0;
@@ -909,6 +885,10 @@ int MatrixBuilder::loopEventsAndEval(TTStubReader& reader) {
         for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
             statP.at(ipar).fill(parameters_fit(ipar) - parameters(ipar));
 
+            if (std::abs(simChargeOverPt) < 1.0/100.) {
+                statP100GeV.at(ipar).fill(parameters_fit(ipar) - parameters(ipar));
+            }
+
             if (po_.speedup<1) {
                 hname = Form("par%i", ipar);
                 histograms_[hname]->Fill(parameters(ipar));
@@ -937,12 +917,16 @@ int MatrixBuilder::loopEventsAndEval(TTStubReader& reader) {
             std::cout << "principal " << ivar << ": " << statV.at(ivar).getEntries() << " " << statV.at(ivar).getMean() << " " << statV.at(ivar).getSigma() << std::endl;
         }
         std::cout << Info() << "statCT: " << std::endl;
-        for (unsigned ivar=0; ivar<2; ++ivar) {
-            std::cout << "parameter " << ivar << ": " << statCT.at(ivar).getEntries() << " " << statCT.at(ivar).getMean() << " " << statCT.at(ivar).getSigma() << std::endl;
+        for (unsigned ipar=0; ipar<2; ++ipar) {
+            std::cout << "parameter " << ipar << ": " << statCT.at(ipar).getEntries() << " " << statCT.at(ipar).getMean() << " " << statCT.at(ipar).getSigma() << std::endl;
         }
         std::cout << Info() << "statP: " << std::endl;
         for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
             std::cout << "parameter " << ipar << ": " << statP.at(ipar).getEntries() << " " << statP.at(ipar).getMean() << " " << statP.at(ipar).getSigma() << std::endl;
+        }
+        std::cout << Info() << "statP100GeV: " << std::endl;
+        for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
+            std::cout << "parameter " << ipar << ": " << statP100GeV.at(ipar).getEntries() << " " << statP100GeV.at(ipar).getMean() << " " << statP100GeV.at(ipar).getSigma() << std::endl;
         }
         std::cout.flags(flags);
     }
@@ -995,10 +979,6 @@ int MatrixBuilder::writeHistograms(TString out) {
 int MatrixBuilder::run() {
     int exitcode = 0;
     Timing(1);
-
-    exitcode = setupTriggerTower(po_.datadir);
-    if (exitcode)  return exitcode;
-    Timing();
 
     exitcode = bookHistograms();
     if (exitcode)  return exitcode;

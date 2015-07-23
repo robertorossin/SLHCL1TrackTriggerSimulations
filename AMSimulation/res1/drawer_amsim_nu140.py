@@ -4,6 +4,9 @@ from rootdrawing import *
 from parser import *
 
 # Configurations
+#col  = TColor.GetColor("#1f78b4")  # mu0
+#fcol = TColor.GetColor("#a6cee3")  # mu0
+
 col  = TColor.GetColor("#e31a1c")  # nu140
 fcol = TColor.GetColor("#fb9a99")  # nu140
 
@@ -17,35 +20,43 @@ def drawer_book(options):
 
     hname = "nroads_per_event"
     nbins, xmin, xmax = 200, 0., 200.*options.xscale
+    #nbins, xmin, xmax = 40, 0., 40.*options.xscale
     histos[hname] = TH1F(hname, "; # roads/tower/BX"                , nbins, xmin, xmax)
 
     hname = "ncombinations_per_road"
     nbins, xmin, xmax = 400, 0., 400.*options.xscale
+    #nbins, xmin, xmax = 40, 0., 40.*options.xscale
     histos[hname] = TH1F(hname, "; # combinations/road/tower/BX"    , nbins, xmin, xmax)
 
     hname = "ncombinations_per_event"
     nbins, xmin, xmax = 800, 0., 1600.*options.xscale
+    #nbins, xmin, xmax = 150, 0., 150.*options.xscale
     histos[hname] = TH1F(hname, "; # combinations/tower/BX"         , nbins, xmin, xmax)
 
     hname = "nsuperstrips_per_road"
     nbins, xmin, xmax = 20, 0., 20.
+    #nbins, xmin, xmax = 20, 0., 20.
     histos[hname] = TH1F(hname, "; # superstrips/road/tower/BX"     , nbins, xmin, xmax)
 
     hname = "nstubs_per_superstrip"
     nbins, xmin, xmax = 50, 0., 50.
+    #nbins, xmin, xmax = 20, 0., 20.
     histos[hname] = TH1F(hname, "; # stubs/superstrip/road/tower/BX", nbins, xmin, xmax)
 
     hname = "nstubs_per_road"
     nbins, xmin, xmax = 50, 0., 50.
+    #nbins, xmin, xmax = 20, 0., 20.
     histos[hname] = TH1F(hname, "; # stubs/road/tower/BX"           , nbins, xmin, xmax)
 
     hname = "nstubs_per_event"
     nbins, xmin, xmax = 500, 0., 500.
+    #nbins, xmin, xmax = 50, 0., 50.
     histos[hname] = TH1F(hname, "; # stubs/tower/BX"                , nbins, xmin, xmax)
 
     for i in xrange(6):
         hname = "nstubs_per_layer_%i" % i
         nbins, xmin, xmax = 50, 0., 50.
+        #nbins, xmin, xmax = 20, 0., 20.
         histos[hname] = TH1F(hname, "; # stubs/layer/road/tower/BX" , nbins, xmin, xmax)
 
     # Style
@@ -75,6 +86,9 @@ def drawer_project(tree, histos, options):
         ncombinations_per_event = 0
         stubmap = {}  # per event
 
+        if options.has_roads and evt.AMTTRoads_patternRef.size() == 0:
+            continue
+
         # Loop over roads
         for patternRef, tower, nstubs, superstripIds, stubRefs in izip(evt.AMTTRoads_patternRef, evt.AMTTRoads_tower, evt.AMTTRoads_nstubs, evt.AMTTRoads_superstripIds, evt.AMTTRoads_stubRefs):
 
@@ -92,7 +106,7 @@ def drawer_project(tree, histos, options):
                         stubmap[stub] = stubmap.get(stub, 0) + 1
 
                     nstubs_per_layer = ssid_stubRefs.size()
-                    histos["nstubs_per_layer_%i" % l].Fill(nstubs_per_layer)
+                    histos["nstubs_per_layer_%i" % l].Fill(nstubs_per_layer)  # a superstrip can enter more than once
 
                     l += 1
 
@@ -160,11 +174,9 @@ def drawer_draw(histos, options):
         ps.SetX1NDC(newX1NDC)
         ps.SetY1NDC(newY1NDC)
 
-        h.stats = []
-        h.stats.append(h.GetMean())
         for iq, q in enumerate(in_quantiles):
             ps.AddText("%i%% CI = %6.4g" % (int(q*100), quantiles[iq]))
-            h.stats.append(quantiles[iq])
+        h.stats = [h.GetMean()] + quantiles.tolist()
 
         h.SetStats(0)
         #gPad.Modified(); gPad.Update()
@@ -273,7 +285,7 @@ def drawer_sitrep(histos, options):
     h = histos["ncombinations_per_road"]
     print "ncombs per road \t{0:6.4g}\t{1:6.4g}\t{2:6.4g}".format(*h.stats)
     h = histos["ncombinations_per_event"]
-    print "ncombs per event \t{0:6.4g}\t{1:6.4g}\t{2:6.4g}".format(*h.stats)
+    print "ncombs per event\t{0:6.4g}\t{1:6.4g}\t{2:6.4g}".format(*h.stats)
 
 
 # ______________________________________________________________________________
@@ -307,6 +319,7 @@ if __name__ == '__main__':
     parser.add_argument("--coverage", type=float, default=0.95, help="desired coverage (default: %(default)s)")
     parser.add_argument("--minPt", type=float, default=2, help="min pT (default: %(default)s)")
     parser.add_argument("--xscale", type=float, default=1, help="scale factor for the x-axis range (default: %(default)s)")
+    parser.add_argument("--has-roads", action="store_true", help="only events with at least 1 road (default: %(default)s)")
 
     # Parse default arguments
     options = parser.parse_args()
