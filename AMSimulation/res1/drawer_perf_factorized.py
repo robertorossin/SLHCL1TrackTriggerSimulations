@@ -9,16 +9,16 @@ fcol = TColor.GetColor("#E58080")
 
 # ______________________________________________________________________________
 factorized = [
-    "0TP",
-    "1det",
-    "2digi",
-    "3clus",
-    "4stub",
-    "5cable",
-    "6tower",
-    "7road",
-    "8comb",
-    "9track",
+    "00TP",
+    "01det",
+    "02digi",
+    "03clus",
+    "04stub",
+    "05cable",
+    "06tower",
+    "07road",
+    "08comb",
+    "09track",
     "10dedup",
 ]
 
@@ -199,7 +199,7 @@ def drawer_project(tree, histos, options):
             if options.verbose:  print ievt, "part ", ipart, trkparts[ipart]
 
         for ipart, part in trkparts.iteritems():
-            trkparts_ievt_fact["0TP"].append(part)
+            trkparts_ievt_fact["00TP"].append(part)
 
         # ______________________________________________________________________
         # Sim hits
@@ -249,7 +249,7 @@ def drawer_project(tree, histos, options):
 
             if len(layers) >= options.minNLayers:
                 if options.verbose:  print ievt, "-- det: >>", len(layers)
-                trkparts_ievt_fact["1det"].append(trkparts[tpId])
+                trkparts_ievt_fact["01det"].append(trkparts[tpId])
                 trkparts_modules[tpId].sort()
                 trkparts_simhits[tpId].sort()
 
@@ -319,7 +319,7 @@ def drawer_project(tree, histos, options):
 
             if len(layers) >= options.minNLayers:
                 if options.verbose:  print ievt, "-- digi: >>", len(layers)
-                trkparts_ievt_fact["2digi"].append(trkparts[tpId])
+                trkparts_ievt_fact["02digi"].append(trkparts[tpId])
                 trkparts_modules[tpId].sort()
                 trkparts_digis[tpId].sort()
 
@@ -389,7 +389,7 @@ def drawer_project(tree, histos, options):
 
             if len(layers) >= options.minNLayers:
                 if options.verbose:  print ievt, "-- clus: >>", len(layers)
-                trkparts_ievt_fact["3clus"].append(trkparts[tpId])
+                trkparts_ievt_fact["03clus"].append(trkparts[tpId])
                 trkparts_modules[tpId].sort()
                 trkparts_cluss[tpId].sort()
 
@@ -453,7 +453,7 @@ def drawer_project(tree, histos, options):
 
             if len(layers) >= options.minNLayers:
                 if options.verbose:  print ievt, "-- stub: >>", len(layers)
-                trkparts_ievt_fact["4stub"].append(trkparts[tpId])
+                trkparts_ievt_fact["04stub"].append(trkparts[tpId])
                 trkparts_modules[tpId].sort()
                 trkparts_stubs[tpId].sort()
 
@@ -466,8 +466,8 @@ def drawer_project(tree, histos, options):
         #  - Find the subset of stubs transmitted successfully by cables, repeat the same thing
         #  - NOT IMPLEMENTED
 
-        for part in trkparts_ievt_fact["4stub"]:
-            trkparts_ievt_fact["5cable"].append(part)
+        for part in trkparts_ievt_fact["04stub"]:
+            trkparts_ievt_fact["05cable"].append(part)
 
         # ______________________________________________________________________
         # Tower
@@ -494,7 +494,7 @@ def drawer_project(tree, histos, options):
 
             if len(layers) >= options.minNLayers:
                 if options.verbose:  print ievt, "-- tower: >>", len(layers)
-                trkparts_ievt_fact["6tower"].append(trkparts[tpId])
+                trkparts_ievt_fact["06tower"].append(trkparts[tpId])
 
             if options.verbose:  print ievt, "-- tower: >>", len(trkparts_modules[tpId]), trkparts_modules[tpId]
             if options.verbose:  print ievt, "-- tower: >>", len(trkparts_stubs[tpId]), trkparts_stubs[tpId]
@@ -536,7 +536,7 @@ def drawer_project(tree, histos, options):
                     break
 
             if trigger:
-                trkparts_ievt_fact["7road"].append(trkparts[tpId])
+                trkparts_ievt_fact["07road"].append(trkparts[tpId])
 
 
             trigger = False
@@ -570,7 +570,7 @@ def drawer_project(tree, histos, options):
                     break
 
             if trigger:
-                trkparts_ievt_fact["8comb"].append(trkparts[tpId])
+                trkparts_ievt_fact["08comb"].append(trkparts[tpId])
 
 
         # ______________________________________________________________________
@@ -608,7 +608,7 @@ def drawer_project(tree, histos, options):
                     break
 
             if trigger:
-                trkparts_ievt_fact["9track"].append(trkparts[tpId])
+                trkparts_ievt_fact["09track"].append(trkparts[tpId])
 
 
             trigger = False
@@ -677,7 +677,7 @@ def drawer_draw(histos, options):
     prefix2 = "efficiency2_"
 
     for i, fact in enumerate(factorized):
-        if fact == "0TP":
+        if fact == "00TP":
            continue
 
         for j, hvar in enumerate(hvars):
