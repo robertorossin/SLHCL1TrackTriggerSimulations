@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
         ("superstrip,s" , po::value<std::string>(&option.superstrip)->default_value("ss256_nz2"), "Specify the superstrip definition (default: ss256_nz2)")
 
         // Track fitting algorithm
-        ("algo,f"       , po::value<std::string>(&option.algo)->default_value("PCA4"), "Select track fitter -- PCA4: PCA fitter 4 params; PCA5: PCA fitter 5 params; ATF4: ATF fitter 4 params; ATF5: ATF fitter 5 params; LTF: Linearized track fitter (default: PCA4)")
+        ("algo,f"       , po::value<std::string>(&option.algo)->default_value("LTF"), "Select track fitter -- PCA4: PCA fitter 4 params; PCA5: PCA fitter 5 params; ATF4: ATF fitter 4 params; ATF5: ATF fitter 5 params; LTF: Linearized track fitter (default: LTF)")
 
         // MC truth
         ("minPt"        , po::value<float>(&option.minPt)->default_value(     2.0), "Specify min pt")
