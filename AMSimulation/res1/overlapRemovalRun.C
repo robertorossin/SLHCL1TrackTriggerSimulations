@@ -13,7 +13,7 @@ void genTrackPropagate(double *genTrackPt_Phi0_CotTheta, double r, double *genTr
 void loadTT27ModuleList(vector <unsigned> &v);
 void findFactors(unsigned num, unsigned &f1, unsigned &f2);
 
-void overlapRemoval::Loop(Long64_t nMax,bool makePlots)
+void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt)
 {
 
 	if (fChain == 0) return;
@@ -115,6 +115,7 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots)
 		};
 
 		double genTrackPt_Phi0[2] = {-genParts_pt->at(0)*genParts_charge->at(0), genParts_phi->at(0)};
+		if (genTrackPt_Phi0[0]<minPt) continue;
 
 		std::map<short,stub> stubMapClean;
 
@@ -234,9 +235,16 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots)
 		}
 	}
 
-	TCanvas* cStubRadius = new TCanvas("cStubRadius","cStubRadius",50,50,900,900);
+	TCanvas* cStubRadius = new TCanvas("cStubRadius","cStubRadius",50,50,1700,900);
 	cStubRadius->SetLogy();
 	h1StubRadius->DrawCopy();
+	if (makePlots) {
+		char cc[100];
+		sprintf(cc,"stubRadii");
+		cStubRadius->SaveAs(outDir+TString(cc)+TString(".C"));
+		cStubRadius->SaveAs(outDir+TString(cc)+TString(".pdf"));
+		cStubRadius->SaveAs(outDir+TString(cc)+TString(".png"));
+	}
 
 
 	TCanvas* c2stubLocalCoord = new TCanvas("c2stubLocalCoord","c2stubLocalCoord",50,0,900,900);
@@ -246,12 +254,15 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots)
 		h2stubLocalCoord[iLay]->DrawCopy("colz0");
 	}
 
+	char cMinPt[10];
+	sprintf(cMinPt,"_minPt%02.0f",minPt);
+
 	unsigned ih2stubLocalCoordAll=0;
 	TCanvas* c2stubLocalCoordByModule[6];
 	for (unsigned iLay=0; iLay<6; ++iLay) {
 		char cc[100];
 		sprintf(cc,"c2stubLocalCoordByModule_Layer%d",iLay);
-		c2stubLocalCoordByModule[iLay] = new TCanvas(cc,cc,50,0,900,900);
+		c2stubLocalCoordByModule[iLay] = new TCanvas(cc,cc,50,0,1700,900);
 		unsigned nx, ny;
 		findFactors(nModules[iLay], nx,ny);
 		cout << iLay << "\t" << nModules[iLay] << "\t" << nx << ":" << ny << endl;
@@ -259,6 +270,12 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots)
 		for (unsigned iMod=0; iMod<nModules[iLay]; ++iMod) {
 			c2stubLocalCoordByModule[iLay]->cd(iMod+1);
 			h2stubLocalCoordAll[ih2stubLocalCoordAll++]->DrawCopy("colz0");
+		}
+		if (makePlots) {
+			sprintf(cc,"stubLocalCoord_Layer%d",iLay);
+			c2stubLocalCoordByModule[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".C"));
+			c2stubLocalCoordByModule[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".pdf"));
+			c2stubLocalCoordByModule[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".png"));
 		}
 	}
 
@@ -278,9 +295,9 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots)
 		}
 		if (makePlots) {
 			sprintf(cc,"stubOverlapLocalCoords_Layer%d",iLay);
-			c2stubLocalCoordByModuleDupl[iLay]->SaveAs(outDir+TString(cc)+TString(".C"));
-			c2stubLocalCoordByModuleDupl[iLay]->SaveAs(outDir+TString(cc)+TString(".pdf"));
-			c2stubLocalCoordByModuleDupl[iLay]->SaveAs(outDir+TString(cc)+TString(".png"));
+			c2stubLocalCoordByModuleDupl[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".C"));
+			c2stubLocalCoordByModuleDupl[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".pdf"));
+			c2stubLocalCoordByModuleDupl[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".png"));
 		}
 	}
 
@@ -306,9 +323,9 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots)
 		}
 		if (makePlots) {
 			sprintf(cc,"stubOverlapLocalCoordsEff_Layer%d",iLay);
-			c2stubLocalCoordByModuleDuplEff[iLay]->SaveAs(outDir+TString(cc)+TString(".C"));
-			c2stubLocalCoordByModuleDuplEff[iLay]->SaveAs(outDir+TString(cc)+TString(".pdf"));
-			c2stubLocalCoordByModuleDuplEff[iLay]->SaveAs(outDir+TString(cc)+TString(".png"));
+			c2stubLocalCoordByModuleDuplEff[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".C"));
+			c2stubLocalCoordByModuleDuplEff[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".pdf"));
+			c2stubLocalCoordByModuleDuplEff[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".png"));
 		}
 	}
 
@@ -355,10 +372,10 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots)
 	return;
 }
 
-void overlapRemovalRun(Long64_t nMax=1000000,bool makePlots=false) {
+void overlapRemovalRun(Long64_t nMax=1000000,bool makePlots=false, float minPt=2) {
 	gStyle->SetOptStat(0);
 	overlapRemoval s;
-	s.Loop(nMax,makePlots);
+	s.Loop(nMax,makePlots,minPt);
 	return;
 
 }
