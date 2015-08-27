@@ -5,6 +5,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HelperMath.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Picky.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ModuleOverlapMap.h"
 using namespace slhcl1tt;
 
 
@@ -15,6 +16,8 @@ class StubCleaner {
     : po_(po),
       nEvents_(po.maxEvents), verbose_(po.verbose) {
 
+        momap_   = new ModuleOverlapMap();
+        momap_->readModuleOverlapMap(po_.datadir);
         // Initialize
         picky_ = new Picky();
     }
@@ -32,6 +35,8 @@ class StubCleaner {
     // Member functions
     // Select one unique stub per layer
     int cleanStubs(TString src, TString out);
+
+    ModuleOverlapMap  * momap_;
 
     // Program options
     const ProgramOption po_;
