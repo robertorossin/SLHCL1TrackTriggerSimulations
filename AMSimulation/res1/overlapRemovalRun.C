@@ -4,6 +4,7 @@
 #include <TStyle.h>
 #include <TCanvas.h>
 #include <TMath.h>
+#include <TLatex.h>
 
 #include <iostream>
 #include <fstream>
@@ -13,7 +14,7 @@ void genTrackPropagate(double *genTrackPt_Phi0_CotTheta, double r, double *genTr
 void loadTT27ModuleList(vector <unsigned> &v);
 void findFactors(unsigned num, unsigned &f1, unsigned &f2);
 
-void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt)
+void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt,TString sBeamDisplaced)
 {
 
 	if (fChain == 0) return;
@@ -29,6 +30,8 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt)
 	TH2* h2stubLocalCoordDupl[nMod];
 	TH2* h2stubLocalCoordEff[nMod];
 	unsigned nModules[6] = {0,0,0,0,0,0};
+	int nBinTIB = 960/2;
+	int nBinTOB = 1016/2;
 	for (unsigned iMod=0; iMod<vModuleId.size(); ++iMod) {
 		moduleIdMap[vModuleId[iMod]]=iMod;
 
@@ -39,12 +42,12 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt)
 		sprintf(hName ,"h2stubLocalCoordAll_ModuleId%d",vModuleId[iMod]);
 		sprintf(hName2,"h2stubLocalCoordDupl_ModuleId%d",vModuleId[iMod]);
 		if (iLay<3) {
-			h2stubLocalCoordAll [iMod] = new TH2F(hName ,hName ,1920,0,960,32,0,32);
-			h2stubLocalCoordDupl[iMod] = new TH2F(hName2,hName2,1920,0,960,32,0,32);
+			h2stubLocalCoordAll [iMod] = new TH2F(hName ,hName ,nBinTIB,0,960,32,0,32);
+			h2stubLocalCoordDupl[iMod] = new TH2F(hName2,hName2,nBinTIB,0,960,32,0,32);
 		}
 		else        {
-			h2stubLocalCoordAll [iMod] = new TH2F(hName ,hName ,2030,0,1015,2,0,2);
-			h2stubLocalCoordDupl[iMod] = new TH2F(hName2,hName2,2030,0,1015,2,0,2);
+			h2stubLocalCoordAll [iMod] = new TH2F(hName ,hName ,nBinTOB,0,1016,2,0,2);
+			h2stubLocalCoordDupl[iMod] = new TH2F(hName2,hName2,nBinTOB,0,1016,2,0,2);
 		}
 	}
 	for (unsigned iLay=0; iLay<6; ++iLay) std::cout << nModules[iLay] << "\t" ;
@@ -82,8 +85,8 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt)
 	for (unsigned iLay=0; iLay<6; ++iLay) {
 		char hName[100];
 		sprintf(hName,"h2stubLocalCoord_Layer%d",iLay);
-		if (iLay<3) h2stubLocalCoord[iLay] = new TH2D(hName,hName,1920,0,960,32,0,32);
-		else        h2stubLocalCoord[iLay] = new TH2D(hName,hName,2030,0,1015,2,0,2);
+		if (iLay<3) h2stubLocalCoord[iLay] = new TH2D(hName,hName,nBinTIB,0,960,32,0,32);
+		else        h2stubLocalCoord[iLay] = new TH2D(hName,hName,nBinTOB,0,1016,2,0,2);
 		for (unsigned iXYZ=0; iXYZ<3; ++iXYZ) {
 			sprintf(hName,"h1StubTrackResiduals_Layer%d_%s",iLay,sXYZ[iXYZ].Data());
 			h1StubTrackResiduals[iLay][iXYZ] = new TH1F(hName,hName,200,-2,2);
@@ -124,10 +127,10 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt)
 		for (unsigned iStub=0; iStub<TTStubs_r->size(); ++iStub) {
 
 			std::map<unsigned,unsigned>::iterator itMod = moduleIdMap.find(TTStubs_modId->at(iStub));
-			if (itMod == moduleIdMap.end()) continue; // does not belong to TT27
+//			if (itMod == moduleIdMap.end()) continue; // does not belong to TT27
 
 			short int stub_layer = TMath::Floor(TTStubs_modId   ->at(iStub)/10000.)-5;
-			if (stub_layer<0 || stub_layer>5) continue; // in case there are stray stubs from secondaries
+			if (stub_layer<0 || stub_layer>5) continue; // look only in the barrel
 
 			unsigned moduleId = TTStubs_modId   ->at(iStub);
 //			moduleIdMap[moduleId] = moduleId;
@@ -191,6 +194,9 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt)
 		for (std::map<short,stub>::iterator it = stubMapClean.begin(); it!=stubMapClean.end(); ++it) {
 			vStubsSubLayer[it->second.layer].push_back(it->second.sublayer);
 		}
+		for (unsigned iLay=0; iLay<6; ++iLay) { // sorting each vector. innermost sublayer will be in [0]
+			std::sort(vStubsSubLayer[iLay].begin(),vStubsSubLayer[iLay].end());
+		}
 
 		for (std::map<short,stub>::iterator it = stubMapClean.begin(); it!=stubMapClean.end(); ++it) {
 //			if (stubMapClean.size()>48) std::cout << stubMapClean.size() << "\t"
@@ -205,11 +211,16 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt)
 			unsigned iStub = it->second.iStub;
 
 			std::map<unsigned,unsigned>::iterator itMod = moduleIdMap.find(TTStubs_modId->at(iStub));
+			if (itMod==moduleIdMap.end()) continue;
 			unsigned iMod = moduleIdMap.find(TTStubs_modId->at(iStub))->second;
 			h2stubLocalCoordAll[iMod]->Fill(TTStubs_coordx->at(iStub),TTStubs_coordy->at(iStub));
-			if (vStubsSubLayer[it->second.layer].size()>1) {
-				if (vStubsSubLayer[it->second.layer][0]<it->second.sublayer) h2stubLocalCoordDupl[iMod]->Fill(TTStubs_coordx->at(iStub),TTStubs_coordy->at(iStub));
-			}
+			// Filling dupl histo if and only if the hit is in the innermost sublayer
+			if (vStubsSubLayer[it->second.layer][0]==it->second.sublayer) h2stubLocalCoordDupl[iMod]->Fill(TTStubs_coordx->at(iStub),TTStubs_coordy->at(iStub));
+
+//    OLD WAY. getting regions to remove.
+//			if (vStubsSubLayer[it->second.layer].size()>1) {
+//				if (vStubsSubLayer[it->second.layer][0]<it->second.sublayer) h2stubLocalCoordDupl[iMod]->Fill(TTStubs_coordx->at(iStub),TTStubs_coordy->at(iStub));
+//			}
 		}
 
 
@@ -254,6 +265,10 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt)
 		h2stubLocalCoord[iLay]->DrawCopy("colz0");
 	}
 
+
+	TFile* fOutHistos = new TFile(outDir+TString("stubOverlapHistos")+TString(sBeamDisplaced)+TString(".root"),"recreate");
+
+
 	char cMinPt[10];
 	sprintf(cMinPt,"_minPt%02.0f",minPt);
 
@@ -261,7 +276,7 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt)
 	TCanvas* c2stubLocalCoordByModule[6];
 	for (unsigned iLay=0; iLay<6; ++iLay) {
 		char cc[100];
-		sprintf(cc,"c2stubLocalCoordByModule_Layer%d",iLay);
+		sprintf(cc,"c2stubLocalCoordByModule%s_Layer%d",TString(sBeamDisplaced).Data(),iLay);
 		c2stubLocalCoordByModule[iLay] = new TCanvas(cc,cc,50,0,1700,900);
 		unsigned nx, ny;
 		findFactors(nModules[iLay], nx,ny);
@@ -269,13 +284,14 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt)
 		c2stubLocalCoordByModule[iLay]->Divide(nx,ny);
 		for (unsigned iMod=0; iMod<nModules[iLay]; ++iMod) {
 			c2stubLocalCoordByModule[iLay]->cd(iMod+1);
+			h2stubLocalCoordAll[ih2stubLocalCoordAll]->Write();
 			h2stubLocalCoordAll[ih2stubLocalCoordAll++]->DrawCopy("colz0");
 		}
 		if (makePlots) {
 			sprintf(cc,"stubLocalCoord_Layer%d",iLay);
-			c2stubLocalCoordByModule[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".C"));
-			c2stubLocalCoordByModule[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".pdf"));
-			c2stubLocalCoordByModule[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".png"));
+			c2stubLocalCoordByModule[iLay]->SaveAs(outDir+TString(cc)+TString(sBeamDisplaced)+TString(cMinPt)+TString(".C"));
+			c2stubLocalCoordByModule[iLay]->SaveAs(outDir+TString(cc)+TString(sBeamDisplaced)+TString(cMinPt)+TString(".pdf"));
+			c2stubLocalCoordByModule[iLay]->SaveAs(outDir+TString(cc)+TString(sBeamDisplaced)+TString(cMinPt)+TString(".png"));
 		}
 	}
 
@@ -283,7 +299,7 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt)
 	TCanvas* c2stubLocalCoordByModuleDupl[6];
 	for (unsigned iLay=0; iLay<6; ++iLay) {
 		char cc[100];
-		sprintf(cc,"c2stubLocalCoordByModuleDupl_Layer%d",iLay);
+		sprintf(cc,"c2stubLocalCoordByModuleDupl%s_Layer%d",TString(sBeamDisplaced).Data(),iLay);
 		c2stubLocalCoordByModuleDupl[iLay] = new TCanvas(cc,cc,50,0,1700,900);
 		unsigned nx, ny;
 		findFactors(nModules[iLay], nx,ny);
@@ -291,13 +307,14 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt)
 		c2stubLocalCoordByModuleDupl[iLay]->Divide(nx,ny);
 		for (unsigned iMod=0; iMod<nModules[iLay]; ++iMod) {
 			c2stubLocalCoordByModuleDupl[iLay]->cd(iMod+1);
+			h2stubLocalCoordDupl[ih2stubLocalCoordDupl]->Write();
 			h2stubLocalCoordDupl[ih2stubLocalCoordDupl++]->DrawCopy("colz0");
 		}
 		if (makePlots) {
-			sprintf(cc,"stubOverlapLocalCoords_Layer%d",iLay);
-			c2stubLocalCoordByModuleDupl[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".C"));
-			c2stubLocalCoordByModuleDupl[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".pdf"));
-			c2stubLocalCoordByModuleDupl[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".png"));
+			sprintf(cc,"stubOverlapLocalCoords%s_Layer%d",TString(sBeamDisplaced).Data(),iLay);
+			c2stubLocalCoordByModuleDupl[iLay]->SaveAs(outDir+TString(cc)+TString(sBeamDisplaced)+TString(cMinPt)+TString(".C"));
+			c2stubLocalCoordByModuleDupl[iLay]->SaveAs(outDir+TString(cc)+TString(sBeamDisplaced)+TString(cMinPt)+TString(".pdf"));
+			c2stubLocalCoordByModuleDupl[iLay]->SaveAs(outDir+TString(cc)+TString(sBeamDisplaced)+TString(cMinPt)+TString(".png"));
 		}
 	}
 
@@ -305,7 +322,7 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt)
 	TCanvas* c2stubLocalCoordByModuleDuplEff[6];
 	for (unsigned iLay=0; iLay<6; ++iLay) {
 		char cc[100];
-		sprintf(cc,"c2stubLocalCoordByModuleDuplEff_Layer%d",iLay);
+		sprintf(cc,"c2stubLocalCoordByModuleDuplEff%s_Layer%d",TString(sBeamDisplaced).Data(),iLay);
 		c2stubLocalCoordByModuleDuplEff[iLay] = new TCanvas(cc,cc,50,0,1700,900);
 		unsigned nx, ny;
 		findFactors(nModules[iLay], nx,ny);
@@ -319,16 +336,18 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt)
 			h2stubLocalCoordEff[ih2stubLocalCoordDuplEff]->SetTitle(hName);
 			h2stubLocalCoordEff[ih2stubLocalCoordDuplEff]->Divide(h2stubLocalCoordAll[ih2stubLocalCoordDuplEff]);
 			h2stubLocalCoordEff[ih2stubLocalCoordDuplEff]->GetZaxis()->SetRangeUser(0,1);
+			h2stubLocalCoordEff[ih2stubLocalCoordDuplEff]->Write();
 			h2stubLocalCoordEff[ih2stubLocalCoordDuplEff++]->DrawCopy("colz0");
 		}
 		if (makePlots) {
 			sprintf(cc,"stubOverlapLocalCoordsEff_Layer%d",iLay);
-			c2stubLocalCoordByModuleDuplEff[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".C"));
-			c2stubLocalCoordByModuleDuplEff[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".pdf"));
-			c2stubLocalCoordByModuleDuplEff[iLay]->SaveAs(outDir+TString(cc)+TString(cMinPt)+TString(".png"));
+			c2stubLocalCoordByModuleDuplEff[iLay]->SaveAs(outDir+TString(cc)+TString(sBeamDisplaced)+TString(cMinPt)+TString(".root"));
+			c2stubLocalCoordByModuleDuplEff[iLay]->SaveAs(outDir+TString(cc)+TString(sBeamDisplaced)+TString(cMinPt)+TString(".C"));
+			c2stubLocalCoordByModuleDuplEff[iLay]->SaveAs(outDir+TString(cc)+TString(sBeamDisplaced)+TString(cMinPt)+TString(".pdf"));
+			c2stubLocalCoordByModuleDuplEff[iLay]->SaveAs(outDir+TString(cc)+TString(sBeamDisplaced)+TString(cMinPt)+TString(".png"));
 		}
 	}
-
+	fOutHistos->Close();
 
 	//*********************************************
 
@@ -372,10 +391,32 @@ void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt)
 	return;
 }
 
-void overlapRemovalRun(Long64_t nMax=1000000,bool makePlots=false, float minPt=2) {
+void overlapRemovalRun(Long64_t nMax=1000000,bool makePlots=false, float minPt=3, unsigned iBeamDisplaced=0) {
 	gStyle->SetOptStat(0);
-	overlapRemoval s;
-	s.Loop(nMax,makePlots,minPt);
+	TString fName;
+	TString sBeamDisplaced("");
+	switch (iBeamDisplaced) {
+		case 0:
+			fName="/data/rossin/EOS/singleMuNoTest2_2000/SingleMuonFlatOneOverPt0p0005To0p5_tt27NoTest_cfi_py_GEN_SIM_DIGI_L1TrackTrigger_2Msum.root";
+			fName="/data/rossin/EOS/SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3/SingleMuonTest_tt27_PU0_20150408/SingleMuonTest_tt27_PU0_ntuple_Pt0p2_6p5M.root";
+			fName="/data/rossin/EOS/SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3/SingleMuonTest_tt27_PU0_20150408/SingleMuonTest_tt27_PU0_ntuple_Pt3_6M.root";
+			sBeamDisplaced="";
+			break;
+		case 1:
+			fName="/data/rossin/EOS/SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3/SingleMuonTest_tt27_PU0_20150408/SingleMuonTest_tt27_XY1mmAway_PU0_ntuple_Pt3.root";
+			sBeamDisplaced="XY1mmAway_";
+			break;
+		case 2:
+			fName="/data/rossin/EOS/SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3/SingleMuonTest_tt27_PU0_20150408/SingleMuonTest_tt27_XY1mmTowards_PU0_ntuple_Pt3.root";
+			sBeamDisplaced="XY1mmTowards_";
+			break;
+		case 3:
+			fName="/data/rossin/EOS/SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3/SingleMuonTest_tt27_PU0_20150408/SingleMuonTest_tt27_XY1mmOrthogonal_PU0_ntuple_Pt3.root";
+			sBeamDisplaced="XY1mmOrthogonal_";
+			break;
+	}
+	overlapRemoval s(fName);
+	s.Loop(nMax,makePlots,minPt,sBeamDisplaced);
 	return;
 
 }

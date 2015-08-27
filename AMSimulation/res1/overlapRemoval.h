@@ -11,6 +11,7 @@
 #include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
+#include <iostream>
 
 // Header file for the classes stored in the TTree if any.
 #include <vector>
@@ -378,13 +379,14 @@ public :
    TBranch        *b_trkParts_trkIds;   //!
    TBranch        *b_trkVertices_vtxIds;   //!
 
-   overlapRemoval(TTree *tree=0);
+   TTree *tree;
+   overlapRemoval(TString fName);
    virtual ~overlapRemoval();
    virtual Int_t    Cut(Long64_t entry);
    virtual Int_t    GetEntry(Long64_t entry);
    virtual Long64_t LoadTree(Long64_t entry);
    virtual void     Init(TTree *tree);
-   virtual void     Loop(Long64_t nMax,bool makePlots,float minPt);
+   virtual void     Loop(Long64_t nMax,bool makePlots,float minPt,TString sBeamDisplaced);
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
 };
@@ -392,18 +394,19 @@ public :
 #endif
 
 #ifdef overlapRemoval_cxx
-overlapRemoval::overlapRemoval(TTree *tree) : fChain(0) 
+overlapRemoval::overlapRemoval(TString fName) : fChain(0)
 {
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
-   if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/data/rossin/EOS/singleMuNoTest2_2000/SingleMuonFlatOneOverPt0p0005To0p5_tt27NoTest_cfi_py_GEN_SIM_DIGI_L1TrackTrigger_2Msum.root");
+//   if (tree == 0) {
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(fName);
       if (!f || !f->IsOpen()) {
-         f = new TFile("/data/rossin/EOS/singleMuNoTest2_2000/SingleMuonFlatOneOverPt0p0005To0p5_tt27NoTest_cfi_py_GEN_SIM_DIGI_L1TrackTrigger_2Msum.root");
+         f = new TFile(fName);
       }
-      TDirectory * dir = (TDirectory*)f->Get("/data/rossin/EOS/singleMuNoTest2_2000/SingleMuonFlatOneOverPt0p0005To0p5_tt27NoTest_cfi_py_GEN_SIM_DIGI_L1TrackTrigger_2Msum.root:/ntupler");
+      TDirectory * dir = (TDirectory*)f->Get(fName+TString(":/ntupler"));
       dir->GetObject("tree",tree);
-   }
+      std::cout << "Initializing " << fName.Data() <<  std::endl;
+//   }
    Init(tree);
 }
 

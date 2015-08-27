@@ -86,7 +86,7 @@ def drawer_project(tree, histos, options):
 
         if (ievt % 100 == 0):  print "Processing event: %i" % ievt
 
-        nparts_all = evt.trkParts_primary.size()
+        nparts_all = evt.trkParts_primary.size() # sim track particles. can be more than one/event even if genParts_size==1
         trkparts = {}
 
         for ipart in xrange(nparts_all):
@@ -115,7 +115,7 @@ def drawer_project(tree, histos, options):
             trkparts[ipart] = (phi, sinh(eta), vz, float(charge)/pt)
             if options.verbose:  print ievt, "part ", ipart, trkparts[ipart]
 
-        ntracks_all = evt.AMTTTracks_patternRef.size()
+        ntracks_all = evt.AMTTTracks_patternRef.size() #tracks from the fitter
         tracks = {}
 
         for itrack in xrange(ntracks_all):
@@ -137,7 +137,8 @@ def drawer_project(tree, histos, options):
 
             tracks[itrack] = (phi0, cottheta, z0, invPt)
 
-        # Sanity check
+        # Sanity check. Double loop over simtracks and fitted tracks
+        # For every simTrack look for the closest fitted track (in normalized track pars square diff)
         for ipart, part in trkparts.iteritems():
             minMatch, minMatch_i = 999999., 0
             for itrack, track in tracks.iteritems():
@@ -150,6 +151,8 @@ def drawer_project(tree, histos, options):
                     minMatch_i = itrack
                 #print ievt, ipart, itrack, "(%i)" % evt.AMTTTracks_synTpId[itrack], match, minMatch, minMatch_i
 
+            # If there is a good match (minMatch<...)
+            # And the simtrack (ipart) does not match the syntethic tpid (can happen for 5/6 patterns)
             if minMatch != 999999. and minMatch < 5:
                 if ipart != evt.AMTTTracks_synTpId[minMatch_i]:
                     print "WARNING: not match: ", ipart, evt.AMTTTracks_synTpId[minMatch_i]
