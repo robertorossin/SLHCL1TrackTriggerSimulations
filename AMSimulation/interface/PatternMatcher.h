@@ -8,6 +8,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/AssociativeMemory.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HitBuffer.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ModuleOverlapMap.h"
 using namespace slhcl1tt;
 
 
@@ -16,7 +17,7 @@ class PatternMatcher {
     // Constructor
     PatternMatcher(const ProgramOption& po)
     : po_(po),
-      nEvents_(po.maxEvents), verbose_(po.verbose),
+      nEvents_(po.maxEvents), verbose_(po.verbose), removeOverlap_(po.removeOverlap),
       prefixRoad_("AMTTRoads_"), suffix_("") {
 
         // Initialize
@@ -25,7 +26,10 @@ class PatternMatcher {
 
         arbiter_ = new SuperstripArbiter();
         arbiter_->setDefinition(po_.superstrip, po_.tower, ttmap_);
-    }
+
+        momap_   = new ModuleOverlapMap();
+        momap_->readModuleOverlapMap(po_.datadir);
+}
 
     // Destructor
     ~PatternMatcher() {
@@ -50,6 +54,7 @@ class PatternMatcher {
     const ProgramOption po_;
     long long nEvents_;
     int verbose_;
+    bool removeOverlap_;
 
     // Configurations
     const TString prefixRoad_;
@@ -58,6 +63,7 @@ class PatternMatcher {
     // Operators
     TriggerTowerMap   * ttmap_;
     SuperstripArbiter * arbiter_;
+    ModuleOverlapMap  * momap_;
 
     // Associative memory
     AssociativeMemory associativeMemory_;

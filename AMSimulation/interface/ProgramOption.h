@@ -54,6 +54,7 @@ struct ProgramOption {
     int         maxTracks;
 
     bool        no_trim;
+    bool        removeOverlap;
 
     std::string datadir;
 };

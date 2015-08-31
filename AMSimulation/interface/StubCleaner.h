@@ -14,7 +14,7 @@ class StubCleaner {
     // Constructor
     StubCleaner(const ProgramOption& po)
     : po_(po),
-      nEvents_(po.maxEvents), verbose_(po.verbose) {
+      nEvents_(po.maxEvents), verbose_(po.verbose), removeOverlap_(po.removeOverlap) {
 
         momap_   = new ModuleOverlapMap();
         momap_->readModuleOverlapMap(po_.datadir);
@@ -42,6 +42,7 @@ class StubCleaner {
     const ProgramOption po_;
     long long nEvents_;
     int verbose_;
+    bool removeOverlap_;
 
     // Picky
     Picky * picky_;

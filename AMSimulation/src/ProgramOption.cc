@@ -61,6 +61,7 @@ std::ostream& operator<<(std::ostream& o, const ProgramOption& po) {
       << "  maxTracks: "    << po.maxTracks
 
       << "  no_trim: "      << po.no_trim
+      << "  removeOverlap: "<< po.removeOverlap
 
       << "  datadir: "      << po.datadir
       ;

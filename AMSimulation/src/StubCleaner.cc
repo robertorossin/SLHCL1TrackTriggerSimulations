@@ -164,31 +164,33 @@ int StubCleaner::cleanStubs(TString src, TString out) {
             float    stub_ds  = reader.vb_trigBend->at(istub);
 
             // RR removing stubs in the overlapping regions
-            float    stub_coordx = reader.vb_coordx->at(istub);
-            float    stub_coordy = reader.vb_coordy->at(istub);
-            std::map<unsigned,ModuleOverlap>::iterator it_mo = momap_->moduleOverlap_map_.find(moduleId);
-           	if (it_mo != momap_->moduleOverlap_map_.end()) {
-           		float minx = it_mo->second.x1;
-           		if (stub_coordx < minx) {
-               		if (verbose_>2)  std::cout << Info() << "Removing stub in module " << ievt << "\t" << moduleId << "\t x1: " <<  stub_coordx << std::endl;
-           			continue;
-           		}
-           		float maxx = it_mo->second.x2;
-           		if (stub_coordx > maxx) {
-               		if (verbose_>2)  std::cout << Info() << "Removing stub in module " << ievt << "\t"  << moduleId << "\t x2: " <<  stub_coordx << std::endl;
-           			continue;
-           		}
-           		float miny = it_mo->second.y1;
-           		if (stub_coordy < miny) {
-               		if (verbose_>2)  std::cout << Info() << "Removing stub in module " << ievt << "\t"  << moduleId << "\t y1: " <<  stub_coordy << std::endl;
-           			continue;
-           		}
-           		float maxy = it_mo->second.y2;
-           		if (stub_coordy > maxy) {
-               		if (verbose_>2)  std::cout << Info() << "Removing stub in module " << ievt << "\t"  << moduleId << "\t y2: " <<  stub_coordy << std::endl;
-           			continue;
-           		}
-           	}
+            if (removeOverlap_) {
+            	float    stub_coordx = reader.vb_coordx->at(istub);
+            	float    stub_coordy = reader.vb_coordy->at(istub);
+            	std::map<unsigned,ModuleOverlap>::iterator it_mo = momap_->moduleOverlap_map_.find(moduleId);
+            	if (it_mo != momap_->moduleOverlap_map_.end()) {
+            		float minx = it_mo->second.x1;
+            		if (stub_coordx < minx) {
+            			if (verbose_>2)  std::cout << Info() << "Removing stub in module " << ievt << "\t" << moduleId << "\t x1: " <<  stub_coordx << std::endl;
+            			continue;
+            		}
+            		float maxx = it_mo->second.x2;
+            		if (stub_coordx > maxx) {
+            			if (verbose_>2)  std::cout << Info() << "Removing stub in module " << ievt << "\t"  << moduleId << "\t x2: " <<  stub_coordx << std::endl;
+            			continue;
+            		}
+            		float miny = it_mo->second.y1;
+            		if (stub_coordy < miny) {
+            			if (verbose_>2)  std::cout << Info() << "Removing stub in module " << ievt << "\t"  << moduleId << "\t y1: " <<  stub_coordy << std::endl;
+            			continue;
+            		}
+            		float maxy = it_mo->second.y2;
+            		if (stub_coordy > maxy) {
+            			if (verbose_>2)  std::cout << Info() << "Removing stub in module " << ievt << "\t"  << moduleId << "\t y2: " <<  stub_coordy << std::endl;
+            			continue;
+            		}
+            	}
+            } // endif removeOverlap_
 
             unsigned lay16    = compressLayer(decodeLayer(moduleId));
             assert(lay16 < 16);

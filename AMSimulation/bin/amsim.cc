@@ -89,6 +89,9 @@ int main(int argc, char **argv) {
         // Only for stub cleaning
         ("picky"        , po::value<int>(&option.picky)->default_value(1), "Specify picky level (default: 1)")
 
+        // Only for stub cleaning and pattern recognition
+        ("removeOverlap", po::bool_switch(&option.removeOverlap)->default_value(false), "remove stubs in overlap regions (default: false)")
+
         // Only for bank generation
         ("minFrequency" , po::value<int>(&option.minFrequency)->default_value(1), "Specify min frequency of a pattern to be stored or read")
 
