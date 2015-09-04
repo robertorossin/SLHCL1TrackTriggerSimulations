@@ -161,8 +161,7 @@ int PatternMatcher::makeRoads(TString src, TString out) {
         // Skip stubs
 
         std::vector<bool> stubsNotInTower;  // true: not in this trigger tower
-        std::vector<bool> stubsInOverlapping(nstubs,false);  // if true stub is in overlapping region and has TO BE removed
-        if (removeOverlap_) stubsInOverlapping.clear();
+        std::vector<bool> stubsInOverlapping(nstubs,false);  // true: stub is in overlapping region and has TO BE removed
         for (unsigned istub=0; istub<nstubs; ++istub) {
         	unsigned moduleId = reader.vb_modId   ->at(istub);
 
@@ -179,31 +178,29 @@ int PatternMatcher::makeRoads(TString src, TString out) {
         		float minx = it_mo->second.x1;
         		if (stub_coordx < minx) {
         			if (verbose_>2)  std::cout << Info() << "Removing stub in module " << ievt << "\t" << moduleId << "\t x1: " <<  stub_coordx << std::endl;
-        			stubsInOverlapping.push_back(true);
+        			stubsInOverlapping.at(istub)=true;
         			continue;
         		}
         		float maxx = it_mo->second.x2;
         		if (stub_coordx > maxx) {
         			if (verbose_>2)  std::cout << Info() << "Removing stub in module " << ievt << "\t"  << moduleId << "\t x2: " <<  stub_coordx << std::endl;
-        			stubsInOverlapping.push_back(true);
+        			stubsInOverlapping.at(istub)=true;
         			continue;
         		}
         		float miny = it_mo->second.y1;
         		if (stub_coordy < miny) {
         			if (verbose_>2)  std::cout << Info() << "Removing stub in module " << ievt << "\t"  << moduleId << "\t y1: " <<  stub_coordy << std::endl;
-        			stubsInOverlapping.push_back(true);
+        			stubsInOverlapping.at(istub)=true;
         			continue;
         		}
         		float maxy = it_mo->second.y2;
         		if (stub_coordy > maxy) {
         			if (verbose_>2)  std::cout << Info() << "Removing stub in module " << ievt << "\t"  << moduleId << "\t y2: " <<  stub_coordy << std::endl;
-        			stubsInOverlapping.push_back(true);
+        			stubsInOverlapping.at(istub)=true;
         			continue;
         		}
         	}
-      		stubsInOverlapping.push_back(false);
         }
-//          reader.nullStubs(stubsInOverlapping);
         } // endif removeOverlap_
         // Null stub information for those that are not in this trigger tower
         reader.nullStubs(stubsNotInTower);

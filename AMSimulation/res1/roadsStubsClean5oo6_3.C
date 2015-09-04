@@ -89,10 +89,15 @@ void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95cov
 //	TString sTree="SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/roads_5oo6_SingleMuonFlatOneOverPt0p0005To0p5_tt27_sf1_nz4_pt3_SLHC25p3_2M.root"; isSLHC25=1; TString pName("SingleMu_PU0_sf1_nz4_pt3_5or6oo6");// 5/6
 //	TString sTree="SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/roads_6oo6_SingleMuonFlatOneOverPt0p0005To0p5_tt27_sf1_nz4_pt2_SLHC25p3_2M.root"; isSLHC25=1; TString pName("SingleMu_PU0_sf1_nz4_pt2_6oo6");// 6/6
 //	TString sTree="SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/roads_6oo6_SingleMuonFlatOneOverPt0p0005To0p5_tt27_sf1_nz4_pt3_SLHC25p3_2M.root"; isSLHC25=1; TString pName("SingleMu_PU0_sf1_nz4_pt3_6oo6");// 6/6
+//	TString sTree="SingleMuonTest_tt27_PU0_20150815_fullNtuple/roads_SingleMuonTest_tt27_PU0_sf1_nz4_pt3_5oo6_95c_100k.root"; isSLHC25=1; TString pName("SingleMuTest_PU0_sf1_nz4_pt3_5oo6"); TString pTitle("SingleMuTest SF=1 Nz=4 Pt>3 GeV/c 5oo6");// 5/6
+//	TString sTree="SingleMuonTest_tt27_PU0_20150815_fullNtuple/roads_SingleMuonTest_tt27_PU0_sf1_nz4_pt3_5oo6_95c_100k_removeOverlap.root"; isSLHC25=1; TString pName("SingleMuTest_PU0_sf1_nz4_pt3_5oo6_removeOverlap"); TString pTitle("SingleMuTest SF=1 Nz=4 Pt>3 GeV/c 5oo6 remove Overlap");// 5/6
+//	TString sTree="Neutrino_PU140_tt27_sf1_nz4_pt3_OverlapClean_20150903/roads_Neutrino_PU140_tt27_sf1_nz4_pt3_5oo6_95c.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt3_5oo6"); TString pTitle("Neutrino PU140 SF=1 Nz=4 Pt>3 GeV/c 5oo6");// 5/6
+	TString sTree="Neutrino_PU140_tt27_sf1_nz4_pt3_OverlapClean_20150903/roads_Neutrino_PU140_tt27_sf1_nz4_pt3_5oo6_OverlapClean_95c.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt3_5oo6_OverlapClean"); TString pTitle("Neutrino PU140 SF=1 Nz=4 Pt>3 GeV/c 5oo6 remove Overlap");// 5/6
 
 //	TString sTree="Neutrino_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt2_6oo6_Neutrino_PU140_20150408_SLHC25p3_newBank_100M.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt2_6oo6"); TString pTitle("PU140 SF=1 Nz=4 Pt>2 GeV/c");;// 6/6
 //	TString sTree="Neutrino_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt2_5or6oo6_Neutrino_PU140_20150408_SLHC25p3_newBank_100M.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt2_5or6oo6"); TString pTitle("PU140 SF=1 Nz=4 Pt>2 GeV/c");// 6/6
-	TString sTree="Neutrino_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt3_5or6oo6_Neutrino_PU140_20150408_SLHC25p3_newBank_100M.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt3_5or6oo6"); TString pTitle("PU140 SF=1 Nz=4 Pt>3 GeV/c");// 6/6
+//	TString sTree="Neutrino_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt3_5or6oo6_Neutrino_PU140_20150408_SLHC25p3_newBank_100M.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt3_5or6oo6"); TString pTitle("PU140 SF=1 Nz=4 Pt>3 GeV/c");// 6/6
+
 
 //	TString sTree="TTbarTTbar_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt2_5oo6_TTbarTTbar_tt27_PU140_20150408_SLHC25p3_100M.root"; isSLHC25=1; TString pName("4Tops_PU140_sf1_nz4_pt2_5or6oo6"); TString pTitle("tttt+PU140 SF=1 Nz=4 Pt>2 GeV/c");// 6/6
 //	TString sTree="TTbarTTbar_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt2_6oo6_TTbarTTbar_tt27_PU140_20150408_SLHC25p3_100M.root"; isSLHC25=1; TString pName("4Tops_PU140_sf1_nz4_pt2_6oo6"); TString pTitle("tttt+PU140 SF=1 Nz=4 Pt>2 GeV/c");// 6/6
@@ -110,7 +115,9 @@ void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95cov
 
 //	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/patternBank_SingleMuonFlatOneOverPt0p0005To0p5_tt27_sf1_nz1_pt2_SLHC25p3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 103200;
 //	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/patternBank_SingleMuonFlatOneOverPt0p0005To0p5_tt27_sf1_nz4_pt2_SLHC25p3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 3100200;
-	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/patternBank_SingleMuonFlatOneOverPt0p0005To0p5_tt27_sf1_nz4_pt3_SLHC25p3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1862700;
+//	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/patternBank_SingleMuonFlatOneOverPt0p0005To0p5_tt27_sf1_nz4_pt3_SLHC25p3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1862700;
+//	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_20150815_fullNtuple/patternBank_tt27_sf1_nz4_pt3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1862700;
+	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_20150815_fullNtuple/patternBank_tt27_sf1_nz4_pt3_100M_OverlapClean.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1830100;
 
 //	TString sTree="SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/roads_6oo6_SingleMuonFlatOneOverPt0p0005To0p5_tt27_sf1_nz1_pt200_SLHC25p3_100M.root"; isSLHC25=1; TString pName("SingleMuon_sf1_nz1_pt200"); TString pTitle("Single Mu SF=1 Nz=1 Pt>200 GeV/c");// 6/6
 //	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/patternBank_SingleMuonFlatOneOverPt0p0005To0p5_tt27_sf1_nz1_pt200_SLHC25p3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1E7;
@@ -365,9 +372,9 @@ void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95cov
 				}
 			}
 			if (pName.Contains("SingleMu_PU140_") || pName.Contains("Neutrino_PU140_")) {
-				nRoadHisto=800;
-				nCombRoadHisto = 200;
-				nCombHisto=3000;
+				nRoadHisto=200;
+				nCombRoadHisto = 100;
+				nCombHisto=500;
 				if (!iMissLay) {
 					nRoadHisto/=4;
 					nCombRoadHisto/=2;
