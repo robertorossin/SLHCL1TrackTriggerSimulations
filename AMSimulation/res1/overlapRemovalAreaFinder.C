@@ -14,6 +14,10 @@
 #include <TList.h>
 #include <TString.h>
 #include <TMath.h>
+#include <TRandom3.h>
+#include <TLegend.h>
+#include <TLegendEntry.h>
+#include <TStyle.h>
 #include <iostream>
 #include <iomanip> // for setw
 #include <vector>
@@ -29,6 +33,20 @@ typedef struct{
 } module;
 
 void overlapRemovalAreaFinder(unsigned iProc = 0, bool saveCanvas = 0) {
+
+	gStyle->SetOptStat(0);
+
+//	float cutOffEffs[6] = {0.8, 0.8, 0.6, 0.8, 0.6, 0.5};
+	float cutOffEffs[6] = {0.2, 0.2, 0.2, 0.2, 0.2, 0.2};
+	TString scutOffEffs[6];
+	std::cout << "CutOff efficiencies." << std::endl;
+	for (unsigned layer=0; layer<6; ++layer) {
+		char cc[10];
+		sprintf(cc,"%2.1f",cutOffEffs[layer]);
+		scutOffEffs[layer] = TString(cc).ReplaceAll(".","p");
+		std::cout << cutOffEffs[layer] << "\t";
+	}
+	std::cout << std::endl;
 
 	TString cProc("_");
 	switch (iProc) {
@@ -52,6 +70,14 @@ void overlapRemovalAreaFinder(unsigned iProc = 0, bool saveCanvas = 0) {
 	TFile fIn(cFile+TString(".root"));
 	if (saveCanvas) cFile = cFile+TString("Frames");
 	else            cFile = cFile+TString("FramesOnlyTree");
+	TH1F* hAreaRatios[6];
+	for (unsigned layer=0; layer<6; ++layer) {
+		cFile = cFile+TString("_") + scutOffEffs[layer];
+		char cc[50];
+		sprintf(cc,"hAreaRatios_Layer_%d",layer);
+//		hAreaRatios[layer] = new TH1F(cc,cc,51,0.495,1.005);
+		hAreaRatios[layer] = new TH1F(cc,cc,500,0.50,1.00001);
+	}
 	TFile fOut(cFile+TString(".root"),"recreate");
 //	TFile fIn("/home/rossin/Dropbox/TT/Work/figures_stubOverlapRemoval/stubOverlapHistosXY1mmOrthogonal_.root");
 //	TFile fOut("/home/rossin/Dropbox/TT/Work/figures_stubOverlapRemoval/stubOverlapHistosXY1mmOrthogonal_Frames.root","recreate");
@@ -67,6 +93,7 @@ void overlapRemovalAreaFinder(unsigned iProc = 0, bool saveCanvas = 0) {
 	tmod.Branch("y2"    ,&modRegion.y2    ,"y2/I"   );
 
 	std::vector <module> vmodules;
+
 
 	TList* tl = fIn.GetListOfKeys();
 	TIter next(tl);
@@ -121,6 +148,12 @@ void overlapRemovalAreaFinder(unsigned iProc = 0, bool saveCanvas = 0) {
 				if (!isOverlappingPhi) { P[0][1] = 1; P[1][1] = ny;}
 				if (!isOverlappingEta) { P[0][0] = 1; P[1][0] = nx;}
 			}
+			if (layer ==2) {
+				bool isOverlappingEta    = (moduleID/100)%2;
+				bool isOverlappingPhi    = (moduleID%2);
+				if (!isOverlappingPhi) { P[0][1] = 1; P[1][1] = ny;}
+				if (!isOverlappingEta) { P[0][0] = 1; P[1][0] = nx;}
+			}
 
 			unsigned nSkipRegion = 0;
 			unsigned nVertex=0;
@@ -146,7 +179,7 @@ void overlapRemovalAreaFinder(unsigned iProc = 0, bool saveCanvas = 0) {
 					for (unsigned ix=P[0][0]; ix<P[1][0]; ++ix) {
 						stripIntegral+=h->GetBinContent(ix,P[0][1]+deltaP[0][1]);
 						++nStripBin;
-						if (nVertex>2992) std::cout << ix << "\t" << P[0][1]+ deltaP[0][1] << "\t" << h->GetBinContent(ix,P[0][1]+deltaP[0][1])<< std::endl;
+//						if (nVertex>2992) std::cout << ix << "\t" << P[0][1]+ deltaP[0][1] << "\t" << h->GetBinContent(ix,P[0][1]+deltaP[0][1])<< std::endl;
 
 						}
 				}
@@ -183,13 +216,7 @@ void overlapRemovalAreaFinder(unsigned iProc = 0, bool saveCanvas = 0) {
 						++nStripBin;
 					}
 				}
-				if (nStripBin==0
-						|| (layer<2  && stripIntegral/nStripBin<0.2*integral/nBins)
-						|| (layer==2 && stripIntegral/nStripBin<0.2*integral/nBins)
-						||              stripIntegral/nStripBin<0.2*integral/nBins
-								) {
-					++nSkipRegion;
-				}
+				if (nStripBin==0 || stripIntegral/nStripBin<cutOffEffs[layer]*integral/nBins) ++nSkipRegion;
 				else {
 					P[0][0]+=deltaP[0][0];
 					P[0][1]+=deltaP[0][1];
@@ -237,7 +264,53 @@ void overlapRemovalAreaFinder(unsigned iProc = 0, bool saveCanvas = 0) {
 			modRegion.y2    = yBinWidth*P[1][1];
 			tmod.Fill();
 
+			if (saveCanvas) {
+				float ratio = (modRegion.x2-modRegion.x1)*(modRegion.y2-modRegion.y1);
+				ratio /= (h->GetXaxis()->GetXmax())*(h->GetYaxis()->GetXmax());
+				hAreaRatios[layer]->Fill(ratio);
+			}
 		}
+	}
+
+	TLegend* tleg;
+	TH1F* hMultiplicity;
+	char cc3[50];
+	if (saveCanvas) {
+		TCanvas *cAreaRatios = new TCanvas("cAreaRatios","cAreaRatios",0,0,1000,700);
+		cAreaRatios->Divide(3,2);
+		for (unsigned layer=0; layer<6; ++layer) {
+			cAreaRatios->cd(layer+1);
+			hAreaRatios[layer]->DrawCopy();
+			tleg = new TLegend(0.1,0.7,0.8,0.9);
+			sprintf(cc3,"Unmasked area ratio: %4.3lf",hAreaRatios[layer]->GetMean());
+			tleg->AddEntry(hAreaRatios[layer],cc3);
+			tleg->Draw("APL");
+			hAreaRatios[layer]->Write();
+		}
+		hMultiplicity = new TH1F("hMultiplicity","hMultiplicity",33,0,33);
+		TRandom3 r(222);
+		for (unsigned iPE=0; iPE<1000000; ++iPE) {
+			unsigned nComb = 1;
+			for (unsigned layer=0; layer<6; ++layer) {
+				float fraction = hAreaRatios[layer]->GetRandom();
+				float rand = r.Uniform(1);
+//				if (rand>fraction) std::cout << layer << "\t" << fraction  << "\t" << rand << "\t" << (rand>fraction) << std::endl;
+				nComb *= (rand>fraction ? 2 : 1);
+			}
+			hMultiplicity->Fill(nComb);
+		}
+		TCanvas *cMultiplicity = new TCanvas("cMultiplicity","cMultiplicity",0,0,1000,700);
+		cMultiplicity->cd();
+		hMultiplicity->DrawCopy();
+		tleg = new TLegend(0.3,0.75,0.9,0.9);
+		sprintf(cc3,"average # combinations: %4.3lf",hMultiplicity->GetMean());
+		tleg->AddEntry(hMultiplicity,cc3);
+		tleg->Draw("APL");
+		cMultiplicity->SetLogy();
+		cMultiplicity->SaveAs(cFile+TString("_PEmultiplicity.png"));
+		hMultiplicity->Write();
+		cAreaRatios->SaveAs(cFile+TString("_AreaRatios.png"));
+		cAreaRatios->Write();
 	}
 
 	tmod.Write();

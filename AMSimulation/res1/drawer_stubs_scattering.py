@@ -17,7 +17,7 @@ vertexmap = json.load(open("../data/module_vertices.json"), object_pairs_hook=co
 
 nbinsx, xmin, xmax = 1500/5, -40., 110.
 nbinsy, ymin, ymax = 1500/5,   0., 150.
-nbinsz, zmin, zmax = 1500/5, -30., 120.
+nbinsz, zmin, zmax = 2500/5, -30., 220.
 
 tlatex2 = TLatex()
 tlatex2.SetNDC(0)

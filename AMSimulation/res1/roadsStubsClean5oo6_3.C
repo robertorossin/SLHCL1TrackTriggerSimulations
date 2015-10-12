@@ -35,11 +35,13 @@ struct tVectorComp {
 	{return lhs.Mag2()<rhs.Mag2();}
 };
 
+TH1* makeCDF(TH1* h);
+
 double gau(double* x, double* par) ;
 short int stubLayer(double r) ;
 //bool passStubPtCut (double stubInvRoughPt, double roadInvPt, double roadInvPtRms, double nSigmas);
 
-void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95coverage=0, TString clayerSelect="111111", unsigned bitReduction=0) {
+void roadsStubsClean5oo6_3 (int savePlots=0, const int nLayers=6, bool use95coverage=0, TString clayerSelect="111111", unsigned bitReduction=0) {
 
 	if (!clayerSelect.IsBin()) {
 		cout << "layer selector not a binary integer. Exiting" << endl;
@@ -61,10 +63,11 @@ void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95cov
 
 	TStyle* style = gStyle;
 	style->SetOptStat(1111111);
+	style->SetOptStat(0);
 
 	bool isSLHC25=0;
 
-	TString dirPlots("/home/rossin/Dropbox/TT/Work/figures_stubCleaning/");
+	TString dirPlots("/home/rossin/Dropbox/TT/Work/figures_stubCleaning/OverlapClean_95c_0p8_0p8_0p6_0p8_0p6_0p5/");
 
 //	TString sTree="results_sf1_nz1_tt27_pt2_SingleMuonFlatOneOverPt0p005To0p5_tt27_Sum2M_SL6.root" ;
 //	TString sTree="singleMuonNoTest/results_SingleMuonFlatOneOverPt0p005To0p5_tt27NoTest_cfi_py_GEN_SIM_DIGI_L1TrackTrigger_2M.root" ;
@@ -93,6 +96,7 @@ void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95cov
 //	TString sTree="SingleMuonTest_tt27_PU0_20150815_fullNtuple/roads_SingleMuonTest_tt27_PU0_sf1_nz4_pt3_5oo6_95c_100k_removeOverlap.root"; isSLHC25=1; TString pName("SingleMuTest_PU0_sf1_nz4_pt3_5oo6_removeOverlap"); TString pTitle("SingleMuTest SF=1 Nz=4 Pt>3 GeV/c 5oo6 remove Overlap");// 5/6
 //	TString sTree="Neutrino_PU140_tt27_sf1_nz4_pt3_OverlapClean_20150903/roads_Neutrino_PU140_tt27_sf1_nz4_pt3_5oo6_95c.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt3_5oo6"); TString pTitle("Neutrino PU140 SF=1 Nz=4 Pt>3 GeV/c 5oo6");// 5/6
 	TString sTree="Neutrino_PU140_tt27_sf1_nz4_pt3_OverlapClean_20150903/roads_Neutrino_PU140_tt27_sf1_nz4_pt3_5oo6_OverlapClean_95c.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt3_5oo6_OverlapClean"); TString pTitle("Neutrino PU140 SF=1 Nz=4 Pt>3 GeV/c 5oo6 remove Overlap");// 5/6
+//	TString sTree="Neutrino_PU140_tt27_sf1_nz4_pt3_OverlapClean_20150903/roads_Neutrino_PU140_tt27_sf1_nz4_pt3_5oo6_OverlapClean_95c_0p8_0p8_0p6_0p8_0p6_0p5.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt3_5oo6_OverlapClean_0p8_0p8_0p6_0p8_0p6_0p5"); TString pTitle("Neutrino PU140 SF=1 Nz=4 Pt>3 GeV/c 5oo6 remove Overlap");// 5/6
 
 //	TString sTree="Neutrino_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt2_6oo6_Neutrino_PU140_20150408_SLHC25p3_newBank_100M.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt2_6oo6"); TString pTitle("PU140 SF=1 Nz=4 Pt>2 GeV/c");;// 6/6
 //	TString sTree="Neutrino_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt2_5or6oo6_Neutrino_PU140_20150408_SLHC25p3_newBank_100M.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt2_5or6oo6"); TString pTitle("PU140 SF=1 Nz=4 Pt>2 GeV/c");// 6/6
@@ -118,6 +122,7 @@ void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95cov
 //	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/patternBank_SingleMuonFlatOneOverPt0p0005To0p5_tt27_sf1_nz4_pt3_SLHC25p3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1862700;
 //	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_20150815_fullNtuple/patternBank_tt27_sf1_nz4_pt3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1862700;
 	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_20150815_fullNtuple/patternBank_tt27_sf1_nz4_pt3_100M_OverlapClean.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1830100;
+//	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuon_PU0_tt27_sf1_nz4_pt3_5or6oo6_OverlapClean_20150828/patternBank_tt27_sf1_nz4_pt3_100M_OverlapClean_0p8_0p8_0p6_0p8_0p6_0p5.3.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1826900;
 
 //	TString sTree="SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/roads_6oo6_SingleMuonFlatOneOverPt0p0005To0p5_tt27_sf1_nz1_pt200_SLHC25p3_100M.root"; isSLHC25=1; TString pName("SingleMuon_sf1_nz1_pt200"); TString pTitle("Single Mu SF=1 Nz=1 Pt>200 GeV/c");// 6/6
 //	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/patternBank_SingleMuonFlatOneOverPt0p0005To0p5_tt27_sf1_nz1_pt200_SLHC25p3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1E7;
@@ -688,11 +693,23 @@ void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95cov
 	} // end looping over events
 	//	cout << count6 << "\t" << count5 << endl;
 
-	//	return;
+//		return;
 
+	TFile* fOut=0;
+	if (savePlots>1) {
+		fOut = new TFile(TString(dirPlots+TString("stubCleaning_")+pName+TString(".root")),"recreate");
+		if (fOut->IsOpen()) {
+			std::cout << TString(dirPlots+TString("stubCleaning_")+pName+TString(".root")) <<
+					"\t" << "has been opened." << std::endl;
+		}
+		else {
+			std::cout << "Unable to open file: " << TString(dirPlots+TString("stubCleaning_")+pName+TString(".root")) << std::endl;
+			return;
+		}
+	}
 	TLegend* tl;
 	TCanvas* cStubsPerLayer[nLayersLoop][2];
-	for (unsigned iMissLay=0; iMissLay <nLayersLoop; ++iMissLay) {
+	for (unsigned iMissLay=1; iMissLay <nLayersLoop; ++iMissLay) {
 		if (nLayers==6 && iMissLay) continue;
 		char cc [50];
 		char cc2[50];
@@ -724,50 +741,58 @@ void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95cov
 				h1StubsPerLayer[iLay][iMissLay][0]->SetXTitle("# stubs/layer/road");
 				h1StubsPerLayer[iLay][iMissLay][0]->SetMinimum(0.5);
 				h1StubsPerLayer[iLay][iMissLay][0]->DrawCopy();
+				if (savePlots>1) 				h1StubsPerLayer[iLay][iMissLay][0]->Write();
 				sprintf(cc3,"Mean # stubs: %3.2lf",h1StubsPerLayer[iLay][iMissLay][0]->GetMean());
 				tl->AddEntry(h1StubsPerLayer[iLay][iMissLay][0],cc3);
 
 				h1StubsPerLayer[iLay][iMissLay][1]->SetLineWidth(2);
 				h1StubsPerLayer[iLay][iMissLay][1]->SetLineColor(2);
 				h1StubsPerLayer[iLay][iMissLay][1]->DrawCopy("same");
+				if (savePlots>1) 				h1StubsPerLayer[iLay][iMissLay][1]->Write();
 				sprintf(cc3,"Mean # stubs clean: %3.1lf",h1StubsPerLayer[iLay][iMissLay][1]->GetMean());
 				tl->AddEntry(h1StubsPerLayer[iLay][iMissLay][1],cc3);
 				tl->Draw("APL");
 			}
-			sName =(dirPlots+cStubsPerLayer[iMissLay][iClean]->GetName()+TString("_")+pName+TString("_cleanLay")+clayerSelect+TString(".png"));
+			sName =(dirPlots+cStubsPerLayer[iMissLay][iClean]->GetName()+TString("_")+pName+TString("_cleanLay")+clayerSelect);
 			if (savePlots) {
 				cStubsPerLayer[iMissLay][iClean]->Update();
-				cStubsPerLayer[iMissLay][iClean]->SaveAs(sName);
+				cStubsPerLayer[iMissLay][iClean]->SaveAs(sName+TString(".png"));
+				if (savePlots>1) {
+					cStubsPerLayer[iMissLay][iClean]->Write(cStubsPerLayer[iMissLay][iClean]->GetName()+TString("_")+pName);
+				}
 			}
 		}
 	}
 
-	TCanvas* cRemovedStubsDeltaSPerLayer = new TCanvas("cRemovedStubsDeltaSPerLayer","cRemovedStubsDeltaSPerLayer",0,0,900,900);
-	cRemovedStubsDeltaSPerLayer->Divide(3,2);
-	for (unsigned iLay=0; iLay <6; ++iLay) {
-		cRemovedStubsDeltaSPerLayer->cd(iLay+1);
-		h1RemovedStubsDeltaSPerLayer[iLay]->DrawCopy();
-	}
-
-	TCanvas* cRemovedStubsResidualDeltaSPerLayer = new TCanvas("cRemovedStubsResidualDeltaSPerLayer","cRemovedStubsResidualDeltaSPerLayer",0,0,900,900);
-	cRemovedStubsResidualDeltaSPerLayer->Divide(3,2);
-	for (unsigned iLay=0; iLay <6; ++iLay) {
-		cRemovedStubsResidualDeltaSPerLayer->cd(iLay+1);
-		h1RemovedStubsResidualDeltaSPerLayer[iLay]->DrawCopy();
-	}
-
-	TCanvas* c2RemovedStubsResidualDeltaSPerLayer = new TCanvas("c2RemovedStubsResidualDeltaSPerLayer","cR2emovedStubsResidualDeltaSPerLayer",0,0,900,900);
-	c2RemovedStubsResidualDeltaSPerLayer->Divide(3,2);
-	for (unsigned iLay=0; iLay <6; ++iLay) {
-		c2RemovedStubsResidualDeltaSPerLayer->cd(iLay+1);
-		h2RemovedStubsResidualDeltaSPerLayer[iLay]->DrawCopy("colz0");
-	}
+//	TCanvas* cRemovedStubsDeltaSPerLayer = new TCanvas("cRemovedStubsDeltaSPerLayer","cRemovedStubsDeltaSPerLayer",0,0,900,900);
+//	cRemovedStubsDeltaSPerLayer->Divide(3,2);
+//	for (unsigned iLay=0; iLay <6; ++iLay) {
+//		cRemovedStubsDeltaSPerLayer->cd(iLay+1);
+//		h1RemovedStubsDeltaSPerLayer[iLay]->DrawCopy();
+//	}
+//
+//	TCanvas* cRemovedStubsResidualDeltaSPerLayer = new TCanvas("cRemovedStubsResidualDeltaSPerLayer","cRemovedStubsResidualDeltaSPerLayer",0,0,900,900);
+//	cRemovedStubsResidualDeltaSPerLayer->Divide(3,2);
+//	for (unsigned iLay=0; iLay <6; ++iLay) {
+//		cRemovedStubsResidualDeltaSPerLayer->cd(iLay+1);
+//		h1RemovedStubsResidualDeltaSPerLayer[iLay]->DrawCopy();
+//	}
+//
+//	TCanvas* c2RemovedStubsResidualDeltaSPerLayer = new TCanvas("c2RemovedStubsResidualDeltaSPerLayer","cR2emovedStubsResidualDeltaSPerLayer",0,0,900,900);
+//	c2RemovedStubsResidualDeltaSPerLayer->Divide(3,2);
+//	for (unsigned iLay=0; iLay <6; ++iLay) {
+//		c2RemovedStubsResidualDeltaSPerLayer->cd(iLay+1);
+//		h2RemovedStubsResidualDeltaSPerLayer[iLay]->DrawCopy("colz0");
+//	}
 
 	double  percentiles   [3] = {0.01, 0.5, 0.95};
 	double xpercentiles[6][3];
 	TCanvas* cRoadPerEvent[2]; // 6oo6, 5oo6 per layer
 	TCanvas* cCombPerRoad [2];
 	TCanvas* cCombPerEvent[2];
+	TCanvas* cRoadPerEventCDF[2]; // 6oo6, 5oo6 per layer
+	TCanvas* cCombPerRoadCDF [2];
+	TCanvas* cCombPerEventCDF[2];
 	for (unsigned iLay=0; iLay <2; ++iLay) {
 		if (nLayers==6 && iLay) continue;
 		char cc [50];
@@ -783,18 +808,27 @@ void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95cov
 		TString sName (TString("cRoadsPerEvent")+TString(cc));
 		TString sTitle(TString("Roads per event")+TString(cc2));
 		cRoadPerEvent[iLay] = new TCanvas(sName,sTitle,0,0,900,900);
+		sName  = TString("cRoadsPerEventCDF")+TString(cc);
+		sTitle = TString("Roads per event CDF")+TString(cc2);
+		cRoadPerEventCDF[iLay] = new TCanvas(sName,sTitle,0,0,900,900);
 		sName  = (TString("cCombPerRoad")+TString(cc));
 		sTitle = (TString("Combs per road")+TString(cc2));
 		cCombPerRoad [iLay] = new TCanvas(sName,sTitle,0,0,900,900);
+		sName  = (TString("cCombPerRoadCDF")+TString(cc));
+		sTitle = (TString("Combs per road CDF")+TString(cc2));
+		cCombPerRoadCDF [iLay] = new TCanvas(sName,sTitle,0,0,900,900);
 		sName  = (TString("cCombPerEvent")+TString(cc));
 		sTitle = (TString("Combs per event")+TString(cc2));
 		cCombPerEvent[iLay] = new TCanvas(sName,sTitle,0,0,900,900);
+		sName  = (TString("cCombPerEventCDF")+TString(cc));
+		sTitle = (TString("Combs per event CDF")+TString(cc2));
+		cCombPerEventCDF[iLay] = new TCanvas(sName,sTitle,0,0,900,900);
 	}
 
-	ofstream myfile;
-	myfile.open ("example.txt", std::ios_base::app);
+//	ofstream myfile;
+//	myfile.open ("example.txt", std::ios_base::app);
 
-	for (unsigned iLay=0; iLay <nLayersLoop; ++iLay) {
+	for (unsigned iLay=1; iLay <nLayersLoop; ++iLay) {
 		if (nLayers==6 && iLay) continue;
 		char cc [150];
 		char cc2[150];
@@ -811,7 +845,7 @@ void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95cov
 		TLegend * tlr=new TLegend(0.3,0.7,0.9,0.9);
 		TLegend * tlc=new TLegend(0.3,0.7,0.9,0.9);
 		TLegend * tle=new TLegend(0.3,0.7,0.9,0.9);
-		myfile << iLay  << "\t"  << clayerSelect << "\t";
+//		myfile << iLay  << "\t"  << clayerSelect << "\t";
 		cout << iLay  << "\t" << clayerSelect << "\t";
 		for (unsigned iClean=0; iClean<2; ++iClean) {
 			cRoadPerEvent[iLay]->cd();
@@ -825,7 +859,7 @@ void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95cov
 				sprintf(cc3,"# roads clean. #mu=%3.1lf, #Lambda_{95}=%3.1lf",h1RoadPerEvent[iLay][iClean]->GetMean(),xpercentiles[0][2]);
 				tlr->AddEntry(h1RoadPerEvent[iLay][iClean],cc3);
 				tlr->Draw("APL");
-				myfile << h1RoadPerEvent[iLay][iClean]->GetMean() << "\t" << xpercentiles[0][2] << "\t";
+//				myfile << h1RoadPerEvent[iLay][iClean]->GetMean() << "\t" << xpercentiles[0][2] << "\t";
 				cout << h1RoadPerEvent[iLay][iClean]->GetMean() << "\t" << xpercentiles[0][2] << "\t";
 			}
 			else {
@@ -836,6 +870,22 @@ void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95cov
 				sprintf(cc3,"# roads. #mu=%3.1lf, #Lambda_{95}=%3.1lf",h1RoadPerEvent[iLay][iClean]->GetMean(),xpercentiles[0][2]);
 				tlr->AddEntry(h1RoadPerEvent[iLay][iClean],cc3);
 			}
+			cRoadPerEventCDF[iLay]->cd();
+			cRoadPerEventCDF[iLay]->SetGridx();
+			TH1* hRECDF = makeCDF(h1RoadPerEvent[iLay][iClean]);
+			hRECDF->SetMinimum(0.5);
+			if (!iClean) {
+				hRECDF->DrawCopy();
+				TLine l;
+				float xmax = h1RoadPerEvent[iLay][iClean]->GetXaxis()->GetXmax();
+				l.DrawLine(0,1.0,xmax,1.0);
+				l.SetLineStyle(4);
+				l.DrawLine(0,0.90,xmax,0.90);
+				l.DrawLine(0,0.95,xmax,0.95);
+				l.DrawLine(0,0.99,xmax,0.99);
+			}
+			else         hRECDF->DrawCopy("same");
+
 			cCombPerRoad[iLay]->cd();
 			gPad->SetLogy();
 			gPad->SetGrid();
@@ -847,7 +897,7 @@ void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95cov
 				sprintf(cc3,"# combs clean. #mu=%3.1lf, #Lambda_{95}=%3.1lf",h1CombPerRoad[iLay][iClean]->GetMean(),xpercentiles[0][2]);
 				tlc->AddEntry(h1CombPerRoad[iLay][iClean],cc3);
 				tlc->Draw("APL");
-				myfile << h1CombPerRoad[iLay][iClean]->GetMean() << "\t" << xpercentiles[0][2] << "\t";
+//				myfile << h1CombPerRoad[iLay][iClean]->GetMean() << "\t" << xpercentiles[0][2] << "\t";
 				cout << h1CombPerRoad[iLay][iClean]->GetMean() << "\t" << xpercentiles[0][2] << "\t";
 			}
 			else {
@@ -858,6 +908,21 @@ void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95cov
 				sprintf(cc3,"# combs. #mu=%3.1lf, #Lambda_{95}=%3.1lf",h1CombPerRoad[iLay][iClean]->GetMean(),xpercentiles[0][2]);
 				tlc->AddEntry(h1CombPerRoad[iLay][iClean],cc3);
 			}
+			cCombPerRoadCDF[iLay]->cd();
+			cCombPerRoadCDF[iLay]->SetGridx();
+			TH1* hCRCDF = makeCDF(h1CombPerRoad[iLay][iClean]);
+			hCRCDF->SetMinimum(0.5);
+			if (!iClean) {
+				hCRCDF->DrawCopy();
+				TLine l;
+				float xmax = h1CombPerRoad[iLay][iClean]->GetXaxis()->GetXmax();
+				l.DrawLine(0,1.0,xmax,1.0);
+				l.SetLineStyle(4);
+				l.DrawLine(0,0.90,xmax,0.90);
+				l.DrawLine(0,0.95,xmax,0.95);
+				l.DrawLine(0,0.99,xmax,0.99);
+			}
+			else         hCRCDF->DrawCopy("same");
 
 			cCombPerEvent[iLay]->cd();
 			gPad->SetLogy();
@@ -869,7 +934,7 @@ void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95cov
 				h1CombPerEvent[iLay][iClean]->DrawCopy("same");
 				sprintf(cc3,"# combs clean. #mu=%3.1lf, #Lambda_{95}=%3.1lf",h1CombPerEvent[iLay][iClean]->GetMean(),xpercentiles[0][2]);
 				tle->AddEntry(h1CombPerEvent[iLay][iClean],cc3);
-				myfile << h1CombPerEvent[iLay][iClean]->GetMean() << "\t" << xpercentiles[0][2] << "\n";
+//				myfile << h1CombPerEvent[iLay][iClean]->GetMean() << "\t" << xpercentiles[0][2] << "\n";
 				cout << h1CombPerEvent[iLay][iClean]->GetMean() << "\t" << xpercentiles[0][2] << "\n";
 			}
 			else {
@@ -881,21 +946,53 @@ void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95cov
 				tle->AddEntry(h1CombPerEvent[iLay][iClean],cc3);
 				tle->Draw("APL");
 			}
+			if (savePlots>1) {
+				h1RoadPerEvent[iLay][iClean]->Write();
+				h1CombPerRoad [iLay][iClean]->Write();
+				h1CombPerEvent[iLay][iClean]->Write();
+			}
+			cCombPerEventCDF[iLay]->cd();
+			cCombPerEventCDF[iLay]->SetGridx();
+			TH1* hCECDF = makeCDF(h1CombPerEvent[iLay][iClean]);
+			hCECDF->SetMinimum(0.5);
+			if (!iClean) {
+				hCECDF->DrawCopy();
+				TLine l;
+				float xmax = h1CombPerEvent[iLay][iClean]->GetXaxis()->GetXmax();
+				l.DrawLine(0,1.0,xmax,1.0);
+				l.SetLineStyle(4);
+				l.DrawLine(0,0.90,xmax,0.90);
+				l.DrawLine(0,0.95,xmax,0.95);
+				l.DrawLine(0,0.99,xmax,0.99);
+			}
+			else         hCECDF->DrawCopy("same");
 
-			TCanvas* cCombEtaPhi = new TCanvas("cCombEtaPhi","cCombEtaPhi",0,0,900,900);
-			hProfile2DCombEtaPhi   [0][0]->DrawCopy("colz0");
+
+//			TCanvas* cCombEtaPhi = new TCanvas("cCombEtaPhi","cCombEtaPhi",0,0,900,900);
+//			hProfile2DCombEtaPhi   [0][0]->DrawCopy("colz0");
 		}
 
 		if (savePlots) {
-			sName=(dirPlots+TString("roadsPerEvent")+TString(cc)+pName+TString("_cleanLay")+clayerSelect+TString(".png"));
+			sName=(dirPlots+TString("roadsPerEvent")+TString(cc)+pName+TString("_cleanLay")+clayerSelect);
 			cRoadPerEvent [iLay]->Update();
-			cRoadPerEvent [iLay]->SaveAs(sName);
-			sName=(dirPlots+TString("combsPerRoad")+TString(cc)+pName+TString("_cleanLay")+clayerSelect+TString(".png"));
+			cRoadPerEvent [iLay]->SaveAs(sName+TString(".png"));
+			sName=(dirPlots+TString("combsPerRoad")+TString(cc)+pName+TString("_cleanLay")+clayerSelect);
 			cCombPerRoad  [iLay]->Update();
-			cCombPerRoad  [iLay]->SaveAs(sName);
-			sName=(dirPlots+TString("combsPerEvent")+TString(cc)+pName+TString("_cleanLay")+clayerSelect+TString(".png"));
+			cCombPerRoad  [iLay]->SaveAs(sName+TString(".png"));
+			sName=(dirPlots+TString("combsPerEvent")+TString(cc)+pName+TString("_cleanLay")+clayerSelect);
 			cCombPerEvent [iLay]->Update();
-			cCombPerEvent [iLay]->SaveAs(sName);
+			cCombPerEvent [iLay]->SaveAs(sName+TString(".png"));
+			sName=(dirPlots+TString("roadsPerEventCDF")+TString(cc)+pName+TString("_cleanLay")+clayerSelect);
+			cRoadPerEventCDF[iLay]->SaveAs(sName+TString(".png"));
+			sName=(dirPlots+TString("combsPerRoadCDF")+TString(cc)+pName+TString("_cleanLay")+clayerSelect);
+			cCombPerRoadCDF [iLay]->SaveAs(sName+TString(".png"));
+			sName=(dirPlots+TString("combsPerEventCDF")+TString(cc)+pName+TString("_cleanLay")+clayerSelect);
+			cCombPerEventCDF[iLay]->SaveAs(sName+TString(".png"));
+			if (savePlots>1) {
+				cRoadPerEvent [iLay]->Write();
+				cCombPerRoad  [iLay]->Write();
+				cCombPerEvent [iLay]->Write();
+			}
 		}
 
 		//		if (nLayers==5) {
@@ -940,7 +1037,11 @@ void roadsStubsClean5oo6_3 (bool savePlots=0, const int nLayers=6, bool use95cov
 		//			}
 		//		}
 	}
-	myfile.close();
+//	myfile.close();
+
+	if (savePlots>1) {
+		fOut->Close();
+	}
 
 	return;
 
@@ -959,6 +1060,21 @@ double gau(double* x, double* par) {
 //	if (stubInvRoughPt>roadInvPt+nSigmas*roadInvPtRms) return 0;
 //	return 1;
 //}
+
+TH1* makeCDF(TH1* h) {
+	TString sName(TString(h->GetName())+TString("_CDF"));
+	TString sTitle(TString(h->GetTitle())+TString(" CDF"));
+	TH1* hOut = (TH1*) h->Clone(sName);
+	hOut->SetTitle(sTitle);
+	hOut->Reset();
+	double cdf = 0;
+	for (int ibin=0; ibin < h->GetNbinsX()+2; ++ibin) {
+		cdf += h->GetBinContent(ibin);
+		hOut->SetBinContent(ibin,cdf);
+	}
+	hOut->Scale(1.0/(h->Integral(0,h->GetNbinsX()+1)));
+	return hOut;
+}
 
 short int stubLayer(double r) {
 	double radii_low [6]={20,30,45,65,85,105};

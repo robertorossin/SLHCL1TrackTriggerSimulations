@@ -14,7 +14,7 @@ void genTrackPropagate(double *genTrackPt_Phi0_CotTheta, double r, double *genTr
 void loadTT27ModuleList(vector <unsigned> &v);
 void findFactors(unsigned num, unsigned &f1, unsigned &f2);
 
-void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt,TString sBeamDisplaced)
+void overlapRemoval::Loop(Long64_t nMax,bool makePlots,float minPt,TString sBeamDisplaced,bool dummy,int idummy)
 {
 
 	if (fChain == 0) return;

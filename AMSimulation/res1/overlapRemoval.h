@@ -386,7 +386,7 @@ public :
    virtual Int_t    GetEntry(Long64_t entry);
    virtual Long64_t LoadTree(Long64_t entry);
    virtual void     Init(TTree *tree);
-   virtual void     Loop(Long64_t nMax,bool makePlots,float minPt,TString sBeamDisplaced);
+   virtual void     Loop(Long64_t nMax,bool makePlots,float minPt,TString sBeamDisplaced,bool makeRX=false,int iTT=27);
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
 };
