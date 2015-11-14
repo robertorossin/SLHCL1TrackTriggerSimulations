@@ -19,6 +19,7 @@
 #include <TLegendEntry.h>
 #include <TStyle.h>
 #include <iostream>
+#include <fstream>
 #include <iomanip> // for setw
 #include <vector>
 
@@ -36,8 +37,8 @@ void overlapRemovalAreaFinder(unsigned iProc = 0, bool saveCanvas = 0) {
 
 	gStyle->SetOptStat(0);
 
-//	float cutOffEffs[6] = {0.8, 0.8, 0.6, 0.8, 0.6, 0.5};
-	float cutOffEffs[6] = {0.2, 0.2, 0.2, 0.2, 0.2, 0.2};
+	float cutOffEffs[6] = {0.8, 0.8, 0.6, 0.8, 0.6, 0.5};
+//	float cutOffEffs[6] = {0.2, 0.2, 0.2, 0.2, 0.2, 0.2};
 	TString scutOffEffs[6];
 	std::cout << "CutOff efficiencies." << std::endl;
 	for (unsigned layer=0; layer<6; ++layer) {
@@ -79,12 +80,15 @@ void overlapRemovalAreaFinder(unsigned iProc = 0, bool saveCanvas = 0) {
 		hAreaRatios[layer] = new TH1F(cc,cc,500,0.50,1.00001);
 	}
 	TFile fOut(cFile+TString(".root"),"recreate");
-//	TFile fIn("/home/rossin/Dropbox/TT/Work/figures_stubOverlapRemoval/stubOverlapHistosXY1mmOrthogonal_.root");
+	TString fOutTextName(cFile+TString("temp.txt"));
+	ofstream fOutText;
+	fOutText.open(fOutTextName.Data());
+	//	TFile fIn("/home/rossin/Dropbox/TT/Work/figures_stubOverlapRemoval/stubOverlapHistosXY1mmOrthogonal_.root");
 //	TFile fOut("/home/rossin/Dropbox/TT/Work/figures_stubOverlapRemoval/stubOverlapHistosXY1mmOrthogonal_Frames.root","recreate");
 	//	fIn.ls();
 
 	module modRegion;
-  TTree tmod("tmodule","Tree with overlapping regions to keep, per module");
+	TTree tmod("tmodule","Tree with overlapping regions to keep, per module");
 	tmod.Branch("id"    ,&modRegion.id    ,"id/I"   );
 	tmod.Branch("layer" ,&modRegion.layer ,"layer/I");
 	tmod.Branch("x1"    ,&modRegion.x1    ,"x1/I"   );
@@ -264,6 +268,13 @@ void overlapRemovalAreaFinder(unsigned iProc = 0, bool saveCanvas = 0) {
 			modRegion.y2    = yBinWidth*P[1][1];
 			tmod.Fill();
 
+			fOutText << modRegion.id    << "\t";
+			fOutText << modRegion.layer << "\t";
+			fOutText << modRegion.x1    << "\t";
+			fOutText << modRegion.y1    << "\t";
+			fOutText << modRegion.x2    << "\t";
+			fOutText << modRegion.y2    << "\n";
+
 			if (saveCanvas) {
 				float ratio = (modRegion.x2-modRegion.x1)*(modRegion.y2-modRegion.y1);
 				ratio /= (h->GetXaxis()->GetXmax())*(h->GetYaxis()->GetXmax());
@@ -313,8 +324,21 @@ void overlapRemovalAreaFinder(unsigned iProc = 0, bool saveCanvas = 0) {
 		cAreaRatios->Write();
 	}
 
+	std::cout << "# of processed modules " << tmod.GetEntries() << std::endl;
 	tmod.Write();
 	fOut.Close();
 	fIn.Close();
+	fOutText.close();
+	std::cout << cFile << std::endl;
+	char cc[500];
+	fOutTextName=TString(cFile+TString(".txt"));
+	sprintf(cc,"echo '%d    0    0    0    0    0' > %s",(int)tmod.GetEntries(),fOutTextName.Data());
+	system(cc);
+	TString fOutTextNameTmp=TString(cFile+TString("temp.txt"));
+	std::cout <<  "\t" << fOutTextName << std::endl;
+	sprintf(cc,"cat %s >> %s",fOutTextNameTmp.Data(),fOutTextName.Data());
+	system(cc);
+
+	//	fOutText << tmod.GetEntries()    << "\t 0 \t 0 \t 0 \t 0 \t 0 \n"; // add a check line with the # of modules.
 	return;
 }

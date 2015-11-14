@@ -54,7 +54,7 @@ void roadsStubsClean5oo6 (int applyOnMuon = 1, bool savePlots=0, bool deriveCuts
 //	TString sTree="singleMuNoTest2_2000/results_20150528_SingleMuonFlatOneOverPt0p0005To0p5_tt27NoTest_4M.root" ;
 //	TString sTree="singleMuNoTest2_2000/results_20150528_5outOf6_SingleMuonFlatOneOverPt0p0005To0p5_tt27NoTest_4M.root" ;
 //	TString sTree="singleMuNoTest2_2000/roads_sf1_nz1_tt27_pt2_SingleMuonFlatOneOverPt0p0005To0p5_tt27NoTest_4M_SLHC25.root"; isSLHC25=1; TString pName("SingleMuFlat_PU0_6oo6");// 6/6
-	TString sTree="singleMuNoTest2_2000/roads_5outOf6_sf1_nz1_tt27_pt2_SingleMuonFlatOneOverPt0p0005To0p5_tt27NoTest_4M_SLHC25.root"; isSLHC25=1; TString pName("SingleMuFlat_PU0_5oo6");// 5/6
+//	TString sTree="singleMuNoTest2_2000/roads_5outOf6_sf1_nz1_tt27_pt2_SingleMuonFlatOneOverPt0p0005To0p5_tt27NoTest_4M_SLHC25.root"; isSLHC25=1; TString pName("SingleMuFlat_PU0_5oo6");// 5/6
 
 //	TString sTree="SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz1_tt27_pt2_6oo6_SingleMuonTest_tt27_PU0_20150408_SLHC25p3_newBank_10M.root"; isSLHC25=1; TString pName("SingleMu_PU0_6oo6");// 6/6
 //	TString sTree="SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz1_tt27_pt2_5oo6_SingleMuonTest_tt27_PU0_20150408_SLHC25p3_newBank_10M.root"; isSLHC25=1; TString pName("SingleMu_PU0_5or6oo6");// 5/6
@@ -74,6 +74,7 @@ void roadsStubsClean5oo6 (int applyOnMuon = 1, bool savePlots=0, bool deriveCuts
 //	TString sTree="Neutrino_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt3_5or6oo6_Neutrino_PU140_20150408_SLHC25p3_newBank_100M.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt3_5or6oo6");// 6/6
 //	TString sTree="Neutrino_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt2_6oo6_Neutrino_PU140_20150408_SLHC25p3_newBank_100M.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt2_6oo6");// 6/6
 //	TString sTree="Neutrino_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt2_5or6oo6_Neutrino_PU140_20150408_SLHC25p3_newBank_100M.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt2_5or6oo6");// 6/6
+	TString sTree="Neutrino_PU140_tt27_sf1_nz4_pt3_20151107/roads_Neutrino_PU140_tt27_sf1_nz4_pt3_5oo6_95c_14k.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt3_5or6oo6");// 6/6
 
 //		TString sTree="TTbarTTbar_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt2_5oo6_TTbarTTbar_tt27_PU140_20150408_SLHC25p3_100M.root"; isSLHC25=1; TString pName("4Tops_PU140_sf1_nz4_pt2_5or6oo6");// 6/6
 //		TString sTree="TTbarTTbar_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt2_6oo6_TTbarTTbar_tt27_PU140_20150408_SLHC25p3_100M.root"; isSLHC25=1; TString pName("4Tops_PU140_sf1_nz4_pt2_6oo6");// 6/6
@@ -86,12 +87,15 @@ void roadsStubsClean5oo6 (int applyOnMuon = 1, bool savePlots=0, bool deriveCuts
 //	TFile *f = TFile::Open("/data/rossin/EOS/patternBank_SingleMuonFlatOneOverPt0p005To0p5_tt27_2M.root","READ");
 //	TFile *f = TFile::Open("/data/rossin/EOS/singleMuonNoTest/patternBank_SingleMuonFlatOneOverPt0p005To0p5_tt27_2M.root","READ");
 //	TFile *f = TFile::Open("/data/rossin/EOS/singleMuNoTest2_2000/patternBank_sf1_nz1_tt27_pt2_SingleMuonFlatOneOverPt0p0005To0p5_tt27NoTest_4M.root","READ");
-	TFile *f = TFile::Open("/data/rossin/EOS/singleMuNoTest2_2000/patternBank_sf1_nz1_tt27_pt2_SingleMuonFlatOneOverPt0p0005To0p5_tt27NoTest_4M_SLHC25.root","READ"); isSLHC25=1;
+//	TFile *f = TFile::Open("/data/rossin/EOS/singleMuNoTest2_2000/patternBank_sf1_nz1_tt27_pt2_SingleMuonFlatOneOverPt0p0005To0p5_tt27NoTest_4M_SLHC25.root","READ"); isSLHC25=1;
 //	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/patternBank_sf1_nz1_tt27_pt2_SingleMuon_tt27_SLHC25p3_10M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 104000;
 
 //	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/patternBank_SingleMuonFlatOneOverPt0p0005To0p5_tt27_sf1_nz4_pt3_SLHC25p3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1862700;
 //	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/patternBank_SingleMuonFlatOneOverPt0p0005To0p5_tt27_sf1_nz4_pt2_SLHC25p3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 3100200;
-		if (!f) { return; }
+	TFile *f = TFile::Open("/data/rossin/EOS/Neutrino_PU140_tt27_sf1_nz4_pt3_20151107/patternBank_tt27_sf1_nz4_pt3_100M.root","READ"); isSLHC25=1;
+
+
+	if (!f) { return; }
 //	TTree *t=0; f->GetObject("tSSID",t);
 	TTree *t=0;
 	TTree *tAtt=0;
