@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <vector>
 #include <algorithm>
+#include <map>
 
 using namespace std;
 
@@ -33,10 +34,41 @@ struct patternS {
 	}
 
 };
+// Sort patterns by phi angle
+bool sortByPhi(const patternS &lhs, const patternS &rhs) { return lhs.phi_mean < rhs.phi_mean; }
+
+// Calculate distances in SS btw patterns
+int absDeltaSS(const patternS &lhs, const patternS &rhs) {
+	int delta = 0;
+	int deltaSSz = 322;
+	for (unsigned iSS=0; iSS<6; ++iSS) {
+		int deltaSS = TMath::Abs((int)lhs.superstripIds.at(iSS)-(int)rhs.superstripIds.at(iSS));
+		int n = (deltaSS+deltaSSz/2)%deltaSSz-deltaSSz/2;
+		if ((deltaSS-n)%322) std::cout << "WTF" << std::endl;
+		int m = (deltaSS-n)/deltaSSz;
+		delta += TMath::Abs(n)+TMath::Abs(m);
+	}
+	return delta;
+}
+
+// Calculate how many SS are in common (returning an integer from 0 to 6)
+unsigned roadRelative(const patternS &lhs, const patternS &rhs) {
+	unsigned delta = 0;
+//	int deltaSSz = 322;
+	for (unsigned iSS=0; iSS<6; ++iSS) {
+		if (lhs.superstripIds.at(iSS)!=rhs.superstripIds.at(iSS)) ++delta;
+	}
+	return delta;
+}
+
 
 long unsigned int patternAttributes::ReadPercentile(TString sTree, TString &pName) {
 //	std::cout << sTree.Data() << std::endl;
 	if (percentile==95) {
+		if(sTree.Contains("SingleMuonTest_tt27_PU0_20150815_fullNtuple/patternBank_tt27_sf1_nz4_pt3_100M.root")){
+			pName=TString("_pattern_sf1_nz4_pt3");
+			return 1862700;
+		}
 		if(sTree.Contains("SingleMuonTest_tt27_PU0_140_20150408_SLHC25p3_NewPatterns/patternBank_SingleMuonFlatOneOverPt0p0005To0p5_tt27_sf1_nz4_pt2_SLHC25p3_100M.root")){
 			pName=TString("_pattern_sf1_nz4_pt2");
 			return 3100200;
@@ -100,6 +132,7 @@ void patternAttributes::Loop(TString sTree, int makePlots)
 	std::cout << "Loading patterns " << nentries << " for " << percentile  << "% coverage." << std::endl;
 
 	std::vector <patternS> pattS;
+	std::vector <patternS> pattS_phi;
 
 	Long64_t nbytes = 0, nb = 0;
 	for (Long64_t jentry=0; jentry<nentries;jentry++) {
@@ -124,6 +157,7 @@ void patternAttributes::Loop(TString sTree, int makePlots)
   		p.superstripIds.push_back(superstripIds->at(iSS));
   	}
   	pattS.push_back(p);
+  	pattS_phi.push_back(p);
   	if (jentry%100000==0) {
   		std::cout << "Loading pattern " << jentry << std::endl;
 //  		std::cout << std::setw(10)
@@ -140,6 +174,43 @@ void patternAttributes::Loop(TString sTree, int makePlots)
 	std::cout << "Sorting patterns by invPt" << std::endl;
 	std::sort(pattS.begin(), pattS.end());
 	std::cout << "Done" <<std::endl;
+	std::cout << "Sorting patterns by phi" << std::endl;
+	std::sort(pattS_phi.begin(), pattS_phi.end(), sortByPhi);
+	std::cout << "Done" <<std::endl;
+
+	int deltaNpatterns = 20000;
+	TProfile* h2siblingsVSfreq = new TProfile("h2siblingsVSfreq","h2siblingsVSfreq",130,0,1300,0,100);
+	TProfile* h2siblingsSSVSfreq = new TProfile("h2siblingsSSVSfreq","h2siblingsSSVSfreq",130,0,1300,0,100);
+	for (unsigned iPat1=0; iPat1<pattS_phi.size(); ++iPat1) {
+		patternS p1(pattS_phi.at(iPat1));
+//		if (iPat1) {
+//			patternS p3=pattS_phi.at(iPat1-1);
+//			if (TMath::Abs(p1.invPt_mean-p3.invPt_mean)<0.005)
+//			for (unsigned i=0; i<6; ++i) {
+//				if (TMath::Abs((int)p1.superstripIds.at(i) - (int)p3.superstripIds.at(i))>100) std::cout << i << "\t" << (int)p1.superstripIds.at(i) - (int)p3.superstripIds.at(i) << std::endl;
+//
+//			}
+//		}
+		int nSiblingsSS = 0;
+		int nSiblings   = 0;
+		unsigned minPat2 = TMath::Max(0                    ,(int)iPat1-deltaNpatterns);
+		unsigned maxPat2 = TMath::Min((int)pattS_phi.size(),(int)iPat1+deltaNpatterns);
+		for (unsigned iPat2=minPat2; iPat2<maxPat2; ++iPat2) {
+			if (iPat1==iPat2) continue;
+			patternS p2(pattS_phi.at(iPat2));
+			if (absDeltaSS(p1,p2)<=2) ++nSiblingsSS;
+			if (roadRelative(p1,p2)==1) ++nSiblings  ;
+		}
+		h2siblingsVSfreq  ->Fill(p1.frequency, nSiblings  );
+		h2siblingsSSVSfreq->Fill(p1.frequency, nSiblingsSS);
+		if (iPat1%10000 == 0) std::cout << "Searching for siblings. Pattern " << iPat1 << std::endl;
+	}
+	TCanvas* csiblingsVSfreq = new TCanvas("csiblingsVSfreq","csiblingsVSfreq",0,0,1000,1000);
+	h2siblingsVSfreq->DrawCopy();
+	csiblingsVSfreq->SaveAs("csiblingsVSfreq.png");
+	TCanvas* csiblingsSSVSfreq = new TCanvas("csiblingsSSVSfreq","csiblingsSSVSfreq",0,0,1000,1000);
+	h2siblingsSSVSfreq->DrawCopy();
+	csiblingsSSVSfreq->SaveAs("csiblingsSSVSfreq.png");
 
   const unsigned long int Npatt = pattS.size();
 
@@ -320,11 +391,11 @@ void patternAttributes::Loop(TString sTree, int makePlots)
 
 void patternBankAttributes(TString sTree, int perc=95, int makePlots=0) {
 
-	gStyle->SetOptStat(0);
-	const unsigned nC=35;
-	int colors[nC];
-	for (unsigned i=0; i<nC; ++i) colors[i]=10+i;
-	gStyle->SetPalette(nC,colors);
+//	gStyle->SetOptStat(0);
+//	const unsigned nC=35;
+//	int colors[nC];
+//	for (unsigned i=0; i<nC; ++i) colors[i]=10+i;
+//	gStyle->SetPalette(nC,colors);
 	patternAttributes p(sTree);
 	p.percentile=perc;
 	p.Loop(sTree,makePlots);

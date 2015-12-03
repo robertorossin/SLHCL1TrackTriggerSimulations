@@ -319,7 +319,7 @@ def drawer_draw(histos, options):
 
             for ibin in xrange(nbinsx):
                 hpy = h.ProjectionY(hname + "_py%i" % ibin, ibin+1, ibin+1); setattr(h, "py%i" % ibin, hpy)
-                x = h.GetBinCenter(ibin+1)
+                x = h.GetXaxis().GetBinCenter(ibin+1)
 
                 if hpy.GetEntries() < 30:
                     print "WARNING: not enough entries in %s: %i" % (hpy.GetName(), hpy.GetEntries())

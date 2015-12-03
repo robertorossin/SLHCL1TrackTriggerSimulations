@@ -11,7 +11,7 @@ fcol = TColor.GetColor("#a6cee3")  # mu0
 
 # ______________________________________________________________________________
 parnames = ["#phi", "cot #theta", "z_{0} [cm]", "1/p_{T} [1/GeV]"]
-nvariables = 12
+# nvariables = 12
 nparameters = 4
 
 parrmses = [0.000453, 0.002403, 0.083406, 0.001283]

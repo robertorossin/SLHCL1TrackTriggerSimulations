@@ -33,19 +33,19 @@ def drawer_book():
     histos[hname] = TH1F(hname, "; # combinations/tower/BX"         , nbins, xmin, xmax)
 
     hname = "ntracks_per_event"
-    nbins, xmin, xmax = 80, 0., 80.*options.xscale
+    nbins, xmin, xmax = 100, 0., 100.*options.xscale
     histos[hname] = TH1F(hname, "; # tracks/tower/BX"               , nbins, xmin, xmax)
 
     hname = "ngoods_per_event"
-    nbins, xmin, xmax = 80, 0., 80.*options.xscale
+    nbins, xmin, xmax = 100, 0., 100.*options.xscale
     histos[hname] = TH1F(hname, "; # good tracks/tower/BX"          , nbins, xmin, xmax)
 
     hname = "nduplicates_per_event"
-    nbins, xmin, xmax = 80, 0., 80.*options.xscale
+    nbins, xmin, xmax = 100, 0., 100.*options.xscale
     histos[hname] = TH1F(hname, "; # duplicate tracks/tower/BX"     , nbins, xmin, xmax)
 
     hname = "nfakes_per_event"
-    nbins, xmin, xmax = 80, 0., 80.*options.xscale
+    nbins, xmin, xmax = 100, 0., 100.*options.xscale
     histos[hname] = TH1F(hname, "; # fake tracks/tower/BX"          , nbins, xmin, xmax)
 
     for c in ["good", "duplicate", "fake"]:
@@ -178,7 +178,7 @@ def drawer_project(tree, histos, options):
     return
 
 def drawer_draw(histos, options):
-    def displayQuantiles(h, in_quantiles=[0.95,0.99], scalebox=(1.,1.)):
+    def displayQuantiles(h, in_quantiles=[0.95,0.99,0.999], scalebox=(1.,1.)):
         # Display one-sided confidence intervals, a.k.a quantiles
         n = len(in_quantiles)
         in_quantiles = array('d', in_quantiles)
@@ -195,7 +195,7 @@ def drawer_draw(histos, options):
         ps.SetY1NDC(newY1NDC)
 
         for iq, q in enumerate(in_quantiles):
-            ps.AddText("%i%% CI = %6.4g" % (int(q*100), quantiles[iq]))
+            ps.AddText("%4.1f%% CI = %6.4g" % ((q*100), quantiles[iq]))
         h.stats = [h.GetMean()] + quantiles.tolist()
 
         h.SetStats(0)
@@ -215,7 +215,7 @@ def drawer_draw(histos, options):
             displayQuantiles(h)
 
         CMS_label()
-        save(options.outdir, "%s_%s" % (hname, options.ss), dot_root=True)
+        save(options.outdir, "%s_%s" % (hname, options.ss), dot_root=False, dot_pdf=False)
     return
 
 def drawer_draw2(histos, options):
@@ -256,7 +256,7 @@ def drawer_draw2(histos, options):
         tlegend.Draw()
 
         CMS_label()
-        save(options.outdir, "%s_stack_%s" % (v, options.ss), dot_root=True)
+        save(options.outdir, "%s_stack_%s" % (v, options.ss), dot_root=False, dot_pdf=False)
 
         # Ratio
         hratio1 = h1.Clone(hname1 + "_ratio")
@@ -286,7 +286,7 @@ def drawer_draw2(histos, options):
         tlegend.Draw()
 
         CMS_label()
-        save(options.outdir, "%s_ratio_%s" % (v, options.ss), dot_root=True)
+        save(options.outdir, "%s_ratio_%s" % (v, options.ss), dot_root=False, dot_pdf=False)
 
         # Norm
         hnorm1 = h1.Clone(hname1 + "_norm")
@@ -315,7 +315,7 @@ def drawer_draw2(histos, options):
         tlegend.Draw()
 
         CMS_label()
-        save(options.outdir, "%s_norm_%s" % (v, options.ss), dot_root=True)
+        save(options.outdir, "%s_norm_%s" % (v, options.ss), dot_pdf=False, dot_root=False)
 
         donotdelete.append([hstack1, hstack2, hstack3])
         donotdelete.append([hratio1, hratio2, hratio3])
