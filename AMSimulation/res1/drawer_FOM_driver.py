@@ -12,8 +12,8 @@ def main(options):
     #
     # Choose the base directory where all the samples are stored
     #    
-    inDir = "/data/rossin/EOS/"
-#     inDir = "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC25p3_results/test1/" # cmslpc
+#     inDir = "/data/rossin/EOS/"
+    inDir = "/eos/uscms/store/user/l1upgrades/SLHC/GEN/620_SLHC25p3_results/test1/" # cmslpc
     
     options.infile = ""
     options.npatterns = 1862700 # this is to obtain 95% coverge on TT27 and sf1_nz4
