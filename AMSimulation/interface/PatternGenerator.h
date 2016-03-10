@@ -34,6 +34,10 @@ class PatternGenerator {
              it != patternAttributes_map_.end(); ++it) {
             if (it->second)  delete it->second;
         }
+        for (std::map<pattern_type, ShortAttributes *>::iterator it=patternShortAttributes_map_.begin();
+             it != patternShortAttributes_map_.end(); ++it) {
+            if (it->second)  delete it->second;
+        }
     }
 
     // Main driver
@@ -62,7 +66,8 @@ class PatternGenerator {
     std::map<pattern_type, unsigned>                patternBank_map_;
     std::vector<std::pair<pattern_type, unsigned> > patternBank_pairs_;
 
-    std::map<pattern_type, Attributes *>            patternAttributes_map_;
+    std::map<pattern_type,      Attributes *>            patternAttributes_map_;
+    std::map<pattern_type, ShortAttributes *>            patternShortAttributes_map_;
 
     // Bookkeepers
     float coverage_;

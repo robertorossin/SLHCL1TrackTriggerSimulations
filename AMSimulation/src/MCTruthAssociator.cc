@@ -117,7 +117,7 @@ void MCTruthAssociator::associate(std::vector<TrackingParticle>& trkParts, std::
 
                 } else {
                     mcCategories.at(ipart) = ParticleCategory::FOUND;
-                    recoCategories.at(itrack) = TrackCategory::DUPLICATE;
+                    recoCategories.at(itrack) = TrackCategory::DUPLICATE-trkParts.at(ipart).tpId; // Duplicates will still carry the tpId, but they will be counted as -1000000, -1000001, -1000002
                 }
 
                 // Debug
@@ -141,7 +141,7 @@ void MCTruthAssociator::associate(std::vector<TrackingParticle>& trkParts, std::
         const int cat = recoCategories.at(itrack);
         if (cat == TrackCategory::FAKE)
             ++nfakes;
-        else if (cat == TrackCategory::DUPLICATE)
+        else if (cat <= TrackCategory::DUPLICATE)
             ++nduplicates;
         else
             ++ngoods;

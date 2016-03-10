@@ -14,3 +14,6 @@
 
 Attributes::Attributes()
 :   id(0), n(0), invPt(), cotTheta(), phi(), z0() {}
+
+ShortAttributes::ShortAttributes()
+:   invPt(), phi() {}

@@ -30,4 +30,13 @@ public:
     ~Attributes() {}
 };
 
+class ShortAttributes {
+public:
+    Statistics invPt;    // mean and sigma of track parameters
+    Statistics phi;      // mean and sigma of track parameters
+
+    ShortAttributes();
+    ~ShortAttributes() {}
+};
+
 #endif /* defined(__BuildPatternBank__Attributes__) */

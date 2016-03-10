@@ -107,9 +107,14 @@ int TrackFitter::makeTracks(TString src, TString out) {
             for (unsigned icomb=0; icomb<combinations.size(); ++icomb)
                 assert(combinations.at(icomb).size() == reader.vr_stubRefs->at(iroad).size());
 
-            if (verbose_>2) {
-                std::cout << Debug() << "... ... road: " << iroad << " # combinations: " << combinations.size() << std::endl;
-            }
+//            if (verbose_>2) {
+//                std::cout << Debug() << "... ... road: " << iroad << " # combinations: " << combinations.size() << std::endl;
+//                std::cout << reader.vr_patternInvPt->at(iroad) << "  [ ";
+//                for (unsigned iSS=0; iSS< reader.vr_superstripIds->at(iroad).size(); ++iSS) {
+//                	std::cout << reader.vr_superstripIds->at(iroad).at(iSS) << ", ";
+//                }
+//                std::cout << "]" << std::endl;
+//            }
 
             // Loop over the combinations
             for (unsigned icomb=0; icomb<combinations.size(); ++icomb) {
@@ -117,6 +122,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
 
                 // Create and set TTRoadComb
                 TTRoadComb acomb;
+                std::vector <int> stub_tpId;
                 acomb.roadRef    = iroad;
                 acomb.combRef    = icomb;
                 acomb.patternRef = patternRef;
@@ -135,6 +141,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
                         acomb.stubs_phi .push_back(reader.vb_phi ->at(stubRef));
                         acomb.stubs_z   .push_back(reader.vb_z   ->at(stubRef));
                         acomb.stubs_bool.push_back(true);
+                        stub_tpId.push_back(reader.vb_tpId       ->at(stubRef));
                     } else {
                         acomb.stubs_r   .push_back(0.);
                         acomb.stubs_phi .push_back(0.);
@@ -167,6 +174,19 @@ int TrackFitter::makeTracks(TString src, TString out) {
                     tracks.push_back(atrack);
 
                 if (verbose_>2)  std::cout << Debug() << "... ... ... track: " << icomb << " status: " << fitstatus << " reduced chi2: " << atrack.chi2Red() << " invPt: " << atrack.invPt() << " phi0: " << atrack.phi0() << " cottheta: " << atrack.cottheta() << " z0: " << atrack.z0() << std::endl;
+//                if (verbose_>2 && atrack.chi2Red()>3)  {
+//                	std::cout << Debug() << "# " << ievt << " # "
+//                			<<                1.0/reader.vp_pt ->at(0)
+//                			<< " " <<             reader.vp_phi->at(0)
+//							<< " " <<        sinh(reader.vp_eta->at(0))
+//							<< " " <<             reader.vp_vz ->at(0)
+//							<< std::endl;
+//                	std::cout << "\033[1;31m" ;
+//                	for (unsigned istub=0; istub<stub_tpId.size(); ++istub) {
+//                		std::cout << "... ... ... " << stub_tpId.at(istub) << std::endl;
+//                	}
+//                	std::cout << "\033[0m" << std::endl;
+//                }
             }
         }  // loop over the roads
 

@@ -40,7 +40,7 @@ class MCTruthAssociator {
 
     // Enum
     enum ParticleCategory { NOTFOUND=-1, FOUND=1 };
-    enum TrackCategory    { FAKE=-2, DUPLICATE=-1, GOOD=1 };
+    enum TrackCategory    { FAKE=-2, DUPLICATE=-1000000, GOOD=1 };
 
     void associate(std::vector<TrackingParticle>& trkParts, std::vector<TTTrack2>& tracks);
 
