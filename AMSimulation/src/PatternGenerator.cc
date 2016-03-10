@@ -280,6 +280,8 @@ int PatternGenerator::writePatterns(TString out) {
             const ShortAttributes * attr = patternShortAttributes_map_.at(patt);
             *(writer.pb_invPt_mean)     = attr->invPt.getMean();
             *(writer.pb_invPt_sigma)    = attr->invPt.getSigma();
+            *(writer.pb_phi_mean)       = attr->phi.getMean();
+            *(writer.pb_phi_sigma)      = attr->phi.getSigma();
         }
 
         writer.fillPatternBank();
