@@ -163,11 +163,14 @@ int PatternMatcher::makeRoads(TString src, TString out) {
         std::vector<bool> stubsNotInTower;  // true: not in this trigger tower
         std::vector<bool> stubsInOverlapping(nstubs,false);  // true: stub is in overlapping region and has TO BE removed
         for (unsigned istub=0; istub<nstubs; ++istub) {
-        	unsigned moduleId = reader.vb_modId   ->at(istub);
+            unsigned moduleId = reader.vb_modId   ->at(istub);
+            float    stub_ds  = reader.vb_trigBend->at(istub);  // in full-strip unit
 
-        	// Skip if not in this trigger tower
-        	bool isNotInTower = (ttrmap.find(moduleId) == ttrmap.end());
-        	stubsNotInTower.push_back(isNotInTower);
+            // Skip if not in this trigger tower
+            bool isNotInTower = (ttrmap.find(moduleId) == ttrmap.end());
+            bool isNotInStubWindow = !cutter_->applyCuts(moduleId, stub_ds);
+
+            stubsNotInTower.push_back(isNotInTower || isNotInStubWindow);
 
         	// RR // Skip if in overlapping regions
           if (removeOverlap_) {

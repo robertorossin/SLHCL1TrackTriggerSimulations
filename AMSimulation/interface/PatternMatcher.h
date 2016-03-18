@@ -6,6 +6,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TriggerTowerMap.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/StubCutter.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/AssociativeMemory.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HitBuffer.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ModuleOverlapMap.h"
@@ -27,11 +28,13 @@ class PatternMatcher {
         arbiter_ = new SuperstripArbiter();
         arbiter_->setDefinition(po_.superstrip, po_.tower, ttmap_);
 
+        cutter_ = new StubCutter();
+
         if (removeOverlap_) {
         	momap_   = new ModuleOverlapMap();
         	momap_->readModuleOverlapMap(po_.datadir);
         }
-}
+    }
 
     // Destructor
     ~PatternMatcher() {
@@ -65,6 +68,7 @@ class PatternMatcher {
     // Operators
     TriggerTowerMap   * ttmap_;
     SuperstripArbiter * arbiter_;
+    StubCutter        * cutter_;
     ModuleOverlapMap  * momap_;
 
     // Associative memory

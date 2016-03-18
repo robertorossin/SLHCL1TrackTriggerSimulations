@@ -83,9 +83,14 @@ int PatternGenerator::makePatterns(TString src) {
         unsigned ngoodstubs = 0;
         for (unsigned istub=0; istub<nstubs; ++istub) {
             unsigned moduleId = reader.vb_modId   ->at(istub);
-            if (ttrmap.find(moduleId) != ttrmap.end()) {
-                ++ngoodstubs;
-            }
+            float    stub_ds  = reader.vb_trigBend->at(istub);  // in full-strip unit
+
+            bool isNotInTower = (ttrmap.find(moduleId) == ttrmap.end());
+            bool isNotInStubWindow = !cutter_->applyCuts(moduleId, stub_ds);
+            if (isNotInTower || isNotInStubWindow)
+                continue;
+
+            ++ngoodstubs;
         }
         if (ngoodstubs != po_.nLayers) {
             ++nRead;

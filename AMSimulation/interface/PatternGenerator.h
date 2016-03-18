@@ -6,6 +6,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TriggerTowerMap.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/StubCutter.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Attributes.h"
 using namespace slhcl1tt;
 
@@ -23,6 +24,8 @@ class PatternGenerator {
 
         arbiter_ = new SuperstripArbiter();
         arbiter_->setDefinition(po_.superstrip, po_.tower, ttmap_);
+
+        cutter_ = new StubCutter();
     }
 
     // Destructor
@@ -61,6 +64,7 @@ class PatternGenerator {
     // Operators
     TriggerTowerMap   * ttmap_;
     SuperstripArbiter * arbiter_;
+    StubCutter        * cutter_;
 
     // Pattern bank data
     std::map<pattern_type, unsigned>                patternBank_map_;
