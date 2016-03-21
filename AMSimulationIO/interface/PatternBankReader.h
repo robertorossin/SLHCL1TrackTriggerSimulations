@@ -22,7 +22,8 @@ class PatternBankReader {
 
     int init(TString src);
 
-    void getPatternBankInfo(float& coverage, unsigned& count, unsigned& tower, std::string& superstrip);
+    void getPatternBankInfo(float& coverage, unsigned& count, unsigned& tower, std::string& superstrip,
+                            unsigned& superstrip_nx, unsigned& superstrip_nz);
     void getPatternInvPt(Long64_t entry, float& invPt_mean);
 
     Int_t getPattern(Long64_t entry) { return ttree->GetEntry(entry); }
@@ -44,6 +45,8 @@ class PatternBankReader {
     unsigned                       pb_count;
     unsigned                       pb_tower;
     std::string *                  pb_superstrip;
+    unsigned                       pb_superstrip_nx;
+    unsigned                       pb_superstrip_nz;
 
     // Pattern bank
     frequency_type                 pb_frequency;
@@ -89,6 +92,8 @@ class PatternBankWriter {
     std::auto_ptr<unsigned>                      pb_count;
     std::auto_ptr<unsigned>                      pb_tower;
     std::auto_ptr<std::string>                   pb_superstrip;
+    std::auto_ptr<unsigned>                      pb_superstrip_nx;
+    std::auto_ptr<unsigned>                      pb_superstrip_nz;
 
     // Pattern bank
     std::auto_ptr<frequency_type>                pb_frequency;

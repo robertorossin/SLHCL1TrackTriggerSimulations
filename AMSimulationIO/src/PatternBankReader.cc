@@ -19,6 +19,8 @@ PatternBankReader::PatternBankReader(int verbose)
   pb_count          (0),
   pb_tower          (0),
   pb_superstrip     (0),
+  pb_superstrip_nx  (0),
+  pb_superstrip_nz  (0),
   //
   pb_frequency      (0),
   pb_superstripIds  (0),
@@ -66,10 +68,12 @@ int PatternBankReader::init(TString src) {
     ttree2 = (TTree*) tfile->Get("patternBankInfo");
     assert(ttree2 != 0);
 
-    ttree2->SetBranchAddress("coverage"    , &pb_coverage);
-    ttree2->SetBranchAddress("count"       , &pb_count);
-    ttree2->SetBranchAddress("tower"       , &pb_tower);
-    ttree2->SetBranchAddress("superstrip"  , &pb_superstrip);
+    ttree2->SetBranchAddress("coverage"     , &pb_coverage);
+    ttree2->SetBranchAddress("count"        , &pb_count);
+    ttree2->SetBranchAddress("tower"        , &pb_tower);
+    ttree2->SetBranchAddress("superstrip"   , &pb_superstrip);
+    ttree2->SetBranchAddress("superstrip_nx", &pb_superstrip_nx);
+    ttree2->SetBranchAddress("superstrip_nz", &pb_superstrip_nz);
 
     ttree = (TTree*) tfile->Get("patternBank");
     assert(ttree != 0);
@@ -80,13 +84,15 @@ int PatternBankReader::init(TString src) {
     return 0;
 }
 
-void PatternBankReader::getPatternBankInfo(float& coverage, unsigned& count, unsigned& tower, std::string& superstrip) {
+void PatternBankReader::getPatternBankInfo(float& coverage, unsigned& count, unsigned& tower, std::string& superstrip, unsigned& superstrip_nx, unsigned& superstrip_nz) {
     ttree2->GetEntry(0);
 
-    coverage   = pb_coverage;
-    count      = pb_count;
-    tower      = pb_tower;
-    superstrip = (*pb_superstrip);
+    coverage      = pb_coverage;
+    count         = pb_count;
+    tower         = pb_tower;
+    superstrip    = (*pb_superstrip);
+    superstrip_nx = pb_superstrip_nx;
+    superstrip_nz = pb_superstrip_nz;
 }
 
 void PatternBankReader::getPatternInvPt(Long64_t entry, float& invPt_mean) {
@@ -111,6 +117,8 @@ PatternBankWriter::PatternBankWriter(int verbose)
   pb_count          (new unsigned(0)),
   pb_tower          (new unsigned(0)),
   pb_superstrip     (new std::string("")),
+  pb_superstrip_nx  (new unsigned(0)),
+  pb_superstrip_nz  (new unsigned(0)),
   //
   pb_frequency      (new frequency_type(0)),
   pb_superstripIds  (new std::vector<superstrip_type>()),
@@ -159,6 +167,8 @@ int PatternBankWriter::init(TString out) {
     ttree2->Branch("count"         , &(*pb_count));
     ttree2->Branch("tower"         , &(*pb_tower));
     ttree2->Branch("superstrip"    , &(*pb_superstrip));
+    ttree2->Branch("superstrip_nx" , &(*pb_superstrip_nx));
+    ttree2->Branch("superstrip_nz" , &(*pb_superstrip_nz));
 
     // Pattern bank
     ttree = new TTree("patternBank", "");
