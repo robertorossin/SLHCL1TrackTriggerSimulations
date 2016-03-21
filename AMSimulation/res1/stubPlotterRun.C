@@ -5,6 +5,7 @@
 #include <TCanvas.h>
 #include <TGraph.h>
 #include <TLegend.h>
+#include <TLegendEntry.h>
 #include <TMath.h>
 #include <TArc.h>
 
@@ -24,9 +25,34 @@ public:
 	   bool    iSprimary;
 };
 
+class trackLTF{
+public:
+	   float        pt;
+	   float        eta;
+	   float        rinv;
+	   float        invPt;
+	   float        phi0;
+	   float        cottheta;
+	   float        z0;
+	   float        d0;
+	   float        chi2;
+	   int          ndof;
+	   float        chi2_phi;
+	   float        chi2_z;
+	   bool         isGhost;
+	   int          tpId;
+	   int          synTpId;
+	   unsigned int tower;
+	   unsigned int hitBits;
+	   unsigned int ptSegment;
+	   unsigned int roadRef;
+	   unsigned int combRef;
+	   unsigned int patternRef;
+};
+
 void loadTT27ModuleList(vector <unsigned> &v);
 
-void stubPlotter::Loop(unsigned int iEv,TString pName)
+void stubPlotter::Loop(unsigned int iEv,TString pName, bool makePlots)
 {
 //   In a ROOT session, you can do:
 //      Root > .L stubPlotter.C
@@ -80,6 +106,7 @@ void stubPlotter::Loop(unsigned int iEv,TString pName)
    }
 
    vector <trackParticle> vParticles;
+   vector <trackLTF>      vTracksLTF;
 
    unsigned nStubsTOT = 0;
    unsigned nStubsInRoads = 0;
@@ -98,6 +125,7 @@ void stubPlotter::Loop(unsigned int iEv,TString pName)
       // if (Cut(ientry) < 0) continue;
 
       vParticles .clear();
+      vTracksLTF .clear();
 
       vStubsX    .clear();
       vStubsY    .clear();
@@ -109,12 +137,22 @@ void stubPlotter::Loop(unsigned int iEv,TString pName)
       vRoadPhi0  .clear();
       vRoadPatternRef  .clear();
 
+      // Fill the fitted tracks info
+      for (unsigned ift=0; ift<AMTTTracks_invPt->size(); ++ift) {
+    	  trackLTF ft;
+    	  ft.invPt      = AMTTTracks_invPt     ->at(ift);
+    	  ft.phi0       = AMTTTracks_phi0      ->at(ift);
+    	  ft.pt         = AMTTTracks_pt        ->at(ift);
+    	  ft.patternRef = AMTTTracks_patternRef->at(ift);
+    	  vTracksLTF.push_back(ft);
+      }
+
       // Fill the track particle info
       for (unsigned itp=0; itp<trkParts_pt->size(); ++itp) {
     	  trackParticle tp;
     	  double err=0.002;
     	  if (TMath::Abs(trkParts_pt    ->at(itp)) < 3.0  ) continue;
-    	  if (TMath::Abs(trkParts_pt    ->at(itp)) > 20.  && !pName.Contains("PU")) continue;
+    	  if (TMath::Abs(trkParts_pt    ->at(itp)) > 7.  && !pName.Contains("Neutrino")) continue;
     	  if ( trkParts_phi    ->at(itp)>TMath::Pi()/2+err) continue;
     	  if ( trkParts_phi    ->at(itp)<TMath::Pi()/4-err) continue;
     	  if ( trkParts_eta    ->at(itp)< -err*80         ) continue;
@@ -157,54 +195,56 @@ void stubPlotter::Loop(unsigned int iEv,TString pName)
 //	  }
 //	  continue;
 
-      std::map <unsigned, unsigned> map_stubsInRoads;
+  	std::map <unsigned, unsigned> map_stubsInRoads;
+  	std::map <unsigned, unsigned>::iterator it_map_stubs_InRoads;
 
-      nRoads = AMTTRoads_nstubs->size();
-      for (unsigned int iRoads=0; iRoads<nRoads; ++iRoads) { // LOOPING OVER ROADS in EVENT
-    	  slhcl1tt::TTRoad road;
-    	  road.stubRefs       = AMTTRoads_stubRefs     ->at(iRoads);
-    	  road.superstripIds  = AMTTRoads_superstripIds->at(iRoads);
-    	  road.nstubs         = AMTTRoads_nstubs       ->at(iRoads);
-		  double patternInvPt = AMTTRoads_patternInvPt ->at(iRoads);
-		  unsigned patternRef = AMTTRoads_patternRef   ->at(iRoads);
-		  vRoadInvPt.push_back(patternInvPt);
-		  patternAttributes->GetEntry(patternRef);
-		  vRoadPhi0.push_back(patternPhi0);
-		  vRoadPatternRef.push_back(patternRef);
+	  nRoads = AMTTRoads_nstubs->size();
+	  for (unsigned int iRoads=0; iRoads<nRoads; ++iRoads) { // LOOPING OVER ROADS in EVENT
+	  	slhcl1tt::TTRoad road;
+	  	road.stubRefs       = AMTTRoads_stubRefs     ->at(iRoads);
+	  	road.superstripIds  = AMTTRoads_superstripIds->at(iRoads);
+	  	road.nstubs         = AMTTRoads_nstubs       ->at(iRoads);
+	  	double patternInvPt = AMTTRoads_patternInvPt ->at(iRoads);
+	  	unsigned patternRef = AMTTRoads_patternRef   ->at(iRoads);
+	  	vRoadInvPt.push_back(patternInvPt);
+	  	patternAttributes->GetEntry(patternRef);
+	  	vRoadPhi0.push_back(patternPhi0);
+	  	vRoadPatternRef.push_back(patternRef);
 
-		  for (unsigned int iSS=0; iSS<road.superstripIds.size();++iSS) { // Looping over SS in ROAD
-			  unsigned int ssID = road.superstripIds.at(iSS);
-			  unsigned int nStubs = road.stubRefs.at(iSS).size();
-			  for (unsigned int iStub=0; iStub<nStubs; ++iStub) { // looping on stubs 1
-				  unsigned int stubID = road.stubRefs.at(iSS).at(iStub);
-				  short int stub_layer = TMath::Floor(TTStubs_modId   ->at(stubID)/10000.)-5;
-				  double stub_bend = TTStubs_trigBend->at(stubID);
-				  double stub_x1    = TTStubs_x    ->at(stubID);
-				  double stub_y1    = TTStubs_y    ->at(stubID);
-				  double stub_z1    = TTStubs_z    ->at(stubID);
-				  unsigned int stub_moduleId = TTStubs_modId->at(stubID);
+	  	for (unsigned int iSS=0; iSS<road.superstripIds.size();++iSS) { // Looping over SS in ROAD
+	  		unsigned int ssID = road.superstripIds.at(iSS);
+	  		unsigned int nStubs = road.stubRefs.at(iSS).size();
+	  		for (unsigned int iStub=0; iStub<nStubs; ++iStub) { // looping on stubs 1
+	  			unsigned int stubID = road.stubRefs.at(iSS).at(iStub);
+	  			short int stub_layer = TMath::Floor(TTStubs_modId   ->at(stubID)/10000.)-5;
+	  			double stub_bend = TTStubs_trigBend->at(stubID);
+	  			double stub_x1    = TTStubs_x    ->at(stubID);
+	  			double stub_y1    = TTStubs_y    ->at(stubID);
+	  			double stub_z1    = TTStubs_z    ->at(stubID);
+	  			unsigned int stub_moduleId = TTStubs_modId->at(stubID);
 
-				  for (unsigned int iMod=0; iMod<vModuleId.size(); ++iMod) {
-					  if (vModuleId.at(iMod)!=stub_moduleId) continue;
-					  else {
-						  vRoadStubsX.push_back(stub_x1);
-						  vRoadStubsY.push_back(stub_y1);
-						  map_stubsInRoads.insert(make_pair(stubID,iSS));
-						  break;
-					  }
-				  } //looping over moduleIDs
-			  } // looping over stubs
-		  } //looping over SS in road
-      } //looping over roads
-      if (!vRoadStubsX.size()) {
-    	  std::cout << "No road fired!!" << std::endl;
-      }
-      else {
-    	  ++evCounter;
-          std::cout << "Processing event " << jentry  << "\t Found " << nStubsTOT << "\tstubs and " << map_stubsInRoads.size() << "\tin " << nRoads << "\troads." << std::endl;
-          evNumber = jentry;
-          nStubsInRoads = map_stubsInRoads.size();
-      }
+	  			for (unsigned int iMod=0; iMod<vModuleId.size(); ++iMod) {
+	  				if (vModuleId.at(iMod)!=stub_moduleId) continue;
+	  				it_map_stubs_InRoads = map_stubsInRoads.find(stubID);
+	  				if (it_map_stubs_InRoads == map_stubsInRoads.end()) {
+	  					vRoadStubsX.push_back(stub_x1);
+	  					vRoadStubsY.push_back(stub_y1);
+	  					map_stubsInRoads.insert(make_pair(stubID,iSS));
+	  					break;
+	  				}
+	  			} //looping over moduleIDs
+	  		} // looping over stubs
+	  	} //looping over SS in road
+	  } //looping over roads
+	  if (!vRoadStubsX.size()) {
+	  	std::cout << "No road fired!!" << std::endl;
+	  }
+	  else {
+	  	++evCounter;
+	  	std::cout << "Processing event " << jentry  << "\t Found " << nStubsTOT << "\tstubs and " << map_stubsInRoads.size() << "\tin " << nRoads << "\troads." << std::endl;
+	  	evNumber = jentry;
+	  	nStubsInRoads = map_stubsInRoads.size();
+	  }
    } //looping over entries
 
 //   TCanvas* cStubsPerLayer = new TCanvas("cStubsPerLayer","cStubsPerLayer",0,0,1000,1000);
@@ -225,22 +265,19 @@ void stubPlotter::Loop(unsigned int iEv,TString pName)
 //   cStubsPerLayer->SaveAs(TString(cc)+TString(".png"));
 
    TGraph* grStubsXY_all   = new TGraph( vStubsX    .size(),&(vStubsX    [0]),&(vStubsY    [0]));
+   grStubsXY_all->SetTitle("Stubs in Tower");
+   grStubsXY_all->GetXaxis()->SetTitle("X [cm]");
+   grStubsXY_all->GetYaxis()->SetTitle("Y [cm]");
+
    TGraph* grStubsXY_roads = new TGraph( vRoadStubsX.size(),&(vRoadStubsX[0]),&(vRoadStubsY[0]));
    TCanvas* cStubsXY_all   = new TCanvas("cStubsXY_all","cStubsXY_all",0,0,1000,1000);
-   cStubsXY_all->Divide(2,2);
-   cStubsXY_all->cd(1);
+//   cStubsXY_all->Divide(2,2);
+//   cStubsXY_all->cd(1);
    grStubsXY_all->SetMarkerStyle(20);
    grStubsXY_all->SetMarkerSize (0.5);
    grStubsXY_all->DrawClone("AP");
    gPad->SetGrid();
-   cStubsXY_all->cd(2);
-   grStubsXY_all->Draw("AP");
-   gPad->SetGrid();
-   grStubsXY_all->SetMarkerColor(0);
-   grStubsXY_roads->SetMarkerColor(1);
-   grStubsXY_roads->SetMarkerStyle(20);
-   grStubsXY_roads->SetMarkerSize (0.5);
-   grStubsXY_roads->Draw("P");
+   TArc arc;
    for (unsigned itp=0; itp<vParticles.size(); ++itp) {
 	   trackParticle tp = vParticles.at(itp);
 	   std::cout << "Track particle[" << itp << "] pt/phi = " << tp.pt << "\t" << tp.phi << std::endl;
@@ -255,44 +292,138 @@ void stubPlotter::Loop(unsigned int iEv,TString pName)
 		   phiMin = alpha - TMath::Pi();
 		   phiMax = TMath::Pi();
 	   }
-	   TArc arc;
 	   arc.SetFillStyle(0);
 	   arc.SetLineWidth(0.3);
 	   arc.SetLineColor(2);
-	   arc.DrawArc(c0x,c0y,R,phiMin*180/TMath::Pi(),phiMax*180/TMath::Pi(),"only");
 	   cStubsXY_all->cd(1);
 	   arc.DrawArc(c0x,c0y,R,phiMin*180/TMath::Pi(),phiMax*180/TMath::Pi(),"only");
-	   cStubsXY_all->cd(2);
+//	   arc.DrawArc(c0x,c0y,R,phiMin*180/TMath::Pi(),phiMax*180/TMath::Pi(),"only");
+   }
+   TLegend* l = new TLegend(0.4,0.8,0.9,0.9);
+   sprintf(cc,"Tot # stubs = %d",(int)vStubsX    .size());
+   l->AddEntry(grStubsXY_all,cc,"p");
+   sprintf(cc,"Tot # tracking-part [Pt>3GeV/c] = %d",(int)vParticles.size());
+   TLegendEntry* tle = l->AddEntry(&arc,cc,"l");
+   tle->SetLineColor(2);
+   l->DrawClone();
+   sprintf(cc,"/home/rossin/Dropbox/TT/DOCS/20151111_Luciano_Rossin_AM_Status/stubsXYall%s_%02d",pName.Data(),iEv);
+   if (makePlots) {
+	   cStubsXY_all->SaveAs(TString(cc)+TString(".pdf"));
+	   cStubsXY_all->SaveAs(TString(cc)+TString(".png"));
    }
 
-   std::cout << "Tot # Roads = " << nRoads << std::endl;
+//   cStubsXY_all->cd(2);
+
+   TCanvas* cStubsXY_roads   = new TCanvas("cStubsXY_roads","cStubsXY_roads",0,0,1000,1000);
+   grStubsXY_all->SetTitle("Stubs in Tower after AM");
+   grStubsXY_all->Draw("AP");
+   gPad->SetGrid();
+   grStubsXY_all->SetMarkerColor(0);
+   grStubsXY_all->SetLineColor(1);
+   grStubsXY_roads->SetMarkerColor(1);
+   grStubsXY_roads->SetMarkerStyle(20);
+   grStubsXY_roads->SetMarkerSize (0.5);
+   grStubsXY_roads->Draw("P");
+
+   TLegend* l2 = new TLegend(0.4,0.8,0.9,0.9);
+   sprintf(cc,"# stubs after AM = %d",(int)vRoadStubsX.size());
+   l2->AddEntry(grStubsXY_roads,cc,"p");
+   l2->Draw();
+   sprintf(cc,"/home/rossin/Dropbox/TT/DOCS/20151111_Luciano_Rossin_AM_Status/stubsXYroads%s_%02d",pName.Data(),iEv);
+   if (makePlots) {
+  	 cStubsXY_roads->SaveAs(TString(cc)+TString(".pdf"));
+  	 cStubsXY_roads->SaveAs(TString(cc)+TString(".png"));
+   }
+
+   for (unsigned int iTrack=0; iTrack<vTracksLTF.size(); ++iTrack) {
+	   trackLTF track = vTracksLTF.at(iTrack);
+	   std::cout << "Track [" << iTrack << "] pt/phi = " << track.pt << "\t" << track.phi0 << std::endl;
+
+	   double R = TMath::Abs(100*track.pt/(0.3*3.8));
+	   float  charge = TMath::Sign(1.0f,track.invPt);
+	   double alpha = track.phi0-charge*TMath::Pi()/2;
+	   double c0x = R*TMath::Cos(alpha);
+	   double c0y = R*TMath::Sin(alpha);
+	   double phiMin = TMath::Pi()/2;
+	   double phiMax = TMath::Pi()+alpha;
+	   if (charge<0) {
+		   phiMin = alpha - TMath::Pi();
+		   phiMax = TMath::Pi();
+	   }
+//	   TArc arc;
+	   arc.SetFillStyle(0);
+	   arc.SetLineWidth(0.1);
+	   arc.SetLineColor(4);
+//	   cStubsXY_all->cd(2);
+	   arc.DrawArc(c0x,c0y,R,phiMin*180/TMath::Pi(),phiMax*180/TMath::Pi(),"only");
+//	   cStubsXY_all->cd(1);
+//	   arc.DrawArc(c0x,c0y,R,phiMin*180/TMath::Pi(),phiMax*180/TMath::Pi(),"only");
+   }
+
+   cStubsXY_roads->cd();
+   grStubsXY_all->SetTitle("Fitted tracks");
+   cStubsXY_roads->Update();
+   TLegend* l3 = new TLegend(0.4,0.8,0.9,0.9);
+   sprintf(cc,"# stubs after AM = %d",(int)vRoadStubsX.size());
+   l3->AddEntry(grStubsXY_roads,cc,"p");
+//   sprintf(cc,"Tot # tracks [Pt>3GeV/c] = %d",(int)vTracksLTF.size());
+//   l3->AddEntry(&arc,cc,"l");
+   l3->Draw();
+   sprintf(cc,"/home/rossin/Dropbox/TT/DOCS/20151111_Luciano_Rossin_AM_Status/stubsXYroads_and_tracks%s_%02d",pName.Data(),iEv);
+   if (makePlots) {
+  	 cStubsXY_roads->SaveAs(TString(cc)+TString(".pdf"));
+  	 cStubsXY_roads->SaveAs(TString(cc)+TString(".png"));
+   }
+
+
+   std::cout << "Tot # Roads  = " << nRoads << std::endl;
+   std::cout << "Tot # Tracks = " << vTracksLTF.size() << std::endl;
    TH1F* hRoadInvPt      = new TH1F("hRoadInvPt","hRoadInvPt",200,-0.5,0.5);
    TH1F* hRoadPatternRef = new TH1F("hRoadPatternRef","hRoadPatternRef",1900,0,1900000);
    TH2F* h2RoadInvPt_Phi0 = new TH2F("h2RoadInvPt_Phi0","h2RoadInvPt_Phi0",200,-0.5,0.5,100,TMath::Pi()/4,TMath::Pi()/2);
    for (unsigned int iRoad=0; iRoad<vRoadInvPt.size(); ++iRoad) { // LOOPING OVER ROADS
-	   std::cout << "Road[" << iRoad << "] patternId/pt/phi = " << vRoadPatternRef.at(iRoad) << "\t" << vRoadInvPt.at(iRoad) << "\t" << vRoadPhi0.at(iRoad) <<  std::endl;
+	   std::cout << "Road [" << iRoad << "] patternId/invPt/phi = " << vRoadPatternRef.at(iRoad) << "\t" << vRoadInvPt.at(iRoad) << "\t" << vRoadPhi0.at(iRoad) <<  std::endl;
+	   for (unsigned int iTrack=0; iTrack<vTracksLTF.size(); ++iTrack) {
+		   if (vRoadPatternRef.at(iRoad) != vTracksLTF.at(iTrack).patternRef) continue;
+		   std::cout << "Track[" << iTrack << "] patternId/invPt/phi = " << vTracksLTF.at(iTrack).patternRef << "\t" << vTracksLTF.at(iTrack).invPt << "\t" << vTracksLTF.at(iTrack).phi0 <<  std::endl;
+	   }
 	   hRoadInvPt      ->Fill(vRoadInvPt     .at(iRoad));
 	   hRoadPatternRef ->Fill(vRoadPatternRef.at(iRoad));
 	   h2RoadInvPt_Phi0->Fill(vRoadInvPt     .at(iRoad),vRoadPhi0.at(iRoad));
    }
-   cStubsXY_all->cd(3);
-   hRoadPatternRef->DrawCopy();
-   TLegend* tl = new TLegend(0.4,0.6,0.95,0.95);
-   sprintf(cc,"evNumber = %d", evNumber);
-   tl->AddEntry(hRoadPatternRef,cc,"l");
-   sprintf(cc,"nStubs = %d", nStubsInRoads);
-   tl->AddEntry(hRoadPatternRef,cc,"l");
-   sprintf(cc,"nRoads = %d", (int)vRoadInvPt.size());
-   tl->AddEntry(hRoadPatternRef,cc,"l");
-   sprintf(cc,"<popularity> = %7.0lf", hRoadPatternRef->GetMean());
-   tl->AddEntry(hRoadPatternRef,cc,"l");
-   tl->Draw();
-   cStubsXY_all->cd(4);
-   h2RoadInvPt_Phi0->DrawCopy("colz0");
 
-   sprintf(cc,"/home/rossin/Dropbox/TT/DOCS/20151111_Luciano_Rossin_AM_Status/stubsXYall%s_%02d",pName.Data(),iEv);
-   cStubsXY_all->SaveAs(TString(cc)+TString(".pdf"));
-   cStubsXY_all->SaveAs(TString(cc)+TString(".png"));
+   //   cStubsXY_all->cd(3);
+//   hRoadPatternRef->DrawCopy();
+//   TLegend* tl = new TLegend(0.4,0.6,0.95,0.95);
+////   sprintf(cc,"evNumber = %d", evNumber);
+////   tl->AddEntry(hRoadPatternRef,cc,"l");
+//   sprintf(cc,"nStubs = %d", nStubsInRoads);
+//   tl->AddEntry(hRoadPatternRef,cc,"l");
+//   sprintf(cc,"nRoads = %d", (int)vRoadInvPt.size());
+//   tl->AddEntry(hRoadPatternRef,cc,"l");
+//   sprintf(cc,"nTracks = %d", (int)vTracksLTF.size());
+//   tl->AddEntry(hRoadPatternRef,cc,"l");
+//   sprintf(cc,"<popularity> = %7.0lf", hRoadPatternRef->GetMean());
+//   tl->AddEntry(hRoadPatternRef,cc,"l");
+//   tl->Draw();
+
+   TCanvas* croadsInvPtPhi= new TCanvas("croadsInvPtPhi","croadsInvPtPhi",0,0,1000,1000);
+   h2RoadInvPt_Phi0->SetTitle("Roads: #phi_{0} VS 1/Pt");
+   h2RoadInvPt_Phi0->GetXaxis()->SetTitle("1/Pt [c/GeV]");
+   h2RoadInvPt_Phi0->GetYaxis()->SetTitle("#phi_{0} [rad]");
+   h2RoadInvPt_Phi0->DrawCopy("colz0");
+   gPad->SetGrid();
+   sprintf(cc,"/home/rossin/Dropbox/TT/DOCS/20151111_Luciano_Rossin_AM_Status/roadsInvPtPhi_%s_%02d",pName.Data(),iEv);
+   if (makePlots) {
+  	 croadsInvPtPhi->SaveAs(TString(cc)+TString(".pdf"));
+  	 croadsInvPtPhi->SaveAs(TString(cc)+TString(".png"));
+   }
+
+//   sprintf(cc,"/home/rossin/Dropbox/TT/DOCS/20151111_Luciano_Rossin_AM_Status/stubsXYall%s_%02d",pName.Data(),iEv);
+//   if (makePlots) {
+//	   cStubsXY_all->SaveAs(TString(cc)+TString(".pdf"));
+//	   cStubsXY_all->SaveAs(TString(cc)+TString(".png"));
+//   }
 
 //   grStubsXY_roads->Draw("P same");
 //   TCanvas* cStubsXY_roads   = new TCanvas("cStubsXY_roads","cStubsXY_roads",0,0,1000,1000);
@@ -335,9 +466,10 @@ void stubPlotterRun(unsigned int iEv=1,bool makePlots=false) {
 	gStyle->SetOptStat(0);
 //	TString fName("/data/rossin/EOS/SinglePionTest_PU0_tt27_sf1_nz4_pt3_ml5_20150511/roads_SinglePionTest_tt27_PU0_sf1_nz4_pt3_5oo6_95c_10k.root"); TString pName("SinglePionTest_PU0");
 //	TString fName("/data/rossin/EOS/SinglePionTest_PU0_tt27_sf1_nz4_pt3_ml5_20150511/results_LTF_SinglePionTest_tt27_PU0_sf1_nz4_pt3_5oo6_95c_10k.root"); TString pName("SinglePionTest_PU0");
-	TString fName("/data/rossin/EOS/Neutrino_PU140_tt27_sf1_nz4_pt3_20151107/roads_Neutrino_PU140_tt27_sf1_nz4_pt3_5oo6_95c_14k.root"); TString pName("PU140");
+//	TString fName("/data/rossin/EOS/Neutrino_PU140_tt27_sf1_nz4_pt3_20151107/roads_Neutrino_PU140_tt27_sf1_nz4_pt3_5oo6_95c_14k.root"); TString pName("PU140");
+	TString fName("/data/rossin/EOS/Neutrino_PU140_tt27_sf1_nz4_pt3_20151107/tracks_LTF_Neutrino_PU140_tt27_sf1_nz4_pt3_5oo6_95c_14k.root"); TString pName("PU140");
 //	TString fName("/data/rossin/EOS/Neutrino_PU200_tt27_sf1_nz4_pt3_20151029/roads_Neutrino_PU200_tt27_sf1_nz4_pt3_5oo6_95c.root"); TString pName("PU200");
 	stubPlotter s(fName);
-	s.Loop(iEv,pName);
+	s.Loop(iEv,pName,makePlots);
 	return;
 }
