@@ -4,6 +4,7 @@ from collections import defaultdict
 from rootdrawing import *
 from parser import *
 import operator
+from _bisect import bisect_left
 
 col  = TColor.GetColor("#1f78b4")  # mu0
 fcol = TColor.GetColor("#a6cee3")  # mu0
@@ -226,7 +227,7 @@ def drawer_project(tree, treepattern, treepatternA, histos, options):
         trkparts = {}
 
         for ipart in xrange(nparts_all):
-            if options.pu == 0:  # single-track events
+            if options.pu <=1:  # single-track events
                 if ipart > 0:
                     break
  
@@ -341,7 +342,7 @@ def drawer_project(tree, treepattern, treepatternA, histos, options):
 #             trigger_SSclean = False
 
             synTpId  = evt.AMTTTracks_synTpId[itrack]
-            if synTpId >= 0:
+            if synTpId == 0:
                 trigger = True
 #             if synTpId >=-1:
 #                 trigger_SSclean = True
@@ -366,7 +367,7 @@ def drawer_project(tree, treepattern, treepatternA, histos, options):
  
             if trigger:
                 trkparts_trigger[synTpId] = True
-                trkparts_trigger_vars[synTpId] = (track_pt, track_eta)
+                trkparts_trigger_vars[synTpId] = (track_pt, track_eta, chi2, ndof, chi2Red)
  
                 if options.verbose and (synTpId in trkparts):  print ievt, "track", itrack, track_pt, track_eta, repr_cppvector(evt.AMTTTracks_stubRefs[itrack])
 #                 print ievt, "track", itrack, track_pt, track_eta, repr_cppvector(evt.AMTTTracks_stubRefs[itrack]),synTpId,patternRef
@@ -374,7 +375,7 @@ def drawer_project(tree, treepattern, treepatternA, histos, options):
             ntracks += 1
 #             if trigger_SSclean: ntracks_SSclean += 1
             
-            if synTpId == -2:
+            if (synTpId == -2 or synTpId):
                 histos["pt_fake" ].Fill(track_pt)
                 nfakes += 1
 #                 if trigger_SSclean: nfakes_SSclean += 1
@@ -383,7 +384,7 @@ def drawer_project(tree, treepattern, treepatternA, histos, options):
                 histos["pt_duplicate" ].Fill(track_pt)
                 nduplicates += 1
 
-            else:
+            elif synTpId == 0:
                 histos["pt_good" ].Fill(track_pt)
                 ngoods += 1
 
@@ -421,55 +422,26 @@ def drawer_project(tree, treepattern, treepatternA, histos, options):
                         break
 
             if trigger_SSclean:
-                if synTpId == -2:
+                if (synTpId == -2 or synTpId>0):
                  nfakes_SSclean += 1
 
-            if (trigger_SSclean and synTpId>=-1):
+            if (trigger_SSclean and (synTpId==-1 or synTpId==0)):
                 if (ngoods_SSclean==0):
                     for itrk , synTp in goodOrDuplicate.iteritems():
 #                         print itrk, synTp
                         if (synTp>=0):
                             ngoods_SSclean = 1
                             trkparts_trigger_SSclean[synTp] = True
-                            trkparts_trigger_vars_SSclean[synTp] = (track_pt, track_eta)
+                            trkparts_trigger_vars_SSclean[synTp] = (track_pt, track_eta, chi2, ndof, chi2Red)
 #                             print bcolors.OKBLUE,ievt, "track", itrack, track_pt, track_eta, repr_cppvector(evt.AMTTTracks_stubRefs[itrack]),synTpId,patternRef,bcolors.ENDC
                 else: 
                     nduplicates_SSclean +=1
 
-#             patternRef = evt.AMTTTracks_patternRef[itrack]
-#             isSScleanroad = 0
-#             if (patternRef < options.npatterns and chi2Red < options.maxChi2):
-#             
-#                 for iroadclean, roadclean in enumerate(roadListClean):
-#                     if (patternRef==roadclean[0]):
-#                         isSScleanroad = 1
-#                         break
-#                 
-#                 ntracks += 1
-#                 if isSScleanroad: ntracks_SSclean += 1
-#                 
-#                 if synTpId == -2:
-#                     histos["pt_fake" ].Fill(track_pt)
-# #                     histos["eta_fake"].Fill(track_eta)
-#                     nfakes += 1
-#                     if isSScleanroad: nfakes_SSclean += 1
-#                 
-#                 elif synTpId == -1:
-#                     histos["pt_duplicate" ].Fill(track_pt)
-# #                     histos["eta_duplicate"].Fill(track_eta)
-#                     nduplicates += 1
-#                     if isSScleanroad: nduplicates_SSclean += 1
-#                 
-#                 else:
-#                     histos["pt_good" ].Fill(track_pt)
-# #                 histos["eta_good"].Fill(track_eta)
-#                     ngoods += 1
-#                     if isSScleanroad: ngoods_SSclean += 1
-#                 
-#             if (trigger and isSScleanroad):
-#                 trkparts_trigger_SSclean[synTpId] = True
-#                 trkparts_trigger_vars_SSclean[synTpId] = (track_pt, track_eta)
+        if (len(trkparts_trigger)!=len(trkparts_trigger_vars_SSclean)):
+            print trkparts_trigger_vars
+            print bcolors.OKGREEN,trkparts_trigger_vars_SSclean,bcolors.ENDC
             
+                
 
         if options.verbose:  print ievt, nroads, ncombs, ntracks, ngoods, nduplicates, nfakes
 
@@ -677,6 +649,30 @@ def drawer_draw(histos, options):
         CMS_label()
         save(options.outdir, "%s_%s" % (hname, options.outstring), dot_root=False, dot_pdf=False, additional=h.additional)
 
+    def find_le(a, x):
+        'Find rightmost value less than or equal to x'
+        i = bisect_right(a, x)
+        if i:
+            return a[i-1]
+        raise ValueError
+
+
+#     def getQuantilesWithOverflow(h,q,in_q):
+#         assert(len(q)==len(in_q))
+#         assert(h.ClassName().find("TH1")>=0)
+#         nbins = h.GetXaxis().GetNbins()
+#         hCDF = [0. for i in range(nbins+3)]
+#         for i in range(len(hCDF)-1):
+#             hCDF[i+1]=hCDF[i]+h.GetBinContent(nbins+1-i)
+#         
+#         hsum=hCDF[nbins+2]
+#         hCDF[:] = [x / hsum for x in hCDF]
+#         print hsum, hCDF[0],hCDF[1],hCDF[2],hCDF[3],hCDF[-4],hCDF[-3],hCDF[-2],hCDF[-1]
+#         for quantile, in_quantile in zip(q,in_q):
+#             lowxq = bisect_left(hCDF, 1-in_quantile)
+#             print 1-in_quantile, lowxq
+# #             quantile=(in_quantile-hCDF[lowxq])/(hCDF[lowxq+1]-hCDF[lowxq])+lowxq
+#         return
     
     def displayQuantiles(h, in_quantiles=[0.95,0.99,0.999], scalebox=(1.,1.)):
         # Display one-sided confidence intervals, a.k.a quantiles
@@ -684,7 +680,8 @@ def drawer_draw(histos, options):
         in_quantiles = array('d', in_quantiles)
         quantiles = array('d', [0. for i in xrange(n)])
         h.GetQuantiles(n, quantiles, in_quantiles)
-
+#         print in_quantiles, quantiles
+#         getQuantilesWithOverflow(h,quantiles,in_quantiles)
         gPad.Modified(); gPad.Update()
         ps = h.FindObject("stats")
         ps.SetName("mystats")
@@ -708,7 +705,7 @@ def drawer_draw(histos, options):
         if options.logy:
             h.SetMaximum(h.GetMaximum() * 1.4); h.SetMinimum(0.5)
             if hname.find("_integral")>0:
-                h.SetMinimum(0.5/h.GetEntries())
+                h.SetMinimum(0.2/h.GetEntries())
         else:
             h.SetMaximum(h.GetMaximum() * 1.4); h.SetMinimum(0.)
 
@@ -863,7 +860,7 @@ def main():
     parser.add_argument("inpatternfile", help="input pattern bank file (a .root file)")
     parser.add_argument("ss", help="short name of superstrip definition (e.g. ss256)")
     parser.add_argument("npatterns", type=int, help="number of patterns to reach the desired coverage")
-    parser.add_argument("--distance", type=int, default=4, help="min # of layers with same SS needed merging (default: %(default)s)")
+    parser.add_argument("--distance", type=int, default=4, help="min # of layers with same SS needed for merging (default: %(default)s)")
     parser.add_argument("--coverage", type=float, default=0.95, help="desired coverage (default: %(default)s)")
     parser.add_argument("--minPt", type=float, default=3, help="min pT for gen particle (default: %(default)s)")
     parser.add_argument("--maxChi2", type=float, default=5, help="max reduced chi-squared (default: %(default)s)")
