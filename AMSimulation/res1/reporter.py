@@ -16,11 +16,11 @@ class Options:
 
 options = Options()
 
-options.nevents = 1000           # analyze first nevents
-options.threshold_nroads = 80   # analyze event if nroads > threshold (when event_list is empty)
+options.nevents = 100           # analyze first nevents
+options.threshold_nroads = 1   # analyze event if nroads > threshold (when event_list is empty)
 options.threshold_ntracks = 1   # analyze event if ntracks > threshold (when event_list is empty)
 
-options.event_list = [939]
+options.event_list = [1,2,3,4,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,26,27]
 #options.event_list = [7, 43, 59, 152, 202, 221, 235, 375, 439,]
 
 options.use_color = True
@@ -224,7 +224,7 @@ def main():
             raise Exception("No particle!")
 
         for (ipart, pt, invPt, eta, phi, vz) in particles:
-            print("  part {0:5} pt: {1:6.3f}, invPt: {2: .3f}, eta: {3: .3f}, phi: {4: .3f}, vz: {5: .3f}".format(
+            print("  part {0:5} pt: {1:7.3f}, invPt: {2: .3f}, eta: {3: .3f}, phi: {4: .3f}, vz: {5: .3f}".format(
                 ipart, pt, invPt, eta, phi, vz))
 
         # AM roads
@@ -278,13 +278,14 @@ def main():
             closest = get_closest_particle(invPt, phi, particles)
             closest_ipart, closest_invPt, closest_phi = closest[0], closest[2], closest[4]
 
-            print("  track {0:3} pt: {1:6.3f}, invPt: {2: .3f}, eta: {3: .3f}, phi: {4: .3f}, vz: {5: .3f}, synTpId: {6:5}, myTpId: {7:5} d(invPt): {8}, d(phi): {9}, patternRef: {10:8}, roadRef: {11:3} {12}".format(
-                itrack, pt, invPt, eta, phi, vz, synTpId, closest_ipart, print_delta(invPt, closest_invPt), print_delta(phi, closest_phi), patternRef, roadRef, print_matching_for_tracks(stubRefs)))
+            print("  track {0:3} pt: {1:6.3f}, invPt: {2: .3f}, eta: {3: .3f}, phi: {4: .3f}, vz: {5: 7.3f}, synTpId: {6:8}, myTpId: {7:5} d(invPt): {8}, d(phi): {9}, Chi2/ndof: {10:8.3f}, patternRef: {11:8}, roadRef: {12:3} {13}".format(
+                itrack, pt, invPt, eta, phi, vz, synTpId, closest_ipart, print_delta(invPt, closest_invPt), print_delta(phi, closest_phi), chi2Red, patternRef, roadRef, print_matching_for_tracks(stubRefs)))
 
             # Collect reconstructed "particles"
             particle = (synTpId, pt, invPt, eta, phi, vz)
 
-            if synTpId != -2 and synTpId != -1 and synTpId not in synthetics:
+#             if synTpId != -2 and synTpId != -1 and synTpId not in synthetics:
+            if synTpId >= 0 and synTpId not in synthetics:
                 synthetics.append(synTpId)
                 synParticles.append(particle)
 
@@ -296,13 +297,14 @@ def main():
         for (ipart, pt, invPt, eta, phi, vz) in synParticles:
 
             matchedParts = filter(lambda x: x[0] == ipart, particles)
+            if (len(matchedParts) != 1): print ipart, pt, invPt, eta, phi, vz, matchedParts
             assert(len(matchedParts) == 1)  # make sure the tracking particle was selected
             (ipart, tp_pt, tp_invPt, tp_eta, tp_phi, tp_vz) = matchedParts[0]
 
             print("  part {0:5} pt: {1:6.3f}, invPt: {2: .3f}, eta: {3: .3f}, phi: {4: .3f}, vz: {5: .3f}, d(invPt): {6}, d(eta): {7}, d(phi): {8}, d(vz): {9}".format(
                 ipart, pt, invPt, eta, phi, vz, print_delta(invPt, tp_invPt), print_delta(eta, tp_eta), print_delta(phi, tp_phi), print_delta(vz,tp_vz)))
 
-        print("-" * 16)
+        print("#" * 80)
 
     reset_branch_status(ttree)
     return 0
