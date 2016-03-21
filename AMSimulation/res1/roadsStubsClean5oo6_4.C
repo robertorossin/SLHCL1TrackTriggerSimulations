@@ -146,8 +146,8 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 
 
 //// ****** 4T **********
-//	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_20150815_fullNtuple/patternBank_tt27_sf1_nz4_pt3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1862700;
-//	TString sTree="TTbarTTbar_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt3_5oo6_TTbarTTbar_tt27_PU140_20150408_SLHC25p3_100M.root"; isSLHC25=1; TString pName("4Tops_PU140_sf1_nz4_pt3_5or6oo6"); TString pTitle("tttt+PU140 SF=1 Nz=4 Pt>3 GeV/c");// 6/6
+	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_20150815_fullNtuple/patternBank_tt27_sf1_nz4_pt3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1862700;
+	TString sTree="TTbarTTbar_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt3_5oo6_TTbarTTbar_tt27_PU140_20150408_SLHC25p3_100M.root"; isSLHC25=1; TString pName("4Tops_PU140_sf1_nz4_pt3_5or6oo6"); TString pTitle("tttt+PU140 SF=1 Nz=4 Pt>3 GeV/c");// 6/6
 //	TString sTree="TTbarTTbar_PU200_tt27_sf1_nz4_pt3_20151029/roads_TTbarTTbar_PU200_tt27_sf1_nz4_pt3_5oo6_95c.root"; isSLHC25=1; TString pName("4Tops_PU200_sf1_nz4_pt3_5oo6"); TString pTitle("tttt+PU200 SF=1 Nz=4 Pt>3 GeV/c");// 5/6
 
 //// Overlap Removed
@@ -157,13 +157,28 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 
 
 //// ****** Pure PU *********
-	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_20150815_fullNtuple/patternBank_tt27_sf1_nz4_pt3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1862700;
-//	TString sTree="Neutrino_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt2_5or6oo6_Neutrino_PU140_20150408_SLHC25p3_newBank_100M.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt2_5oo6"); TString pTitle("PU140 SF=1 Nz=4 Pt>2 GeV/c");// 5/6
-//	TString sTree="Neutrino_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt3_5or6oo6_Neutrino_PU140_20150408_SLHC25p3_newBank_100M.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt3_5oo6"); TString pTitle("PU140 SF=1 Nz=4 Pt>3 GeV/c");// 5/6
-	TString sTree="Neutrino_PU140_tt27_sf1_nz4_pt3_20151107/roads_Neutrino_PU140_tt27_sf1_nz4_pt3_5oo6_95c_14k.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt3_5oo6_14k"); TString pTitle("PU140 SF=1 Nz=4 Pt>3 GeV/c 5oo6");// 5/6
+//	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_20150815_fullNtuple/patternBank_tt27_sf1_nz4_pt3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1862700;
+//	TString sTree="Neutrino_PU140_tt27_sf1_nz4_pt3_20151107/roads_Neutrino_PU140_tt27_sf1_nz4_pt3_5oo6_95c_14k.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt3_5oo6_14k"); TString pTitle("PU140 SF=1 Nz=4 Pt>3 GeV/c 5oo6");// 5/6
 //	TString sTree="Neutrino_PU140_tt27_sf1_nz4_pt3_20151107/roads_Neutrino_PU140_tt27_sf1_nz4_pt3_6oo6_95c_14k.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt3_6oo6_14k"); TString pTitle("PU140 SF=1 Nz=4 Pt>3 GeV/c 6oo6");// 5/6
 //	TString sTree="Neutrino_PU200_tt27_sf1_nz4_pt3_20151029/roads_Neutrino_PU200_tt27_sf1_nz4_pt3_5oo6_95c.root"; isSLHC25=1; TString pName("Neutrino_PU200_sf1_nz4_pt3_5oo6_4k"); TString pTitle("PU200 SF=1 Nz=4 Pt>3 GeV/c");// 5/6
 //	TString sTree="Neutrino_PU250_tt27_sf1_nz4_pt3_20151103/roads_Neutrino_PU250_tt27_sf1_nz4_pt3_5oo6_95c.root"; isSLHC25=1; TString pName("Neutrino_PU250_sf1_nz4_pt3_5oo6_4k"); TString pTitle("PU250 SF=1 Nz=4 Pt>3 GeV/c");// 5/6
+//	TString sTree="Neutrino_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt3_5or6oo6_Neutrino_PU140_20150408_SLHC25p3_newBank_100M.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt3_5oo6"); TString pTitle("PU140 SF=1 Nz=4 Pt>3 GeV/c");// 5/6
+//	TString sTree="Neutrino_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt2_5or6oo6_Neutrino_PU140_20150408_SLHC25p3_newBank_100M.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt2_5oo6"); TString pTitle("PU140 SF=1 Nz=4 Pt>2 GeV/c");// 5/6
+
+//	TFile *f = TFile::Open("/data/rossin/EOS/Neutrino_tt27_sf1_nz6_pt3_20151209/patternBank_tt27_sf1_nz666666_pt3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 4057100;
+//	TString sTree="Neutrino_tt27_sf1_nz6_pt3_20151209/roads_Neutrino_PU140_tt27_sf1_nz666666_pt3_5oo6_95c_20151204.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz6_pt3_5oo6"); TString pTitle("PU140 SF=1 Nz=6 Pt>3 GeV/c");// 5/6
+//	TString sTree="Neutrino_tt27_sf1_nz6_pt3_20151209/roads_Neutrino_PU200_tt27_sf1_nz666666_pt3_5oo6_95c_20151204.root"; isSLHC25=1; TString pName("Neutrino_PU200_sf1_nz6_pt3_5oo6"); TString pTitle("PU140 SF=1 Nz=6 Pt>3 GeV/c");// 5/6
+//	TString sTree="Neutrino_tt27_sf1_nz6_pt3_20151209/roads_Neutrino_PU250_tt27_sf1_nz666666_pt3_5oo6_95c_20151204.root"; isSLHC25=1; TString pName("Neutrino_PU250_sf1_nz6_pt3_5oo6"); TString pTitle("PU250 SF=1 Nz=6 Pt>3 GeV/c");// 5/6
+
+//	TFile *f = TFile::Open("/data/rossin/EOS/Neutrino_PU140_tt27_sf1_nz8_pt3_20151209/patternBank_tt27_sf1_nz888888_pt3_200M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 7097900;
+//	TString sTree="Neutrino_PU140_tt27_sf1_nz8_pt3_20151209/roads_Neutrino_PU140_tt27_sf1_nz888888_pt3_5oo6_95c_20151204.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz8_pt3_5oo6"); TString pTitle("PU140 SF=1 Nz=8 Pt>3 GeV/c");// 5/6
+//	TString sTree="Neutrino_PU200_tt27_sf1_nz8_pt3_20151209/roads_Neutrino_PU200_tt27_sf1_nz888888_pt3_5oo6_95c_20151204.root"; isSLHC25=1; TString pName("Neutrino_PU200_sf1_nz8_pt3_5oo6"); TString pTitle("PU200 SF=1 Nz=8 Pt>3 GeV/c");// 5/6
+//	TString sTree="Neutrino_PU250_tt27_sf1_nz8_pt3_20151209/roads_Neutrino_PU250_tt27_sf1_nz888888_pt3_5oo6_95c_20151204.root"; isSLHC25=1; TString pName("Neutrino_PU250_sf1_nz8_pt3_5oo6"); TString pTitle("PU250 SF=1 Nz=8 Pt>3 GeV/c");// 5/6
+
+//	TFile *f = TFile::Open("/data/rossin/EOS/Neutrino_PU140_tt27_sf1_nz1_pt3_ml5_20150511/patternBank_tt27_sf1_nz111111_pt3_10M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 57800;
+//	TString sTree="Neutrino_PU140_tt27_sf1_nz1_pt3_ml5_20150511/roads_Neutrino_PU140_tt27_sf1_nz111111_pt3_5oo6_95c_14k.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz1_pt3_5oo6"); TString pTitle("PU140 SF=1 Nz=1 Pt>3 GeV/c");// 5/6
+//	TString sTree="Neutrino_PU200_tt27_sf1_nz1_pt3_20151209/roads_Neutrino_PU200_tt27_sf1_nz111111_pt3_5oo6_95c.root"; isSLHC25=1; TString pName("Neutrino_PU200_sf1_nz1_pt3_5oo6"); TString pTitle("PU200 SF=1 Nz=1 Pt>3 GeV/c");// 5/6
+//	TString sTree="Neutrino_PU250_tt27_sf1_nz1_pt3_20151209/roads_Neutrino_PU250_tt27_sf1_nz111111_pt3_5oo6_95c.root"; isSLHC25=1; TString pName("Neutrino_PU250_sf1_nz1_pt3_5oo6"); TString pTitle("PU250 SF=1 Nz=1 Pt>3 GeV/c");// 5/6
 
 //// Overlap Removed
 //	TFile *f = TFile::Open("/data/rossin/EOS/Neutrino_PU140_tt27_sf1_nz4_pt3_20151107/patternBank_tt27_sf1_nz4_pt3_100M_OverlapClean.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1826900;
@@ -172,6 +187,20 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 //	TString sTree="Neutrino_PU200_tt27_sf1_nz4_pt3_20151029/roads_Neutrino_PU200_tt27_sf1_nz4_pt3_5oo6_95c_OR0p8_0p8_0p6_0p8_0p6_0p5.root"; isSLHC25=1; TString pName("Neutrino_PU200_sf1_nz4_pt3_5oo6_4k_OverlapRemoved"); TString pTitle("PU200 SF=1 Nz=4 Pt>3 GeV/c 5oo6 Overlap Masked");// 5/6
 //	TString sTree="Neutrino_PU250_tt27_sf1_nz4_pt3_20151103/roads_Neutrino_PU250_tt27_sf1_nz4_pt3_5oo6_95c_OR0p8_0p8_0p6_0p8_0p6_0p5.root"; isSLHC25=1; TString pName("Neutrino_PU250_sf1_nz4_pt3_5oo6_4k_OverlapRemoved"); TString pTitle("PU250 SF=1 Nz=4 Pt>3 GeV/c 5oo6 Overlap Masked");// 5/6
 
+//	TFile *f = TFile::Open("/data/rossin/EOS/Neutrino_tt27_sf1_nz6_pt3_20151209/patternBank_tt27_sf1_nz666666_pt3_200M_removeOverlap_0p8_0p8_0p6_0p8_0p6_0p5.root","READ"); isSLHC25=1; unsigned npatt95coverage = 3935800;
+//	TString sTree="Neutrino_tt27_sf1_nz6_pt3_20151209/roads_Neutrino_PU140_tt27_sf1_nz666666_pt3_5oo6_95c_20151204_removeOverlap_0p8_0p8_0p6_0p8_0p6_0p5.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz6_pt3_5oo6_OverlapRemoved"); TString pTitle("PU140 SF=1 Nz=6 Pt>3 GeV/c Overlap Masked");// 5/6
+//	TString sTree="Neutrino_tt27_sf1_nz6_pt3_20151209/roads_Neutrino_PU200_tt27_sf1_nz666666_pt3_5oo6_95c_20151204_removeOverlap_0p8_0p8_0p6_0p8_0p6_0p5.root"; isSLHC25=1; TString pName("Neutrino_PU200_sf1_nz6_pt3_5oo6_OverlapRemoved"); TString pTitle("PU200 SF=1 Nz=6 Pt>3 GeV/c Overlap Masked");// 5/6
+//	TString sTree="Neutrino_tt27_sf1_nz6_pt3_20151209/roads_Neutrino_PU250_tt27_sf1_nz666666_pt3_5oo6_95c_20151204_removeOverlap_0p8_0p8_0p6_0p8_0p6_0p5.root"; isSLHC25=1; TString pName("Neutrino_PU250_sf1_nz6_pt3_5oo6_OverlapRemoved"); TString pTitle("PU250 SF=1 Nz=6 Pt>3 GeV/c Overlap Masked");// 5/6
+
+//	TFile *f = TFile::Open("/data/rossin/EOS/Neutrino_PU140_tt27_sf1_nz8_pt3_20151209/patternBank_tt27_sf1_nz888888_pt3_200M_removeOverlap_0p8_0p8_0p6_0p8_0p6_0p5.root","READ"); isSLHC25=1; unsigned npatt95coverage = 6871900;
+//	TString sTree="Neutrino_PU140_tt27_sf1_nz8_pt3_20151209/roads_Neutrino_PU140_tt27_sf1_nz888888_pt3_5oo6_95c_20151204_removeOverlap_0p8_0p8_0p6_0p8_0p6_0p5.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz8_pt3_5oo6_OverlapRemoved"); TString pTitle("PU140 SF=1 Nz=8 Pt>3 GeV/c Overlap Masked");// 5/6
+//	TString sTree="Neutrino_PU200_tt27_sf1_nz8_pt3_20151209/roads_Neutrino_PU200_tt27_sf1_nz888888_pt3_5oo6_95c_20151204_removeOverlap_0p8_0p8_0p6_0p8_0p6_0p5.root"; isSLHC25=1; TString pName("Neutrino_PU200_sf1_nz8_pt3_5oo6_OverlapRemoved"); TString pTitle("PU200 SF=1 Nz=8 Pt>3 GeV/c Overlap Masked");// 5/6
+//	TString sTree="Neutrino_PU250_tt27_sf1_nz8_pt3_20151209/roads_Neutrino_PU250_tt27_sf1_nz888888_pt3_5oo6_95c_20151204_removeOverlap_0p8_0p8_0p6_0p8_0p6_0p5.root"; isSLHC25=1; TString pName("Neutrino_PU250_sf1_nz8_pt3_5oo6_OverlapRemoved"); TString pTitle("PU250 SF=1 Nz=8 Pt>3 GeV/c Overlap Masked");// 5/6
+
+//	TFile *f = TFile::Open("/data/rossin/EOS/Neutrino_PU140_tt27_sf1_nz1_pt3_ml5_20150511/patternBank_tt27_sf1_nz111111_pt3_10M_removeOverlap_0p8_0p8_0p6_0p8_0p6_0p5.root","READ"); isSLHC25=1; unsigned npatt95coverage = 56600;
+//	TString sTree="Neutrino_PU140_tt27_sf1_nz1_pt3_ml5_20150511/roads_Neutrino_PU140_tt27_sf1_nz111111_pt3_5oo6_95c_14k_removeOverlap_0p8_0p8_0p6_0p8_0p6_0p5.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz1_pt3_5oo6_OverlapRemoved"); TString pTitle("PU140 SF=1 Nz=1 Pt>3 GeV/c Overlap Masked");// 5/6
+//	TString sTree="Neutrino_PU200_tt27_sf1_nz1_pt3_20151209/roads_Neutrino_PU200_tt27_sf1_nz111111_pt3_5oo6_95c_removeOverlap_0p8_0p8_0p6_0p8_0p6_0p5.root"; isSLHC25=1; TString pName("Neutrino_PU200_sf1_nz1_pt3_5oo6_OverlapRemoved"); TString pTitle("PU200 SF=1 Nz=1 Pt>3 GeV/c Overlap Masked");// 5/6
+//	TString sTree="Neutrino_PU250_tt27_sf1_nz1_pt3_20151209/roads_Neutrino_PU250_tt27_sf1_nz111111_pt3_5oo6_95c_removeOverlap_0p8_0p8_0p6_0p8_0p6_0p5.root"; isSLHC25=1; TString pName("Neutrino_PU250_sf1_nz1_pt3_5oo6_OverlapRemoved"); TString pTitle("PU250 SF=1 Nz=1 Pt>3 GeV/c Overlap Masked");// 5/6
 
 	if (!f) { return; }
 	//	TTree *t=0; f->GetObject("tSSID",t);
@@ -423,9 +452,15 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 				}
 			}
 			if (pName.Contains("SingleMu_PU") || pName.Contains("Neutrino")) {
-				nRoadHisto=300;
-				nCombRoadHisto = 100;
-				nCombHisto=800;
+//				nRoadHisto=300;
+//				nCombRoadHisto = 100;
+//				nCombHisto=800;
+//				nRoadHisto=1200;
+//				nCombRoadHisto = 400;
+//				nCombHisto=2000;
+				nRoadHisto=1000;
+				nCombRoadHisto = 4000;
+				nCombHisto=6000;
 //				if (!iMissLay) {
 //					nRoadHisto/=4;
 //					nCombRoadHisto/=2;
@@ -514,8 +549,8 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 		nb = r.fChain->GetEntry(jentry);   nbytes += nb;
 		unsigned int nPart  = r.genParts_pt     ->size();
 		//		unsigned int nTotStubs = r.TTStubs_r       ->size();
-		unsigned int nRoads = r.AMTTRoads_nstubs->size();
-		if (!nRoads) continue;
+		unsigned int nRoads = r.AMTTRoads_patternRef->size();
+//		if (!nRoads) continue;
 		++countEv;
 
 		bool eventFired6 = false;
@@ -548,7 +583,8 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 			road.stubRefs      = r.AMTTRoads_stubRefs     ->at(iRoads);
 			road.superstripIds = r.AMTTRoads_superstripIds->at(iRoads);
 			road.nstubs        = r.AMTTRoads_nstubs       ->at(iRoads);
-			//			road.patternRef    = r.AMTTRoads_patternRef   ->at(iRoads);
+			road.patternRef    = r.AMTTRoads_patternRef   ->at(iRoads);
+			if (road.patternRef > npatt95coverage) continue;
 			slhcl1tt::TTRoad roadSingleStub(road);
 			//			slhcl1tt::TTRoad roadDsClean   (road);
 
@@ -895,7 +931,7 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 	double  percentiles   [nQuant] = {0.90, 0.95, 0.99, 0.999};
 	double xpercentiles[6][nQuant];
 	short whichQuant = 1;
-	if (pName.Contains("Neutrino")) whichQuant = 3;
+	if (pName.Contains("Neutrino")) whichQuant = 1;
 	TCanvas* cRoadPerEvent[2]; // 6oo6, 5oo6 per layer
 	TCanvas* cCombPerRoad [2];
 	TCanvas* cCombPerEvent[2];
@@ -955,7 +991,7 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 		else continue;
 		TLegend * tlr=new TLegend(0.3,0.7,0.9,0.9);
 		TLegend * tlc=new TLegend(0.3,0.7,0.9,0.9);
-		TLegend * tle=new TLegend(0.3,0.7,0.9,0.9);
+		TLegend * tle=new TLegend(0.15,0.7,0.9,0.9);
 //		myfile << iLay  << "\t"  << clayerSelect << "\t";
 		cout << iLay  << "\t" << clayerSelect << "\t";
 		for (unsigned iClean=0; iClean<2; ++iClean) {
@@ -971,7 +1007,6 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 //				tlr->AddEntry(h1RoadPerEvent[iLay][iClean],cc3);
 				tlr->Draw("APL");
 ////				myfile << h1RoadPerEvent[iLay][iClean]->GetMean() << "\t" << xpercentiles[0][2] << "\t";
-//				cout << h1RoadPerEvent[iLay][iClean]->GetMean() << "\t" << xpercentiles[0][whichQuant] << "\t";
 			}
 			else {
 				h1RoadPerEvent[iLay][iClean]     ->DrawCopy();
@@ -981,6 +1016,13 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 				sprintf(cc3,"# roads. #mu=%3.1lf, #Lambda_{%3.1lf}=%3.1lf",h1RoadPerEvent[iLay][iClean]->GetMean(),percentiles[whichQuant]*100,xpercentiles[0][whichQuant]);
 				tlr->AddEntry(h1RoadPerEvent[iLay][iClean],cc3);
 			}
+			cout << endl << "iClean = " << iClean << endl;
+			cout << "# roads: Mean = " << h1RoadPerEvent[iLay][iClean]->GetMean() << "   " ;
+			for (int iQ=0; iQ<nQuant; ++iQ) {
+				cout <<  "\tPerc["<< percentiles[iQ]*100 <<"]= " << xpercentiles[0][iQ] << "   ";
+			}
+			cout << endl;
+
 			cRoadPerEventCDF[iLay]->cd();
 			cRoadPerEventCDF[iLay]->SetGridx();
 			TH1* hRECDF = makeCDF(h1RoadPerEvent[iLay][iClean]);
@@ -1005,11 +1047,11 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 			if (iClean) {
 				h1CombPerRoad[iLay][iClean]->SetLineColor(2);
 				h1CombPerRoad[iLay][iClean]->DrawCopy("same");
-				sprintf(cc3,"# combs clean. #mu=%3.1lf, #Lambda_{%3.1lf}=%3.1lf",h1CombPerRoad[iLay][iClean]->GetMean(),percentiles[whichQuant]*100,xpercentiles[0][whichQuant]);
+				sprintf(cc3,"# combs #Deltas clean. #mu=%3.1lf, #Lambda_{%3.1lf}=%3.1lf",h1CombPerRoad[iLay][iClean]->GetMean(),percentiles[whichQuant]*100,xpercentiles[0][whichQuant]);
 				tlc->AddEntry(h1CombPerRoad[iLay][iClean],cc3);
 				tlc->Draw("APL");
 //				myfile << h1CombPerRoad[iLay][iClean]->GetMean() << "\t" << xpercentiles[0][2] << "\t";
-				cout << h1CombPerRoad[iLay][iClean]->GetMean() << "\t" << xpercentiles[0][whichQuant] << "\t";
+//				cout << h1CombPerRoad[iLay][iClean]->GetMean() << "\t" << xpercentiles[0][whichQuant] << "\t";
 			}
 			else {
 				h1CombPerRoad[iLay][1]     ->DrawCopy();
@@ -1043,10 +1085,10 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 			if (iClean) {
 				h1CombPerEvent[iLay][iClean]->SetLineColor(2);
 				h1CombPerEvent[iLay][iClean]->DrawCopy("same");
-				sprintf(cc3,"# combs clean. #mu=%3.1lf, #Lambda_{%3.1lf}=%3.1lf",h1CombPerEvent[iLay][iClean]->GetMean(),percentiles[whichQuant]*100,xpercentiles[0][whichQuant]);
+				sprintf(cc3,"# combs #Deltas clean. #mu=%3.1lf, #Lambda_{%3.1lf}=%3.1lf",h1CombPerEvent[iLay][iClean]->GetMean(),percentiles[whichQuant]*100,xpercentiles[0][whichQuant]);
 				tle->AddEntry(h1CombPerEvent[iLay][iClean],cc3);
 //				myfile << h1CombPerEvent[iLay][iClean]->GetMean() << "\t" << xpercentiles[0][2] << "\n";
-				cout << h1CombPerEvent[iLay][iClean]->GetMean() << "\t" << xpercentiles[0][whichQuant] << "\n";
+//				cout << h1CombPerEvent[iLay][iClean]->GetMean() << "\t" << xpercentiles[0][whichQuant] << "\n";
 			}
 			else {
 				h1CombPerEvent[iLay][1]     ->DrawCopy();
@@ -1057,6 +1099,12 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 				tle->AddEntry(h1CombPerEvent[iLay][iClean],cc3);
 				tle->Draw("APL");
 			}
+//			cout << endl << "iClean = " << iClean << endl;
+			cout << "# comb/ev: Mean = " << h1CombPerEvent[iLay][iClean]->GetMean() << "   " ;
+			for (int iQ=0; iQ<nQuant; ++iQ) {
+				cout <<  "\tPerc["<< percentiles[iQ]*100 <<"]= " << xpercentiles[0][iQ] << "   ";
+			}
+			cout << endl;
 			if (savePlots>1) {
 				h1RoadPerEvent[iLay][iClean]->Write();
 				h1CombPerRoad [iLay][iClean]->Write();
