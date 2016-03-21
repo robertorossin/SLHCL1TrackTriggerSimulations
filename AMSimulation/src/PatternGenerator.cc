@@ -224,6 +224,8 @@ int PatternGenerator::writePatterns(TString out) {
     *(writer.pb_count)      = coverage_count_;
     *(writer.pb_tower)      = po_.tower;
     *(writer.pb_superstrip) = po_.superstrip;
+    *(writer.pb_superstrip_nx) = arbiter_->nx();
+    *(writer.pb_superstrip_nz) = arbiter_->nz();
     writer.fillPatternBankInfo();
 
     // _________________________________________________________________________

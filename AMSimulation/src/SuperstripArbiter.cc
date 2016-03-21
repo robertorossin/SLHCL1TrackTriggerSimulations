@@ -375,6 +375,50 @@ unsigned SuperstripArbiter::superstripFountain(unsigned moduleId, float r, float
 }
 
 // _____________________________________________________________________________
+unsigned SuperstripArbiter::nx() const {
+    unsigned nx = 0;
+    switch (sstype_) {
+        case SuperstripType::FIXEDWIDTH:
+            nx = MAX_NSTRIPS / fixedwidth_nstrips_;
+            break;
+
+        case SuperstripType::PROJECTIVE:
+            nx = projective_max_nx_;
+            break;
+
+        case SuperstripType::FOUNTAIN:
+            nx = fountain_max_nx_;
+            break;
+
+        default:
+            break;
+    }
+    return nx;
+}
+
+unsigned SuperstripArbiter::nz() const {
+    unsigned nz = 0;
+    switch (sstype_) {
+        case SuperstripType::FIXEDWIDTH:
+            nz = fixedwidth_nz_;
+            break;
+
+        case SuperstripType::PROJECTIVE:
+            nz = projective_nz_;
+            break;
+
+        case SuperstripType::FOUNTAIN:
+            nz = fountain_nz_;
+            break;
+
+        default:
+            break;
+    }
+    return nz;
+}
+
+
+// _____________________________________________________________________________
 void SuperstripArbiter::print() {
     switch (sstype_) {
     case SuperstripType::FIXEDWIDTH:

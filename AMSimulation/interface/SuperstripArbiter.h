@@ -29,6 +29,10 @@ class SuperstripArbiter {
 
     unsigned nsuperstripsPerLayer() const { return nsuperstripsPerLayer_; }
 
+    unsigned nx() const;
+
+    unsigned nz() const;
+
     bool useGlobalCoord() const { return useGlobalCoord_; }
 
     // Debug
