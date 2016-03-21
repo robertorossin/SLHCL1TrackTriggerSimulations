@@ -318,9 +318,9 @@ def drawer_draw2(histos, options):
         hnorm2 = h2.Clone(hname2 + "_norm")
         hnorm3 = h3.Clone(hname3 + "_norm")
 
-        hnorm1.Scale(1.0/hnorm1.Integral())
-        hnorm2.Scale(1.0/hnorm2.Integral())
-        hnorm3.Scale(1.0/hnorm3.Integral())
+        if (hnorm1.Integral()>0): hnorm1.Scale(1.0/hnorm1.Integral())
+        if (hnorm2.Integral()>0): hnorm2.Scale(1.0/hnorm2.Integral())
+        if (hnorm3.Integral()>0): hnorm3.Scale(1.0/hnorm3.Integral())
 
         hnorm1.SetFillStyle(0)
         hnorm2.SetFillStyle(0)
