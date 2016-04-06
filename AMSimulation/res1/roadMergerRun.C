@@ -25,6 +25,8 @@
 
 using namespace std;
 
+#define magicNumber 243
+
 class TTRoad {
 public:
 	unsigned patternRef;
@@ -94,8 +96,9 @@ class mergedRoad {
 	vector <unsigned> roadIds_;
 	vector <vector <unsigned> > SSIds_;
 	vector <unsigned> nStubs_;
+	float patternInvPt_;
 public:
-	mergedRoad(unsigned mergedPatternId, unsigned firstPatternId, unsigned firstRoadId, const vector <unsigned> &SSIds0, const vector <unsigned> &nStubs) {
+	mergedRoad(unsigned mergedPatternId, unsigned firstPatternId, unsigned firstRoadId, const vector <unsigned> &SSIds0, const vector <unsigned> &nStubs, float patternInvPt) {
 		mergedPatternId_ = mergedPatternId;
 		patternIds_.push_back(firstPatternId);
 		roadIds_   .push_back(firstRoadId);
@@ -105,8 +108,7 @@ public:
 			SSIds_.push_back(v);
 		};
 		nStubs_          = nStubs;
-
-
+		patternInvPt_    = patternInvPt;
 	}
 	void setPatternsIds(vector         <unsigned> patternIds) {patternIds_=patternIds;
 	cout << " patternIds_ "<< patternIds_.size(); for (unsigned i=0; i<patternIds_.size(); ++i) cout << " " <<  patternIds_.at(i) ; cout << endl;
@@ -114,16 +116,23 @@ public:
 	void setRoadIds    (vector         <unsigned>    roadIds) {   roadIds_=   roadIds; cout << " roadIds_    "<< roadIds_   .size() <<endl;}
 	void setSSIds      (vector <vector <unsigned> >    SSIds) {     SSIds_=     SSIds; cout << " SSIds_      "<< SSIds_     .size() <<endl;}
 	void setNstubs     (vector         <unsigned>     nStubs) {    nStubs_=    nStubs; cout << " nStubs_     "<< nStubs_    .size() <<endl;}
+	void getNstubs     (vector         <unsigned>    &nStubs) {    nStubs =   nStubs_;}
 	void add           (TTRoad road) {
-		unsigned nDifferentLayers = 0;
-		unsigned siblingDistance = 0;
+		unsigned nDifferentLayers   = 0;
+        unsigned siblingPhiDistance = 0;
+        unsigned siblingZDistance   = 0;
 		for (unsigned iLay=0; iLay<nLay; ++iLay) {
 			bool isNewSS = true;
 //			cout <<  mergedPatternId_ <<  " SSIds_.size() " << SSIds_.size() << endl;
 //			cout << "road.superstripIds.size() " << road.superstripIds.size() << endl;
 			for (unsigned iMergedSS=0; iMergedSS<SSIds_.at(iLay).size(); ++iMergedSS) {
-				if (SSIds_.at(iLay).at(iMergedSS) == road.superstripIds.at(iLay)) isNewSS = false;
-				else (siblingDistance += TMath::Abs((int)SSIds_.at(iLay).at(iMergedSS)-(int)road.superstripIds.at(iLay)));
+			    int ssID1 = (int)SSIds_.at(iLay).at(iMergedSS);
+			    int ssID2 = road.superstripIds.at(iLay);
+				if (ssID1 == ssID2) isNewSS = false;
+				else {
+				    siblingPhiDistance = TMath::Abs((int)(ssID1%magicNumber)-(int)(ssID2%magicNumber)) ; //absolute distance in phi
+                    siblingZDistance   = TMath::Abs((int)(ssID1/magicNumber)-(int)(ssID2/magicNumber)) ; //absolute distance in z
+				}
 //				cout << "SSIds_.at(" << iLay <<").at("<< iMergedSS <<") " << SSIds_.at(iLay).at(iMergedSS) << " ";
 			}
 //			cout << endl;
@@ -137,20 +146,21 @@ public:
 				++nDifferentLayers;
 			}
 		};
-//		if (nDifferentLayers>1) {
-//			cout << "******** ERROR *********" << endl;
-//			cout << "Siblings differ by more than one layer" << endl;
-//		}
-//		if (siblingDistance>1) {
-//			cout << "******** ERROR *********" << endl;
-//			cout << "Siblings distance > 1" << endl;
-//		}
+		if (nDifferentLayers>2) {
+			cout << "******** ERROR *********" << endl;
+			cout << "Siblings differ by more than two layers" << endl;
+		}
+		if (siblingPhiDistance>1 || siblingZDistance>1) {
+			cout << "******** ERROR *********" << endl;
+			cout << "Siblings distance > 1\t"  << siblingPhiDistance << " " << siblingZDistance << endl;
+		}
 	}
     unsigned getCombinations () {
     	unsigned nComb = 1;
     	for (unsigned iLay=0; iLay<nStubs_.size(); ++iLay) if (nStubs_.at(iLay)) nComb *= nStubs_.at(iLay);
     	return nComb;
     }
+    float getRoadInvPt () {return patternInvPt_;}
 	void print (bool verbose = 0) {
 		if (patternIds_.size()<2 and !verbose) return;
 		cout << "-----------------------------------------" <<endl;
@@ -175,7 +185,8 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
 
 	unsigned pu=0;
 	if (pName.Contains("PU140")) pu=140;
-	if (pName.Contains("PU200")) pu=200;
+    if (pName.Contains("PU200")) pu=200;
+    if (pName.Contains("PU250")) pu=250;
 
    TFile* fmergedPatt = 0;
    if (pName.Contains("sf1L0x2L5x2_nz4")) {
@@ -189,6 +200,9 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
    if (pName.Contains("sf1L0x2L5x2_nz8")) {
 	   if (merging==2) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m_patternBank_tt27_sf1L0x2L5x2_nz8_pt3_300M.root" ,"READ");
 	   if (merging==4) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m4_patternBank_tt27_sf1L0x2L5x2_nz8_pt3_300M.root" ,"READ");
+   }
+   if (pName.Contains("sf1L0x2L5x2__nz8_OR")) {
+       if (merging==4) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m4_patternBank_tt27_sf1L0x2L5x2_nz8_pt3_300M_removeOverlap0p8_0p8_0p6_0p8_0p6_0p5.root" ,"READ");
    }
    if (pName.Contains("sf1L0x2_nz4"    )) {
 	   if (merging==2) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m_patternBank_tt27_sf1L0x2_nz4_pt3_300M.root"  ,"READ");
@@ -209,7 +223,7 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
 	   std::cout << "ERROR. Can not open pattern file. Exiting..." << std::endl;
 	   return;
    }
-   TTree *patternBank = (TTree*) fmergedPatt->Get("patternBank");
+   TTree *patternBank       = (TTree*) fmergedPatt->Get("patternBank");
    unsigned int nTotPatterns = patternBank->GetEntries();
    TTree *  toMerged     = (TTree*) fmergedPatt->Get(  "toMerged");
    TTree *fromMerged     = (TTree*) fmergedPatt->Get("fromMerged");
@@ -231,12 +245,24 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
 //	   if (iMerged%100==0) cout << iMerged << "\t" << indFromMerged->size() << endl;
    }
 
+   TTree *patternAttributes = (TTree*) fmergedPatt->Get("patternAttributes");
+   vector <float> vpatternInvPt;
+   float patternInvPt = 0;
+   patternAttributes->SetBranchAddress("invPt_mean"  ,&patternInvPt);
+   for (unsigned iPatt=0; iPatt<patternAttributes->GetEntries(); ++iPatt) {
+       patternAttributes->GetEntry(iPatt);
+       vpatternInvPt.push_back(patternInvPt);
+       if (iPatt%500000==0) cout << "Reading patternAttributes " << iPatt << endl;
+   }
+
    std::cout << " # merged pattern indices loaded = " << vindFromMerged.size() << std::endl;
    long unsigned anPatterns[]={indToMerged->size(),vindFromMerged.size()};
+
 
    TH1F* hnRoads       [2];
    TH1F* hnCombsPerRoad[2];
    TH1F* hnCombsPerBX  [2];
+   TH1F* hnStubsPerSSPerLay [2][8];
    TString smergingN("");
    if (merging==2) smergingN=TString("_x2_");
    if (merging==4) smergingN=TString("_x4_");
@@ -247,19 +273,28 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
 	   unsigned nbins = 150;
 	   double xmax = (double) nbins;
 	   if (pu==200) {nbins*=2;xmax*=2;}
+       if (pu==250) {nbins*=2;xmax*=4;}
 	   hnRoads       [i] = new TH1F(hname,hname,nbins,0,xmax);
 	   hname=TString("nCombsPerRoad");
 	   if (i) hname+=TString("Merged"+smergingN);
 	   nbins = 30;
 	   xmax = (double) nbins;
 	   if (pu==200) {nbins*=1.5;xmax*=1.5;}
+       if (pu==250) {nbins*=2  ;xmax*=2  ;}
 	   hnCombsPerRoad[i] = new TH1F(hname,hname,nbins,0,xmax);
 	   hname=TString("nCombsPerBX");
 	   if (i) hname+=TString("Merged"+smergingN);
 	   nbins = 600;
 	   xmax = (double) nbins;
-	   if (pu==200) {nbins*=1.5;xmax*=3;}
+       if (pu==200) {nbins*=1.5;xmax*=3;}
+       if (pu==250) {nbins*=3  ;xmax*=6;}
 	   hnCombsPerBX  [i] = new TH1F(hname,hname,nbins,0,xmax);
+	   for (unsigned iLay=0; iLay<8; ++iLay) {
+		   char name[100]; sprintf(name,"_%d_",iLay);
+		   if (i==0) hname=TString("hStubsPerSS_Layer"+TString(name));
+		   else      hname=TString("hStubsPerSS_Layer"+TString(name)+smergingN);
+		   hnStubsPerSSPerLay[i][iLay] = new TH1F(hname,hname,10,0,10);
+	   }
    }
 
    if (fChain == 0) return;
@@ -298,15 +333,31 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
 
 	  std::map <unsigned, mergedRoad>              mapMergedRoads;
 	  std::map <unsigned, mergedRoad>::iterator it_mapMergedRoads;
+	  unsigned nRoadsByPt = 0;
 	  for (unsigned int iRoads=0; iRoads<nRoads; ++iRoads) { // LOOPING OVER ROADS in EVENT
 		  TTRoad road;
 		  road.patternRef     = AMTTRoads_patternRef   ->at(iRoads);
 		  road.stubRefs       = AMTTRoads_stubRefs     ->at(iRoads);
 		  road.superstripIds  = AMTTRoads_superstripIds->at(iRoads);
 		  //		  	road.nstubs         = AMTTRoads_nstubs       ->at(iRoads);
+          patternInvPt = vpatternInvPt.at(road.patternRef);
+//          if (TMath::Abs(1.0/patternInvPt)>5.0 || TMath::Abs(1.0/patternInvPt)<0.0) continue;
+          ++nRoadsByPt;
 		  vector <unsigned> nStubsPerLayer;
-		  for (unsigned iLay=0; iLay<nLay; ++iLay) nStubsPerLayer.push_back(road.stubRefs.at(iLay).size());
-		  road.nStubs = nStubsPerLayer;
+          unsigned maxNstubPerLayer=0;
+          unsigned maxLayermaxNstub=7;
+		  for (unsigned iLay=0; iLay<nLay; ++iLay) {
+		      unsigned nStubsPL = road.stubRefs.at(iLay).size();
+		      if (maxNstubPerLayer < nStubsPL) {
+		          maxNstubPerLayer = nStubsPL;
+		          maxLayermaxNstub = iLay;
+		      }
+		      hnStubsPerSSPerLay[0][iLay]->Fill(nStubsPL);
+			  nStubsPerLayer.push_back(nStubsPL);
+		  }
+          hnStubsPerSSPerLay[0][6]->Fill(maxNstubPerLayer);
+          hnStubsPerSSPerLay[0][7]->Fill(maxLayermaxNstub);
+          road.nStubs = nStubsPerLayer;
 		  if (debug) {
 			  cout <<  "  # " << iRoads << " " <<  jentry << endl;
 			  printRoad(road);
@@ -319,7 +370,7 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
 		  }
 		  unsigned mergedPatternRef = indToMerged->at(road.patternRef);
 		  //		  	unsigned nMerged = vindFromMerged.at(mergedPatternRef).size();
-		  mergedRoad mr(mergedPatternRef,road.patternRef,iRoads, road.superstripIds,nStubsPerLayer);
+		  mergedRoad mr(mergedPatternRef,road.patternRef,iRoads, road.superstripIds,nStubsPerLayer,patternInvPt);
 		  //		  	mr.setPatternsIds();
 		  //		  	for (unsigned iMerged=0; iMerged<nMerged ; ++iMerged) {
 		  //		  		unsigned patternRef       = vindFromMerged.at(mergedPatternRef).at(iMerged);
@@ -336,12 +387,29 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
 
 	  for (it_mapMergedRoads=mapMergedRoads.begin(); it_mapMergedRoads!=mapMergedRoads.end(); ++it_mapMergedRoads) {
 		  mergedRoad mr = it_mapMergedRoads->second;
+//		  if (TMath::Abs(1.0/mr.getRoadInvPt())>5) cout << "MMMHHHH" << endl;
 		  unsigned nCombRoadMerged = mr.getCombinations();
 		  hnCombsPerRoad[1]->Fill(nCombRoadMerged);
 		  nCombsPerBXMerged += nCombRoadMerged;
 		  if (debug) mr.print();
+		  vector <unsigned> nStubs;
+		  mr.getNstubs(nStubs);
+          vector <unsigned> nStubsPerLayer;
+          unsigned maxNstubPerLayer=0;
+          unsigned maxLayermaxNstub=7;
+          for (unsigned iLay=0; iLay<nLay; ++iLay) {
+              unsigned nStubsPL = nStubs.at(iLay);
+              if (maxNstubPerLayer < nStubsPL) {
+                  maxNstubPerLayer = nStubsPL;
+                  maxLayermaxNstub = iLay;
+              }
+              hnStubsPerSSPerLay[1][iLay]->Fill(nStubsPL);
+              nStubsPerLayer.push_back(nStubsPL);
+          }
+          hnStubsPerSSPerLay[1][6]->Fill(maxNstubPerLayer);
+          hnStubsPerSSPerLay[1][7]->Fill(maxLayermaxNstub);
 	  }
-	  hnRoads     [0]->Fill(nRoads);
+	  hnRoads     [0]->Fill(nRoadsByPt);
 	  hnRoads     [1]->Fill(mapMergedRoads.size());
 	  hnCombsPerBX[0]->Fill(nCombsPerBX);
 	  hnCombsPerBX[1]->Fill(nCombsPerBXMerged);
@@ -416,11 +484,31 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
    }
    tl->DrawClone();
 
+   TCanvas* cStubsPerSS = new TCanvas("cStubsPerSS","cStubsPerSS",0,0,900,900);
+   cStubsPerSS->Divide(3,3);
+   for (unsigned iLay=0; iLay<8; ++iLay) {
+       cStubsPerSS->cd(iLay+1);
+       if (iLay!=7) gPad->SetLogy();
+       gPad->SetGrid();
+       for (unsigned i=0; i<2; ++i) {
+           if (i==0) {
+               hnStubsPerSSPerLay[i][iLay]->SetLineColor(1);
+               hnStubsPerSSPerLay[i][iLay]->Draw();
+           }
+           else {
+               hnStubsPerSSPerLay[i][iLay]->SetLineColor(2);
+               hnStubsPerSSPerLay[i][iLay]->Draw("same");
+           }
+       }
+   }
+
+
    if (makePlots) {
 	   TString outDir("/home/rossin/Dropbox/TT/Work/figures_mergingPatterns/");
 	   cRoads        -> SaveAs(outDir+TString("nRoads"       )+TString("_merged")+smergingN+pName+TString(".png"));
 	   cCombsPerRoad -> SaveAs(outDir+TString("nCombsPerRoad")+TString("_merged")+smergingN+pName+TString(".png"));
-	   cCombsPerBX   -> SaveAs(outDir+TString("nCombsPerBX"  )+TString("_merged")+smergingN+pName+TString(".png"));
+       cCombsPerBX   -> SaveAs(outDir+TString("nCombsPerBX"  )+TString("_merged")+smergingN+pName+TString(".png"));
+       cStubsPerSS   -> SaveAs(outDir+TString("nStubsPerSS"  )+TString("_merged")+smergingN+pName+TString(".png"));
    }
 }
 
@@ -439,12 +527,21 @@ void roadMergerRun(unsigned iProc=0,unsigned merging=2,unsigned int iEv=10000000
 	if (iProc==3) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz4_pt3_20160308/tracks_LTF_Neutrino_PU140_tt27_sf1L0x2_nz4_pt3_5oo6_95c_chi100_300M.root"        ); pName=TString ("PU140_sf1L0x2_nz4");    }
 	if (iProc==4) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz6_pt3_20160308/tracks_LTF_Neutrino_PU140_tt27_sf1L0x2_nz6_pt3_5oo6_95c_chi100_300M.root"        ); pName=TString ("PU140_sf1L0x2_nz6");    }
 	if (iProc==5) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz8_pt3_20160308/tracks_LTF_Neutrino_PU140_tt27_sf1L0x2_nz8_pt3_5oo6_95c_chi100_300M.root"        ); pName=TString ("PU140_sf1L0x2_nz8");    }
-	if (iProc==6) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz4_pt3_20160308/tracks_LTF_Neutrino_PU200_tt27_sf1L0x2L5x2_nz4_pt3_5oo6_95c_chi100_300M.root"); pName=TString ("PU200_sf1L0x2L5x2_nz4");}
-	if (iProc==7) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz6_pt3_20160308/tracks_LTF_Neutrino_PU200_tt27_sf1L0x2L5x2_nz6_pt3_5oo6_95c_chi100_300M.root"); pName=TString ("PU200_sf1L0x2L5x2_nz6");}
-	if (iProc==8) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz8_pt3_20160308/tracks_LTF_Neutrino_PU200_tt27_sf1L0x2L5x2_nz8_pt3_5oo6_95c_chi100_300M.root"); pName=TString ("PU200_sf1L0x2L5x2_nz8");}
-	if (iProc==9) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz4_pt3_20160308/tracks_LTF_Neutrino_PU200_tt27_sf1L0x2_nz4_pt3_5oo6_95c_chi100_300M.root"        ); pName=TString ("PU200_sf1L0x2_nz4");    }
-	if (iProc==10){fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz6_pt3_20160308/tracks_LTF_Neutrino_PU200_tt27_sf1L0x2_nz6_pt3_5oo6_95c_chi100_300M.root"        ); pName=TString ("PU200_sf1L0x2_nz6");    }
-	if (iProc==11){fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz8_pt3_20160308/tracks_LTF_Neutrino_PU200_tt27_sf1L0x2_nz8_pt3_5oo6_95c_chi100_300M.root"        ); pName=TString ("PU200_sf1L0x2_nz8");    }
+    if (iProc==6) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz4_pt3_20160308/tracks_LTF_Neutrino_PU200_tt27_sf1L0x2L5x2_nz4_pt3_5oo6_95c_chi100_300M.root"); pName=TString ("PU200_sf1L0x2L5x2_nz4");}
+    if (iProc==7) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz6_pt3_20160308/tracks_LTF_Neutrino_PU200_tt27_sf1L0x2L5x2_nz6_pt3_5oo6_95c_chi100_300M.root"); pName=TString ("PU200_sf1L0x2L5x2_nz6");}
+    if (iProc==8) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz8_pt3_20160308/tracks_LTF_Neutrino_PU200_tt27_sf1L0x2L5x2_nz8_pt3_5oo6_95c_chi100_300M.root"); pName=TString ("PU200_sf1L0x2L5x2_nz8");}
+    if (iProc==9) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz4_pt3_20160308/tracks_LTF_Neutrino_PU200_tt27_sf1L0x2_nz4_pt3_5oo6_95c_chi100_300M.root"        ); pName=TString ("PU200_sf1L0x2_nz4");    }
+    if (iProc==10){fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz6_pt3_20160308/tracks_LTF_Neutrino_PU200_tt27_sf1L0x2_nz6_pt3_5oo6_95c_chi100_300M.root"        ); pName=TString ("PU200_sf1L0x2_nz6");    }
+    if (iProc==11){fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz8_pt3_20160308/tracks_LTF_Neutrino_PU200_tt27_sf1L0x2_nz8_pt3_5oo6_95c_chi100_300M.root"        ); pName=TString ("PU200_sf1L0x2_nz8");    }
+    if (iProc==12){fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz4_pt3_20160308/tracks_LTF_Neutrino_PU250_tt27_sf1L0x2L5x2_nz4_pt3_5oo6_95c_chi100_300M.root"); pName=TString ("PU250_sf1L0x2L5x2_nz4");}
+    if (iProc==13){fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz6_pt3_20160308/tracks_LTF_Neutrino_PU250_tt27_sf1L0x2L5x2_nz6_pt3_5oo6_95c_chi100_300M.root"); pName=TString ("PU250_sf1L0x2L5x2_nz6");}
+    if (iProc==14){fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz8_pt3_20160308/tracks_LTF_Neutrino_PU250_tt27_sf1L0x2L5x2_nz8_pt3_5oo6_95c_chi100_300M.root"); pName=TString ("PU250_sf1L0x2L5x2_nz8");}
+    if (iProc==15){fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz4_pt3_20160308/tracks_LTF_Neutrino_PU250_tt27_sf1L0x2_nz4_pt3_5oo6_95c_chi100_300M.root"        ); pName=TString ("PU250_sf1L0x2_nz4");    }
+    if (iProc==16){fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz6_pt3_20160308/tracks_LTF_Neutrino_PU250_tt27_sf1L0x2_nz6_pt3_5oo6_95c_chi100_300M.root"        ); pName=TString ("PU250_sf1L0x2_nz6");    }
+    if (iProc==17){fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz8_pt3_20160308/tracks_LTF_Neutrino_PU250_tt27_sf1L0x2_nz8_pt3_5oo6_95c_chi100_300M.root"        ); pName=TString ("PU250_sf1L0x2_nz8");    }
+    if (iProc==18){fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz8_pt3_20160308/tracks_LTF_Neutrino_PU140_tt27_sf1L0x2L5x2_nz8_pt3_5oo6_95c_300M_removeOverlap0p8_0p8_0p6_0p8_0p6_0p5.root"); pName=TString ("PU140_sf1L0x2L5x2__nz8_OR");}
+    if (iProc==19){fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz8_pt3_20160308/tracks_LTF_Neutrino_PU200_tt27_sf1L0x2L5x2_nz8_pt3_5oo6_95c_300M_removeOverlap0p8_0p8_0p6_0p8_0p6_0p5.root"); pName=TString ("PU200_sf1L0x2L5x2__nz8_OR");}
+    if (iProc==20){fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz8_pt3_20160308/tracks_LTF_Neutrino_PU250_tt27_sf1L0x2L5x2_nz8_pt3_5oo6_95c_300M_removeOverlap0p8_0p8_0p6_0p8_0p6_0p5.root"); pName=TString ("PU250_sf1L0x2L5x2__nz8_OR");}
 
 	roadMerger rm(fName);
 	rm.Loop(iEv,merging,pName,makePlots, debug);

@@ -98,6 +98,7 @@ void plotPatternsVSroads (unsigned pu=140, bool savePlots = 0) {
 //	vssC.push_back(ssConfiguration ("sf1_nz8"	         ,  13.26, 48.42	, 25.95	, 102.2,	6712700));
 
 	unsigned coverage = 0;
+	unsigned nConfs = 1;
 //  PU140 - 95% coverage
 	if (pu==140) {
 		coverage = 95;
@@ -113,6 +114,7 @@ void plotPatternsVSroads (unsigned pu=140, bool savePlots = 0) {
 		vssC.push_back(ssConfiguration ("sf1_nz8_L5x2"       , 12.65 , 46.15    , 26.79 ,104.2 ,    4953500)); //14k
 		vssC.push_back(ssConfiguration ("sf1_nz8_L5x2_L10x2" , 12.87 , 46.05    , 28.56 ,111.1 ,    3775200)); //14k
 		vssC.push_back(ssConfiguration ("sf1p26_nz8"         , 13.52 , 48.63    , 29.12 ,114.2 ,    3990200)); //14k
+		nConfs = 4;
 	}
 
 //  PU200 - 90% coverage
@@ -129,7 +131,24 @@ void plotPatternsVSroads (unsigned pu=140, bool savePlots = 0) {
 		vssC.push_back(ssConfiguration ("sf1_nz8_L5x2_L10x2" ,  19.22, 59.58    , 52.48 ,185.7 ,    2586500));
 		vssC.push_back(ssConfiguration ("sf1_nz8_L5x3_L10x2" ,   0.0 , 64       , 0.0   ,  215 ,    2314700));
 		vssC.push_back(ssConfiguration ("sf1opt_nz8"	     ,  17.71, 55.47    , 44.94 ,159.4 ,    4625000));
+        nConfs = 3;
 	}
+
+	if (pu==250) { // TODO    FAKE FOR NOW!!!!
+        coverage = 95;
+        vssC.push_back(ssConfiguration ("sf1_nz4     "       , 16.52 , 57.81    , 41.23 ,161.9 ,    1764800)); //14k
+        vssC.push_back(ssConfiguration ("sf1_nz4_L5x2"       , 17.06 , 58.68    , 47.47 ,183.8 ,    1309600)); //14k
+        vssC.push_back(ssConfiguration ("sf1_nz4_L5x2_L10x2" , 18.05 , 61.02    , 54.56 ,210.1 ,    1001100)); //14k
+        vssC.push_back(ssConfiguration ("sf1p26_nz4"         , 18.98 , 64.8     , 55.58 ,214.8 ,    1053200)); //14k
+        vssC.push_back(ssConfiguration ("sf1_nz6"            , 13.88 , 50.48    , 28.91 , 114  ,    3905700)); //14k
+        vssC.push_back(ssConfiguration ("sf1_nz6_L5x2"       , 13.79 , 49.56    , 31.45 , 123  ,    2851200)); //14k
+        vssC.push_back(ssConfiguration ("sf1_nz6_L5x2_L10x2" , 14.25 , 50.58    , 34.84 , 134  ,    2180400)); //14k
+        vssC.push_back(ssConfiguration ("sf1p26_nz6"         , 15.11 , 53.46    , 35.82 ,137.8 ,    2304700)); //14k
+        vssC.push_back(ssConfiguration ("sf1_nz8"            , 12.88 , 47.03    , 25.12 , 98.64,    6712700)); //14k
+        vssC.push_back(ssConfiguration ("sf1_nz8_L5x2"       , 12.65 , 46.15    , 26.79 ,104.2 ,    4953500)); //14k
+        vssC.push_back(ssConfiguration ("sf1_nz8_L5x2_L10x2" , 12.87 , 46.05    , 28.56 ,111.1 ,    3775200)); //14k
+        vssC.push_back(ssConfiguration ("sf1p26_nz8"         , 13.52 , 48.63    , 29.12 ,114.2 ,    3990200)); //14k
+    }
 
 	unsigned merging=0;
 	// grep Mean meanlog.txt | awk '{print "\"" $1"\" , \"" $2 "\" , \""$3 "\"" ", " $4 " , ""\"" $5 "\"", ", " $6 " , " $7 " , " $8, ",", $10}'
@@ -190,48 +209,15 @@ void plotPatternsVSroads (unsigned pu=140, bool savePlots = 0) {
         vmc.push_back(mergedConfiguration("nRoadsMerged_x4_" , "PU140_sf1L0x2_nz8" , "Mean=", 9.27 , "Q[0.90,0.95,0.99]=" , 24.95 , 33.38 , 52.73 , 2309055             ));
         vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x4_" , "PU140_sf1L0x2_nz8" , "Mean=", 2.22 , "Q[0.90,0.95,0.99]=" , 4.70 , 6.58 , 12.42 , 2309055        ));
         vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x4_" , "PU140_sf1L0x2_nz8" , "Mean=", 20.78 , "Q[0.90,0.95,0.99]=" , 54.46 , 82.28 , 181.02 , 2309055      ));
-//		}
-//		if (merging==4) {
-//			vmc.push_back(mergedConfiguration("nRoads" , "PU140_sf1L0x2L5x2_nz4" , "Mean=", 17.79 , "Q[0.90,0.95,0.99]=" , 45.30 , 60.31 , 96.78 , 1001026                  ));
-//			vmc.push_back(mergedConfiguration("nRoadsMerged_x4_" , "PU140_sf1L0x2L5x2_nz4" , "Mean=", 13.35 , "Q[0.90,0.95,0.99]=" , 33.65 , 44.57 , 71.38 , 477291         ));
-//			vmc.push_back(mergedConfiguration("nCombsPerRoad" , "PU140_sf1L0x2L5x2_nz4" , "Mean=", 2.84 , "Q[0.90,0.95,0.99]=" , 6.48 , 8.80 , 16.89 , 1001026              ));
-//			vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x4_" , "PU140_sf1L0x2L5x2_nz4" , "Mean=", 3.07 , "Q[0.90,0.95,0.99]=" , 6.83 , 9.75 , 18.57 , 477291     ));
-//			vmc.push_back(mergedConfiguration("nCombsPerBX" , "PU140_sf1L0x2L5x2_nz4" , "Mean=", 50.48 , "Q[0.90,0.95,0.99]=" , 132.84 , 201.31 , 379.82 , 1001026          ));
-//			vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x4_" , "PU140_sf1L0x2L5x2_nz4" , "Mean=", 42.32 , "Q[0.90,0.95,0.99]=" , 110.53 , 168.12 , 330.59 , 477291 ));
-//			vmc.push_back(mergedConfiguration("nRoads" , "PU140_sf1L0x2L5x2_nz6" , "Mean=", 14.15 , "Q[0.90,0.95,0.99]=" , 37.72 , 50.35 , 78.90 , 2180279                  ));
-//			vmc.push_back(mergedConfiguration("nRoadsMerged_x4_" , "PU140_sf1L0x2L5x2_nz6" , "Mean=", 10.46 , "Q[0.90,0.95,0.99]=" , 27.54 , 36.52 , 56.70 , 1018838        ));
-//			vmc.push_back(mergedConfiguration("nCombsPerRoad" , "PU140_sf1L0x2L5x2_nz6" , "Mean=", 2.34 , "Q[0.90,0.95,0.99]=" , 4.82 , 6.85 , 12.90 , 2180279              ));
-//			vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x4_" , "PU140_sf1L0x2L5x2_nz6" , "Mean=", 2.52 , "Q[0.90,0.95,0.99]=" , 5.00 , 8.18 , 15.75 , 1018838    ));
-//			vmc.push_back(mergedConfiguration("nCombsPerBX" , "PU140_sf1L0x2L5x2_nz6" , "Mean=", 33.13 , "Q[0.90,0.95,0.99]=" , 88.30 , 130.72 , 264.64 , 2180279           ));
-//			vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x4_" , "PU140_sf1L0x2L5x2_nz6" , "Mean=", 26.83 , "Q[0.90,0.95,0.99]=" , 71.31 , 104.33 , 222.19 , 1018838 ));
-//			vmc.push_back(mergedConfiguration("nRoads" , "PU140_sf1L0x2L5x2_nz8" , "Mean=", 12.85 , "Q[0.90,0.95,0.99]=" , 34.90 , 46.00 , 73.67 , 3774867                  ));
-//			vmc.push_back(mergedConfiguration("nRoadsMerged_x4_" , "PU140_sf1L0x2L5x2_nz8" , "Mean=", 9.44 , "Q[0.90,0.95,0.99]=" , 25.51 , 33.47 , 53.33 , 1750212         ));
-//			vmc.push_back(mergedConfiguration("nCombsPerRoad" , "PU140_sf1L0x2L5x2_nz8" , "Mean=", 2.16 , "Q[0.90,0.95,0.99]=" , 4.61 , 6.42 , 12.42 , 3774867              ));
-//			vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x4_" , "PU140_sf1L0x2L5x2_nz8" , "Mean=", 2.30 , "Q[0.90,0.95,0.99]=" , 4.79 , 6.77 , 12.72 , 1750212    ));
-//			vmc.push_back(mergedConfiguration("nCombsPerBX" , "PU140_sf1L0x2L5x2_nz8" , "Mean=", 27.81 , "Q[0.90,0.95,0.99]=" , 72.94 , 110.30 , 237.08 , 3774867           ));
-//			vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x4_" , "PU140_sf1L0x2L5x2_nz8" , "Mean=", 22.26 , "Q[0.90,0.95,0.99]=" , 58.26 , 87.34 , 196.03 , 1750212  ));
-//			vmc.push_back(mergedConfiguration("nRoads" , "PU140_sf1L0x2_nz4" , "Mean=", 16.87 , "Q[0.90,0.95,0.99]=" , 43.04 , 58.13 , 93.44 , 1309491                      ));
-//			vmc.push_back(mergedConfiguration("nRoadsMerged_x4_" , "PU140_sf1L0x2_nz4" , "Mean=", 12.54 , "Q[0.90,0.95,0.99]=" , 31.63 , 42.50 , 67.86 , 623341             ));
-//			vmc.push_back(mergedConfiguration("nCombsPerRoad" , "PU140_sf1L0x2_nz4" , "Mean=", 2.65 , "Q[0.90,0.95,0.99]=" , 6.14 , 8.47 , 16.39 , 1309491                  ));
-//			vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x4_" , "PU140_sf1L0x2_nz4" , "Mean=", 2.89 , "Q[0.90,0.95,0.99]=" , 6.56 , 8.82 , 16.91 , 623341         ));
-//			vmc.push_back(mergedConfiguration("nCombsPerBX" , "PU140_sf1L0x2_nz4" , "Mean=", 44.76 , "Q[0.90,0.95,0.99]=" , 116.10 , 177.61 , 345.37 , 1309491              ));
-//			vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x4_" , "PU140_sf1L0x2_nz4" , "Mean=", 37.22 , "Q[0.90,0.95,0.99]=" , 95.42 , 146.55 , 290.13 , 623341      ));
-//			vmc.push_back(mergedConfiguration("nRoads" , "PU140_sf1L0x2_nz6" , "Mean=", 13.70 , "Q[0.90,0.95,0.99]=" , 37.15 , 49.45 , 78.18 , 2851008                      ));
-//			vmc.push_back(mergedConfiguration("nRoadsMerged_x4_" , "PU140_sf1L0x2_nz6" , "Mean=", 10.12 , "Q[0.90,0.95,0.99]=" , 27.19 , 35.62 , 56.00 , 1337203            ));
-//			vmc.push_back(mergedConfiguration("nCombsPerRoad" , "PU140_sf1L0x2_nz6" , "Mean=", 2.23 , "Q[0.90,0.95,0.99]=" , 4.69 , 6.58 , 12.54 , 2851008                  ));
-//			vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x4_" , "PU140_sf1L0x2_nz6" , "Mean=", 2.40 , "Q[0.90,0.95,0.99]=" , 4.88 , 6.93 , 12.91 , 1337203        ));
-//			vmc.push_back(mergedConfiguration("nCombsPerBX" , "PU140_sf1L0x2_nz6" , "Mean=", 30.62 , "Q[0.90,0.95,0.99]=" , 82.21 , 121.35 , 250.15 , 2851008               ));
-//			vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x4_" , "PU140_sf1L0x2_nz6" , "Mean=", 24.66 , "Q[0.90,0.95,0.99]=" , 65.53 , 96.66 , 203.70 , 1337203      ));
-//			vmc.push_back(mergedConfiguration("nRoads" , "PU140_sf1L0x2_nz8" , "Mean=", 12.62 , "Q[0.90,0.95,0.99]=" , 34.21 , 46.08 , 74.15 , 4953044                      ));
-//			vmc.push_back(mergedConfiguration("nRoadsMerged_x4_" , "PU140_sf1L0x2_nz8" , "Mean=", 9.27 , "Q[0.90,0.95,0.99]=" , 24.95 , 33.38 , 52.73 , 2309055             ));
-//			vmc.push_back(mergedConfiguration("nCombsPerRoad" , "PU140_sf1L0x2_nz8" , "Mean=", 2.07 , "Q[0.90,0.95,0.99]=" , 4.50 , 6.15 , 10.91 , 4953044                  ));
-//			vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x4_" , "PU140_sf1L0x2_nz8" , "Mean=", 2.22 , "Q[0.90,0.95,0.99]=" , 4.70 , 6.58 , 12.42 , 2309055        ));
-//			vmc.push_back(mergedConfiguration("nCombsPerBX" , "PU140_sf1L0x2_nz8" , "Mean=", 26.22 , "Q[0.90,0.95,0.99]=" , 68.65 , 103.57 , 219.08 , 4953044               ));
-//			vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x4_" , "PU140_sf1L0x2_nz8" , "Mean=", 20.78 , "Q[0.90,0.95,0.99]=" , 54.46 , 82.28 , 181.02 , 2309055      ));
-//		}
+        vmc.push_back(mergedConfiguration("nRoads" , "PU140_sf1L0x2L5x2__nz8_OR" , "Mean=", 11.11 , "Q[0.90,0.95,0.99]=" , 31.07 , 40.47 , 64.63 , 3671262                  ));
+        vmc.push_back(mergedConfiguration("nRoadsMerged_x4_" , "PU140_sf1L0x2L5x2__nz8_OR" , "Mean=", 8.22 , "Q[0.90,0.95,0.99]=" , 22.72 , 29.70 , 46.89 , 1706341         ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoad" , "PU140_sf1L0x2L5x2__nz8_OR" , "Mean=", 1.93 , "Q[0.90,0.95,0.99]=" , 4.28 , 4.99 , 10.49 , 3671262              ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x4_" , "PU140_sf1L0x2L5x2__nz8_OR" , "Mean=", 2.05 , "Q[0.90,0.95,0.99]=" , 4.48 , 6.16 , 12.21 , 1706341    ));
+        vmc.push_back(mergedConfiguration("nCombsPerBX" , "PU140_sf1L0x2L5x2__nz8_OR" , "Mean=", 21.67 , "Q[0.90,0.95,0.99]=" , 57.26 , 86.53 , 183.02 , 3671262            ));
+        vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x4_" , "PU140_sf1L0x2L5x2__nz8_OR" , "Mean=", 17.22 , "Q[0.90,0.95,0.99]=" , 44.89 , 67.68 , 143.51 , 1706341  ));
 	}
 	if (pu==200) {
-        vmc.push_back(mergedConfiguration("nRoads" , "PU200_sf1L0x2L5x2_nz4" , "Mean=", 50.88 , "Q[0.90,0.95,0.99]=" , 109.85 , 140.03 , 207.31 , 1001026                ));
+	    vmc.push_back(mergedConfiguration("nRoads" , "PU200_sf1L0x2L5x2_nz4" , "Mean=", 50.88 , "Q[0.90,0.95,0.99]=" , 109.85 , 140.03 , 207.31 , 1001026                ));
         vmc.push_back(mergedConfiguration("nCombsPerRoad" , "PU200_sf1L0x2L5x2_nz4" , "Mean=", 3.82 , "Q[0.90,0.95,0.99]=" , 8.68 , 12.68 , 24.80 , 1001026              ));
         vmc.push_back(mergedConfiguration("nCombsPerBX" , "PU200_sf1L0x2L5x2_nz4" , "Mean=", 204.19 , "Q[0.90,0.95,0.99]=" , 487.82 , 688.55 , 1207.06 , 1001026         ));
         vmc.push_back(mergedConfiguration("nRoads" , "PU200_sf1L0x2L5x2_nz6" , "Mean=", 32.13 , "Q[0.90,0.95,0.99]=" , 74.19 , 94.73 , 139.80 , 2180279                  ));
@@ -285,7 +271,75 @@ void plotPatternsVSroads (unsigned pu=140, bool savePlots = 0) {
         vmc.push_back(mergedConfiguration("nRoadsMerged_x4_" , "PU200_sf1L0x2_nz8" , "Mean=", 17.32 , "Q[0.90,0.95,0.99]=" , 41.24 , 52.70 , 79.33 , 2309055             ));
         vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x4_" , "PU200_sf1L0x2_nz8" , "Mean=", 2.83 , "Q[0.90,0.95,0.99]=" , 6.32 , 8.71 , 18.41 , 2309055         ));
         vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x4_" , "PU200_sf1L0x2_nz8" , "Mean=", 50.60 , "Q[0.90,0.95,0.99]=" , 121.88 , 177.12 , 368.02 , 2309055     ));
+        vmc.push_back(mergedConfiguration("nRoads" , "PU200_sf1L0x2L5x2__nz8_OR" , "Mean=", 21.51 , "Q[0.90,0.95,0.99]=" , 52.07 , 67.29 , 101.67 , 3671262                 ));
+        vmc.push_back(mergedConfiguration("nRoadsMerged_x4_" , "PU200_sf1L0x2L5x2__nz8_OR" , "Mean=", 15.96 , "Q[0.90,0.95,0.99]=" , 38.27 , 48.87 , 72.44 , 1706341        ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoad" , "PU200_sf1L0x2L5x2__nz8_OR" , "Mean=", 2.41 , "Q[0.90,0.95,0.99]=" , 4.87 , 7.00 , 16.06 , 3671262              ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x4_" , "PU200_sf1L0x2L5x2__nz8_OR" , "Mean=", 2.62 , "Q[0.90,0.95,0.99]=" , 5.72 , 8.40 , 16.83 , 1706341    ));
+        vmc.push_back(mergedConfiguration("nCombsPerBX" , "PU200_sf1L0x2L5x2__nz8_OR" , "Mean=", 52.95 , "Q[0.90,0.95,0.99]=" , 133.01 , 191.10 , 380.01 , 3671262          ));
+        vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x4_" , "PU200_sf1L0x2L5x2__nz8_OR" , "Mean=", 43.13 , "Q[0.90,0.95,0.99]=" , 107.10 , 156.59 , 310.00 , 1706341));
 	}
+    if (pu==250) {
+        vmc.push_back(mergedConfiguration("nRoads" , "PU250_sf1L0x2L5x2_nz4" , "Mean=", 117.60 , "Q[0.90,0.95,0.99]=" , 230.51 , 292.06 , 434.06 , 1001026                  ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoad" , "PU250_sf1L0x2L5x2_nz4" , "Mean=", 4.63 , "Q[0.90,0.95,0.99]=" , 10.65 , 16.34 , 32.81 , 1001026                ));
+        vmc.push_back(mergedConfiguration("nCombsPerBX" , "PU250_sf1L0x2L5x2_nz4" , "Mean=", 576.90 , "Q[0.90,0.95,0.99]=" , 1286.33 , 1755.50 , 2840.30 , 1001026          ));
+        vmc.push_back(mergedConfiguration("nRoads" , "PU250_sf1L0x2L5x2_nz6" , "Mean=", 63.31 , "Q[0.90,0.95,0.99]=" , 131.45 , 167.00 , 226.00 , 2180279                   ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoad" , "PU250_sf1L0x2L5x2_nz6" , "Mean=", 3.70 , "Q[0.90,0.95,0.99]=" , 8.43 , 12.46 , 24.89 , 2180279                 ));
+        vmc.push_back(mergedConfiguration("nCombsPerBX" , "PU250_sf1L0x2L5x2_nz6" , "Mean=", 248.53 , "Q[0.90,0.95,0.99]=" , 552.00 , 756.00 , 1548.00 , 2180279            ));
+        vmc.push_back(mergedConfiguration("nRoads" , "PU250_sf1L0x2L5x2_nz8" , "Mean=", 44.02 , "Q[0.90,0.95,0.99]=" , 95.78 , 118.00 , 180.00 , 3774867                    ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoad" , "PU250_sf1L0x2L5x2_nz8" , "Mean=", 3.22 , "Q[0.90,0.95,0.99]=" , 6.81 , 10.03 , 24.02 , 3774867                 ));
+        vmc.push_back(mergedConfiguration("nCombsPerBX" , "PU250_sf1L0x2L5x2_nz8" , "Mean=", 147.29 , "Q[0.90,0.95,0.99]=" , 336.00 , 473.00 , 874.00 , 3774867             ));
+        vmc.push_back(mergedConfiguration("nRoads" , "PU250_sf1L0x2_nz4" , "Mean=", 103.58 , "Q[0.90,0.95,0.99]=" , 205.49 , 254.55 , 380.02 , 1309491                      ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoad" , "PU250_sf1L0x2_nz4" , "Mean=", 4.20 , "Q[0.90,0.95,0.99]=" , 8.95 , 12.91 , 30.36 , 1309491                     ));
+        vmc.push_back(mergedConfiguration("nCombsPerBX" , "PU250_sf1L0x2_nz4" , "Mean=", 458.36 , "Q[0.90,0.95,0.99]=" , 1023.50 , 1416.25 , 2326.10 , 1309491              ));
+        vmc.push_back(mergedConfiguration("nRoads" , "PU250_sf1L0x2_nz6" , "Mean=", 56.66 , "Q[0.90,0.95,0.99]=" , 120.44 , 146.50 , 205.00 , 2851008                       ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoad" , "PU250_sf1L0x2_nz6" , "Mean=", 3.39 , "Q[0.90,0.95,0.99]=" , 7.85 , 12.01 , 24.35 , 2851008                     ));
+        vmc.push_back(mergedConfiguration("nCombsPerBX" , "PU250_sf1L0x2_nz6" , "Mean=", 200.52 , "Q[0.90,0.95,0.99]=" , 450.00 , 596.00 , 1124.00 , 2851008                ));
+        vmc.push_back(mergedConfiguration("nRoads" , "PU250_sf1L0x2_nz8" , "Mean=", 40.58 , "Q[0.90,0.95,0.99]=" , 89.23 , 110.75 , 164.00 , 4953044                        ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoad" , "PU250_sf1L0x2_nz8" , "Mean=", 3.00 , "Q[0.90,0.95,0.99]=" , 6.53 , 8.88 , 18.79 , 4953044                      ));
+        vmc.push_back(mergedConfiguration("nCombsPerBX" , "PU250_sf1L0x2_nz8" , "Mean=", 123.12 , "Q[0.90,0.95,0.99]=" , 279.40 , 406.05 , 662.02 , 4953044                 ));
+        vmc.push_back(mergedConfiguration("nRoadsMerged_x2_" , "PU250_sf1L0x2L5x2_nz4" , "Mean=", 99.41 , "Q[0.90,0.95,0.99]=" , 192.40 , 244.00 , 363.00 , 595679          ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x2_" , "PU250_sf1L0x2L5x2_nz4" , "Mean=", 4.99 , "Q[0.90,0.95,0.99]=" , 12.24 , 16.95 , 36.27 , 595679       ));
+        vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x2_" , "PU250_sf1L0x2L5x2_nz4" , "Mean=", 538.11 , "Q[0.90,0.95,0.99]=" , 1200.84 , 1659.10 , 2736.22 , 595679 ));
+        vmc.push_back(mergedConfiguration("nRoadsMerged_x2_" , "PU250_sf1L0x2L5x2_nz6" , "Mean=", 53.44 , "Q[0.90,0.95,0.99]=" , 109.88 , 140.00 , 188.00 , 1298337         ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x2_" , "PU250_sf1L0x2L5x2_nz6" , "Mean=", 3.96 , "Q[0.90,0.95,0.99]=" , 8.73 , 12.75 , 28.58 , 1298337       ));
+        vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x2_" , "PU250_sf1L0x2L5x2_nz6" , "Mean=", 227.70 , "Q[0.90,0.95,0.99]=" , 503.00 , 684.00 , 1410.00 , 1298337  ));
+        vmc.push_back(mergedConfiguration("nRoadsMerged_x2_" , "PU250_sf1L0x2L5x2_nz8" , "Mean=", 37.25 , "Q[0.90,0.95,0.99]=" , 80.67 , 97.80 , 151.20 , 2249397           ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x2_" , "PU250_sf1L0x2L5x2_nz8" , "Mean=", 3.42 , "Q[0.90,0.95,0.99]=" , 7.63 , 12.10 , 24.38 , 2249397       ));
+        vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x2_" , "PU250_sf1L0x2L5x2_nz8" , "Mean=", 133.55 , "Q[0.90,0.95,0.99]=" , 307.33 , 428.00 , 806.00 , 2249397   ));
+        vmc.push_back(mergedConfiguration("nRoadsMerged_x2_" , "PU250_sf1L0x2_nz4" , "Mean=", 87.11 , "Q[0.90,0.95,0.99]=" , 170.86 , 213.50 , 321.00 , 776321              ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x2_" , "PU250_sf1L0x2_nz4" , "Mean=", 4.55 , "Q[0.90,0.95,0.99]=" , 10.27 , 16.13 , 32.39 , 776321           ));
+        vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x2_" , "PU250_sf1L0x2_nz4" , "Mean=", 423.80 , "Q[0.90,0.95,0.99]=" , 950.80 , 1308.40 , 2142.08 , 776321      ));
+        vmc.push_back(mergedConfiguration("nRoadsMerged_x2_" , "PU250_sf1L0x2_nz6" , "Mean=", 47.73 , "Q[0.90,0.95,0.99]=" , 100.20 , 121.33 , 176.00 , 1693108             ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x2_" , "PU250_sf1L0x2_nz6" , "Mean=", 3.64 , "Q[0.90,0.95,0.99]=" , 8.34 , 12.35 , 24.75 , 1693108           ));
+        vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x2_" , "PU250_sf1L0x2_nz6" , "Mean=", 183.31 , "Q[0.90,0.95,0.99]=" , 408.00 , 554.00 , 1005.00 , 1693108      ));
+        vmc.push_back(mergedConfiguration("nRoadsMerged_x2_" , "PU250_sf1L0x2_nz8" , "Mean=", 34.27 , "Q[0.90,0.95,0.99]=" , 75.08 , 90.91 , 138.00 , 2945176               ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x2_" , "PU250_sf1L0x2_nz8" , "Mean=", 3.19 , "Q[0.90,0.95,0.99]=" , 6.77 , 9.74 , 20.80 , 2945176            ));
+        vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x2_" , "PU250_sf1L0x2_nz8" , "Mean=", 111.33 , "Q[0.90,0.95,0.99]=" , 255.24 , 365.05 , 608.01 , 2945176       ));
+        vmc.push_back(mergedConfiguration("nRoadsMerged_x4_" , "PU250_sf1L0x2L5x2_nz4" , "Mean=", 89.53 , "Q[0.90,0.95,0.99]=" , 174.40 , 219.50 , 316.00 , 477291          ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x4_" , "PU250_sf1L0x2L5x2_nz4" , "Mean=", 5.12 , "Q[0.90,0.95,0.99]=" , 12.36 , 18.21 , 36.46 , 477291       ));
+        vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x4_" , "PU250_sf1L0x2L5x2_nz4" , "Mean=", 506.12 , "Q[0.90,0.95,0.99]=" , 1133.80 , 1576.90 , 2664.18 , 477291 ));
+        vmc.push_back(mergedConfiguration("nRoadsMerged_x4_" , "PU250_sf1L0x2L5x2_nz6" , "Mean=", 47.54 , "Q[0.90,0.95,0.99]=" , 96.29 , 125.33 , 170.00 , 1018838          ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x4_" , "PU250_sf1L0x2L5x2_nz6" , "Mean=", 4.09 , "Q[0.90,0.95,0.99]=" , 8.88 , 12.90 , 30.11 , 1018838       ));
+        vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x4_" , "PU250_sf1L0x2L5x2_nz6" , "Mean=", 210.37 , "Q[0.90,0.95,0.99]=" , 472.67 , 626.00 , 1266.00 , 1018838  ));
+        vmc.push_back(mergedConfiguration("nRoadsMerged_x4_" , "PU250_sf1L0x2L5x2_nz8" , "Mean=", 32.95 , "Q[0.90,0.95,0.99]=" , 71.07 , 86.50 , 136.00 , 1750212           ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x4_" , "PU250_sf1L0x2L5x2_nz8" , "Mean=", 3.55 , "Q[0.90,0.95,0.99]=" , 8.17 , 12.29 , 24.63 , 1750212       ));
+        vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x4_" , "PU250_sf1L0x2L5x2_nz8" , "Mean=", 122.90 , "Q[0.90,0.95,0.99]=" , 278.40 , 398.00 , 702.00 , 1750212   ));
+        vmc.push_back(mergedConfiguration("nRoadsMerged_x4_" , "PU250_sf1L0x2_nz4" , "Mean=", 78.50 , "Q[0.90,0.95,0.99]=" , 152.57 , 192.00 , 288.00 , 623341              ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x4_" , "PU250_sf1L0x2_nz4" , "Mean=", 4.68 , "Q[0.90,0.95,0.99]=" , 10.78 , 16.32 , 32.78 , 623341           ));
+        vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x4_" , "PU250_sf1L0x2_nz4" , "Mean=", 395.95 , "Q[0.90,0.95,0.99]=" , 879.40 , 1217.47 , 2068.08 , 623341      ));
+        vmc.push_back(mergedConfiguration("nRoadsMerged_x4_" , "PU250_sf1L0x2_nz6" , "Mean=", 42.45 , "Q[0.90,0.95,0.99]=" , 88.67 , 109.40 , 154.00 , 1337203              ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x4_" , "PU250_sf1L0x2_nz6" , "Mean=", 3.76 , "Q[0.90,0.95,0.99]=" , 8.50 , 12.50 , 24.89 , 1337203           ));
+        vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x4_" , "PU250_sf1L0x2_nz6" , "Mean=", 169.23 , "Q[0.90,0.95,0.99]=" , 379.00 , 505.00 , 964.00 , 1337203       ));
+        vmc.push_back(mergedConfiguration("nRoadsMerged_x4_" , "PU250_sf1L0x2_nz8" , "Mean=", 30.25 , "Q[0.90,0.95,0.99]=" , 65.18 , 79.57 , 120.00 , 2309055               ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x4_" , "PU250_sf1L0x2_nz8" , "Mean=", 3.30 , "Q[0.90,0.95,0.99]=" , 6.91 , 10.45 , 22.74 , 2309055           ));
+        vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x4_" , "PU250_sf1L0x2_nz8" , "Mean=", 103.56 , "Q[0.90,0.95,0.99]=" , 232.00 , 339.20 , 548.00 , 2309055       ));
+        vmc.push_back(mergedConfiguration("nRoads" , "PU250_sf1L0x2L5x2__nz8_OR" , "Mean=", 37.00 , "Q[0.90,0.95,0.99]=" , 79.82 , 100.92 , 153.00 , 3671262                ));
+        vmc.push_back(mergedConfiguration("nRoadsMerged_x4_" , "PU250_sf1L0x2L5x2__nz8_OR" , "Mean=", 27.78 , "Q[0.90,0.95,0.99]=" , 58.71 , 74.14 , 113.00 , 1706341       ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoad" , "PU250_sf1L0x2L5x2__nz8_OR" , "Mean=", 2.92 , "Q[0.90,0.95,0.99]=" , 6.39 , 8.84 , 20.28 , 3671262              ));
+        vmc.push_back(mergedConfiguration("nCombsPerRoadMerged_x4_" , "PU250_sf1L0x2L5x2__nz8_OR" , "Mean=", 3.20 , "Q[0.90,0.95,0.99]=" , 6.79 , 10.33 , 24.10 , 1706341   ));
+        vmc.push_back(mergedConfiguration("nCombsPerBX" , "PU250_sf1L0x2L5x2__nz8_OR" , "Mean=", 110.39 , "Q[0.90,0.95,0.99]=" , 254.50 , 350.00 , 634.00 , 3671262         ));
+        vmc.push_back(mergedConfiguration("nCombsPerBXMerged_x4_" , "PU250_sf1L0x2L5x2__nz8_OR" , "Mean=", 91.53 , "Q[0.90,0.95,0.99]=" , 208.75 , 290.00 , 540.00 , 1706341));
+    }
 
 	TMultiGraph *mgRoads = new TMultiGraph();
 	char hname [200];
@@ -300,15 +354,15 @@ void plotPatternsVSroads (unsigned pu=140, bool savePlots = 0) {
 //	mgCombs->SetNameTitle("patterns90VScombs95","PU200 - Pattern(90c) vs Combinations 95%");
 	mgCombs->SetNameTitle(hname,htitle);
 
-	TGraph* vgr[10][2];
+	TGraph* vgr[15][2];
 	Double_t x[1], xx[1], y[1];
 	for (unsigned issC=0; issC<vssC.size(); ++issC) {
 		y[0] = vssC.at(issC).nPatterns_; x[0] = vssC.at(issC).roads95_; xx[0] = vssC.at(issC).combs95_;
 		for (unsigned ii=0; ii<2; ++ii) {
 			if (ii==0) vgr[issC][ii] = new TGraph(1,x ,y); //roads
 			else       vgr[issC][ii] = new TGraph(1,xx,y); //combs
-			vgr[issC][ii]->SetMarkerStyle(20+issC/4);
-			vgr[issC][ii]->SetMarkerColor(1+(issC)%4);
+			vgr[issC][ii]->SetMarkerStyle(20+(issC)%nConfs);
+			vgr[issC][ii]->SetMarkerColor(1+issC/nConfs);
 			vgr[issC][ii]->SetFillStyle(0);
 			vgr[issC][ii]->SetLineColor(0);
 			vgr[issC][ii]->SetNameTitle(vssC.at(issC).name_,vssC.at(issC).name_);
@@ -331,12 +385,12 @@ void plotPatternsVSroads (unsigned pu=140, bool savePlots = 0) {
 	mgCombs->GetXaxis()->SetTitle("# combinations/BX");
 	mgCombs->GetYaxis()->SetTitle(hname);
 	mgCombs ->Draw("acp");
-	TLegend* tl = cmgCombs->BuildLegend(0.5,0.4,0.9,0.9);
+	TLegend* tl = cmgCombs->BuildLegend(0.45,0.4,0.9,0.9);
 
 	TMultiGraph *mergedMultiGraph[3];
 	TString varNames[3];
 	for (unsigned ivar=0; ivar<3; ++ivar) mergedMultiGraph[ivar]= new TMultiGraph();
-	TGraph* mergedGraphs[3][6][3];
+	TGraph* mergedGraphs[3][7][3];
 	for (unsigned iv=0; iv<vmc.size(); ++iv) {
 		unsigned imerge=0;
 		if (vmc.at(iv).var_.Contains("Merged_x2")) imerge=1;
@@ -350,7 +404,8 @@ void plotPatternsVSroads (unsigned pu=140, bool savePlots = 0) {
 		if (vmc.at(iv).conf_.Contains("sf1L0x2_nz8"))     iconf=2;
 		if (vmc.at(iv).conf_.Contains("sf1L0x2L5x2_nz4")) iconf=3;
 		if (vmc.at(iv).conf_.Contains("sf1L0x2L5x2_nz6")) iconf=4;
-		if (vmc.at(iv).conf_.Contains("sf1L0x2L5x2_nz8")) iconf=5;
+        if (vmc.at(iv).conf_.Contains("sf1L0x2L5x2_nz8")) iconf=5;
+        if (vmc.at(iv).conf_.Contains("sf1L0x2L5x2__nz8_OR")) iconf=6;
 		TString m("");
 		if (imerge==1) m=TString("_mx2");
 		if (imerge==2) m=TString("_mx4");
@@ -361,10 +416,18 @@ void plotPatternsVSroads (unsigned pu=140, bool savePlots = 0) {
 		mergedGraphs[imerge][iconf][ivar]->SetFillStyle(0);
 		mergedGraphs[imerge][iconf][ivar]->SetLineColor(0);
 		mergedGraphs[imerge][iconf][ivar]->SetNameTitle(vmc.at(iv).conf_+m,vmc.at(iv).conf_+m);
-		mergedMultiGraph[ivar]->Add(mergedGraphs[imerge][iconf][ivar]);
-		char htitle[100];
-		sprintf(htitle,"PU%d - Pattern(95%%c) vs ",pu);
-		if (iconf==0 && imerge==0) mergedMultiGraph[ivar]->SetTitle(TString(htitle)+vmc.at(iv).var_+TString(";")+vmc.at(iv).var_+TString(" 95%;")+TString("# patterns (95% cov)"));
+        if (iconf==0 && imerge==0) mergedMultiGraph[ivar]->SetTitle(TString("Patterns VS ")+vmc.at(iv).var_+TString(";")+vmc.at(iv).var_+TString(" 95%;")+TString("# patterns (95% cov)"));
+	}
+	for (unsigned ivar=0; ivar<3; ++ivar) {
+	    for (unsigned iconf=0; iconf<6; ++iconf) {
+	        for (unsigned imerge=0; imerge<3; ++imerge) {
+//	            if (imerge==2) continue;
+	            char htitle[100];
+//	            sprintf(htitle,"PU%d - Pattern(95%%c) vs ",pu);
+	            mergedMultiGraph[ivar]->Add(mergedGraphs[imerge][iconf][ivar]);
+	        }
+	    }
+	    mergedMultiGraph[ivar]->Add(mergedGraphs[2][6][ivar]);
 	}
 	TCanvas *cmerged[3];
 	for (unsigned ivar=0; ivar<3; ++ivar) {
@@ -379,18 +442,17 @@ void plotPatternsVSroads (unsigned pu=140, bool savePlots = 0) {
 		gPad->BuildLegend(0.58,0.45,0.98,0.95);
 	}
 
-
 	if (savePlots) {
 		TString outDir("/home/rossin/Dropbox/TT/Work/figures_SSoptimization/");
 		TString ext[2] = {".pdf",".png"};
 		TString sPU("_PU140");
-		if (pu==200) sPU=TString("_PU200");
+        if (pu==200) sPU=TString("_PU200");
+        if (pu==250) sPU=TString("_PU250");
 		for (unsigned iext=0; iext<2; ++iext) {
 			cmgRoads->                                           SaveAs(outDir+mgRoads->GetName()+sPU+ext[iext]);
 			cmgCombs->                                           SaveAs(outDir+mgCombs->GetName()+sPU+ext[iext]);
 			for (unsigned ivar=0; ivar<3; ++ivar) cmerged[ivar]->SaveAs(outDir+varNames[ivar]    +sPU+ext[iext]);
 		}
 	}
-
 	return;
 }
