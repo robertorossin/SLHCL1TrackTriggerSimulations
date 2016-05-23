@@ -111,7 +111,7 @@ public :
    virtual Int_t    GetEntry(Long64_t entry);
    virtual Long64_t LoadTree(Long64_t entry);
    virtual void     Init(TTree *tree);
-   virtual void     Loop(unsigned int iEv,unsigned merging,TString pName, bool makePlots, bool debug);
+   virtual void     Loop(unsigned int iEv,unsigned merging,TString pName, bool makePlots, bool debug, TString fName);
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
 };

@@ -146,7 +146,7 @@ public:
 				++nDifferentLayers;
 			}
 		};
-		if (nDifferentLayers>2) {
+		if (nDifferentLayers>3) {
 			cout << "******** ERROR *********" << endl;
 			cout << "Siblings differ by more than two layers" << endl;
 		}
@@ -180,13 +180,16 @@ public:
 	}
 };
 
-void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool makePlots, bool debug)
+void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool makePlots, bool debug, TString fName)
 {
 
 	unsigned pu=0;
 	if (pName.Contains("PU140")) pu=140;
     if (pName.Contains("PU200")) pu=200;
     if (pName.Contains("PU250")) pu=250;
+
+    bool isTTbar =0;
+    if (pName.Contains("TTbar")) isTTbar=1;
 
    TFile* fmergedPatt = 0;
    if (pName.Contains("sf1L0x2L5x2_nz4")) {
@@ -195,14 +198,17 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
    }
    if (pName.Contains("sf1L0x2L5x2_nz6")) {
 	   if (merging==2) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m_patternBank_tt27_sf1L0x2L5x2_nz6_pt3_300M.root"  ,"READ");
-	   if (merging==4) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m4_patternBank_tt27_sf1L0x2L5x2_nz6_pt3_300M.root" ,"READ");
+       if (merging==4) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m4_patternBank_tt27_sf1L0x2L5x2_nz6_pt3_300M.root" ,"READ");
+       if (merging==8) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m8_patternBank_tt27_sf1L0x2L5x2_nz6_pt3_300M.root" ,"READ");
    }
    if (pName.Contains("sf1L0x2L5x2_nz8")) {
 	   if (merging==2) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m_patternBank_tt27_sf1L0x2L5x2_nz8_pt3_300M.root" ,"READ");
-	   if (merging==4) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m4_patternBank_tt27_sf1L0x2L5x2_nz8_pt3_300M.root" ,"READ");
+       if (merging==4) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m4_patternBank_tt27_sf1L0x2L5x2_nz8_pt3_300M.root" ,"READ");
+       if (merging==8) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m8_patternBank_tt27_sf1L0x2L5x2_nz8_pt3_300M.root" ,"READ");
    }
    if (pName.Contains("sf1L0x2L5x2__nz8_OR")) {
        if (merging==4) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m4_patternBank_tt27_sf1L0x2L5x2_nz8_pt3_300M_removeOverlap0p8_0p8_0p6_0p8_0p6_0p5.root" ,"READ");
+       if (merging==8) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m8_patternBank_tt27_sf1L0x2L5x2_nz8_pt3_300M_removeOverlap0p8_0p8_0p6_0p8_0p6_0p5.root" ,"READ");
    }
    if (pName.Contains("sf1L0x2_nz4"    )) {
 	   if (merging==2) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m_patternBank_tt27_sf1L0x2_nz4_pt3_300M.root"  ,"READ");
@@ -210,11 +216,13 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
    }
    if (pName.Contains("sf1L0x2_nz6"    )) {
 	   if (merging==2) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m_patternBank_tt27_sf1L0x2_nz6_pt3_300M.root"  ,"READ");
-	   if (merging==4) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m4_patternBank_tt27_sf1L0x2_nz6_pt3_300M.root" ,"READ");
+       if (merging==4) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m4_patternBank_tt27_sf1L0x2_nz6_pt3_300M.root" ,"READ");
+       if (merging==8) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m8_patternBank_tt27_sf1L0x2_nz6_pt3_300M.root" ,"READ");
    }
    if (pName.Contains("sf1L0x2_nz8"    )) {
 	   if (merging==2) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m_patternBank_tt27_sf1L0x2_nz8_pt3_300M.root"  ,"READ");
 	   if (merging==4) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m4_patternBank_tt27_sf1L0x2_nz8_pt3_300M.root" ,"READ");
+       if (merging==8) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m8_patternBank_tt27_sf1L0x2_nz8_pt3_300M.root" ,"READ");
    }
 //   if (pName.Contains("sf1_nz4"    )) {
 //	   if (merging==4) fmergedPatt = new TFile("/data/rossin/EOS/patternMerging/m4_patternBank_tt27_sf1_nz4_pt3.root" ,"READ");
@@ -259,6 +267,8 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
    long unsigned anPatterns[]={indToMerged->size(),vindFromMerged.size()};
 
 
+   unsigned maxRoads[2] = {0,0};
+   unsigned maxCombs[2] = {0,0};
    TH1F* hnRoads       [2];
    TH1F* hnCombsPerRoad[2];
    TH1F* hnCombsPerBX  [2];
@@ -266,6 +276,7 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
    TString smergingN("");
    if (merging==2) smergingN=TString("_x2_");
    if (merging==4) smergingN=TString("_x4_");
+   if (merging==8) smergingN=TString("_x8_");
 
    for (unsigned i=0; i<2; ++i) {
 	   TString hname("nRoads");
@@ -274,13 +285,15 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
 	   double xmax = (double) nbins;
 	   if (pu==200) {nbins*=2;xmax*=2;}
        if (pu==250) {nbins*=2;xmax*=4;}
-	   hnRoads       [i] = new TH1F(hname,hname,nbins,0,xmax);
+       if (isTTbar) {nbins*=2;xmax*=4;}
+       hnRoads       [i] = new TH1F(hname,hname,nbins,0,xmax);
 	   hname=TString("nCombsPerRoad");
 	   if (i) hname+=TString("Merged"+smergingN);
 	   nbins = 30;
 	   xmax = (double) nbins;
 	   if (pu==200) {nbins*=1.5;xmax*=1.5;}
        if (pu==250) {nbins*=2  ;xmax*=2  ;}
+       if (isTTbar) {nbins*=2;xmax*=2;}
 	   hnCombsPerRoad[i] = new TH1F(hname,hname,nbins,0,xmax);
 	   hname=TString("nCombsPerBX");
 	   if (i) hname+=TString("Merged"+smergingN);
@@ -288,6 +301,7 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
 	   xmax = (double) nbins;
        if (pu==200) {nbins*=1.5;xmax*=3;}
        if (pu==250) {nbins*=3  ;xmax*=6;}
+       if (isTTbar) {nbins*=2;xmax*=4;}
 	   hnCombsPerBX  [i] = new TH1F(hname,hname,nbins,0,xmax);
 	   for (unsigned iLay=0; iLay<8; ++iLay) {
 		   char name[100]; sprintf(name,"_%d_",iLay);
@@ -414,6 +428,11 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
 	  hnCombsPerBX[0]->Fill(nCombsPerBX);
 	  hnCombsPerBX[1]->Fill(nCombsPerBXMerged);
 
+      if (maxRoads[0] < nRoadsByPt) maxRoads[0] = nRoadsByPt;
+      if (maxRoads[1] < mapMergedRoads.size()) maxRoads[1] = mapMergedRoads.size();
+      if (maxCombs[0] < nCombsPerBX) maxCombs[0] = nCombsPerBX;
+      if (maxCombs[1] < nCombsPerBXMerged) maxCombs[1] = nCombsPerBXMerged;
+
 	  if (debug) cout << "##########################################################" << endl << endl;
 
       if (jentry%100==0) {
@@ -442,7 +461,7 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
 	   hnRoads[i]->GetQuantiles(3,x,xperc);
 	   char label[100];
 	   sprintf(label,"Mean= %4.2lf Q[%4.2lf,%4.2lf,%4.2lf]= %4.2lf %4.2lf %4.2lf",hnRoads[i]->GetMean(),xperc[0],xperc[1],xperc[2],x[0],x[1],x[2]);
-	   cout << hnRoads[i]->GetTitle() << "\t" << label << "\t nPatterns= " << anPatterns[i]  << endl;
+	   cout << hnRoads[i]->GetTitle() << "\t" << label << " max= " << maxRoads[i] << "\t nPatterns= " << anPatterns[i]  << endl;
 	   tl->AddEntry(hnRoads[i],label);
    }
    tl->DrawClone();
@@ -479,7 +498,7 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
 	   hnCombsPerBX[i]->GetQuantiles(3,x,xperc);
 	   char label[100];
 	   sprintf(label,"Mean= %4.2lf Q[%4.2lf,%4.2lf,%4.2lf]= %4.2lf %4.2lf %4.2lf",hnCombsPerBX[i]->GetMean(),xperc[0],xperc[1],xperc[2],x[0],x[1],x[2]);
-	   cout << hnCombsPerBX[i]->GetTitle() << "\t" << label << "\t nPatterns= " << anPatterns[i] << endl;
+	   cout << hnCombsPerBX[i]->GetTitle() << "\t" << label  << " max= " << maxCombs[i] << "\t nPatterns= " << anPatterns[i] << endl;
 	   tl->AddEntry(hnCombsPerBX[i],label);
    }
    tl->DrawClone();
@@ -513,9 +532,9 @@ void roadMerger::Loop(unsigned int iEv,unsigned merging,TString pName, bool make
 }
 
 
-void roadMergerRun(unsigned iProc=0,unsigned merging=2,unsigned int iEv=100000000,bool makePlots=false, bool debug=false) {
+void roadMergerRun(unsigned iProc=0,unsigned merging=2,bool makePlots=false, unsigned int iEv=100000000,bool debug=false) {
 
-	if (merging !=2 and merging !=4) return;
+	if (merging !=2 and merging !=4 and merging !=8) return;
 	gStyle->SetOptStat(0);
 	TString fName; TString pName;
 //	TString fName("/data/rossin/EOS/Neutrino_PU140_tt27_sf1_nz4_pt3_20151107/roads_Neutrino_PU140_tt27_sf1_nz4_pt3_5oo6_95c_14k.root"); TString pName("PU140_sf1_nz4");
@@ -523,7 +542,8 @@ void roadMergerRun(unsigned iProc=0,unsigned merging=2,unsigned int iEv=10000000
 //	TString fName("/data/rossin/EOS/patternMerging/roads_Neutrino_PU140_tt27_sf1L0x2L5x2_nz4_pt3_5oo6_95c_300M_merged.root"); TString pName("PU140_sf1L0x2L5x2_nz4");
 	if (iProc==0) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz4_pt3_20160308/tracks_LTF_Neutrino_PU140_tt27_sf1L0x2L5x2_nz4_pt3_5oo6_95c_chi100_300M.root"); pName=TString ("PU140_sf1L0x2L5x2_nz4");}
 	if (iProc==1) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz6_pt3_20160308/tracks_LTF_Neutrino_PU140_tt27_sf1L0x2L5x2_nz6_pt3_5oo6_95c_chi100_300M.root"); pName=TString ("PU140_sf1L0x2L5x2_nz6");}
-	if (iProc==2) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz8_pt3_20160308/tracks_LTF_Neutrino_PU140_tt27_sf1L0x2L5x2_nz8_pt3_5oo6_95c_chi100_300M.root"); pName=TString ("PU140_sf1L0x2L5x2_nz8");}
+    if (iProc==2) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz8_pt3_20160308/tracks_LTF_Neutrino_PU140_tt27_sf1L0x2L5x2_nz8_pt3_5oo6_95c_chi100_300M.root"); pName=TString ("PU140_sf1L0x2L5x2_nz8");}
+//    if (iProc==2) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz8_pt3_20160308/roads_Neutrino_PU140_tt27_sf1L0x2L5x2_nz8_pt3_5oo6_95c_300M.root"); pName=TString ("PU140_sf1L0x2L5x2_nz8");}
 	if (iProc==3) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz4_pt3_20160308/tracks_LTF_Neutrino_PU140_tt27_sf1L0x2_nz4_pt3_5oo6_95c_chi100_300M.root"        ); pName=TString ("PU140_sf1L0x2_nz4");    }
 	if (iProc==4) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz6_pt3_20160308/tracks_LTF_Neutrino_PU140_tt27_sf1L0x2_nz6_pt3_5oo6_95c_chi100_300M.root"        ); pName=TString ("PU140_sf1L0x2_nz6");    }
 	if (iProc==5) {fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz8_pt3_20160308/tracks_LTF_Neutrino_PU140_tt27_sf1L0x2_nz8_pt3_5oo6_95c_chi100_300M.root"        ); pName=TString ("PU140_sf1L0x2_nz8");    }
@@ -542,8 +562,18 @@ void roadMergerRun(unsigned iProc=0,unsigned merging=2,unsigned int iEv=10000000
     if (iProc==18){fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz8_pt3_20160308/tracks_LTF_Neutrino_PU140_tt27_sf1L0x2L5x2_nz8_pt3_5oo6_95c_300M_removeOverlap0p8_0p8_0p6_0p8_0p6_0p5.root"); pName=TString ("PU140_sf1L0x2L5x2__nz8_OR");}
     if (iProc==19){fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz8_pt3_20160308/tracks_LTF_Neutrino_PU200_tt27_sf1L0x2L5x2_nz8_pt3_5oo6_95c_300M_removeOverlap0p8_0p8_0p6_0p8_0p6_0p5.root"); pName=TString ("PU200_sf1L0x2L5x2__nz8_OR");}
     if (iProc==20){fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz8_pt3_20160308/tracks_LTF_Neutrino_PU250_tt27_sf1L0x2L5x2_nz8_pt3_5oo6_95c_300M_removeOverlap0p8_0p8_0p6_0p8_0p6_0p5.root"); pName=TString ("PU250_sf1L0x2L5x2__nz8_OR");}
+    if (iProc==21){fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz6_pt3_20160308/roads_TTbar_PU140_tt27_sf1L0x2L5x2_nz6_pt3_5oo6_95c_300M.root"); pName=TString ("TTbar_PU140_sf1L0x2L5x2_nz6");}
+    if (iProc==22){fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz6_pt3_20160308/roads_TTbar_PU200_tt27_sf1L0x2L5x2_nz6_pt3_5oo6_95c_300M.root"); pName=TString ("TTbar_PU200_sf1L0x2L5x2_nz6");}
+    if (iProc==23){fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz8_pt3_20160308/roads_TTbar_PU140_tt27_sf1L0x2L5x2_nz8_pt3_5oo6_95c_300M.root"); pName=TString ("TTbar_PU140_sf1L0x2L5x2_nz8");}
+    if (iProc==24){fName=TString("/data/rossin/EOS/tt27_sf1L0x2L5x2_nz8_pt3_20160308/roads_TTbar_PU200_tt27_sf1L0x2L5x2_nz8_pt3_5oo6_95c_300M.root"); pName=TString ("TTbar_PU200_sf1L0x2L5x2_nz8");}
+    if (iProc==25){fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz4_pt3_20160308/roads_TTbar_PU140_tt27_sf1L0x2_nz4_pt3_5oo6_95c_300M.root");         pName=TString ("TTbar_PU140_sf1L0x2_nz4");}
+    if (iProc==26){fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz4_pt3_20160308/roads_TTbar_PU200_tt27_sf1L0x2_nz4_pt3_5oo6_95c_300M.root");         pName=TString ("TTbar_PU200_sf1L0x2_nz4");}
+    if (iProc==27){fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz6_pt3_20160308/roads_TTbar_PU140_tt27_sf1L0x2_nz6_pt3_5oo6_95c_300M.root");         pName=TString ("TTbar_PU140_sf1L0x2_nz6");}
+    if (iProc==28){fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz6_pt3_20160308/roads_TTbar_PU200_tt27_sf1L0x2_nz6_pt3_5oo6_95c_300M.root");         pName=TString ("TTbar_PU200_sf1L0x2_nz6");}
+    if (iProc==29){fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz8_pt3_20160308/roads_TTbar_PU140_tt27_sf1L0x2_nz8_pt3_5oo6_95c_300M.root");         pName=TString ("TTbar_PU140_sf1L0x2_nz8");}
+    if (iProc==30){fName=TString("/data/rossin/EOS/tt27_sf1L0x2_nz8_pt3_20160308/roads_TTbar_PU200_tt27_sf1L0x2_nz8_pt3_5oo6_95c_300M.root");         pName=TString ("TTbar_PU200_sf1L0x2_nz8");}
 
 	roadMerger rm(fName);
-	rm.Loop(iEv,merging,pName,makePlots, debug);
+	rm.Loop(iEv,merging,pName,makePlots, debug, fName);
 	return;
 }

@@ -264,6 +264,8 @@ void stubPlotter::Loop(unsigned int iEv,TString pName, bool makePlots)
 //   sprintf(cc,"/home/rossin/Dropbox/TT/DOCS/20151111_Luciano_Rossin_AM_Status/nStubsPerLayerAll%s",pName.Data());
 //   cStubsPerLayer->SaveAs(TString(cc)+TString(".png"));
 
+   double markerSize = 0.8;
+
    TGraph* grStubsXY_all   = new TGraph( vStubsX    .size(),&(vStubsX    [0]),&(vStubsY    [0]));
    grStubsXY_all->SetTitle("Stubs in Tower");
    grStubsXY_all->GetXaxis()->SetTitle("X [cm]");
@@ -274,7 +276,7 @@ void stubPlotter::Loop(unsigned int iEv,TString pName, bool makePlots)
 //   cStubsXY_all->Divide(2,2);
 //   cStubsXY_all->cd(1);
    grStubsXY_all->SetMarkerStyle(20);
-   grStubsXY_all->SetMarkerSize (0.5);
+   grStubsXY_all->SetMarkerSize (markerSize);
    grStubsXY_all->DrawClone("AP");
    gPad->SetGrid();
    TArc arc;
@@ -299,7 +301,7 @@ void stubPlotter::Loop(unsigned int iEv,TString pName, bool makePlots)
 	   arc.DrawArc(c0x,c0y,R,phiMin*180/TMath::Pi(),phiMax*180/TMath::Pi(),"only");
 //	   arc.DrawArc(c0x,c0y,R,phiMin*180/TMath::Pi(),phiMax*180/TMath::Pi(),"only");
    }
-   TLegend* l = new TLegend(0.4,0.8,0.9,0.9);
+   TLegend* l = new TLegend(0.4,0.8,0.94,0.94);
    sprintf(cc,"Tot # stubs = %d",(int)vStubsX    .size());
    l->AddEntry(grStubsXY_all,cc,"p");
    sprintf(cc,"Tot # tracking-part [Pt>3GeV/c] = %d",(int)vParticles.size());
@@ -322,7 +324,7 @@ void stubPlotter::Loop(unsigned int iEv,TString pName, bool makePlots)
    grStubsXY_all->SetLineColor(1);
    grStubsXY_roads->SetMarkerColor(1);
    grStubsXY_roads->SetMarkerStyle(20);
-   grStubsXY_roads->SetMarkerSize (0.5);
+   grStubsXY_roads->SetMarkerSize (markerSize);
    grStubsXY_roads->Draw("P");
 
    TLegend* l2 = new TLegend(0.4,0.8,0.9,0.9);
