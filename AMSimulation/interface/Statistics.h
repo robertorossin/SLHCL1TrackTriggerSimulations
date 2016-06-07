@@ -16,37 +16,51 @@
 class Statistics {
   public:
     long int n_;
-    double mean_;
-    double variance_;
+    float mean_;
+    float variance_;
 
     Statistics();
     ~Statistics() {}
 
-    void fill(double x);
+    void fill(float x);
 
     long int getEntries()   const;
-    double   getMean()      const;
-    double   getVariance()  const;
-    double   getSigma()     const;
+    float   getMean()      const;
+    float   getVariance()  const;
+    float   getSigma()     const;
+};
+
+class ShortStatistics {
+  public:
+    long int n_;
+    float mean_;
+
+    ShortStatistics();
+    ~ShortStatistics() {}
+
+    void fill(float x);
+
+    long int getEntries()   const;
+    float   getMean()      const;
 };
 
 class Statistics2 {
   public:
     long int n_;
-    double mean1_;
-    double mean2_;
-    double covariance_;
+    float mean1_;
+    float mean2_;
+    float covariance_;
 
     Statistics2();
     ~Statistics2() {}
 
-    void fill(double x, double y);
+    void fill(float x, float y);
 
     long int getEntries()     const;
-    double   getMeanX()       const;
-    double   getMeanY()       const;
-    double   getCovariance()  const;
-    double   getSigma()       const;
+    float   getMeanX()       const;
+    float   getMeanY()       const;
+    float   getCovariance()  const;
+    float   getSigma()       const;
 };
 
 #endif /* defined(__LinearizedTrackFitting__Statistics__) */

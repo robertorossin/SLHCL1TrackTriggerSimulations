@@ -18,9 +18,10 @@
 Statistics::Statistics()
 : n_(0),
   mean_(0.),
-  variance_(0.) {}
+  variance_(0.)
+  {}
 
-void Statistics::fill(double x) {
+void Statistics::fill(float x) {
     ++ n_;
     mean_ += (x - mean_)/n_;
     if (n_ > 1)  variance_ += (x - mean_)*(x - mean_)/(n_-1) - variance_/n_;
@@ -30,17 +31,46 @@ long int Statistics::getEntries() const {
     return n_;
 };
 
-double Statistics::getMean() const {
+float Statistics::getMean() const {
     return mean_;
 };
 
-double Statistics::getVariance() const {
+float Statistics::getVariance() const {
     return variance_;
 };
 
-double Statistics::getSigma() const {
+float Statistics::getSigma() const {
     return std::sqrt(variance_);
 };
+
+// _____________________________________________________________________________
+ShortStatistics::ShortStatistics()
+: n_(0),
+  mean_(0.)
+//  variance_(0.)
+  {}
+
+void Statistics::fill(float x) {
+    ++ n_;
+    mean_ += (x - mean_)/n_;
+//    if (n_ > 1)  variance_ += (x - mean_)*(x - mean_)/(n_-1) - variance_/n_;
+}
+
+long int Statistics::getEntries() const {
+    return n_;
+};
+
+float Statistics::getMean() const {
+    return mean_;
+};
+
+//float Statistics::getVariance() const {
+//    return variance_;
+//};
+//
+//float Statistics::getSigma() const {
+//    return std::sqrt(variance_);
+//};
 
 
 // _____________________________________________________________________________
@@ -50,7 +80,7 @@ Statistics2::Statistics2()
   mean2_(0.),
   covariance_(0.) {}
 
-void Statistics2::fill(double x, double y) {
+void Statistics2::fill(float x, float y) {
     ++ n_;
     mean1_ += (x - mean1_)/n_;
     mean2_ += (y - mean2_)/n_;
@@ -61,18 +91,18 @@ long int Statistics2::getEntries() const {
     return n_;
 };
 
-double Statistics2::getMeanX() const {
+float Statistics2::getMeanX() const {
     return mean1_;
 };
 
-double Statistics2::getMeanY() const {
+float Statistics2::getMeanY() const {
     return mean2_;
 };
 
-double Statistics2::getCovariance() const {
+float Statistics2::getCovariance() const {
     return covariance_;
 };
 
-double Statistics2::getSigma() const {
+float Statistics2::getSigma() const {
     return std::sqrt(covariance_);
 };
