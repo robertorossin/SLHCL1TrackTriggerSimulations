@@ -215,11 +215,15 @@ int MatrixTester::testMatrices(TString src) {
         std::cout << std::setprecision(4);
         std::cout << Info() << "statV: " << std::endl;
         for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
-            std::cout << "principal " << ivar << ": " << statV.at(ivar).getEntries() << " " << statV.at(ivar).getMean() << " " << statV.at(ivar).getSigma() << std::endl;
+            std::cout << "principal " << ivar << ": " << statV.at(ivar).getEntries() << " " << statV.at(ivar).getMean() << " "
+//            		<< statV.at(ivar).getSigma()
+								<< std::endl;
         }
         std::cout << Info() << "statP: " << std::endl;
         for (unsigned ipar=0; ipar<nparameters_; ++ipar) {
-            std::cout << "parameter " << ipar << ": " << statP.at(ipar).getEntries() << " " << statP.at(ipar).getMean() << " " << statP.at(ipar).getSigma() << std::endl;
+            std::cout << "parameter " << ipar << ": " << statP.at(ipar).getEntries() << " " << statP.at(ipar).getMean() << " "
+//            		<< statP.at(ipar).getSigma()
+								<< std::endl;
         }
         std::cout.flags(flags);
     }

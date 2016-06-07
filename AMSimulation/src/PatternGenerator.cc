@@ -281,9 +281,9 @@ int PatternGenerator::writePatterns(TString out) {
         else if (po_.speedup==1) {
             const ShortAttributes * attr = patternShortAttributes_map_.at(patt);
             *(writer.pb_invPt_mean)     = attr->invPt.getMean();
-            *(writer.pb_invPt_sigma)    = attr->invPt.getSigma();
+            *(writer.pb_cotTheta_mean)  = attr->cotTheta.getMean();
             *(writer.pb_phi_mean)       = attr->phi.getMean();
-            *(writer.pb_phi_sigma)      = attr->phi.getSigma();
+            *(writer.pb_z0_mean)        = attr->z0.getMean();
         }
 
         writer.fillPatternBank();
