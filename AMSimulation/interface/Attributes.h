@@ -32,8 +32,10 @@ public:
 
 class ShortAttributes {
 public:
-    Statistics invPt;    // mean and sigma of track parameters
-    Statistics phi;      // mean and sigma of track parameters
+	ShortStatistics invPt;    // mean of track parameters
+	ShortStatistics cotTheta; // mean of track parameters
+	ShortStatistics phi;      // mean of track parameters
+	ShortStatistics z0;       // mean of track parameters
 
     ShortAttributes();
     ~ShortAttributes() {}
