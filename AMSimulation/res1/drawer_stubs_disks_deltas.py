@@ -50,6 +50,19 @@ def isint(value):
   except:
     return False
 
+def getCI(h, threshold=0.95):
+    nbinsx = h.GetNbinsX()
+    integral = h.Integral(1,nbinsx)
+    if integral==0: return -1
+    integral_i = 0.
+    x = h.GetBinCenter(1)
+    for i in xrange(1,nbinsx+1):
+        integral_i += h.GetBinContent(i)
+        if (integral_i / integral) <= threshold:
+            x = h.GetBinCenter(i)
+    assert(integral_i == integral)
+    return x
+
 def loadModules():
 
     moduleCoords = {}
@@ -78,6 +91,8 @@ thicknesses = [0.26, 0.16, 0.16, 0.18, 0.18, 0.18]  # cm
 # drCorrs = []
 D = ["PS","2S"]
 D = range(15)
+var = ['dx','dy','dr','dphi','drphi','dparallel','dperpendicular']
+CLstring = ['RMS','CL90']
 # for i in xrange(6):
 #     drCorr = pitches[i] / thicknesses[i] / rMeans[i] * 1e-4
 #     drCorrs.append(drCorr)
@@ -87,6 +102,13 @@ D = range(15)
 def drawer_book():
     histos = {}
 
+    for v in var:
+        for CL in CLstring:
+            hname  = "trackResidual_2D_%s_%s" % (v,CL)
+            htitle = ";Disk Layer;Disk annulus;%s %s" % (v,CL)
+            nbinsx, xmin, xmax, nbinsy, ymin, ymax = 5, 10.5, 15.5, 15, -0.5, 14.5
+            histos[hname] = TH2F(hname, htitle, nbinsx, xmin, xmax, nbinsy, ymin, ymax)
+            
     # TH1F
     for i in xrange(11,16):
 #         hname = "stub_ds_%i" % i
@@ -127,8 +149,8 @@ def drawer_book():
             histos[hname] = TH1F(hname, "; #delta r_{L%i-D%02i} [cm]" % (i,d), nbinsx, xmin, xmax)
     
             hname = "trackResidual_dphi_L%i_D%02i" % (i,d)
-            nbinsx, xmin, xmax = modify_binning(1000, -0.1, 0.1)  if (d<9) else modify_binning(1000, -2., 2.)
-            histos[hname] = TH1F(hname, "; #delta #phi_{L%i-D%02i} [cm]" % (i,d), nbinsx, xmin, xmax)
+            nbinsx, xmin, xmax = modify_binning(1000, -0.025, 0.025) 
+            histos[hname] = TH1F(hname, "; #delta #phi_{L%i-D%02i}" % (i,d), nbinsx, xmin, xmax)
     
             hname = "trackResidual_drphi_L%i_D%02i" % (i,d)
             nbinsx, xmin, xmax = modify_binning(1000, -1., 1.)  if (d<9) else modify_binning(1000, -2., 2.)
@@ -186,8 +208,8 @@ def drawer_project(tree, histos, options):
     print "Loaded" , len(moduleCoords.keys()) , "modules" 
 
 
-#     fileIn = ROOT.TFile("/home/rossin/data/EOS/SingleMuon_tt43_20150918/SingleMuon_tt43_ntuple_999_1_ked.root", "open")
-    fileIn = ROOT.TFile("/home/rossin/data/EOS/SingleMuon_tt43_20150918/SingleMuon_tt35_ntuple_1000_tt43_ntuple_999.root", "open")
+    fileIn = ROOT.TFile("/data/rossin/EOS/SingleMuon_Disks_20160602/SingleMuon_tt35_tt43_ntuple_9_1_Lfv.root", "open")
+#     fileIn = ROOT.TFile("/home/rossin/data/EOS/SingleMuon_tt35_20150918/SingleMuon_tt35_ntuple_1000_tt43_ntuple_999.root", "open")
     tree = fileIn.Get("ntupler/tree")
     entries = tree.GetEntriesFast()
 #     tree.Print()
@@ -325,13 +347,23 @@ def drawer_project(tree, histos, options):
 #             #histos["stub_absdz_corr_%i" % i].Fill(abs(stub_z_corr - ideal_z_at_mean_r))
 #             histos["stub_absdz_four_%i" % i].Fill(abs(stub_z - ideal_z_at_stub_r))
 
+    for v in var:
+        for i in xrange(11,16):
+            for CL in CLstring:
+                h2=histos["trackResidual_2D_%s_%s" % (v,CL)]
+                for d in range(len(D)):
+                    h=histos["trackResidual_%s_L%i_D%02i"              % (v,i,D[d])]
+                    if (CL=='RMS'): h2.SetBinContent(i-11+1,d+1,h.GetRMS())
+                    else          : h2.SetBinContent(i-11+1,d+1,getCI(h,0.9))
     options.nentries = ievt
     tree.SetBranchStatus("*", 1)
     return
 
 def drawer_draw(histos, options):
+    gStyle.SetPaintTextFormat("2.4f")
+
     for hname, h in histos.iteritems():
-        if "vs_" not in hname:
+        if h.ClassName() == "TH1F":
             # TH1F
             h.SetMaximum(h.GetMaximum() * 1.4); h.SetMinimum(0)
             h.SetStats(1); h.Draw("hist")
@@ -339,8 +371,6 @@ def drawer_draw(histos, options):
             save(options.outdir, hname, dot_root=False, dot_pdf=False)
         else:
             # TH2F
-            h.SetStats(0); h.Draw()
-
             if hname.find("_vs_")>=0:
                 pf = h.ProfileX("pf_"+hname, 1, -1, "s")
                 pf.SetLineColor(2)
@@ -353,11 +383,21 @@ def drawer_draw(histos, options):
 #                 gPad.Modified(); gPad.Update()
 #                 pf.Fit("pol1", "N")
                 pf.Draw("same")
+            else:
+                h.SetStats(0)
+                h.SetMinimum(0);
+                h.SetMarkerSize(1.5)
+                h.Draw("COLZ")
+                h.Draw("text same")
+                gPad.SetLogz(0)
+                gPad.SetRightMargin(0.22)
+                gPad.Modified(); gPad.Update()
+
 # 
 #                 tline.DrawLine(h.GetXaxis().GetXmin(), h.ds_cut+0.25, h.GetXaxis().GetXmax(), h.ds_cut+0.25)
 #                 tline.DrawLine(h.GetXaxis().GetXmin(), -h.ds_cut-0.25, h.GetXaxis().GetXmax(), -h.ds_cut-0.25)
 
-            CMS_label()
+#             CMS_label()
             save(options.outdir, hname, dot_root=False, dot_pdf=False)
 
             if hname.startswith("stub_ds_vs_invPt"):
@@ -366,18 +406,6 @@ def drawer_draw(histos, options):
 
 def drawer_sitrep(histos, options):
     # Get one-sided confidence interval
-    def getCI(h, threshold=0.95):
-        nbinsx = h.GetNbinsX()
-        integral = h.Integral(1,nbinsx)
-        if integral==0: return -1
-        integral_i = 0.
-        x = h.GetBinCenter(1)
-        for i in xrange(1,nbinsx+1):
-            integral_i += h.GetBinContent(i)
-            if (integral_i / integral) <= threshold:
-                x = h.GetBinCenter(i)
-        assert(integral_i == integral)
-        return x
 
     print "--- SITREP ---------------------------------------------------------"
 #     print "--- Using rMeans : ", [round(x,2) for x in rMeans]
