@@ -153,13 +153,13 @@ int PatternBankWriter::init(TString out) {
     // Pattern attributes
     ttree3 = new TTree("patternAttributes", "");
     ttree3->Branch("invPt_mean"    , &(*pb_invPt_mean));
-    ttree3->Branch("invPt_sigma"   , &(*pb_invPt_sigma));
     ttree3->Branch("cotTheta_mean" , &(*pb_cotTheta_mean));
-    ttree3->Branch("cotTheta_sigma", &(*pb_cotTheta_sigma));
     ttree3->Branch("phi_mean"      , &(*pb_phi_mean));
-    ttree3->Branch("phi_sigma"     , &(*pb_phi_sigma));
     ttree3->Branch("z0_mean"       , &(*pb_z0_mean));
-    ttree3->Branch("z0_sigma"      , &(*pb_z0_sigma));
+//    ttree3->Branch("invPt_sigma"   , &(*pb_invPt_sigma));
+//    ttree3->Branch("phi_sigma"     , &(*pb_phi_sigma));
+//    ttree3->Branch("cotTheta_sigma", &(*pb_cotTheta_sigma));
+//    ttree3->Branch("z0_sigma"      , &(*pb_z0_sigma));
 
     // Pattern bank statistics
     ttree2 = new TTree("patternBankInfo", "");

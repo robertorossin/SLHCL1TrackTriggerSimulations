@@ -50,17 +50,17 @@ ShortStatistics::ShortStatistics()
 //  variance_(0.)
   {}
 
-void Statistics::fill(float x) {
+void ShortStatistics::fill(float x) {
     ++ n_;
     mean_ += (x - mean_)/n_;
 //    if (n_ > 1)  variance_ += (x - mean_)*(x - mean_)/(n_-1) - variance_/n_;
 }
 
-long int Statistics::getEntries() const {
+long int ShortStatistics::getEntries() const {
     return n_;
 };
 
-float Statistics::getMean() const {
+float ShortStatistics::getMean() const {
     return mean_;
 };
 

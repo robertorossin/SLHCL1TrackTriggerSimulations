@@ -131,10 +131,10 @@ int PatternGenerator::makePatterns(TString src) {
 
         // Update the attributes
         if (po_.speedup<1) {
-            std::pair<std::map<pattern_type, Attributes *>::iterator, bool> ins = patternAttributes_map_.insert(std::make_pair(patt, new Attributes()));
-            Attributes * attr = ins.first->second;
+            std::pair<std::map<pattern_type, ShortAttributes *>::iterator, bool> ins = patternShortAttributes_map_.insert(std::make_pair(patt, new ShortAttributes()));
+            ShortAttributes * attr = ins.first->second;
             if (attr) {
-                ++ attr->n;
+//                ++ attr->n;
                 attr->invPt.fill(simChargeOverPt);
                 attr->cotTheta.fill(simCotTheta);
                 attr->phi.fill(simPhi);
@@ -268,22 +268,22 @@ int PatternGenerator::writePatterns(TString out) {
         *(writer.pb_frequency) = freq;
 
         if (po_.speedup<1) {
-            const Attributes * attr = patternAttributes_map_.at(patt);
+            const ShortAttributes * attr = patternShortAttributes_map_.at(patt);
             *(writer.pb_invPt_mean)     = attr->invPt.getMean();
-            *(writer.pb_invPt_sigma)    = attr->invPt.getSigma();
+//            *(writer.pb_invPt_sigma)    = attr->invPt.getSigma();
             *(writer.pb_cotTheta_mean)  = attr->cotTheta.getMean();
-            *(writer.pb_cotTheta_sigma) = attr->cotTheta.getSigma();
+//            *(writer.pb_cotTheta_sigma) = attr->cotTheta.getSigma();
             *(writer.pb_phi_mean)       = attr->phi.getMean();
-            *(writer.pb_phi_sigma)      = attr->phi.getSigma();
+//            *(writer.pb_phi_sigma)      = attr->phi.getSigma();
             *(writer.pb_z0_mean)        = attr->z0.getMean();
-            *(writer.pb_z0_sigma)       = attr->z0.getSigma();
+//            *(writer.pb_z0_sigma)       = attr->z0.getSigma();
         }
         else if (po_.speedup==1) {
             const ShortAttributes * attr = patternShortAttributes_map_.at(patt);
             *(writer.pb_invPt_mean)     = attr->invPt.getMean();
-            *(writer.pb_cotTheta_mean)  = attr->cotTheta.getMean();
+//            *(writer.pb_cotTheta_mean)  = attr->cotTheta.getMean();
             *(writer.pb_phi_mean)       = attr->phi.getMean();
-            *(writer.pb_z0_mean)        = attr->z0.getMean();
+//            *(writer.pb_z0_mean)        = attr->z0.getMean();
         }
 
         writer.fillPatternBank();
