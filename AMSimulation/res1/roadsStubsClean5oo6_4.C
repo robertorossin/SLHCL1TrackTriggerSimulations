@@ -27,6 +27,7 @@
 #include <map>
 #include <iomanip>
 #include <fstream>
+#include <set>
 
 using namespace std;
 
@@ -34,6 +35,8 @@ struct tVectorComp {
 	bool operator() (const TVector3& lhs, const TVector3& rhs) const
 	{return lhs.Mag2()<rhs.Mag2();}
 };
+
+void loadTT27ModuleList(set <unsigned> &v);
 
 TH1* makeCDF(TH1* h);
 
@@ -82,6 +85,8 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 		capproxDeltaTitle = capproxDeltaTitle + TString(" bit Reduced");
 	}
 
+  set <unsigned> sModuleId;
+  loadTT27ModuleList(sModuleId);
 
 //	TString dirPlots("/home/rossin/Dropbox/TT/Work/figures_stubCleaning/OverlapClean_95c_0p8_0p8_0p6_0p8_0p6_0p5/");
 	TString dirPlots("/home/rossin/Dropbox/TT/Work/figures_stubCleaning/");
@@ -146,8 +151,8 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 
 
 //// ****** 4T **********
-	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_20150815_fullNtuple/patternBank_tt27_sf1_nz4_pt3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1862700;
-	TString sTree="TTbarTTbar_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt3_5oo6_TTbarTTbar_tt27_PU140_20150408_SLHC25p3_100M.root"; isSLHC25=1; TString pName("4Tops_PU140_sf1_nz4_pt3_5or6oo6"); TString pTitle("tttt+PU140 SF=1 Nz=4 Pt>3 GeV/c");// 6/6
+//	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_20150815_fullNtuple/patternBank_tt27_sf1_nz4_pt3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1862700;
+//	TString sTree="TTbarTTbar_tt27_PU140_20150408_SLHC25p3_NewPatterns/roads_sf1_nz4_tt27_pt3_5oo6_TTbarTTbar_tt27_PU140_20150408_SLHC25p3_100M.root"; isSLHC25=1; TString pName("4Tops_PU140_sf1_nz4_pt3_5or6oo6"); TString pTitle("tttt+PU140 SF=1 Nz=4 Pt>3 GeV/c");// 6/6
 //	TString sTree="TTbarTTbar_PU200_tt27_sf1_nz4_pt3_20151029/roads_TTbarTTbar_PU200_tt27_sf1_nz4_pt3_5oo6_95c.root"; isSLHC25=1; TString pName("4Tops_PU200_sf1_nz4_pt3_5oo6"); TString pTitle("tttt+PU200 SF=1 Nz=4 Pt>3 GeV/c");// 5/6
 
 //// Overlap Removed
@@ -157,8 +162,8 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 
 
 //// ****** Pure PU *********
-//	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_20150815_fullNtuple/patternBank_tt27_sf1_nz4_pt3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1862700;
-//	TString sTree="Neutrino_PU140_tt27_sf1_nz4_pt3_20151107/roads_Neutrino_PU140_tt27_sf1_nz4_pt3_5oo6_95c_14k.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt3_5oo6_14k"); TString pTitle("PU140 SF=1 Nz=4 Pt>3 GeV/c 5oo6");// 5/6
+	TFile *f = TFile::Open("/data/rossin/EOS/SingleMuonTest_tt27_PU0_20150815_fullNtuple/patternBank_tt27_sf1_nz4_pt3_100M.root","READ"); isSLHC25=1; unsigned npatt95coverage = 1862700;
+	TString sTree="Neutrino_PU140_tt27_sf1_nz4_pt3_20151107/roads_Neutrino_PU140_tt27_sf1_nz4_pt3_5oo6_95c_14k.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt3_5oo6_14k"); TString pTitle("PU140 SF=1 Nz=4 Pt>3 GeV/c 5oo6");// 5/6
 //	TString sTree="Neutrino_PU140_tt27_sf1_nz4_pt3_20151107/roads_Neutrino_PU140_tt27_sf1_nz4_pt3_6oo6_95c_14k.root"; isSLHC25=1; TString pName("Neutrino_PU140_sf1_nz4_pt3_6oo6_14k"); TString pTitle("PU140 SF=1 Nz=4 Pt>3 GeV/c 6oo6");// 5/6
 //	TString sTree="Neutrino_PU200_tt27_sf1_nz4_pt3_20151029/roads_Neutrino_PU200_tt27_sf1_nz4_pt3_5oo6_95c.root"; isSLHC25=1; TString pName("Neutrino_PU200_sf1_nz4_pt3_5oo6_4k"); TString pTitle("PU200 SF=1 Nz=4 Pt>3 GeV/c");// 5/6
 //	TString sTree="Neutrino_PU250_tt27_sf1_nz4_pt3_20151103/roads_Neutrino_PU250_tt27_sf1_nz4_pt3_5oo6_95c.root"; isSLHC25=1; TString pName("Neutrino_PU250_sf1_nz4_pt3_5oo6_4k"); TString pTitle("PU250 SF=1 Nz=4 Pt>3 GeV/c");// 5/6
@@ -346,6 +351,10 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 	TH1*     h1RemovedStubsResidualDeltaSPerLayer[6];
 	TH2*     h2RemovedStubsResidualDeltaSPerLayer[6];
 
+	TH1* h1StubsPerLayerAll        [6];
+	TH1* h1StubsPerLayerAfterAM    [6];
+	TH1* h1StubsPerLayerAfterDeltaS[6];
+
 	TAxis* stubBendQuantized[6];
 	double stubBendMax[6] = {2.5,2.5,3.0,4.5,5.5,6.5};
 	for (unsigned iLay=0; iLay<6; ++iLay) {
@@ -401,6 +410,12 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 		h1RemovedStubsResidualDeltaSPerLayer[iBin] = new TH1D(cc2,cc2,5,-1.25,1.25);
 		sprintf(cc2,"h2RemovedStubsResidualDeltaSPerLayer_%u",iBin);
 		h2RemovedStubsResidualDeltaSPerLayer[iBin] = new TH2D(cc2,cc2,5,-1.25,1.25,27,-6.75,6.75);
+		sprintf(cc2,"h1StubsPerLayerAll_%u",iBin);
+		h1StubsPerLayerAll        [iBin] = new TH1D(cc2,cc2,200,0,400);
+		sprintf(cc2,"h1StubsPerLayerAfterAM_%u",iBin);
+		h1StubsPerLayerAfterAM    [iBin] = new TH1D(cc2,cc2,200,0,400);
+		sprintf(cc2,"h1StubsPerLayerAfterDeltaS_%u",iBin);
+		h1StubsPerLayerAfterDeltaS[iBin] = new TH1D(cc2,cc2,200,0,400);
 		for (unsigned iMissLay=0; iMissLay<nLayersLoop; ++iMissLay) {
 			if (iMissLay) sprintf(cc2,"_5oo6_NoLayer_%u",iMissLay-1);
 			else          sprintf(cc2,"_6oo6");
@@ -577,6 +592,17 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 		//		vector <slhcl1tt::TTRoad> vroadSingleStubDsClean;
 		//		vector <slhcl1tt::TTRoad> vroadDsClean;
 
+
+		std::set<unsigned int> stubsPerLayerAll        [6];
+		std::set<unsigned int> stubsPerLayerAfterAM    [6];
+		std::set<unsigned int> stubsPerLayerAfterDeltaS[6];
+
+//	  std::set<unsigned int>::iterator it;
+		for (unsigned int iStub=0; iStub<r.TTStubs_modId->size(); ++iStub) {
+			unsigned int stub_layer = TMath::Floor(r.TTStubs_modId   ->at(iStub)/10000.)-5;
+			if (sModuleId.find(r.TTStubs_modId   ->at(iStub))!=sModuleId.end()) stubsPerLayerAll[stub_layer].insert(iStub);
+		}
+
 		//		cout << "nRoads " << nRoads << endl;
 		for (unsigned int iRoads=0; iRoads<nRoads; ++iRoads) { // LOOPING OVER ROADS in EVENT
 			slhcl1tt::TTRoad road;
@@ -587,7 +613,6 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 			if (road.patternRef > npatt95coverage) continue;
 			slhcl1tt::TTRoad roadSingleStub(road);
 			//			slhcl1tt::TTRoad roadDsClean   (road);
-
 
 			std::map <short int,unsigned int> stubLayers_map;
 			std::map <short int,unsigned int> stubLayers_mapClean;
@@ -668,6 +693,7 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 					short int stub_layer = TMath::Floor(r.TTStubs_modId   ->at(stubID)/10000.)-5;
 					++stubsPerLayer[stub_layer];
 					stubLayers_map [stub_layer]=stubID;
+					stubsPerLayerAfterAM[stub_layer].insert(stubID);
 //					++stubsPerLayerSingleStub[stub_layer];
 //					stubLayers_mapSingleStub[stub_layer]=stubID;
 				}// end looping on stubs 3
@@ -735,6 +761,7 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 							stub_bend < centralValueCut+halfWidthCut)) {
 						++stubsPerLayerClean[stub_layer];
 						stubLayers_mapClean[stub_layer]=stubID;
+						stubsPerLayerAfterDeltaS[stub_layer].insert(stubID);
 					}
 					else h1RemovedStubsDeltaSPerLayer[stub_layer]->Fill(stub_bend);
 				} //end looping on stubs
@@ -811,6 +838,12 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 			}
 		} // end looping on roads
 
+		for (unsigned iLay=0; iLay <6; ++iLay) {
+			h1StubsPerLayerAll        [iLay]->Fill(stubsPerLayerAll        [iLay].size());
+			h1StubsPerLayerAfterAM    [iLay]->Fill(stubsPerLayerAfterAM    [iLay].size());
+			h1StubsPerLayerAfterDeltaS[iLay]->Fill(stubsPerLayerAfterDeltaS[iLay].size());
+		}
+
 		h1RoadPerEvent[0][0]->Fill(nRoadsPerEvent6oo6);
 		h1RoadPerEvent[0][1]->Fill(nRoadsPerEventClean6oo6);
 		h1RoadPerEvent[1][0]->Fill(nRoadsPerEvent5oo6);
@@ -849,6 +882,48 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 			return;
 		}
 	}
+
+	const short nQuant = 4;
+	double  percentiles   [nQuant] = {0.90, 0.95, 0.99, 0.999};
+	double xpercentiles[6][nQuant];
+	short whichQuant = 1;
+
+	TCanvas* cStubsPerLayerAll = new TCanvas("cStubsPerLayer","cStubsPerLayer",0,0,1000,700);
+	cStubsPerLayerAll->Divide(3,2);
+	for (unsigned iLay=0; iLay <6; ++iLay) {
+		cStubsPerLayerAll->cd(iLay+1);
+		char cc [50];
+		char cc3 [200];
+		TLegend* tl1 = new TLegend(0.15,0.7,0.9,0.9);
+		sprintf(cc,"Layer %u;Stubs in Layer",iLay);
+		h1StubsPerLayerAfterDeltaS[iLay]->Draw();
+		h1StubsPerLayerAfterDeltaS[iLay]->SetTitle(cc);
+		h1StubsPerLayerAll        [iLay]->SetLineColor(1);
+		h1StubsPerLayerAll        [iLay]->SetLineWidth(2);
+		h1StubsPerLayerAll        [iLay]->Draw("same");
+		h1StubsPerLayerAll        [iLay]->GetQuantiles(nQuant,xpercentiles[0],percentiles);
+		sprintf(cc3,"All stubs. #mu=%3.1lf, #Lambda_{%3.1lf}=%3.1lf",h1StubsPerLayerAll        [iLay]->GetMean(),percentiles[whichQuant]*100,xpercentiles[0][whichQuant]);
+		tl1->AddEntry(h1StubsPerLayerAll        [iLay],cc3);
+		h1StubsPerLayerAfterAM    [iLay]->SetLineColor(2);
+		h1StubsPerLayerAfterAM    [iLay]->SetLineWidth(2);
+		h1StubsPerLayerAfterAM    [iLay]->Draw("same");
+		h1StubsPerLayerAfterAM    [iLay]->GetQuantiles(nQuant,xpercentiles[0],percentiles);
+		sprintf(cc3,"Stubs after AM. #mu=%3.1lf, #Lambda_{%3.1lf}=%3.1lf",h1StubsPerLayerAfterAM        [iLay]->GetMean(),percentiles[whichQuant]*100,xpercentiles[0][whichQuant]);
+		tl1->AddEntry(h1StubsPerLayerAfterAM    [iLay],cc3);
+		h1StubsPerLayerAfterDeltaS[iLay]->SetLineColor(4);
+		h1StubsPerLayerAfterDeltaS[iLay]->SetLineWidth(2);
+		h1StubsPerLayerAfterDeltaS[iLay]->Draw("same");
+		h1StubsPerLayerAfterDeltaS[iLay]->GetQuantiles(nQuant,xpercentiles[0],percentiles);
+		sprintf(cc3,"Stubs after AM+#Deltas. #mu=%3.1lf, #Lambda_{%3.1lf}=%3.1lf",h1StubsPerLayerAfterDeltaS[iLay]->GetMean(),percentiles[whichQuant]*100,xpercentiles[0][whichQuant]);
+		tl1->AddEntry(h1StubsPerLayerAfterDeltaS[iLay],cc3);
+		tl1->Draw("APL");
+//		gPad->BuildLegend();
+	}
+	if (savePlots) {
+		sName=(dirPlots+TString("stubsPerLayerAll_")+pName+TString(".png"));
+		cStubsPerLayerAll->SaveAs(sName);
+	}
+
 	TLegend* tl;
 	TCanvas* cStubsPerLayer[nLayersLoop][2];
 	for (unsigned iMissLay=0; iMissLay <nLayersLoop; ++iMissLay) {
@@ -927,10 +1002,6 @@ void roadsStubsClean5oo6_4 (int savePlots=0, const int nLayers=6, bool use95cove
 //		h2RemovedStubsResidualDeltaSPerLayer[iLay]->DrawCopy("colz0");
 //	}
 
-	const short nQuant = 4;
-	double  percentiles   [nQuant] = {0.90, 0.95, 0.99, 0.999};
-	double xpercentiles[6][nQuant];
-	short whichQuant = 1;
 	if (pName.Contains("Neutrino")) whichQuant = 1;
 	TCanvas* cRoadPerEvent[2]; // 6oo6, 5oo6 per layer
 	TCanvas* cCombPerRoad [2];
@@ -1219,6 +1290,31 @@ double gau(double* x, double* par) {
 //	if (stubInvRoughPt>roadInvPt+nSigmas*roadInvPtRms) return 0;
 //	return 1;
 //}
+
+void loadTT27ModuleList(set <unsigned> &v) { // this is sector 4,4 in mersi's DB
+	double moduleL[] = {50230,50231,50232,50233,50234,50235,50236,50237,50330,50331,50332,50333,50334,50335,50336,50337,50430,50431,50432,50433,50434,50435,50436,50437,
+			60326,60327,60328,60329,60330,60331,60332,60333,60334,60335,60426,60427,60428,60429,60430,60431,60432,60433,60434,60435,60526,60527,60528,60529,60530,60531,
+			60532,60533,60534,60535,60626,60627,60628,60629,60630,60631,60632,60633,60634,60635,
+			70426,70427,70428,70429,70430,70431,70432,70433,70434,70435,70436,70437,70526,70527,70528,70529,70530,70531,70532,70533,70534,70535,70536,70537,70626,70627,
+			70628,70629,70630,70631,70632,70633,70634,70635,70636,70637,70726,70727,70728,70729,70730,70731,70732,70733,70734,70735,70736,70737,70826,70827,70828,70829,
+			70830,70831,70832,70833,70834,70835,70836,70837,70926,70927,70928,70929,70930,70931,70932,70933,70934,70935,70936,70937,
+			80611,80612,80613,80614,80615,80616,80617,80711,80712,80713,80714,80715,80716,80717,80811,80812,80813,80814,80815,80816,80817,80911,80912,80913,80914,80915,
+			80916,80917,81011,81012,81013,81014,81015,81016,81017,81111,81112,81113,81114,81115,81116,81117,81211,81212,81213,81214,81215,81216,81217,
+			90711,90712,90713,90714,90715,90716,90717,90718,90719,90811,90812,90813,90814,90815,90816,90817,90818,90819,90911,90912,90913,90914,90915,90916,90917,90918,
+			90919,91011,91012,91013,91014,91015,91016,91017,91018,91019,91111,91112,91113,91114,91115,91116,91117,91118,91119,91211,91212,91213,91214,91215,91216,91217,
+			91218,91219,91311,91312,91313,91314,91315,91316,91317,91318,91319,91411,91412,91413,91414,91415,91416,91417,91418,91419,91511,91512,91513,91514,91515,91516,
+			91517,91518,91519,91611,91612,91613,91614,91615,91616,91617,91618,91619,
+			100811,100812,100813,100814,100815,100816,100817,100818,100819,100820,100911,100912,100913,100914,100915,100916,100917,100918,100919,100920,101011,101012,
+			101013,101014,101015,101016,101017,101018,101019,101020,101111,101112,101113,101114,101115,101116,101117,101118,101119,101120,101211,101212,101213,101214,
+			101215,101216,101217,101218,101219,101220,101311,101312,101313,101314,101315,101316,101317,101318,101319,101320,101411,101412,101413,101414,101415,101416,
+			101417,101418,101419,101420,101511,101512,101513,101514,101515,101516,101517,101518,101519,101520,101611,101612,101613,101614,101615,101616,101617,101618,
+			101619,101620,101711,101712,101713,101714,101715,101716,101717,101718,101719,101720,101811,101812,101813,101814,101815,101816,101817,101818,101819,101820,
+			101911,101912,101913,101914,101915,101916,101917,101918,101919,101920,102011,102012,102013,102014,102015,102016,102017,102018,102019,102020,102111,102112,
+			102113,102114,102115,102116,102117,102118,102119,102120};
+	unsigned sizeOfArray = sizeof(moduleL)/sizeof(moduleL[0]);
+	for (unsigned iMod=0; iMod<sizeOfArray; ++iMod) v.insert(moduleL[iMod]);
+	return;
+}
 
 TH1* makeCDF(TH1* h) {
 	TString sName(TString(h->GetName())+TString("_CDF"));

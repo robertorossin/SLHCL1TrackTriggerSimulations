@@ -1004,7 +1004,7 @@ void roadsStubsClean5oo6 (int applyOnMuon = 1, bool savePlots=0, bool deriveCuts
 			TString sName (TString("cStubsPerLayer")+TString(cc5)+TString(cc4));
 			cStubsPerLayer[iMissLay][iClean]= new TCanvas(sName,sTitle,0,0,900,900);
 			cStubsPerLayer[iMissLay][iClean]->Divide(3,2);
-			for (unsigned iLay=0; iLay <6; ++iLay) {
+			for (unsigned iLay=0; iLay <1; ++iLay) {
 				cStubsPerLayer[iMissLay][iClean]->cd(iLay+1);
 				gPad->SetLogy();
 				gPad->SetGrid();
