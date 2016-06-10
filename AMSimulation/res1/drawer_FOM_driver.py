@@ -47,6 +47,12 @@ def main(options):
     if (options.ss=="sf1_nz6"): 
         if (options.coverage == 0.90): options.npatterns = 2593800 # 90%
         if (options.coverage == 0.95): options.npatterns = 3905700 # 95%
+    if (options.ss=="sf1L0x2L5x2_nz4_x8"): 
+        if (options.coverage == 0.95): options.npatterns = 9999999 # 95%
+    if (options.ss=="sf1L0x2L5x2_nz6_x8"): 
+        if (options.coverage == 0.95): options.npatterns = 9999999 # 95%
+    if (options.ss=="sf1L0x2L5x2_nz8_x8"): 
+        if (options.coverage == 0.95): options.npatterns = 9999999 # 95%
     if (options.ss=="sf1L0x2_nz6"): 
         if (options.coverage == 0.90): options.npatterns = 1915900 # 90%
         if (options.coverage == 0.95): options.npatterns = 2851200 # 95%
@@ -119,17 +125,30 @@ def main(options):
     # PU = 1.   running on a SingleTrack + PU sample, but considering only the SingleTrack for efficiency caclulation
     #
     elif (options.task==2):
+        ssString = options.ss
+        isX8 = False
+#         print options.ss
+        if (options.ss.find("sf1L0x2L5x2_nz")>=0 or options.ss.find("sf1L0x2_nz")>=0):
+            if (options.ss.find("_x8")>0):
+                isX8 = True
+                ssString = options.ss.replace("_x8","")
+            inDir = inDir+"/tt27_"+ssString+"_pt3_20160308/"
         if   (options.pu==0): 
             if   (options.ss=="sf1_nz4"): options.infile = inDir+"SingleMuonTest_PU0_tt27_sf1_nz4_pt3_ml5_20150511/tracks_LTF_SingleMuonTest_PU0_tt27_sf1_nz4_pt3_5oo6_20150511.root"
             elif (options.ss.find("sf1_nz") and len(options.ss)==12): options.infile = inDir+"SSscan/tracks_LTF_SingleMuonTest_PU0_tt27_"+options.ss+"_pt3_5oo6_95c_20151204.root"
+            if (isX8): options.infile = inDir+"tracks_LTF_SingleMuonTest_PU0_tt27_"+ssString+"_pt3_5oo6_100c_chi100_300M_x8_.root"
+            else     : options.infile = inDir+"tracks_LTF_SingleMuonTest_PU0_tt27_"+ssString+"_pt3_5oo6_95c_chi100_300M.root"
 #         if   (options.pu==0): options.infile = inDir+"SingleMuonTest_PU0_tt27_sf1_nz4_pt3_ml5_20150511/tracks.root"
         elif (options.pu==1): 
             options.infile = inDir+"SingleMuonTest_PU140_tt27_sf1_nz4_pt3_ml5_20150511/tracks_LTF_SingleMuonTest_PU140_tt27_sf1_nz4_pt3_5oo6_95c_20150511.root"
+            if (isX8): options.infile = inDir+"tracks_LTF_SingleMuonTest_PU140_tt27_"+ssString+"_pt3_5oo6_100c_chi100_300M_x8_.root"
+            else     : options.infile = inDir+"tracks_LTF_SingleMuonTest_PU140_tt27_"+ssString+"_pt3_5oo6_95c_chi100_300M.root"
             options.pu=0 # this will process only the first track in the event, i.e. the muon
         elif (options.pu==140): options.infile = inDir+"Neutrino_PU140_tt27_sf1_nz4_pt3_20151107/tracks_LTF_Neutrino_PU140_tt27_sf1_nz4_pt3_5oo6_95c_14k.root"
         elif (options.pu==200): options.infile = inDir+"Neutrino_PU200_tt27_sf1_nz4_pt3_20151029/tracks_LTF_Neutrino_PU200_tt27_sf1_nz4_pt3_5oo6_95c.root"
         else                  : raise ValueError("PU option not valid")
 
+#         print options.infile, isX8
     ##########################################################################################
     # task 3. calculates # of roads and combinations
     #
